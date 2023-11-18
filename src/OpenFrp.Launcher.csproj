@@ -8,19 +8,25 @@
 		<UseWPF>true</UseWPF>
 		<OutputType>WinExe</OutputType>
 		<ApplicationManifest>Properties\App.manifest</ApplicationManifest>
+		<AssemblyName>OpenFrpLauncher</AssemblyName>
+		<AssemblyTitle>OpenFrp WPF 桌面启动器</AssemblyTitle>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\Awe.UI\Awe.UI.csproj" />
-	</ItemGroup>
+
 
 	<ItemGroup>
-	  <Folder Include="Win32\" />
+	  <ProjectReference Include="..\..\Awe.Model\Awe.Model.csproj" />
+	  <ProjectReference Include="..\..\Awe.UI\src\Awe.UI.csproj" />
+	  <ProjectReference Include="..\..\OpenFrp.Service\OpenFrp.Service.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 	  <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Views\" />
 	</ItemGroup>
 
 </Project>
