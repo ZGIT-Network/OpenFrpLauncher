@@ -31,21 +31,30 @@ namespace OpenFrp.Launcher
         protected override void OnStartup(StartupEventArgs e)
         {
             ConfigureWindow();
-            // ConfigureRPC();    
+            ConfigureRPC();    
         }
 
         private static async void ConfigureRPC()
         {
-            var channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", "aweapp.test");
+            var channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", "aweapp.test",new GrpcDotNetNamedPipes.NamedPipeChannelOptions
+            {
+                ConnectionTimeout = 10
+            });
 
             var rpc = RemoteClient = new Service.Proto.Service.OpenFrp.OpenFrpClient(channel);
 
+            await Task.Delay(000);
 
-            var va = await ExtendMethod.RunWithTryCatch(async() => await rpc.SyncAsync(new Google.Protobuf.WellKnownTypes.Empty())) ;
+            var va = await ExtendMethod.RunWithTryCatch(async() => await rpc.SyncAsync(new Service.Proto.Request.SyncRequest
+            {
+                
+            })) ;
 
             if (va is (var data,_) && data is not null)
             {
-                WeakReferenceMessenger.Default.Send(new PropertyChangedMessage<bool>(rpc, "IsPipeConnected", false, true));
+                
+                //WeakReferenceMessenger.Default.Send(new PropertyChangedMessage<bool>(rpc, "IsPipeConnected", false, true));
+                WeakReferenceMessenger.Default.Send(data.TunnelId.ToArray());
             }
         }
         private static void ConfigureWindow()
@@ -128,11 +137,16 @@ namespace OpenFrp.Launcher
                 {
                     
                 }
+                System.Diagnostics.Debug.WriteLine(re.ToString());
                 return (default,re);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
 
+                global::System.Diagnostics.Debugger.Break();
+
+                return (default, ex);
             }
             return (default, default);
         }

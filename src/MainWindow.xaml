@@ -2,13 +2,12 @@
     x:Class="OpenFrp.Launcher.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-
+    xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
-
+    xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
- 
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
@@ -20,6 +19,10 @@
     Foreground="White"
     Style="{StaticResource Awe.UI.DefaultWindow}"
     mc:Ignorable="d">
+    <FrameworkElement.Resources>
+        <converter:NotEqualConverter x:Key="NotEqualConverter" />
+        <converter:EqualConverter x:Key="EqualConverter" />
+    </FrameworkElement.Resources>
     <FrameworkElement.DataContext>
         <vm:MainViewModel />
     </FrameworkElement.DataContext>
@@ -28,31 +31,234 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
+        <!--  Sidebar  -->
         <Border
             Grid.Column="0"
             Width="200"
             Background="#2f222222"
             BorderBrush="#14FFFFFF"
             BorderThickness="0,0,1,0">
-            <StackPanel Margin="20,20">
-                <TextBlock
-                    FontFamily="Montserrat"
-                    FontSize="24"
-                    FontWeight="Medium"
-                    Text="Launcher" />
-                <TextBlock
-                    Margin="0,20,0,0"
-                    FontSize="16"
-                    FontWeight="Black"
-                    Opacity=".6"
-                    Text="页面" />
-                <ItemsControl>
-                    
-                </ItemsControl>
-                
+            <Grid Margin="0">
+                <Grid.Resources>
+                    <Style x:Key="Awe.UI.PanelButton" TargetType="RadioButton">
+                        <Setter Property="FocusVisualStyle">
+                            <Setter.Value>
+                                <Style>
+                                    <Setter Property="Control.Template">
+                                        <Setter.Value>
+                                            <ControlTemplate>
+                                                <Border
+                                                    Margin="-8,-4,-4,-4"
+                                                    BorderBrush="White"
+                                                    BorderThickness="2"
+                                                    CornerRadius="3"
+                                                    SnapsToDevicePixels="True">
+                                                    <Border
+                                                        BorderBrush="Black"
+                                                        BorderThickness="2"
+                                                        CornerRadius="3" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="OverridesDefaultStyle" Value="True" />
+                        <Setter Property="Cursor" Value="Hand" />
 
-                
-            </StackPanel>
+                        <Setter Property="CommandParameter" Value="{Binding Page}" />
+                        <Setter Property="Command" Value="{Binding DataContext.event_RouterItemInvokedCommand, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Mode=OneWay}" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="RadioButton">
+                                    <Grid Background="Transparent" Focusable="False">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border
+                                            Width="20"
+                                            Height="24"
+                                            Margin="0,0,6,0">
+                                            <Path
+                                                Width="16"
+                                                Height="16"
+                                                Data="{Binding Icon}"
+                                                Stretch="Uniform">
+                                                <Path.Fill>
+                                                    <VisualBrush>
+                                                        <VisualBrush.Visual>
+                                                            <Grid Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+                                                                <Rectangle Fill="White" />
+                                                                <Rectangle
+                                                                    x:Name="checked_icon"
+                                                                    Fill="{DynamicResource Awe.UI.AccentColor}"
+                                                                    Opacity="0" />
+                                                            </Grid>
+                                                        </VisualBrush.Visual>
+                                                    </VisualBrush>
+                                                </Path.Fill>
+                                            </Path>
+                                        </Border>
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Padding="0,0,0,0"
+                                            VerticalAlignment="Center"
+                                            FontSize="14"
+                                            Text="{Binding Title}">
+                                            <TextBlock.Foreground>
+                                                <VisualBrush>
+                                                    <VisualBrush.Visual>
+                                                        <Grid Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+                                                            <Rectangle Fill="White" />
+                                                            <Rectangle
+                                                                x:Name="checked_text"
+                                                                Fill="{DynamicResource Awe.UI.AccentColor}"
+                                                                Opacity="0" />
+                                                        </Grid>
+                                                    </VisualBrush.Visual>
+                                                </VisualBrush>
+                                            </TextBlock.Foreground>
+                                        </TextBlock>
+                                    </Grid>
+                                    <ControlTemplate.Resources>
+                                        <CubicEase x:Key="ButtonTranstion" EasingMode="EaseOut" />
+                                    </ControlTemplate.Resources>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource ButtonTranstion}"
+                                                            Storyboard.TargetName="checked_text"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            To="1"
+                                                            Duration="0:0:.25" />
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource ButtonTranstion}"
+                                                            Storyboard.TargetName="checked_icon"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            To="1"
+                                                            Duration="0:0:.25" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource ButtonTranstion}"
+                                                            Storyboard.TargetName="checked_text"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            To="0"
+                                                            Duration="0:0:.25" />
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource ButtonTranstion}"
+                                                            Storyboard.TargetName="checked_icon"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            To="0"
+                                                            Duration="0:0:.25" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource ButtonTranstion}"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            To="1"
+                                                            Duration="0:0:.25" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource ButtonTranstion}"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            To="0.45"
+                                                            Duration="0:0:.25" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style BasedOn="{StaticResource Awe.UI.PanelButton}" TargetType="RadioButton" />
+                </Grid.Resources>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Margin="20,20,20,0">
+                    <TextBlock
+                        FontFamily="Montserrat"
+                        FontSize="24"
+                        FontWeight="Medium"
+                        Text="Launcher" />
+                    <TextBlock
+                        Margin="0,20,0,0"
+                        FontSize="16"
+                        FontWeight="Black"
+                        Opacity=".6"
+                        Text="页面" />
+                    <ItemsControl
+                        Margin="0,10,0,0"
+                        Focusable="False"
+                        ItemsSource="{Binding MainRouterItems, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton
+                                    Margin="0,0,0,10"
+                                    ui:TwiceBindingHelper.Binding="{Binding IsEnableBinding, Mode=OneWay}"
+                                    AutomationProperties.Name="{Binding Title, Mode=OneWay}"
+                                    GroupName="mvr"
+                                    ToolTip="{Binding Title, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+
+                </StackPanel>
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+
+                    <ItemsControl
+                        Grid.Row="1"
+                        Margin="20,10,20,18"
+                        Focusable="False"
+                        ItemsSource="{Binding SubRouterItems, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton GroupName="mvr" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Grid>
         </Border>
+        <!--  Content  -->
+        <Grid Grid.Column="1">
+            <ContentControl Focusable="False">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:InvokeCommandAction Command="{Binding event_FrameLoadedCommand}" PassEventArgsToCommand="True" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </ContentControl>
+        </Grid>
     </Grid>
 </Window>
