@@ -8,12 +8,14 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -71,13 +73,6 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private void @event_DisplayMenu(ContextMenu cm)
-        {
-            cm.IsOpen = true;
-            Keyboard.Focus(cm);
-        }
-
-        [RelayCommand]
         private void @event_SwitchLoaded(RoutedEventArgs e)
         {
             if (e is { Source : Awe.UI.Controls.ToggleSwitch sw } && sw.DataContext is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
@@ -86,8 +81,6 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     string token = UserInfo.UserToken!.ToString();
                     var bf = JsonSerializer.SerializeToUtf8Bytes(tunnel);
-
-                    //if (OnlineTunnels.Contains(tunnel.Id)) { sw.IsChecked = true; }
 
                     sw.Toggled += async delegate
                     {
@@ -146,6 +139,59 @@ namespace OpenFrp.Launcher.ViewModels
                 }
                 global::System.Diagnostics.Debugger.Break();
             }
+        }
+
+        [RelayCommand]
+        private async Task @event_EditTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        {
+            
+        }
+
+        [RelayCommand]
+        private async Task @event_DeleteTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        {
+            var dialog = new Dialog.MessageDialog
+            {
+                Title = new TextBlock()
+                {
+                    Inlines =
+                    {
+                        "删除隧道",
+                        CreateObject<Run>((run) =>
+                        {
+                            run.SetResourceReference(Run.FontFamilyProperty, "Montserrat");
+                            run.FontWeight = FontWeight.FromOpenTypeWeight(500);
+                        }, $" #{tunnel.Id} {tunnel.Name} ")
+                    },
+                    FontSize = 24
+                },
+                Content = CreateObject<TextBlock>((tb) =>
+                {
+                    tb.FontSize = 16;
+                    tb.Text = "确定要删除该隧道吗？会失去真的很久很久(是永久)哦。";
+                    tb.SetBinding(TextBlock.ForegroundProperty, new Binding
+                    {
+                        Mode = BindingMode.OneWay,
+                        RelativeSource = RelativeSource.TemplatedParent,
+                        Path = new PropertyPath(TextElement.ForegroundProperty)
+                    });
+                })
+            };
+
+            var result = await dialog.ShowDialog();
+        }
+
+        private T CreateObject<T>(Action<T>? func = default, params object[] args)
+        {
+            var vc = Activator.CreateInstance(typeof(T),args);
+
+            if (vc is null) throw new NullReferenceException();
+            else if (vc is T tt)
+            {
+                if(func is not null) { func(tt); }
+                return tt;
+            }
+            throw new TypeLoadException();
         }
     }
 }
