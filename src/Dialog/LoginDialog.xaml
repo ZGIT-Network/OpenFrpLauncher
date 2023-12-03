@@ -10,11 +10,14 @@
     xmlns:local="clr-namespace:OpenFrp.Launcher.Dialog"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
+    d:Background="White"
     d:DesignHeight="768"
     d:DesignWidth="1366"
     d:Foreground="White"
     FocusManager.FocusedElement="{Binding ElementName=fct}"
+    Foreground="White"
     mc:Ignorable="d">
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
@@ -27,123 +30,131 @@
     <FrameworkElement.Resources>
         <converter:EqualConverter x:Key="EqualConverter" />
     </FrameworkElement.Resources>
-    <Border
+    <Grid
         MaxWidth="800"
         MaxHeight="450"
-        Margin="24"
-        BorderBrush="{DynamicResource Awe.UI.DefaultBorderBrush}"
-        BorderThickness="1,0.75,1,1"
-        CornerRadius="5">
-        <Border.Background>
-            <!--  Local file used  -->
-            <ImageBrush ImageSource="E:\Desktop\Photo\wallhaven-k7j8wq_1920x1080.png" Stretch="UniformToFill" />
-        </Border.Background>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Border
-                Grid.Column="0"
-                Width="250"
-                Background="#B9000000"
-                CornerRadius="3,0,0,3">
-                <Grid>
-                    <ScrollViewer x:Name="fct" VerticalScrollBarVisibility="Auto">
-                        <Grid Margin="24,36,24,0" IsEnabled="{Binding event_LoginCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}">
-                            <FrameworkElement.Style>
-                                <Style TargetType="Grid">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsEnabled" Value="True">
-                                            <Trigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation
-                                                            Storyboard.TargetProperty="Opacity"
-                                                            To="1"
-                                                            Duration="0:0:.25">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CircleEase EasingMode="EaseOut" />
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.EnterActions>
-                                            <Trigger.ExitActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation
-                                                            Storyboard.TargetProperty="Opacity"
-                                                            To="0.6"
-                                                            Duration="0:0:.25">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CircleEase EasingMode="EaseOut" />
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.ExitActions>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </FrameworkElement.Style>
-                            <StackPanel>
-
-                                <TextBlock FontSize="20" Text="登录" />
-
-                                <TextBlock
-                                    Margin="0,16,0,8"
-                                    FontSize="14"
-                                    Text="账户" />
-                                <TextBox Text="{Binding Username}" />
-
-                                <TextBlock
-                                    Margin="0,16,0,8"
-                                    FontSize="14"
-                                    Text="密码" />
-                                <PasswordBox helper:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" />
-                                <Button
-                                    Margin="0,20,0,0"
-                                    Padding="22,8"
-                                    Command="{Binding event_LoginCommand}"
-                                    Content="登录"
-                                    Style="{StaticResource AccentButtonStyle}" />
-                                <TextBlock
-                                    Margin="0,16,0,0"
-                                    FontSize="14"
-                                    Foreground="Yellow"
-                                    Text="{Binding Reason, Mode=OneWay}"
-                                    TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Grid>
-                    </ScrollViewer>
+        Margin="24">
+        <Border
+            Margin="4"
+            Background="#4f222222"
+            CornerRadius="0">
+            <Border.Effect>
+                <BlurEffect Radius="100" RenderingBias="Performance" />
+            </Border.Effect>
+        </Border>
+        <Border CornerRadius="4" SnapsToDevicePixels="True">
+            <Border.Background>
+                <!--  Local file used  -->
+                <ImageBrush ImageSource="E:\Desktop\Photo\wallhaven-k7j8wq_1920x1080.png" Stretch="UniformToFill" />
+            </Border.Background>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Grid.Column="0"
+                    Width="250"
+                    Background="#99000000"
+                    CornerRadius="3,0,0,3"
+                    SnapsToDevicePixels="True">
                     <Grid>
-                        <ctrl:Loading
-                            Width="100"
-                            Height="100"
-                            FontSize="7"
-                            IsEnabled="{Binding event_LoginCommand.IsRunning}"
-                            Style="{StaticResource Default2}" />
+                        <ScrollViewer x:Name="fct" VerticalScrollBarVisibility="Auto">
+                            <Grid Margin="24,36,24,0" IsEnabled="{Binding event_LoginCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}">
+                                <FrameworkElement.Style>
+                                    <Style TargetType="Grid">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsEnabled" Value="True">
+                                                <Trigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                Storyboard.TargetProperty="Opacity"
+                                                                To="1"
+                                                                Duration="0:0:.25">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CircleEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.EnterActions>
+                                                <Trigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                Storyboard.TargetProperty="Opacity"
+                                                                To="0.6"
+                                                                Duration="0:0:.25">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CircleEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.ExitActions>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </FrameworkElement.Style>
+                                <StackPanel>
+
+                                    <TextBlock FontSize="20" Text="登录" />
+
+                                    <TextBlock
+                                        Margin="0,16,0,8"
+                                        FontSize="14"
+                                        Text="账户" />
+                                    <TextBox Text="{Binding Username}" />
+
+                                    <TextBlock
+                                        Margin="0,16,0,8"
+                                        FontSize="14"
+                                        Text="密码" />
+                                    <PasswordBox helper:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" />
+                                    <Button
+                                        Margin="0,20,0,0"
+                                        Padding="22,8"
+                                        Command="{Binding event_LoginCommand}"
+                                        Content="登录"
+                                        Style="{StaticResource AccentButtonStyle}" />
+                                    <TextBlock
+                                        Margin="0,16,0,0"
+                                        FontSize="14"
+                                        Foreground="Yellow"
+                                        Text="{Binding Reason, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </ScrollViewer>
+                        <Grid>
+                            <ctrl:Loading
+                                Width="100"
+                                Height="100"
+                                FontSize="7"
+                                IsEnabled="{Binding event_LoginCommand.IsRunning}"
+                                Style="{StaticResource Default2}" />
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Border>
-            <Button
-                Grid.Column="1"
-                Margin="0,16,16,0"
-                Padding="12"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                AutomationProperties.Name="关闭查看"
-                Command="{Binding event_CloseDialogCommand}"
-                Cursor="Hand"
-                ToolTip="关闭">
-                <Path
-                    Width="16"
-                    Height="16"
-                    Data="{StaticResource Awe.UI.Icons.Close}"
-                    Fill="Black"
-                    Stretch="Uniform" />
-            </Button>
-        </Grid>
-    </Border>
+                </Border>
+                <Button
+                    Grid.Column="1"
+                    Margin="0,16,16,0"
+                    Padding="12"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="关闭窗口"
+                    Command="{Binding event_CloseDialogCommand}"
+                    Cursor="Hand"
+                    ToolTip="关闭">
+                    <Path
+                        Width="16"
+                        Height="16"
+                        Data="{StaticResource Awe.UI.Icons.Close}"
+                        Fill="Black"
+                        Stretch="Uniform" />
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>

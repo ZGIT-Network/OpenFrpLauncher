@@ -49,7 +49,7 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                 }
 
-                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogOpennedSnapProperty, false);
+                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogOpennedProperty, false);
                 await Task.Delay(250);
                 wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogContentProperty,DependencyProperty.UnsetValue);
             }

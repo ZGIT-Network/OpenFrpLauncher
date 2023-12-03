@@ -107,7 +107,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 var tcs = new TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>();
 
-                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogOpennedSnapProperty, true);
+                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogOpennedProperty, true);
                 wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogContentProperty, new Dialog.LoginDialog
                 {
                     DialogFallback = tcs

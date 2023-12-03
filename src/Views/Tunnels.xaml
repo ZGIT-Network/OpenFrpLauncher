@@ -6,9 +6,11 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI" xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -39,7 +41,14 @@
             Text="隧道" />
         <Grid Grid.Row="1">
             <!--  这里应直接加载，不需要再次请求  -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer
+                helper:ScrollViewerBehavior.UseSmoothScroll="True"
+                helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                Focusable="False"
+                VerticalScrollBarVisibility="Auto"
+                VirtualizingPanel.CacheLength="2,2"
+                VirtualizingPanel.ScrollUnit="Item"
+                VirtualizingPanel.VirtualizationMode="Recycling">
                 <Grid>
                     <Grid Margin="28,0">
                         <ItemsControl
@@ -80,35 +89,64 @@
                                             </Style>
                                         </ContentControl.FocusVisualStyle>
                                         <Grid>
-                                            <Border
-                                                CornerRadius="3"
+                                            <Rectangle
+                                                Fill="{Binding Background, ElementName=cbg, Mode=OneWay}"
                                                 Opacity=".6"
-                                                RenderTransformOrigin=".5,.5">
-                                                <Border.RenderTransform>
-                                                    <ScaleTransform ScaleX=".96" ScaleY=".96" />
-                                                </Border.RenderTransform>
-                                                <Border.Effect>
+                                                RadiusX="3"
+                                                RadiusY="3"
+                                                RenderTransformOrigin=".5,.5"
+                                                Visibility="Collapsed">
+
+                                                <Rectangle.RenderTransform>
+                                                    <ScaleTransform ScaleX="0.98" ScaleY="0.98" />
+                                                </Rectangle.RenderTransform>
+                                                <Rectangle.Effect>
                                                     <BlurEffect Radius="25" />
-                                                </Border.Effect>
-                                                <Border.Background>
-                                                    <LinearGradientBrush StartPoint=".5,.10">
-                                                        <GradientStop Color="{DynamicResource Awe.UI.AccentLinearGradient.1}" />
-                                                        <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentLinearGradient.2}" />
-                                                    </LinearGradientBrush>
-                                                </Border.Background>
+                                                </Rectangle.Effect>
+
+                                            </Rectangle>
+                                            <Border x:Name="cbg" CornerRadius="3">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                <Setter Property="Background">
+                                                                    <Setter.Value>
+                                                                        <LinearGradientBrush StartPoint=".5,.10">
+                                                                            <GradientStop Color="{DynamicResource Awe.UI.AccentDarkLinearGradient.1}" />
+                                                                            <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentDarkLinearGradient.2}" />
+                                                                        </LinearGradientBrush>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                <Setter Property="Background">
+                                                                    <Setter.Value>
+                                                                        <LinearGradientBrush StartPoint=".8,.10">
+                                                                            <GradientStop Color="{DynamicResource Awe.UI.AccentLightLinearGradient.1}" />
+                                                                            <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentLightLinearGradient.2}" />
+                                                                        </LinearGradientBrush>
+                                                                    </Setter.Value>
+                                                                </Setter>
+
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
                                             </Border>
-                                            <Border CornerRadius="3">
-                                                <Border.Background>
-                                                    <LinearGradientBrush StartPoint=".5,.10">
-                                                        <GradientStop Color="{DynamicResource Awe.UI.AccentLinearGradient.1}" />
-                                                        <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentLinearGradient.2}" />
-                                                    </LinearGradientBrush>
-                                                </Border.Background>
-                                            </Border>
-                                            <Border
-                                                Background="#20000000"
-                                                CornerRadius="3"
-                                                TextElement.Foreground="White">
+                                            <Border Background="#20000000" CornerRadius="3">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                <Setter Property="TextElement.Foreground" Value="White" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                <Setter Property="TextElement.Foreground" Value="Black" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
                                                 <Grid Margin="20,20,22,20">
                                                     <Grid.RowDefinitions>
                                                         <RowDefinition Height="Auto" />
@@ -136,16 +174,39 @@
                                                             FontFamily="{StaticResource Montserrat}"
                                                             FontSize="14"
                                                             FontWeight="Medium"
-                                                            Foreground="#9fffffff"
-                                                            Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
+                                                            Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}">
+                                                            <FrameworkElement.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                            <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                            <Setter Property="TextElement.Foreground" Value="#9f000000" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </FrameworkElement.Style>
+                                                        </TextBlock>
                                                     </WrapPanel>
                                                     <!--  隧道附加属性  -->
                                                     <StackPanel
                                                         Grid.Row="1"
                                                         Grid.Column="0"
                                                         Margin="0,2,0,0"
-                                                        Orientation="Vertical"
-                                                        TextElement.Foreground="#8fffffff">
+                                                        Orientation="Vertical">
+                                                        <FrameworkElement.Style>
+                                                            <Style TargetType="StackPanel">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                        <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                        <Setter Property="TextElement.Foreground" Value="#8f000000" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </FrameworkElement.Style>
                                                         <WrapPanel>
                                                             <awe:VisibilityTranstion IsDisplay="{Binding UseEncryption, Mode=OneWay}">
                                                                 <TextBlock FontSize="14" Text="启用数据加密" />
@@ -204,33 +265,61 @@
                                                         Grid.Column="1"
                                                         VerticalAlignment="Center"
                                                         Orientation="Horizontal">
+                                                        <FrameworkElement.Style>
+                                                            <Style TargetType="StackPanel">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                        <Setter Property="TextElement.Foreground" Value="#ffffff" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                        <Setter Property="TextElement.Foreground" Value="#000000" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </FrameworkElement.Style>
                                                         <awe:Loading
                                                             Width="16"
                                                             Height="16"
                                                             Margin="8,0,8,0"
                                                             FontSize="2"
+                                                            Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
                                                             IsEnabled="{Binding IsEnabled, Converter={StaticResource NotEqualConverter}, ConverterParameter='True', ElementName=tg, Mode=OneWay}"
                                                             Style="{StaticResource Default2}" />
-                                                        <awe:ToggleSwitch x:Name="tg" VerticalAlignment="Center">
+                                                        <awe:ToggleSwitch
+                                                            x:Name="tg"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}">
+                                                            <FrameworkElement.Style>
+                                                                <Style BasedOn="{StaticResource DefaultToggleSwitchStyle}" TargetType="awe:ToggleSwitch">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                            <Setter Property="BorderBrush" Value="#A7A7A7" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                            <Setter Property="BorderBrush" Value="#979797" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </FrameworkElement.Style>
                                                             <awe:ToggleSwitch.IsChecked>
                                                                 <MultiBinding
                                                                     Converter="{StaticResource CollectionContainConverter}"
                                                                     ConverterParameter="{x:Type sys:Int32}"
                                                                     Mode="OneTime">
                                                                     <Binding
+                                                                        ElementName="ic"
                                                                         Mode="OneWay"
-                                                                        Path="DataContext.OnlineTunnels"
-                                                                        Source="{x:Reference Name=ic}" />
+                                                                        Path="DataContext.OnlineTunnels" />
                                                                     <Binding Mode="OneWay" Path="Id" />
                                                                 </MultiBinding>
                                                             </awe:ToggleSwitch.IsChecked>
                                                             <behavior:Interaction.Triggers>
                                                                 <behavior:EventTrigger EventName="Loaded">
-                                                                    <behavior:InvokeCommandAction Command="{Binding DataContext.event_SwitchLoadedCommand, Source={x:Reference ic}, Mode=OneWay}" PassEventArgsToCommand="True" />
+                                                                    <behavior:InvokeCommandAction Command="{Binding DataContext.event_SwitchLoadedCommand, ElementName=ic, Mode=OneWay}" PassEventArgsToCommand="True" />
                                                                 </behavior:EventTrigger>
                                                             </behavior:Interaction.Triggers>
                                                             <awe:ToggleSwitch.LayoutTransform>
-                                                                <ScaleTransform ScaleX=".8" ScaleY=".8" />
+                                                                <ScaleTransform ScaleX="1" ScaleY="1" />
                                                             </awe:ToggleSwitch.LayoutTransform>
                                                         </awe:ToggleSwitch>
                                                     </StackPanel>
@@ -240,53 +329,72 @@
                                                         Grid.Column="0"
                                                         Grid.ColumnSpan="2">
                                                         <TextBlock
+                                                            VerticalAlignment="Bottom"
                                                             FontSize="14"
-                                                            FontWeight="Medium"
-                                                            Foreground="#6fffffff">
+                                                            FontWeight="Medium">
+                                                            <FrameworkElement.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                            <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                            <Setter Property="TextElement.Foreground" Value="#8f000000" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </FrameworkElement.Style>
                                                             <Run FontFamily="{StaticResource Montserrat}" Text="{Binding Type, Mode=OneWay}" />
                                                             <Run FontFamily="{StaticResource Montserrat}" Text="{Binding NodeId, StringFormat='#{0}', Mode=OneWay}" />
                                                             <Run Text="{Binding NodeName, Mode=OneWay}" />
                                                         </TextBlock>
-                                                        <awe:NavigationButton
-                                                            Margin="0,0,2,0"
+                                                        <StackPanel
+                                                            Margin="0,0,-4,-4"
                                                             HorizontalAlignment="Right"
-                                                            Command="{Binding DataContext.event_DisplayMenuCommand, Source={x:Reference ic}, Mode=OneWay}"
-                                                            Cursor="Hand"
-                                                            IsEnabled="{Binding IsEnabled, ElementName=tg, Mode=OneWay}"
-                                                            ToolTip="更多">
-                                                            <awe:NavigationButton.CommandParameter>
-                                                                <ContextMenu Width="145" TextElement.Foreground="White">
-                                                                    <MenuItem Header="编辑隧道">
-                                                                        <MenuItem.Icon>
-                                                                            <Path
-                                                                                Width="16"
-                                                                                Height="16"
-                                                                                Margin="0,0,8,0"
-                                                                                Data="{DynamicResource Awe.UI.Icons.Edit}"
-                                                                                Fill="White"
-                                                                                Stretch="Uniform" />
-                                                                        </MenuItem.Icon>
-                                                                    </MenuItem>
-                                                                    <MenuItem Header="删除隧道">
-                                                                        <MenuItem.Icon>
-                                                                            <Path
-                                                                                Width="16"
-                                                                                Height="16"
-                                                                                Margin="0,0,8,0"
-                                                                                Data="{DynamicResource Awe.UI.Icons.Delete}"
-                                                                                Fill="White"
-                                                                                Stretch="Uniform" />
-                                                                        </MenuItem.Icon>
-                                                                    </MenuItem>
-                                                                </ContextMenu>
-                                                            </awe:NavigationButton.CommandParameter>
-                                                            <Path
-                                                                Width="16"
-                                                                Height="16"
-                                                                Data="{DynamicResource Awe.UI.Icons.More}"
-                                                                Fill="White"
-                                                                Stretch="Uniform" />
-                                                        </awe:NavigationButton>
+                                                            Orientation="Horizontal">
+                                                            <FrameworkElement.Style>
+                                                                <Style TargetType="StackPanel">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                            <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                            <Setter Property="TextElement.Foreground" Value="#8f000000" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </FrameworkElement.Style>
+                                                            <awe:NavigationButton
+                                                                Margin="8,0,4,0"
+                                                                Padding="8"
+                                                                AutomationProperties.Name="{Binding Name, StringFormat='删除隧道 {0}', Mode=OneWay}"
+                                                                Command="{Binding DataContext.event_DeleteTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
+                                                                CommandParameter="{Binding Mode=OneWay}"
+                                                                Cursor="Hand"
+                                                                ToolTip="删除隧道">
+
+                                                                <Path
+                                                                    Width="16"
+                                                                    Height="16"
+                                                                    Data="{DynamicResource Awe.UI.Icons.Delete}"
+                                                                    Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
+                                                                    Stretch="Uniform" />
+                                                            </awe:NavigationButton>
+                                                            <awe:NavigationButton
+                                                                Padding="8"
+                                                                AutomationProperties.Name="{Binding Name, StringFormat='编辑隧道 {0}', Mode=OneWay}"
+                                                                Command="{Binding DataContext.event_EditTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
+                                                                CommandParameter="{Binding Mode=OneWay}"
+                                                                Cursor="Hand"
+                                                                ToolTip="编辑隧道">
+                                                                <Path
+                                                                    Width="16"
+                                                                    Height="16"
+                                                                    Data="{DynamicResource Awe.UI.Icons.Edit}"
+                                                                    Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
+                                                                    Stretch="Uniform" />
+                                                            </awe:NavigationButton>
+                                                        </StackPanel>
                                                     </Grid>
                                                 </Grid>
                                             </Border>

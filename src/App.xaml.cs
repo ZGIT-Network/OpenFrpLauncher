@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Markup;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 
@@ -59,9 +60,27 @@ namespace OpenFrp.Launcher
         }
         private static void ConfigureWindow()
         {
-            var wind = new MainWindow();
+            var wind = App.Current?.MainWindow;
+            if (App.Current?.MainWindow is null)
+            {
+                wind = new MainWindow();
 
-            wind.Show();
+                int cc = 0;
+                wind.KeyDown += (e, s) =>
+                {
+                    if (s.Key is System.Windows.Input.Key.F12)
+                    {
+                        cc += 1;
+                        if (cc is 2)
+                        {
+                            ConfigureWindow();
+
+                            cc = 0;
+                        }
+                    }
+                };
+                wind.Show();
+            }
 
             if (Awe.UI.Win32.UserUxtheme.IsSupportDarkMode)
             {
@@ -70,16 +89,18 @@ namespace OpenFrp.Launcher
                 Awe.UI.Win32.UserUxtheme.ShouldSystemUseDarkMode();
             }
 
+            if (wind is null) { App.Current?.Shutdown(); return; }
+
             var handle = new WindowInteropHelper(wind).EnsureHandle();
 
             if (Environment.OSVersion.Version.Major >= 10)
             {
-                int backdropPvAttribute = (int)Awe.UI.Win32.DwmApi.DWMSBT.DWMSBT_TABBEDWINDOW;
+                int backdropPvAttribute = (int)Awe.UI.Win32.DwmApi.DWMSBT.DWMSBT_MAINWINDOW;
                 Awe.UI.Win32.DwmApi.DwmSetWindowAttribute(handle, Awe.UI.Win32.DwmApi.DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE,
                     ref backdropPvAttribute,
                     Marshal.SizeOf(typeof(int)));
 
-                var pvAttribute = (int)Awe.UI.Win32.DwmApi.PvAttribute.Enable;
+                var pvAttribute = (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable;
                 var dwAttribute = Awe.UI.Win32.DwmApi.DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE;
 
                 if (Environment.OSVersion.Version < new Version(10, 0, 18985))
@@ -91,6 +112,7 @@ namespace OpenFrp.Launcher
                     ref pvAttribute,
                     Marshal.SizeOf(typeof(int)));
 
+                
 
                 if (vk is not 0)
                 {
@@ -101,6 +123,12 @@ namespace OpenFrp.Launcher
                     wind.Width += 1;
                     wind.Width -= 1;
                 }
+
+                wind.SetCurrentValue(Window.ForegroundProperty, new System.Windows.Media.SolidColorBrush
+                {
+                    Color = pvAttribute is (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable ? Colors.Black : Colors.White
+                });
+                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, pvAttribute is (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable);
 
             }
 
@@ -148,7 +176,7 @@ namespace OpenFrp.Launcher
 
                 return (default, ex);
             }
-            return (default, default);
+            // return (default, default);
         }
 
 
