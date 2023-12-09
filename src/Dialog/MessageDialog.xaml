@@ -14,8 +14,21 @@
     d:DesignHeight="768"
     d:DesignWidth="1366"
     d:Foreground="White"
-    Foreground="White"
     mc:Ignorable="d">
+    <UserControl.Style>
+        <Style TargetType="local:MessageDialog">
+            <Style.Triggers>
+                <Trigger Property="ui:WindowsHelper.UseLightMode" Value="True">
+                    <Setter Property="Foreground" Value="Black" />
+                    <Setter Property="TextElement.Foreground" Value="Black" />
+                </Trigger>
+                <Trigger Property="ui:WindowsHelper.UseLightMode" Value="False">
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="TextElement.Foreground" Value="White" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Style>
     <UserControl.Resources>
         <conv:ObjectToTypeConverter x:Key="ObjectToTypeConverter" />
         <conv:EqualConverter x:Key="EqualConverter" />
@@ -24,8 +37,8 @@
     <UserControl.Template>
         <ControlTemplate TargetType="local:MessageDialog">
             <Grid
-                MaxWidth="800"
-                MaxHeight="450"
+                MaxWidth="{DynamicResource DialogMaxWidth}"
+                MaxHeight="{DynamicResource DialogMaxHeight}"
                 Margin="36">
                 <Border
                     Margin="4"
@@ -41,8 +54,8 @@
                             <Setter Property="Background" Value="White" />
                             <Setter Property="TextElement.Foreground" Value="Black" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding MainWindow.(ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=local:MessageDialog}, Mode=OneWay}" Value="False">
-                                    <Setter Property="Background" Value="#222222" />
+                                <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=local:MessageDialog}, Mode=OneWay}" Value="False">
+                                    <Setter Property="Background" Value="#FF1A1A1A" />
                                     <Setter Property="BorderBrush" Value="#1affffff" />
                                     <Setter Property="TextElement.Foreground" Value="White" />
                                     <Setter Property="BorderThickness" Value="1" />
@@ -89,12 +102,17 @@
                             </Grid>
                             <Grid Grid.Row="1">
                                 <ScrollViewer
-                                    Margin="0,4,1,0"
+                                    x:Name="sv"
+                                    Margin="-8,2,-9,-8"
                                     ui:ScrollViewerBehavior.UseSmoothScroll="True"
-                                    ui:WindowsHelper.UseLightMode="{Binding MainWindow.(ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                    ui:WindowsHelper.UseLightMode="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                     FocusVisualStyle="{x:Null}"
                                     VerticalScrollBarVisibility="Auto">
-                                    <ContentPresenter Focusable="False" TextElement.Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=Border}, Mode=OneWay}" />
+                                    <ContentPresenter
+                                        x:Name="svc"
+                                        Margin="8,4,4,8"
+                                        Focusable="False"
+                                        TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=local:MessageDialog}, Mode=OneWay}" />
                                 </ScrollViewer>
                             </Grid>
 
@@ -155,7 +173,7 @@
                                 <awe:VisibilityTranstion IsDisplay="{TemplateBinding CloseButtonText, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}">
                                     <Button
                                         x:Name="close"
-                                        ui:WindowsHelper.UseLightMode="{Binding MainWindow.(ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                        ui:WindowsHelper.UseLightMode="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                         Content="{TemplateBinding CloseButtonText}"
                                         IsEnabled="{TemplateBinding IsLoading,
                                                                     Converter={StaticResource EqualConverter},
@@ -167,6 +185,11 @@
                     </Grid>
                 </Border>
             </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger SourceName="sv" Property="ComputedVerticalScrollBarVisibility" Value="Visible">
+                    <Setter TargetName="svc" Property="Margin" Value="8,4,10,8" />
+                </Trigger>
+            </ControlTemplate.Triggers>
         </ControlTemplate>
     </UserControl.Template>
 </UserControl>

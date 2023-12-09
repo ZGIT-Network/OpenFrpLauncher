@@ -31,9 +31,9 @@
         <converter:EqualConverter x:Key="EqualConverter" />
     </FrameworkElement.Resources>
     <Grid
-        MaxWidth="800"
-        MaxHeight="450"
-        Margin="24">
+        MaxWidth="{DynamicResource DialogMaxWidth}"
+        MaxHeight="{DynamicResource DialogMaxHeight}"
+        Margin="56">
         <Border
             Margin="4"
             Background="#4f222222"
@@ -45,7 +45,7 @@
         <Border CornerRadius="4" SnapsToDevicePixels="True">
             <Border.Background>
                 <!--  Local file used  -->
-                <ImageBrush ImageSource="E:\Desktop\Photo\wallhaven-k7j8wq_1920x1080.png" Stretch="UniformToFill" />
+                <ImageBrush ImageSource="E:\Desktop\Desktop\UIAssets\style2.png" Stretch="UniformToFill" />
             </Border.Background>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -137,7 +137,7 @@
                         </Grid>
                     </Grid>
                 </Border>
-                <Button
+                <ctrl:NavigationButton
                     Grid.Column="1"
                     Margin="0,16,16,0"
                     Padding="12"
@@ -151,9 +151,9 @@
                         Width="16"
                         Height="16"
                         Data="{StaticResource Awe.UI.Icons.Close}"
-                        Fill="Black"
+                        Fill="White"
                         Stretch="Uniform" />
-                </Button>
+                </ctrl:NavigationButton>
             </Grid>
         </Border>
     </Grid>

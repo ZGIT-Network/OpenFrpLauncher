@@ -6,9 +6,10 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI" xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
@@ -33,27 +34,29 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="37*" />
+            <RowDefinition Height="55*"/>
         </Grid.RowDefinitions>
         <TextBlock
             Margin="28,48,28,4"
             FontSize="24"
             Text="隧道" />
-        <Grid Grid.Row="1">
+        <Grid Margin="0,82,0,0" Grid.RowSpan="3">
             <!--  这里应直接加载，不需要再次请求  -->
             <ScrollViewer
                 helper:ScrollViewerBehavior.UseSmoothScroll="True"
                 helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                 Focusable="False"
+                IsEnabled="{Binding event_RefreshUserTunnelCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
                 VerticalScrollBarVisibility="Auto"
                 VirtualizingPanel.CacheLength="2,2"
                 VirtualizingPanel.ScrollUnit="Item"
                 VirtualizingPanel.VirtualizationMode="Recycling">
                 <Grid>
-                    <Grid Margin="28,0">
+                    <Grid Margin="28,0,16,0">
                         <ItemsControl
                             x:Name="ic"
-                            Margin="0,12,0,14"
+                            Margin="0,12,0,12"
                             Focusable="False"
                             ItemsSource="{Binding UserTunnels, Mode=OneWay}">
                             <ItemsControl.ItemsPanel>
@@ -67,6 +70,36 @@
                                         Width="300"
                                         Height="168.75"
                                         Margin="0,0,12,12">
+                                        <ContentControl.RenderTransform>
+                                            <TranslateTransform X="0" Y="0" />
+                                        </ContentControl.RenderTransform>
+                                        <behavior:Interaction.Triggers>
+                                            <behavior:EventTrigger EventName="Loaded">
+                                                <behavior:ControlStoryboardAction ControlStoryboardOption="Play">
+                                                    <behavior:ControlStoryboardAction.Storyboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                Storyboard.Target="{Binding RelativeSource={RelativeSource AncestorType=ContentControl}, Mode=OneWay}"
+                                                                Storyboard.TargetProperty="Opacity"
+                                                                From="0"
+                                                                To="1"
+                                                                Duration="0:0:.35" />
+                                                            <DoubleAnimation
+                                                                FillBehavior="Stop"
+                                                                Storyboard.Target="{Binding RelativeSource={RelativeSource AncestorType=ContentControl}, Mode=OneWay}"
+                                                                Storyboard.TargetProperty="RenderTransform.Y"
+                                                                From="20"
+                                                                To="0"
+                                                                Duration="0:0:.35">
+                                                                <DoubleAnimation.EasingFunction>
+                                                                    <CircleEase EasingMode="EaseOut" />
+                                                                </DoubleAnimation.EasingFunction>
+                                                            </DoubleAnimation>
+                                                        </Storyboard>
+                                                    </behavior:ControlStoryboardAction.Storyboard>
+                                                </behavior:ControlStoryboardAction>
+                                            </behavior:EventTrigger>
+                                        </behavior:Interaction.Triggers>
                                         <ContentControl.FocusVisualStyle>
                                             <Style>
                                                 <Setter Property="Control.Template">
@@ -89,22 +122,27 @@
                                             </Style>
                                         </ContentControl.FocusVisualStyle>
                                         <Grid>
-                                            <Rectangle
-                                                Fill="{Binding Background, ElementName=cbg, Mode=OneWay}"
-                                                Opacity=".6"
-                                                RadiusX="3"
-                                                RadiusY="3"
-                                                RenderTransformOrigin=".5,.5"
-                                                Visibility="Collapsed">
+                                            <!--
 
-                                                <Rectangle.RenderTransform>
-                                                    <ScaleTransform ScaleX="0.98" ScaleY="0.98" />
-                                                </Rectangle.RenderTransform>
-                                                <Rectangle.Effect>
-                                                    <BlurEffect Radius="25" />
-                                                </Rectangle.Effect>
+                                                Shadow :: 因为太过影响性能，未使用。
 
-                                            </Rectangle>
+                                                <Rectangle
+                                                    Fill="{Binding Background, ElementName=cbg, Mode=OneWay}"
+                                                    Opacity=".6"
+                                                    RadiusX="3"
+                                                    RadiusY="3"
+                                                    RenderTransformOrigin=".5,.5"
+                                                    Visibility="Visible">
+
+                                                    <Rectangle.RenderTransform>
+                                                        <ScaleTransform ScaleX="0.98" ScaleY="0.98" />
+                                                    </Rectangle.RenderTransform>
+                                                    <Rectangle.Effect>
+                                                        <BlurEffect Radius="25" />
+                                                    </Rectangle.Effect>
+
+                                                </Rectangle>
+                                            -->
                                             <Border x:Name="cbg" CornerRadius="3">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
@@ -134,7 +172,7 @@
                                                     </Style>
                                                 </Border.Style>
                                             </Border>
-                                            <Border Background="#20000000" CornerRadius="3">
+                                            <Border Background="#00000000" CornerRadius="3">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Style.Triggers>
@@ -371,6 +409,7 @@
                                                                 Command="{Binding DataContext.event_DeleteTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
                                                                 CommandParameter="{Binding Mode=OneWay}"
                                                                 Cursor="Hand"
+                                                                IsEnabled="{Binding IsChecked, ElementName=tg, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
                                                                 ToolTip="删除隧道">
 
                                                                 <Path
@@ -386,6 +425,7 @@
                                                                 Command="{Binding DataContext.event_EditTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
                                                                 CommandParameter="{Binding Mode=OneWay}"
                                                                 Cursor="Hand"
+                                                                IsEnabled="{Binding IsChecked, ElementName=tg, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static sys:Boolean.TrueString}, Mode=OneWay}"
                                                                 ToolTip="编辑隧道">
                                                                 <Path
                                                                     Width="16"

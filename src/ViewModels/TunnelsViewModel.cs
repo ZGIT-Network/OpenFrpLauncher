@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using OpenFrp.Launcher.Controls;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace OpenFrp.Launcher.ViewModels
@@ -47,6 +48,23 @@ namespace OpenFrp.Launcher.ViewModels
                     return mv.UserTunnels;
                 }
                 throw new NullReferenceException();
+            }
+            set
+            {
+                if (App.Current?.MainWindow is { DataContext: ViewModels.MainViewModel mv,Dispatcher: var dis })
+                {
+                    dis.Invoke(async () =>
+                    {
+                        mv.UserTunnels.Clear();
+
+                        foreach (var item in value)
+                        {
+                            mv.UserTunnels.Add(item);
+
+                            await Task.Delay(20);
+                        }
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                }
             }
         }
 
@@ -127,12 +145,9 @@ namespace OpenFrp.Launcher.ViewModels
                                 else
                                 {
                                     OnlineTunnels.Remove(tunnel.Id);
-
-                                    Debug.WriteLine("addd");
                                 }
                             }
                         }
-
                         await Task.Delay(250);
                         sw.IsEnabled = true;
                     };
@@ -145,7 +160,81 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_EditTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
         {
-            
+            var dialog = new Dialog.MessageDialog
+            {
+                Title = new TextBlock()
+                {
+                    Inlines =
+                    {
+                        "编辑隧道",
+                        CreateObject<Run>((run) =>
+                        {
+                            run.SetResourceReference(Run.FontFamilyProperty, "Montserrat");
+                            run.FontWeight = FontWeight.FromOpenTypeWeight(500);
+                        }, $" #{tunnel.Id} {tunnel.Name} ")
+                    },
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    FontSize = 24
+                },
+                PrimaryButtonText = "编辑数据",
+                PrimaryButtonIcon = CreateObject<Path>(x =>
+                {
+                    x.SetResourceReference(Path.DataProperty, "Awe.UI.Icons.Edit");
+                    x.SetBinding(Path.FillProperty, new Binding
+                    {
+                        Mode = BindingMode.OneWay,
+                        RelativeSource = RelativeSource.Self,
+                        Path = new PropertyPath(TextElement.ForegroundProperty)
+                    });
+                    //x.Fill = new SolidColorBrush { Color = Colors.Red };
+                    x.Stretch = Stretch.Uniform;
+                    x.Margin = new Thickness(0, 0, 4, 0);
+                    x.Width = x.Height = 16;
+                }),
+                CloseButtonText = "取消",
+                Content = new Controls.TunnelConfig()
+                {
+                    TunnelData = tunnel.CloneUserTunnel(),
+                    IsCreateMode = false,
+                },
+                InvokeAction = async (dialog, cancellationToken) =>
+                {
+                    if (dialog.Content is TunnelConfig { TunnelData: var wt })
+                    {
+                        var resp = await Service.Net.OpenFrp.EditUserTunnel(wt);
+
+                        if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null)
+                        {
+                            await this.event_RefreshUserTunnelCommand.ExecuteAsync(null);
+
+                            return true;
+                        }
+                        // message :::
+                        if (dialog.Description is TextBlock tb)
+                        {
+                            tb.Text = resp.Message;
+                        }
+                    }
+                    return false;
+                },
+            };
+            dialog.Description = CreateObject<TextBlock>((x) =>
+            {
+                x.SetBinding(TextBlock.ForegroundProperty, new Binding
+                {
+                    Mode = BindingMode.OneWay,
+                    Converter = new Awe.UI.Converter.EqualConverter()
+                    {
+                        TrueResult = Color.FromRgb(230, 0, 0),
+                        FalseResult = Colors.Yellow
+                    },
+
+                    Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
+                    Source = dialog
+                });
+            });
+
+            var result = await dialog.ShowDialog();
         }
 
         [RelayCommand]
@@ -167,18 +256,6 @@ namespace OpenFrp.Launcher.ViewModels
                     TextTrimming = TextTrimming.CharacterEllipsis,
                     FontSize = 24
                 },
-                Content = CreateObject<TextBlock>((tb) =>
-                {
-                    tb.FontSize = 16;
-                    tb.TextWrapping = TextWrapping.Wrap;
-                    tb.Text = "确定要删除该隧道吗？会失去真的很久很久(是永久)哦。";
-                    tb.SetBinding(TextBlock.ForegroundProperty, new Binding
-                    {
-                        Mode = BindingMode.OneWay,
-                        RelativeSource = RelativeSource.TemplatedParent,
-                        Path = new PropertyPath(TextElement.ForegroundProperty)
-                    });
-                }),
                 PrimaryButtonText = "确定删除",
                 PrimaryButtonIcon = CreateObject<Path>(x =>
                 {
@@ -211,13 +288,57 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                     return false;
                 },
-                Description = CreateObject<TextBlock>()
-            };
+             };
+
+            dialog.Description = CreateObject<TextBlock>((x) =>
+            {
+                x.SetBinding(TextBlock.ForegroundProperty, new Binding
+                {
+                    Mode = BindingMode.OneWay,
+                    Converter = new Awe.UI.Converter.EqualConverter()
+                    {
+                        TrueResult = Color.FromRgb(230,0,0),
+                        FalseResult = Colors.Yellow
+                    },
+                    
+                    Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
+                    Source = dialog
+                });
+            });
+            dialog.Content = CreateObject<TextBlock>((tb) =>
+            {
+                tb.FontSize = 16;
+                tb.TextWrapping = TextWrapping.Wrap;
+                tb.Text = "确定要删除该隧道吗？会失去真的很久很久(是永久)哦。";
+                tb.SetBinding(TextBlock.ForegroundProperty, new Binding
+                {
+                    Mode = BindingMode.OneWay,
+                    Source = dialog,
+                    Path = new PropertyPath(Dialog.MessageDialog.ForegroundProperty)
+                });
+            });
 
             var result = await dialog.ShowDialog();
             if (result is Dialog.MessageDialogResult.Primary)
             {
                 UserTunnels.Remove(tunnel);
+            }
+        }
+
+        [RelayCommand]
+        private async Task @event_RefreshUserTunnel()
+        {
+            var resp = await Service.Net.OpenFrp.GetUserTunnels();
+
+            if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { List: var list})
+            {
+                UserTunnels = new(list);
+                
+                OnPropertyChanged(nameof(UserTunnels));
+            }
+            else
+            {
+                global::System.Diagnostics.Debugger.Break();
             }
         }
 

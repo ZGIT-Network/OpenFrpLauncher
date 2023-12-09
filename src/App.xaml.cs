@@ -58,6 +58,8 @@ namespace OpenFrp.Launcher
                 WeakReferenceMessenger.Default.Send(data.TunnelId.ToArray());
             }
         }
+        private static bool _issfff;
+
         private static void ConfigureWindow()
         {
             var wind = App.Current?.MainWindow;
@@ -95,12 +97,15 @@ namespace OpenFrp.Launcher
 
             if (Environment.OSVersion.Version.Major >= 10)
             {
-                int backdropPvAttribute = (int)Awe.UI.Win32.DwmApi.DWMSBT.DWMSBT_MAINWINDOW;
+                int backdropPvAttribute = (int)Awe.UI.Win32.DwmApi.DWMSBT.DWMSBT_TABBEDWINDOW;
                 Awe.UI.Win32.DwmApi.DwmSetWindowAttribute(handle, Awe.UI.Win32.DwmApi.DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE,
                     ref backdropPvAttribute,
                     Marshal.SizeOf(typeof(int)));
 
-                var pvAttribute = (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable;
+                var pvAttribute = _issfff ? (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable : (int)Awe.UI.Win32.DwmApi.PvAttribute.Enable;
+
+                _issfff = !_issfff;
+
                 var dwAttribute = Awe.UI.Win32.DwmApi.DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE;
 
                 if (Environment.OSVersion.Version < new Version(10, 0, 18985))
