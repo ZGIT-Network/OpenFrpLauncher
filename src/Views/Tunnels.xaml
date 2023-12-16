@@ -35,13 +35,13 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="37*" />
-            <RowDefinition Height="55*"/>
+            <RowDefinition Height="55*" />
         </Grid.RowDefinitions>
         <TextBlock
             Margin="28,48,28,4"
             FontSize="24"
             Text="隧道" />
-        <Grid Margin="0,82,0,0" Grid.RowSpan="3">
+        <Grid Grid.RowSpan="3" Margin="0,82,0,0">
             <!--  这里应直接加载，不需要再次请求  -->
             <ScrollViewer
                 helper:ScrollViewerBehavior.UseSmoothScroll="True"
@@ -303,18 +303,7 @@
                                                         Grid.Column="1"
                                                         VerticalAlignment="Center"
                                                         Orientation="Horizontal">
-                                                        <FrameworkElement.Style>
-                                                            <Style TargetType="StackPanel">
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                        <Setter Property="TextElement.Foreground" Value="#ffffff" />
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                        <Setter Property="TextElement.Foreground" Value="#000000" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </FrameworkElement.Style>
+
                                                         <awe:Loading
                                                             Width="16"
                                                             Height="16"
@@ -326,19 +315,9 @@
                                                         <awe:ToggleSwitch
                                                             x:Name="tg"
                                                             VerticalAlignment="Center"
+                                                            ui:WindowsHelper.LightModeRebind="True"
                                                             Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}">
-                                                            <FrameworkElement.Style>
-                                                                <Style BasedOn="{StaticResource DefaultToggleSwitchStyle}" TargetType="awe:ToggleSwitch">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                            <Setter Property="BorderBrush" Value="#A7A7A7" />
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                            <Setter Property="BorderBrush" Value="#979797" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </FrameworkElement.Style>
+
                                                             <awe:ToggleSwitch.IsChecked>
                                                                 <MultiBinding
                                                                     Converter="{StaticResource CollectionContainConverter}"

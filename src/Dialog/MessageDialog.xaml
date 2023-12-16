@@ -91,6 +91,7 @@
                                     VerticalAlignment="Top"
                                     AutomationProperties.Name="关闭窗口"
                                     Cursor="Hand"
+                                    TabIndex="0"
                                     ToolTip="关闭窗口">
                                     <Path
                                         Width="16"
@@ -103,7 +104,7 @@
                             <Grid Grid.Row="1">
                                 <ScrollViewer
                                     x:Name="sv"
-                                    Margin="-8,2,-9,-8"
+                                    Margin="-8,2,-8,-8"
                                     ui:ScrollViewerBehavior.UseSmoothScroll="True"
                                     ui:WindowsHelper.UseLightMode="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                     FocusVisualStyle="{x:Null}"
@@ -168,7 +169,8 @@
                                         IsEnabled="{TemplateBinding IsLoading,
                                                                     Converter={StaticResource EqualConverter},
                                                                     ConverterParameter={x:Static sys:Boolean.FalseString}}"
-                                        Style="{StaticResource AccentButtonStyle}" />
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        TabIndex="25" />
                                 </awe:VisibilityTranstion>
                                 <awe:VisibilityTranstion IsDisplay="{TemplateBinding CloseButtonText, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}">
                                     <Button
@@ -177,7 +179,8 @@
                                         Content="{TemplateBinding CloseButtonText}"
                                         IsEnabled="{TemplateBinding IsLoading,
                                                                     Converter={StaticResource EqualConverter},
-                                                                    ConverterParameter={x:Static sys:Boolean.FalseString}}" />
+                                                                    ConverterParameter={x:Static sys:Boolean.FalseString}}"
+                                        TabIndex="26" />
                                 </awe:VisibilityTranstion>
                                 <!--<Button Margin="8,0,0,0" Content="update Now" />-->
                             </StackPanel>

@@ -117,7 +117,7 @@ namespace OpenFrp.Launcher
                     ref pvAttribute,
                     Marshal.SizeOf(typeof(int)));
 
-                
+                Awe.UI.WindowCommand.ChangeThemePerferences(pvAttribute is (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable);
 
                 if (vk is not 0)
                 {

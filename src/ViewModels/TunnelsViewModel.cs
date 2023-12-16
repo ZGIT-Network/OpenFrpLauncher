@@ -199,8 +199,15 @@ namespace OpenFrp.Launcher.ViewModels
                 },
                 InvokeAction = async (dialog, cancellationToken) =>
                 {
-                    if (dialog.Content is TunnelConfig { TunnelData: var wt })
+                    if (dialog.Content is TunnelConfig { } tConfig && tConfig.GetConfig() is { } wt)
                     {
+                        if (wt.Name is null || wt.Name.Length is 0)
+                        {
+                            wt.Name = $"ofPr_{Guid.NewGuid()}".Substring(0, 12);
+
+                            tConfig.UpdateTunnelName();
+                        }
+                        
                         var resp = await Service.Net.OpenFrp.EditUserTunnel(wt);
 
                         if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null)
@@ -220,18 +227,7 @@ namespace OpenFrp.Launcher.ViewModels
             };
             dialog.Description = CreateObject<TextBlock>((x) =>
             {
-                x.SetBinding(TextBlock.ForegroundProperty, new Binding
-                {
-                    Mode = BindingMode.OneWay,
-                    Converter = new Awe.UI.Converter.EqualConverter()
-                    {
-                        TrueResult = Color.FromRgb(230, 0, 0),
-                        FalseResult = Colors.Yellow
-                    },
-
-                    Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
-                    Source = dialog
-                });
+                x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
             });
 
             var result = await dialog.ShowDialog();
@@ -292,18 +288,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             dialog.Description = CreateObject<TextBlock>((x) =>
             {
-                x.SetBinding(TextBlock.ForegroundProperty, new Binding
-                {
-                    Mode = BindingMode.OneWay,
-                    Converter = new Awe.UI.Converter.EqualConverter()
-                    {
-                        TrueResult = Color.FromRgb(230,0,0),
-                        FalseResult = Colors.Yellow
-                    },
-                    
-                    Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
-                    Source = dialog
-                });
+                x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
             });
             dialog.Content = CreateObject<TextBlock>((tb) =>
             {

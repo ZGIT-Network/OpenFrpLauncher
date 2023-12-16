@@ -140,6 +140,10 @@ namespace OpenFrp.Launcher.Dialog
             {
                 btn2.Command = new RelayCommand(() =>
                 {
+                    if (OutTaskCompletionSource.Task.Status is TaskStatus.RanToCompletion)
+                    {
+                        return;
+                    }
                     OutTaskCompletionSource.SetResult(MessageDialogResult.Close);
                 });
             }
@@ -149,6 +153,10 @@ namespace OpenFrp.Launcher.Dialog
                 btn3.Command = new RelayCommand(() =>
                 {
                     CancellationTokenSource.Cancel();
+                    if (OutTaskCompletionSource.Task.Status is TaskStatus.RanToCompletion)
+                    {
+                        return;
+                    }
                     OutTaskCompletionSource.SetResult(MessageDialogResult.CloseDialog);
                 });
             }
