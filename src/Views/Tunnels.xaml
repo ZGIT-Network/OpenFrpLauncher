@@ -34,95 +34,139 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="37*" />
-            <RowDefinition Height="55*" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock
+        <StackPanel
+            Grid.Row="0"
             Margin="28,48,28,4"
-            FontSize="24"
-            Text="隧道" />
-        <Grid Grid.RowSpan="3" Margin="0,82,0,0">
-            <!--  这里应直接加载，不需要再次请求  -->
-            <ScrollViewer
-                helper:ScrollViewerBehavior.UseSmoothScroll="True"
-                helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
-                Focusable="False"
-                IsEnabled="{Binding event_RefreshUserTunnelCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
-                VerticalScrollBarVisibility="Auto"
-                VirtualizingPanel.CacheLength="2,2"
-                VirtualizingPanel.ScrollUnit="Item"
-                VirtualizingPanel.VirtualizationMode="Recycling">
+            Orientation="Horizontal">
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="24"
+                Text="隧道" />
+            <awe:VisibilityTranstion>
+                <awe:VisibilityTranstion.IsDisplay>
+                    <MultiBinding Converter="{StaticResource BothConverter}">
+                        <Binding
+                            Converter="{StaticResource NotEqualConverter}"
+                            ConverterParameter="0"
+                            Mode="OneWay"
+                            Path="UserTunnels.Count" />
+                        <Binding Mode="OneWay" Path="RequireDisplayData" />
+                    </MultiBinding>
+                </awe:VisibilityTranstion.IsDisplay>
+                <awe:NavigationButton
+                    Margin="12,4.5,0,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding event_ToCreateTunnelPageCommand}"
+                    Cursor="Hand"
+                    ToolTip="创建隧道">
+                    <Path
+                        Width="16"
+                        Height="16"
+                        Data="{StaticResource Awe.UI.Icons.Add}"
+                        Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}"
+                        Stretch="Uniform" />
+                </awe:NavigationButton>
+            </awe:VisibilityTranstion>
+        </StackPanel>
+        <Grid Grid.Row="1">
+            <awe:VisibilityTranstion IsDisplay="{Binding TunnelResponse, Converter={StaticResource EqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}">
                 <Grid>
-                    <Grid Margin="28,0,16,0">
-                        <ItemsControl
-                            x:Name="ic"
-                            Margin="0,12,0,12"
-                            Focusable="False"
-                            ItemsSource="{Binding UserTunnels, Mode=OneWay}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <ContentControl
-                                        Width="300"
-                                        Height="168.75"
-                                        Margin="0,0,12,12">
-                                        <ContentControl.RenderTransform>
-                                            <TranslateTransform X="0" Y="0" />
-                                        </ContentControl.RenderTransform>
-                                        <behavior:Interaction.Triggers>
-                                            <behavior:EventTrigger EventName="Loaded">
-                                                <behavior:ControlStoryboardAction ControlStoryboardOption="Play">
-                                                    <behavior:ControlStoryboardAction.Storyboard>
-                                                        <Storyboard>
-                                                            <DoubleAnimation
-                                                                Storyboard.Target="{Binding RelativeSource={RelativeSource AncestorType=ContentControl}, Mode=OneWay}"
-                                                                Storyboard.TargetProperty="Opacity"
-                                                                From="0"
-                                                                To="1"
-                                                                Duration="0:0:.35" />
-                                                            <DoubleAnimation
-                                                                FillBehavior="Stop"
-                                                                Storyboard.Target="{Binding RelativeSource={RelativeSource AncestorType=ContentControl}, Mode=OneWay}"
-                                                                Storyboard.TargetProperty="RenderTransform.Y"
-                                                                From="20"
-                                                                To="0"
-                                                                Duration="0:0:.35">
-                                                                <DoubleAnimation.EasingFunction>
-                                                                    <CircleEase EasingMode="EaseOut" />
-                                                                </DoubleAnimation.EasingFunction>
-                                                            </DoubleAnimation>
-                                                        </Storyboard>
-                                                    </behavior:ControlStoryboardAction.Storyboard>
-                                                </behavior:ControlStoryboardAction>
-                                            </behavior:EventTrigger>
-                                        </behavior:Interaction.Triggers>
-                                        <ContentControl.FocusVisualStyle>
-                                            <Style>
-                                                <Setter Property="Control.Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate>
-                                                            <Border
-                                                                Margin="-4"
-                                                                BorderBrush="White"
-                                                                BorderThickness="2"
-                                                                CornerRadius="3"
-                                                                SnapsToDevicePixels="True">
-                                                                <Border
-                                                                    BorderBrush="Black"
-                                                                    BorderThickness="2"
-                                                                    CornerRadius="3" />
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </ContentControl.FocusVisualStyle>
-                                        <Grid>
-                                            <!--
+                    <awe:VisibilityTranstion IsDisplay="{Binding RequireDisplayData, Mode=OneWay}">
+                        <Grid>
+                            <!--  容器  -->
+                            <awe:VisibilityTranstion IsDisplay="{Binding UserTunnels.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}">
+                                <ScrollViewer
+                                    helper:ScrollViewerBehavior.UseSmoothScroll="True"
+                                    helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                                    Focusable="False"
+                                    IsEnabled="{Binding event_RefreshUserTunnelCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
+                                    VerticalScrollBarVisibility="Auto"
+                                    VirtualizingPanel.CacheLength="2,2"
+                                    VirtualizingPanel.ScrollUnit="Item"
+                                    VirtualizingPanel.VirtualizationMode="Recycling">
+                                    <Grid>
+                                        <Grid Margin="28,0,16,0">
+                                            <ItemsControl
+                                                x:Name="ic"
+                                                Margin="0,12,0,12"
+                                                Focusable="False"
+                                                ItemsSource="{Binding UserTunnels, Mode=OneWay}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemContainerStyle>
+                                                    <Style TargetType="FrameworkElement">
+                                                        <Setter Property="IsEnabled" Value="{Binding IsEnabled, Mode=OneWay}" />
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsEnabled" Value="False">
+                                                                <Setter Property="Opacity" Value=".6" />
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ItemsControl.ItemContainerStyle>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <ContentControl
+                                                            Width="300"
+                                                            Height="168.75"
+                                                            Margin="0,0,12,12">
+                                                            <ContentControl.RenderTransform>
+                                                                <TranslateTransform X="0" Y="0" />
+                                                            </ContentControl.RenderTransform>
+                                                            <behavior:Interaction.Triggers>
+                                                                <behavior:EventTrigger EventName="Loaded">
+                                                                    <behavior:ControlStoryboardAction ControlStoryboardOption="Play">
+                                                                        <behavior:ControlStoryboardAction.Storyboard>
+                                                                            <Storyboard>
+                                                                                <DoubleAnimation
+                                                                                    Storyboard.Target="{Binding RelativeSource={RelativeSource AncestorType=ContentControl}, Mode=OneWay}"
+                                                                                    Storyboard.TargetProperty="Opacity"
+                                                                                    From="0"
+                                                                                    To="1"
+                                                                                    Duration="0:0:.35" />
+                                                                                <DoubleAnimation
+                                                                                    FillBehavior="Stop"
+                                                                                    Storyboard.Target="{Binding RelativeSource={RelativeSource AncestorType=ContentControl}, Mode=OneWay}"
+                                                                                    Storyboard.TargetProperty="RenderTransform.Y"
+                                                                                    From="20"
+                                                                                    To="0"
+                                                                                    Duration="0:0:.35">
+                                                                                    <DoubleAnimation.EasingFunction>
+                                                                                        <CircleEase EasingMode="EaseOut" />
+                                                                                    </DoubleAnimation.EasingFunction>
+                                                                                </DoubleAnimation>
+                                                                            </Storyboard>
+                                                                        </behavior:ControlStoryboardAction.Storyboard>
+                                                                    </behavior:ControlStoryboardAction>
+                                                                </behavior:EventTrigger>
+                                                            </behavior:Interaction.Triggers>
+                                                            <ContentControl.FocusVisualStyle>
+                                                                <Style>
+                                                                    <Setter Property="Control.Template">
+                                                                        <Setter.Value>
+                                                                            <ControlTemplate>
+                                                                                <Border
+                                                                                    Margin="-4"
+                                                                                    BorderBrush="White"
+                                                                                    BorderThickness="2"
+                                                                                    CornerRadius="3"
+                                                                                    SnapsToDevicePixels="True">
+                                                                                    <Border
+                                                                                        BorderBrush="Black"
+                                                                                        BorderThickness="2"
+                                                                                        CornerRadius="3" />
+                                                                                </Border>
+                                                                            </ControlTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Style>
+                                                            </ContentControl.FocusVisualStyle>
+                                                            <Grid>
+                                                                <!--
 
                                                 Shadow :: 因为太过影响性能，未使用。
 
@@ -142,291 +186,468 @@
                                                     </Rectangle.Effect>
 
                                                 </Rectangle>
-                                            -->
-                                            <Border x:Name="cbg" CornerRadius="3">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                <Setter Property="Background">
-                                                                    <Setter.Value>
-                                                                        <LinearGradientBrush StartPoint=".5,.10">
-                                                                            <GradientStop Color="{DynamicResource Awe.UI.AccentDarkLinearGradient.1}" />
-                                                                            <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentDarkLinearGradient.2}" />
-                                                                        </LinearGradientBrush>
-                                                                    </Setter.Value>
-                                                                </Setter>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                <Setter Property="Background">
-                                                                    <Setter.Value>
-                                                                        <LinearGradientBrush StartPoint=".8,.10">
-                                                                            <GradientStop Color="{DynamicResource Awe.UI.AccentLightLinearGradient.1}" />
-                                                                            <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentLightLinearGradient.2}" />
-                                                                        </LinearGradientBrush>
-                                                                    </Setter.Value>
-                                                                </Setter>
+                                                                -->
+                                                                <Border x:Name="cbg" CornerRadius="3">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                                    <Setter Property="Background">
+                                                                                        <Setter.Value>
+                                                                                            <LinearGradientBrush StartPoint=".5,.10">
+                                                                                                <GradientStop Color="{DynamicResource Awe.UI.AccentDarkLinearGradient.1}" />
+                                                                                                <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentDarkLinearGradient.2}" />
+                                                                                            </LinearGradientBrush>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                                    <Setter Property="Background">
+                                                                                        <Setter.Value>
+                                                                                            <LinearGradientBrush StartPoint=".8,.10">
+                                                                                                <GradientStop Color="{DynamicResource Awe.UI.AccentLightLinearGradient.1}" />
+                                                                                                <GradientStop Offset="1" Color="{DynamicResource Awe.UI.AccentLightLinearGradient.2}" />
+                                                                                            </LinearGradientBrush>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
 
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                            </Border>
-                                            <Border Background="#00000000" CornerRadius="3">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                <Setter Property="TextElement.Foreground" Value="White" />
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                <Setter Property="TextElement.Foreground" Value="Black" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <Grid Margin="20,20,22,20">
-                                                    <Grid.RowDefinitions>
-                                                        <RowDefinition Height="Auto" />
-                                                        <RowDefinition Height="*" />
-                                                        <RowDefinition Height="Auto" />
-                                                    </Grid.RowDefinitions>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <!--  标题 + ID  -->
-                                                    <WrapPanel
-                                                        Grid.Row="0"
-                                                        Grid.Column="0"
-                                                        VerticalAlignment="Top"
-                                                        Orientation="Horizontal">
-                                                        <TextBlock
-                                                            Margin="0,0,2,0"
-                                                            FontFamily="{StaticResource Montserrat}"
-                                                            FontSize="20"
-                                                            FontWeight="Medium"
-                                                            Text="{Binding Name, Mode=OneWay}" />
-                                                        <TextBlock
-                                                            VerticalAlignment="Bottom"
-                                                            FontFamily="{StaticResource Montserrat}"
-                                                            FontSize="14"
-                                                            FontWeight="Medium"
-                                                            Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}">
-                                                            <FrameworkElement.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                            <Setter Property="TextElement.Foreground" Value="#8fffffff" />
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                            <Setter Property="TextElement.Foreground" Value="#9f000000" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </FrameworkElement.Style>
-                                                        </TextBlock>
-                                                    </WrapPanel>
-                                                    <!--  隧道附加属性  -->
-                                                    <StackPanel
-                                                        Grid.Row="1"
-                                                        Grid.Column="0"
-                                                        Margin="0,2,0,0"
-                                                        Orientation="Vertical">
-                                                        <FrameworkElement.Style>
-                                                            <Style TargetType="StackPanel">
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                        <Setter Property="TextElement.Foreground" Value="#8fffffff" />
-                                                                    </DataTrigger>
-                                                                    <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                        <Setter Property="TextElement.Foreground" Value="#8f000000" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </FrameworkElement.Style>
-                                                        <WrapPanel>
-                                                            <awe:VisibilityTranstion IsDisplay="{Binding UseEncryption, Mode=OneWay}">
-                                                                <TextBlock FontSize="14" Text="启用数据加密" />
-                                                            </awe:VisibilityTranstion>
-                                                            <awe:VisibilityTranstion>
-                                                                <awe:VisibilityTranstion.IsDisplay>
-                                                                    <MultiBinding Converter="{StaticResource BothConverter}">
-                                                                        <Binding Mode="OneWay" Path="UseCompression" />
-                                                                        <Binding Mode="OneWay" Path="UseEncryption" />
-                                                                    </MultiBinding>
-                                                                </awe:VisibilityTranstion.IsDisplay>
-                                                                <TextBlock FontSize="14" Text="," />
-                                                            </awe:VisibilityTranstion>
-                                                            <awe:VisibilityTranstion IsDisplay="{Binding UseCompression, Mode=OneWay}">
-                                                                <TextBlock FontSize="14" Text="启用数据压缩" />
-                                                            </awe:VisibilityTranstion>
-                                                        </WrapPanel>
-                                                        <WrapPanel>
-                                                            <awe:VisibilityTranstion IsDisplay="{Binding RemotePort, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}">
-                                                                <TextBlock
-                                                                    FontFamily="{StaticResource Montserrat}"
-                                                                    FontSize="14"
-                                                                    FontWeight="Medium"
-                                                                    Text="{Binding RemotePort, StringFormat='{}{0} → ', Mode=OneWay}" />
-                                                            </awe:VisibilityTranstion>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                </Border>
+                                                                <Border Background="#00000000" CornerRadius="3">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                                    <Setter Property="TextElement.Foreground" Value="White" />
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                                    <Setter Property="TextElement.Foreground" Value="Black" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <Grid Margin="20,20,22,20">
+                                                                        <Grid.RowDefinitions>
+                                                                            <RowDefinition Height="Auto" />
+                                                                            <RowDefinition Height="*" />
+                                                                            <RowDefinition Height="Auto" />
+                                                                        </Grid.RowDefinitions>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <!--  标题 + ID  -->
+                                                                        <WrapPanel
+                                                                            Grid.Row="0"
+                                                                            Grid.Column="0"
+                                                                            VerticalAlignment="Top"
+                                                                            Orientation="Horizontal">
+                                                                            <TextBlock
+                                                                                Margin="0,0,2,0"
+                                                                                FontFamily="{StaticResource Montserrat}"
+                                                                                FontSize="20"
+                                                                                FontWeight="Medium"
+                                                                                Text="{Binding Name, Mode=OneWay}" />
+                                                                            <TextBlock
+                                                                                VerticalAlignment="Bottom"
+                                                                                FontFamily="{StaticResource Montserrat}"
+                                                                                FontSize="14"
+                                                                                FontWeight="Medium"
+                                                                                Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}">
+                                                                                <FrameworkElement.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                                                <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                                            </DataTrigger>
+                                                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                                                <Setter Property="TextElement.Foreground" Value="#9f000000" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </FrameworkElement.Style>
+                                                                            </TextBlock>
+                                                                        </WrapPanel>
+                                                                        <!--  隧道附加属性  -->
+                                                                        <StackPanel
+                                                                            Grid.Row="1"
+                                                                            Grid.Column="0"
+                                                                            Margin="0,2,0,0"
+                                                                            Orientation="Vertical">
+                                                                            <FrameworkElement.Style>
+                                                                                <Style TargetType="StackPanel">
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                                            <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                                            <Setter Property="TextElement.Foreground" Value="#8f000000" />
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </FrameworkElement.Style>
+                                                                            <WrapPanel TextOptions.TextHintingMode="Animated">
+                                                                                <awe:VisibilityTranstion IsDisplay="{Binding UseEncryption, Mode=OneWay}">
+                                                                                    <TextBlock FontSize="14" Text="启用数据加密" />
+                                                                                </awe:VisibilityTranstion>
+                                                                                <awe:VisibilityTranstion>
+                                                                                    <awe:VisibilityTranstion.IsDisplay>
+                                                                                        <MultiBinding Converter="{StaticResource BothConverter}">
+                                                                                            <Binding Mode="OneWay" Path="UseCompression" />
+                                                                                            <Binding Mode="OneWay" Path="UseEncryption" />
+                                                                                        </MultiBinding>
+                                                                                    </awe:VisibilityTranstion.IsDisplay>
+                                                                                    <TextBlock FontSize="14" Text="," />
+                                                                                </awe:VisibilityTranstion>
+                                                                                <awe:VisibilityTranstion IsDisplay="{Binding UseCompression, Mode=OneWay}">
+                                                                                    <TextBlock FontSize="14" Text="启用数据压缩" />
+                                                                                </awe:VisibilityTranstion>
+                                                                                <awe:VisibilityTranstion IsDisplay="{Binding IsEnabled, Converter={StaticResource NotEqualConverter}, ConverterParameter='True', Mode=OneWay}">
+                                                                                    <TextBlock
+                                                                                        FontSize="14"
+                                                                                        Foreground="{DynamicResource WarningOrErrorBrush}"
+                                                                                        Text="已禁用(在网页端启用)" />
+                                                                                </awe:VisibilityTranstion>
+                                                                            </WrapPanel>
+                                                                            <WrapPanel>
+                                                                                <awe:VisibilityTranstion IsDisplay="{Binding RemotePort, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}">
+                                                                                    <TextBlock
+                                                                                        FontFamily="{StaticResource Montserrat}"
+                                                                                        FontSize="14"
+                                                                                        FontWeight="Medium"
+                                                                                        Text="{Binding RemotePort, StringFormat='{}{0} → ', Mode=OneWay}" />
+                                                                                </awe:VisibilityTranstion>
 
-                                                            <TextBlock
-                                                                FontFamily="{StaticResource Montserrat}"
-                                                                FontSize="14"
-                                                                FontWeight="Medium">
-                                                                <TextBlock.ToolTip>
-                                                                    <TextBlock MaxWidth="200" TextWrapping="Wrap">
-                                                                        <Run FontWeight="Bold">
-                                                                            <MultiBinding StringFormat="本地服务 {0}:{1}">
-                                                                                <Binding Mode="OneWay" Path="Host" />
-                                                                                <Binding Mode="OneWay" Path="Port" />
-                                                                            </MultiBinding>
-                                                                        </Run>
-                                                                        <LineBreak />
-                                                                        <Run Text="FRPC 需要使用该链接，若该服务未开启(比如 Minecraft 服务器)，则客户端无法进入" />
-                                                                    </TextBlock>
-                                                                </TextBlock.ToolTip>
-                                                                <TextBlock.Text>
-                                                                    <MultiBinding StringFormat="{}{0}:{1}">
-                                                                        <Binding Mode="OneWay" Path="Host" />
-                                                                        <Binding Mode="OneWay" Path="Port" />
-                                                                    </MultiBinding>
-                                                                </TextBlock.Text>
-                                                            </TextBlock>
-                                                        </WrapPanel>
-                                                    </StackPanel>
+                                                                                <TextBlock
+                                                                                    FontFamily="{StaticResource Montserrat}"
+                                                                                    FontSize="14"
+                                                                                    FontWeight="Medium">
+                                                                                    <TextBlock.ToolTip>
+                                                                                        <TextBlock MaxWidth="200" TextWrapping="Wrap">
+                                                                                            <Run FontWeight="Bold">
+                                                                                                <MultiBinding StringFormat="本地服务 {0}:{1}">
+                                                                                                    <Binding Mode="OneWay" Path="Host" />
+                                                                                                    <Binding Mode="OneWay" Path="Port" />
+                                                                                                </MultiBinding>
+                                                                                            </Run>
+                                                                                            <LineBreak />
+                                                                                            <Run Text="FRPC 需要使用该链接，若该服务未开启(比如 Minecraft 服务器)，则客户端无法进入" />
+                                                                                        </TextBlock>
+                                                                                    </TextBlock.ToolTip>
+                                                                                    <TextBlock.Text>
+                                                                                        <MultiBinding StringFormat="{}{0}:{1}">
+                                                                                            <Binding Mode="OneWay" Path="Host" />
+                                                                                            <Binding Mode="OneWay" Path="Port" />
+                                                                                        </MultiBinding>
+                                                                                    </TextBlock.Text>
+                                                                                </TextBlock>
+                                                                            </WrapPanel>
+                                                                        </StackPanel>
 
-                                                    <!--  操作  -->
-                                                    <StackPanel
-                                                        Grid.Row="0"
-                                                        Grid.Column="1"
-                                                        VerticalAlignment="Center"
-                                                        Orientation="Horizontal">
+                                                                        <!--  操作  -->
+                                                                        <StackPanel
+                                                                            Grid.Row="0"
+                                                                            Grid.Column="1"
+                                                                            VerticalAlignment="Center"
+                                                                            Orientation="Horizontal">
 
-                                                        <awe:Loading
-                                                            Width="16"
-                                                            Height="16"
-                                                            Margin="8,0,8,0"
-                                                            FontSize="2"
-                                                            Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
-                                                            IsEnabled="{Binding IsEnabled, Converter={StaticResource NotEqualConverter}, ConverterParameter='True', ElementName=tg, Mode=OneWay}"
-                                                            Style="{StaticResource Default2}" />
-                                                        <awe:ToggleSwitch
-                                                            x:Name="tg"
-                                                            VerticalAlignment="Center"
-                                                            ui:WindowsHelper.LightModeRebind="True"
-                                                            Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}">
+                                                                            <awe:Loading
+                                                                                Width="16"
+                                                                                Height="16"
+                                                                                Margin="8,0,8,0"
+                                                                                FontSize="2"
+                                                                                Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
+                                                                                IsEnabled="{Binding IsEnabled, Converter={StaticResource NotEqualConverter}, ConverterParameter='True', ElementName=tg, Mode=OneWay}"
+                                                                                Style="{StaticResource Default2}" />
+                                                                            <awe:ToggleSwitch
+                                                                                x:Name="tg"
+                                                                                VerticalAlignment="Center"
+                                                                                ui:WindowsHelper.LightModeRebind="True"
+                                                                                Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}">
 
-                                                            <awe:ToggleSwitch.IsChecked>
-                                                                <MultiBinding
-                                                                    Converter="{StaticResource CollectionContainConverter}"
-                                                                    ConverterParameter="{x:Type sys:Int32}"
-                                                                    Mode="OneTime">
-                                                                    <Binding
-                                                                        ElementName="ic"
-                                                                        Mode="OneWay"
-                                                                        Path="DataContext.OnlineTunnels" />
-                                                                    <Binding Mode="OneWay" Path="Id" />
-                                                                </MultiBinding>
-                                                            </awe:ToggleSwitch.IsChecked>
-                                                            <behavior:Interaction.Triggers>
-                                                                <behavior:EventTrigger EventName="Loaded">
-                                                                    <behavior:InvokeCommandAction Command="{Binding DataContext.event_SwitchLoadedCommand, ElementName=ic, Mode=OneWay}" PassEventArgsToCommand="True" />
-                                                                </behavior:EventTrigger>
-                                                            </behavior:Interaction.Triggers>
-                                                            <awe:ToggleSwitch.LayoutTransform>
-                                                                <ScaleTransform ScaleX="1" ScaleY="1" />
-                                                            </awe:ToggleSwitch.LayoutTransform>
-                                                        </awe:ToggleSwitch>
-                                                    </StackPanel>
+                                                                                <awe:ToggleSwitch.IsChecked>
+                                                                                    <MultiBinding
+                                                                                        Converter="{StaticResource CollectionContainConverter}"
+                                                                                        ConverterParameter="{x:Type sys:Int32}"
+                                                                                        Mode="OneTime">
+                                                                                        <Binding
+                                                                                            ElementName="ic"
+                                                                                            Mode="OneWay"
+                                                                                            Path="DataContext.OnlineTunnels" />
+                                                                                        <Binding Mode="OneWay" Path="Id" />
+                                                                                    </MultiBinding>
+                                                                                </awe:ToggleSwitch.IsChecked>
+                                                                                <behavior:Interaction.Triggers>
+                                                                                    <behavior:EventTrigger EventName="Loaded">
+                                                                                        <behavior:InvokeCommandAction Command="{Binding DataContext.event_SwitchLoadedCommand, ElementName=ic, Mode=OneWay}" PassEventArgsToCommand="True" />
+                                                                                    </behavior:EventTrigger>
+                                                                                </behavior:Interaction.Triggers>
+                                                                                <awe:ToggleSwitch.LayoutTransform>
+                                                                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                                                                </awe:ToggleSwitch.LayoutTransform>
+                                                                            </awe:ToggleSwitch>
+                                                                        </StackPanel>
 
-                                                    <Grid
-                                                        Grid.Row="2"
-                                                        Grid.Column="0"
-                                                        Grid.ColumnSpan="2">
-                                                        <TextBlock
-                                                            VerticalAlignment="Bottom"
-                                                            FontSize="14"
-                                                            FontWeight="Medium">
-                                                            <FrameworkElement.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                            <Setter Property="TextElement.Foreground" Value="#8fffffff" />
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                            <Setter Property="TextElement.Foreground" Value="#8f000000" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </FrameworkElement.Style>
-                                                            <Run FontFamily="{StaticResource Montserrat}" Text="{Binding Type, Mode=OneWay}" />
-                                                            <Run FontFamily="{StaticResource Montserrat}" Text="{Binding NodeId, StringFormat='#{0}', Mode=OneWay}" />
-                                                            <Run Text="{Binding NodeName, Mode=OneWay}" />
-                                                        </TextBlock>
-                                                        <StackPanel
-                                                            Margin="0,0,-4,-4"
-                                                            HorizontalAlignment="Right"
-                                                            Orientation="Horizontal">
-                                                            <FrameworkElement.Style>
-                                                                <Style TargetType="StackPanel">
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
-                                                                            <Setter Property="TextElement.Foreground" Value="#8fffffff" />
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
-                                                                            <Setter Property="TextElement.Foreground" Value="#8f000000" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </FrameworkElement.Style>
-                                                            <awe:NavigationButton
-                                                                Margin="8,0,4,0"
-                                                                Padding="8"
-                                                                AutomationProperties.Name="{Binding Name, StringFormat='删除隧道 {0}', Mode=OneWay}"
-                                                                Command="{Binding DataContext.event_DeleteTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
-                                                                CommandParameter="{Binding Mode=OneWay}"
-                                                                Cursor="Hand"
-                                                                IsEnabled="{Binding IsChecked, ElementName=tg, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
-                                                                ToolTip="删除隧道">
+                                                                        <Grid
+                                                                            Grid.Row="2"
+                                                                            Grid.Column="0"
+                                                                            Grid.ColumnSpan="2">
+                                                                            <TextBlock
+                                                                                VerticalAlignment="Bottom"
+                                                                                FontSize="14"
+                                                                                FontWeight="Medium"
+                                                                                TextOptions.TextHintingMode="Animated">
+                                                                                <FrameworkElement.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                                                <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                                            </DataTrigger>
+                                                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                                                <Setter Property="TextElement.Foreground" Value="#8f000000" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </FrameworkElement.Style>
+                                                                                <Run FontFamily="{StaticResource Montserrat}" Text="{Binding Type, Mode=OneWay}" />
+                                                                                <Run FontFamily="{StaticResource Montserrat}" Text="{Binding NodeId, StringFormat='#{0}', Mode=OneWay}" />
+                                                                                <Run Text="{Binding NodeName, Mode=OneWay}" />
+                                                                            </TextBlock>
+                                                                            <StackPanel
+                                                                                Margin="0,0,-4,-4"
+                                                                                HorizontalAlignment="Right"
+                                                                                Orientation="Horizontal">
+                                                                                <FrameworkElement.Style>
+                                                                                    <Style TargetType="StackPanel">
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="False">
+                                                                                                <Setter Property="TextElement.Foreground" Value="#8fffffff" />
+                                                                                            </DataTrigger>
+                                                                                            <DataTrigger Binding="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" Value="True">
+                                                                                                <Setter Property="TextElement.Foreground" Value="#8f000000" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </FrameworkElement.Style>
+                                                                                <awe:NavigationButton
+                                                                                    Margin="8,0,4,0"
+                                                                                    Padding="8"
+                                                                                    AutomationProperties.Name="{Binding Name, StringFormat='删除隧道 {0}', Mode=OneWay}"
+                                                                                    Command="{Binding DataContext.event_DeleteTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
+                                                                                    CommandParameter="{Binding Mode=OneWay}"
+                                                                                    Cursor="Hand"
+                                                                                    IsEnabled="{Binding IsChecked, ElementName=tg, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
+                                                                                    ToolTip="删除隧道">
 
-                                                                <Path
-                                                                    Width="16"
-                                                                    Height="16"
-                                                                    Data="{DynamicResource Awe.UI.Icons.Delete}"
-                                                                    Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
-                                                                    Stretch="Uniform" />
-                                                            </awe:NavigationButton>
-                                                            <awe:NavigationButton
-                                                                Padding="8"
-                                                                AutomationProperties.Name="{Binding Name, StringFormat='编辑隧道 {0}', Mode=OneWay}"
-                                                                Command="{Binding DataContext.event_EditTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
-                                                                CommandParameter="{Binding Mode=OneWay}"
-                                                                Cursor="Hand"
-                                                                IsEnabled="{Binding IsChecked, ElementName=tg, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static sys:Boolean.TrueString}, Mode=OneWay}"
-                                                                ToolTip="编辑隧道">
-                                                                <Path
-                                                                    Width="16"
-                                                                    Height="16"
-                                                                    Data="{DynamicResource Awe.UI.Icons.Edit}"
-                                                                    Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
-                                                                    Stretch="Uniform" />
-                                                            </awe:NavigationButton>
-                                                        </StackPanel>
-                                                    </Grid>
-                                                </Grid>
-                                            </Border>
+                                                                                    <Path
+                                                                                        Width="16"
+                                                                                        Height="16"
+                                                                                        Data="{DynamicResource Awe.UI.Icons.Delete}"
+                                                                                        Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
+                                                                                        Stretch="Uniform" />
+                                                                                </awe:NavigationButton>
+                                                                                <awe:NavigationButton
+                                                                                    Padding="8"
+                                                                                    AutomationProperties.Name="{Binding Name, StringFormat='编辑隧道 {0}', Mode=OneWay}"
+                                                                                    Command="{Binding DataContext.event_EditTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
+                                                                                    CommandParameter="{Binding Mode=OneWay}"
+                                                                                    Cursor="Hand"
+                                                                                    IsEnabled="{Binding IsChecked, ElementName=tg, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static sys:Boolean.TrueString}, Mode=OneWay}"
+                                                                                    ToolTip="编辑隧道">
+                                                                                    <Path
+                                                                                        Width="16"
+                                                                                        Height="16"
+                                                                                        Data="{DynamicResource Awe.UI.Icons.Edit}"
+                                                                                        Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
+                                                                                        Stretch="Uniform" />
+                                                                                </awe:NavigationButton>
+                                                                            </StackPanel>
+                                                                        </Grid>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </Grid>
+                                                        </ContentControl>
+
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </Grid>
-                                    </ContentControl>
+                                    </Grid>
+                                </ScrollViewer>
+                            </awe:VisibilityTranstion>
+                            <awe:VisibilityTranstion IsDisplay="{Binding UserTunnels.Count, Converter={StaticResource EqualConverter}, ConverterParameter='0', Mode=OneWay}">
+                                <ScrollViewer
+                                    Margin="0,32,0,0"
+                                    helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                                    ui:ScrollViewerBehavior.UseSmoothScroll="True"
+                                    Focusable="False"
+                                    VerticalScrollBarVisibility="Auto"
+                                    VirtualizingPanel.CacheLength="2,2"
+                                    VirtualizingPanel.ScrollUnit="Item"
+                                    VirtualizingPanel.VirtualizationMode="Recycling">
+                                    <StackPanel
+                                        Margin="36,32,36,64"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        TextOptions.TextHintingMode="Animated">
+                                        <Image
+                                            Width="120"
+                                            HorizontalAlignment="Left"
+                                            Source="E:\Desktop\Desktop\UIAssets\UI_EmotionIcon69.png" />
+                                        <TextBlock
+                                            Margin="0,0,0,16"
+                                            FontFamily="{StaticResource Awe.UI.DisplayFont}"
+                                            TextWrapping="Wrap">
+                                            <Run FontSize="24" Text="你还没有隧道呢" />
+                                            <LineBreak />
+                                            <Run
+                                                FontSize="16"
+                                                Foreground="{DynamicResource DescriptionForeground2}"
+                                                Text="点击下方&quot;创建&quot;按钮创建新隧道，或前往网页端创建新隧道。创建后你的隧道将在这里显示。" />
+                                            <LineBreak />
+                                            <Run
+                                                FontSize="16"
+                                                Foreground="{DynamicResource DescriptionForeground2}"
+                                                Text="若已有隧道，请点击下方&quot;刷新&quot;按钮。" />
+                                        </TextBlock>
+                                        <WrapPanel>
 
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Grid>
+                                            <Button
+                                                Margin="0,0,8,4"
+                                                Command="{Binding event_ToCreateTunnelPageCommand}"
+                                                Content="创建隧道"
+                                                Style="{StaticResource AccentButtonStyle}">
+                                                <ui:ControlHelper.Icon>
+                                                    <Path
+                                                        Width="16"
+                                                        Height="16"
+                                                        Margin="0,0,6,0"
+                                                        Data="{StaticResource Awe.UI.Icons.Add}"
+                                                        Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}"
+                                                        Stretch="Uniform" />
+                                                </ui:ControlHelper.Icon>
+                                            </Button>
+                                            <Button
+                                                Margin="0,0,8,4"
+                                                ui:WindowsHelper.LightModeRebind="True"
+                                                Command="{Binding event_RefreshUserTunnelCommand}"
+                                                Content="刷新隧道">
+                                                <ui:ControlHelper.Icon>
+                                                    <Path
+                                                        Width="16"
+                                                        Height="16"
+                                                        Margin="0,0,6,0"
+                                                        Data="{StaticResource Awe.UI.Icons.Refresh}"
+                                                        Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}"
+                                                        Stretch="Uniform" />
+                                                </ui:ControlHelper.Icon>
+                                            </Button>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </awe:VisibilityTranstion>
+                        </Grid>
+                    </awe:VisibilityTranstion>
+                    <!--  加载  -->
+                    <awe:VisibilityTranstion IsDisplay="{Binding RequireDisplayData, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}">
+                        <Grid Background="Transparent">
+                            <awe:Loading
+                                FontSize="10"
+                                Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=local:Tunnels}, Mode=OneWay}"
+                                IsEnabled="{Binding RequireDisplayData, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}"
+                                Style="{StaticResource Default2}" />
+                        </Grid>
+                    </awe:VisibilityTranstion>
                 </Grid>
-            </ScrollViewer>
-        </Grid>
+            </awe:VisibilityTranstion>
+            <!--  这里应直接加载，不需要再次请求  -->
+            <awe:VisibilityTranstion IsDisplay="{Binding TunnelResponse, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}">
+                <ScrollViewer
+                    Margin="0,32,0,0"
+                    helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+                    ui:ScrollViewerBehavior.UseSmoothScroll="True"
+                    Focusable="False"
+                    VerticalScrollBarVisibility="Auto"
+                    VirtualizingPanel.CacheLength="2,2"
+                    VirtualizingPanel.ScrollUnit="Item"
+                    VirtualizingPanel.VirtualizationMode="Recycling">
+                    <StackPanel
+                        Margin="36,32,36,64"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        TextOptions.TextHintingMode="Animated">
+                        <Image
+                            Width="120"
+                            HorizontalAlignment="Left"
+                            Source="E:\Desktop\Desktop\UIAssets\UI_EmotionIcon69.png" />
+                        <TextBlock
+                            Margin="0,0,0,16"
+                            FontFamily="{StaticResource Awe.UI.DisplayFont}"
+                            TextWrapping="Wrap">
+                            <Run FontSize="24" Text="{Binding TunnelResponse.Exception.Message, Mode=OneWay}" />
+                            <LineBreak />
+                            <Run
+                                FontSize="16"
+                                Foreground="{DynamicResource DescriptionForeground2}"
+                                Text="若您有正在运行的隧道，将会在下方显示。" />
+                            <LineBreak />
+                            <Run
+                                FontSize="16"
+                                Foreground="{DynamicResource DescriptionForeground2}"
+                                Text="请尝试点击&quot;重新加载&quot;按钮，加载成功后可显示更详细的信息。" />
+                            <LineBreak />
+                            <Run
+                                FontSize="16"
+                                Foreground="{DynamicResource DescriptionForeground2}"
+                                Text="若仍无法加载，请将错误信息提供给开发者。" />
+                        </TextBlock>
+                        <WrapPanel>
+                            <WrapPanel.Resources>
+                                <converter:EqualConverter
+                                    x:Key="EqualConverterForButton"
+                                    FalseResult="隐藏错误"
+                                    TrueResult="查看错误" />
+                            </WrapPanel.Resources>
+                            <Button
+                                Margin="0,0,8,4"
+                                Command="{Binding event_RefreshUserTunnelCommand}"
+                                Content="重新加载"
+                                Style="{StaticResource AccentButtonStyle}">
+                                <ui:ControlHelper.Icon>
+                                    <Path
+                                        Width="16"
+                                        Height="16"
+                                        Margin="0,0,6,0"
+                                        Data="{StaticResource Awe.UI.Icons.Refresh}"
+                                        Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}"
+                                        Stretch="Uniform" />
+                                </ui:ControlHelper.Icon>
+                            </Button>
+                            <Button
+                                Margin="0,0,8,4"
+                                Command="{Binding event_ChangeVisibilityForExceptionCommand}"
+                                Content="{Binding DisplayError, Converter={StaticResource EqualConverterForButton}, ConverterParameter='False', Mode=OneWay}" />
+                        </WrapPanel>
+                        <awe:VisibilityTranstion IsDisplay="{Binding DisplayError, Mode=OneWay}">
+                            <awe:SelectableTextBlock
+                                Margin="0,16,0,0"
+                                FontSize="14"
+                                Text="{Binding TunnelResponse.Exception}"
+                                TextWrapping="Wrap" />
+                        </awe:VisibilityTranstion>
+                        <TextBlock
+                            Margin="0,36,0,16"
+                            FontFamily="{StaticResource Awe.UI.DisplayFont}"
+                            TextWrapping="Wrap">
+                            <Run FontSize="24" Text="正在运行的隧道" />
+                        </TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
 
+            </awe:VisibilityTranstion>
+        </Grid>
     </Grid>
 </UserControl>

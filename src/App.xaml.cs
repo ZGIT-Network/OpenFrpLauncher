@@ -5,6 +5,9 @@ using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Contexts;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
@@ -12,6 +15,8 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using Grpc.Core;
+using OpenFrp.Launcher.Controls;
 
 namespace OpenFrp.Launcher
 {
@@ -31,10 +36,53 @@ namespace OpenFrp.Launcher
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            if (Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.WasCurrentProcessToastActivated())
+            {
+                Environment.Exit(0);
+                return;
+            }
             ConfigureWindow();
-            ConfigureRPC();    
+            ConfigureRPC();
+            ConfigureToast();
+            
         }
 
+        protected override void OnExit(ExitEventArgs e)
+        {
+            ClearToast();
+        }
+
+        private static void ClearToast()
+        {
+            if (Environment.OSVersion.Version.Major is not 10) return;
+            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+        }
+
+        private static void ConfigureToast()
+        {
+            if (Environment.OSVersion.Version.Major is not 10) return;
+
+            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.OnActivated += (e) =>
+            {
+                var thread = new Thread(() =>
+                {
+                    try
+                    {
+                        if (e.Argument.Contains("copy"))
+                        {
+                            Clipboard.SetText(e.Argument.Split(' ').Last());
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                });
+
+                thread.TrySetApartmentState(ApartmentState.STA);
+                thread.Start();
+            };
+        }
         private static async void ConfigureRPC()
         {
             var channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", "aweapp.test",new GrpcDotNetNamedPipes.NamedPipeChannelOptions
@@ -42,24 +90,83 @@ namespace OpenFrp.Launcher
                 ConnectionTimeout = 10
             });
 
-            var rpc = RemoteClient = new Service.Proto.Service.OpenFrp.OpenFrpClient(channel);
+            RemoteClient = new Service.Proto.Service.OpenFrp.OpenFrpClient(channel);
 
-            await Task.Delay(000);
-
-            var va = await ExtendMethod.RunWithTryCatch(async() => await rpc.SyncAsync(new Service.Proto.Request.SyncRequest
+            while (true)
             {
-                
-            })) ;
+                var va = await ExtendMethod.RunWithTryCatch(async () => await RemoteClient.SyncAsync(new Service.Proto.Request.SyncRequest()));
 
-            if (va is (var data,_) && data is not null)
-            {
-                
-                //WeakReferenceMessenger.Default.Send(new PropertyChangedMessage<bool>(rpc, "IsPipeConnected", false, true));
-                WeakReferenceMessenger.Default.Send(data.TunnelId.ToArray());
+                if (va is (var data, _) && data is not null)
+                {
+                    WeakReferenceMessenger.Default.Send(data.TunnelId.ToArray());
+
+                    try
+                    {
+                        var sc = RemoteClient.NotifiyStream(new Google.Protobuf.WellKnownTypes.Empty());
+                        // message sender here
+                        while (await sc.ResponseStream.MoveNext())
+                        {
+                            var bd = JsonSerializer.Deserialize<Awe.Model.OpenFrp.Response.Data.UserTunnel>(sc.ResponseStream.Current.TunnelJson);
+                            if (bd is not null)
+                            {
+                                switch (sc.ResponseStream.Current.State)
+                                {
+                                    case Service.Proto.Response.NotiflyStreamState.LaunchSuccess:
+                                        {
+                                            var sb = new StringBuilder();
+
+                                            if ("HTTP".Contains(bd.Type))
+                                            {
+                                                foreach (var item in bd.Domains)
+                                                {
+                                                    sb.Append(item + ",");
+                                                }
+                                            }
+
+                                            new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                .AddText($"隧道 {bd.Name} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
+                                                .AddText($"可用地址: {("HTTP".Contains(bd.Type) ? sb.ToString().Remove(sb.Length - 1) : bd.ConnectAddress)}")
+                                                .AddAttributionText($"{bd.Type!.ToUpper()} {bd.Host}:{bd.Port}")
+                                                .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {("HTTP".Contains(bd.Type) ? bd.Domains.First() : bd.ConnectAddress)}")
+                                                .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
+                                                .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                .Show(toast => {
+                                                                   toast.Tag = bd.Name;
+                                                                   toast.ExpiresOnReboot = true;
+                                                                   toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                               });
+                                            break;
+                                        };
+                                    case Service.Proto.Response.NotiflyStreamState.NoticeForLauncher when sc.ResponseStream.Current.Message.Contains("被 Console 要求下线"):
+                                        {
+                                            var vac = await ExtendMethod.RunWithTryCatch(async () => await RemoteClient.SyncAsync(new Service.Proto.Request.SyncRequest()));
+
+                                            if (va is (var datac, _) && datac is not null)
+                                            {
+                                                WeakReferenceMessenger.Default.Send(datac.TunnelId.ToArray());
+
+                                                await Task.Delay(500);
+
+                                                WeakReferenceMessenger.Default.Send("refresh");
+                                            }
+
+                                            ;break;
+                                        }
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                await Task.Delay(1000);
             }
         }
         private static bool _issfff;
-
         private static void ConfigureWindow()
         {
             var wind = App.Current?.MainWindow;
@@ -184,6 +291,37 @@ namespace OpenFrp.Launcher
             // return (default, default);
         }
 
+        public static async Task<Exception?> RunWithTryCatch(Func<Task> task)
+        {
+            try
+            {
+                await Task.Run(task);
+
+                return default;
+            }
+            catch (Grpc.Core.RpcException re)
+            {
+                if (re.StatusCode == Grpc.Core.StatusCode.DeadlineExceeded)
+                {
+                    // 访问守护进程超时，重试。
+                }
+                else if (re.StatusCode == Grpc.Core.StatusCode.Unavailable && re.Status.Detail.Equals("failed to connect to all addresses"))
+                {
+
+                }
+                System.Diagnostics.Debug.WriteLine(re.ToString());
+                return re;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.ToString());
+
+                global::System.Diagnostics.Debugger.Break();
+
+                return ex;
+            }
+            // return (default, default);
+        }
 
         //public static async Task<T?> WithTryCatch<T>(this Grpc.Core.AsyncUnaryCall<T> task)
         //{
@@ -200,9 +338,9 @@ namespace OpenFrp.Launcher
         //        else if (re.StatusCode == Grpc.Core.StatusCode.Unavailable && re.Status.Detail.Equals("failed to connect to all addresses"))
         //        {
 
-            //        }
-            //    }
-            //    return default;
-            //}
+        //        }
+        //    }
+        //    return default;
+        //}
     }
 }

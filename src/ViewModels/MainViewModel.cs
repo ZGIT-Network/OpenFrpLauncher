@@ -31,6 +31,13 @@ namespace OpenFrp.Launcher.ViewModels
                     OnlineTunnels.Add(info.Id);
                 });
             }
+            if (!WeakReferenceMessenger.Default.IsRegistered<Type>(nameof(MainViewModel)))
+            {
+                WeakReferenceMessenger.Default.Register<Type>(nameof(MainViewModel), (_, page) =>
+                {
+                    event_RouterItemInvoked(page);
+                });
+            }
             if (!WeakReferenceMessenger.Default.IsRegistered<int[]>(nameof(MainViewModel)))
             {
                 WeakReferenceMessenger.Default.Register<int[]>(nameof(MainViewModel), (_, data) =>
@@ -40,11 +47,11 @@ namespace OpenFrp.Launcher.ViewModels
                     OnlineTunnels.AddRange(data);
                 });
             }
-            this.PropertyChanged += async (_, e) =>
+            this.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName is nameof(UserInfo))
                 {
-                    await event_OnUserInfoChanged();
+                    event_OnUserInfoChanged();
                 }
             };
         }
@@ -62,7 +69,7 @@ namespace OpenFrp.Launcher.ViewModels
             },
             new RouterItem
             {
-                Icon = App.Current.TryFindResource("Awe.UI.Icons.Home") as Geometry,
+                Icon = App.Current.TryFindResource("Awe.UI.Icons.WirelessBroadcast") as Geometry,
                 Title = "隧道",
                 Page = typeof(Views.Tunnels),
                 IsEnableBinding = new Awe.UI.Helper.TwiceBindingHelper
@@ -104,7 +111,7 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> userTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
 
-        private async Task @event_OnUserInfoChanged()
+        private void @event_OnUserInfoChanged()
         {
             if (UserInfo.UserName.Equals("not-allow-display"))
             {
@@ -112,15 +119,15 @@ namespace OpenFrp.Launcher.ViewModels
             }
             else
             {
-                var resp = await Service.Net.OpenFrp.GetUserTunnels();
-                if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is not null)
-                {
-                    UserTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>(resp.Data.List);
-                }
-                else
-                {
-                    global::System.Diagnostics.Debugger.Break();
-                }
+                //var resp = await Service.Net.OpenFrp.GetUserTunnels();
+                //if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is not null)
+                //{
+                //    UserTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>(resp.Data.List);
+                //}
+                //else
+                //{
+                //    global::System.Diagnostics.Debugger.Break();
+                //}
             }
         }
 

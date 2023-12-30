@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -15,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.Linq;
 
 namespace OpenFrp.Launcher.Controls
 {
@@ -26,6 +28,42 @@ namespace OpenFrp.Launcher.Controls
         public TunnelConfig()
         {
             InitializeComponent();
+        }
+
+
+
+        public Awe.Model.OpenFrp.Response.Data.NodeInfo NodeInfo
+        {
+            get { return (Awe.Model.OpenFrp.Response.Data.NodeInfo)GetValue(NodeInfoProperty); }
+            set { SetValue(NodeInfoProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for NodeInfo.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty NodeInfoProperty =
+            DependencyProperty.Register("NodeInfo", typeof(Awe.Model.OpenFrp.Response.Data.NodeInfo), typeof(TunnelConfig), new PropertyMetadata(OnNodeInfoChanged));
+
+        private static void OnNodeInfoChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TunnelConfig tf &&
+                e.NewValue is Awe.Model.OpenFrp.Response.Data.NodeInfo { ProtocolSupport: var ps })
+            {
+                if (ps is null) return;
+
+                ProtocolItems[0].IsEnabled = ps.TCP;
+                ProtocolItems[1].IsEnabled = ps.UDP;
+                ProtocolItems[2].IsEnabled = ps.HTTP;
+                ProtocolItems[3].IsEnabled = ps.HTTPS;
+
+                if (tf.GetTemplateChild("tunnelTypeSelector") is ComboBox tb)
+                {
+                    tb.SelectedIndex = 0;
+                    if (tb.GetBindingExpression(Awe.UI.Controls.RwComboBox.ItemsSourceProperty) is { } isa)
+                    {
+                        isa.UpdateTarget();
+                        tf.ProtocolItemsView.Refresh();
+                    }
+                }
+            }
         }
 
 
@@ -52,7 +90,13 @@ namespace OpenFrp.Launcher.Controls
         public static readonly DependencyProperty IsCreateModeProperty =
             DependencyProperty.Register("IsCreateMode", typeof(bool), typeof(TunnelConfig), new PropertyMetadata(true));
 
-        public Model.ProtocolItem[] ProtocolItems { get;} = new Model.ProtocolItem[]
+
+
+
+        public ListCollectionView ProtocolItemsView { get; } = new ListCollectionView(ProtocolItems);
+
+
+        public static Model.ProtocolItem[] ProtocolItems { get;} = new Model.ProtocolItem[]
         {
             new()
             {
@@ -68,13 +112,11 @@ namespace OpenFrp.Launcher.Controls
             {
                 Title = "HTTP",
                 Description = "适用于 搭建网站",
-                IsEnabled = !false,
             },
             new()
             {
                 Title = "HTTPS",
                 Description = "适用于 搭建网站(加密链接)",
-                IsEnabled = !false,
             },
         };
 
@@ -159,11 +201,76 @@ namespace OpenFrp.Launcher.Controls
             return TunnelData;
         }
 
-        public void UpdateTunnelName()
+        public Awe.Model.OpenFrp.Response.Data.UserTunnel GetCreateConfig()
         {
-            if (GetTemplateChild("tunnelNameHost") is TextBox tb)
+            if (NodeInfo is null)
             {
-                if (tb.GetBindingExpression(TextBox.TextProperty) is { } vt)
+                throw new NullReferenceException("只有先选择 NodeInfo 后，才可获取创建配置内容。");
+            }
+
+            if (TunnelData.Name is null || TunnelData.Name.Length is 0)
+            {
+                TunnelData.Name = $"ofPr_{Guid.NewGuid()}".Substring(0, 12);
+
+                UpdateTunnelName();
+            }
+            if (TunnelData.Port is 0)
+            {
+                TunnelData.Port = 25565;
+            }
+
+            
+
+            if (TunnelData.RemotePort <= 0)
+            {
+                TunnelData.RemotePort = NodeInfo.AllowPortRange.GetRandomRemotePort();
+            }
+            UpdateTunnelRemortPort();
+
+            if (TunnelData.Port <= 0)
+            {
+                TunnelData.Port = 25565;
+            }
+            UpdateTunnelLocalPort();
+
+            if (string.IsNullOrEmpty(TunnelData.Host) || "localhost".Equals(TunnelData.Host))
+            {
+                TunnelData.Host = "127.0.0.1";
+            }
+            UpdateTunnelHost();
+
+            if (string.IsNullOrEmpty(TunnelData.Type))
+            {
+                TunnelData.Type = "TCP";
+            }
+            UpdateTunnelType();
+
+            if (GetTemplateChild("rwPpv") is Awe.UI.Controls.RwComboBox { SelectedValue: Model.ProtocolVersionItem pvi })
+            {
+                if (!"off".Contains(pvi.Value))
+                {
+                    TunnelData.TunnelCustomConfig += $"{(TunnelData.TunnelCustomConfig is not null and { Length: > 0 } ? '\n' : "")}proxy_protocol_version = {pvi.Value}";
+                }
+            }
+
+            TunnelData.Id = -1;
+
+            TunnelData.NodeId = NodeInfo.Id;
+
+            return TunnelData;
+        }
+
+        public void UpdateTunnelName() => UpdateTunnelControl("tunnelNameHost", TextBox.TextProperty);
+        public void UpdateTunnelHost() => UpdateTunnelControl("tunnelHost", TextBox.TextProperty);
+        public void UpdateTunnelRemortPort() => UpdateTunnelControl("tunnelRemotePort", TextBox.TextProperty);
+        public void UpdateTunnelLocalPort() => UpdateTunnelControl("tunnelLocalPort", TextBox.TextProperty);
+        public void UpdateTunnelType() => UpdateTunnelControl("tunnelTypeSelector", Awe.UI.Controls.RwComboBox.SelectedValueProperty);
+
+        public void UpdateTunnelControl(string name,DependencyProperty dp)
+        {
+            if (GetTemplateChild(name) is FrameworkElement tb)
+            {
+                if (tb.GetBindingExpression(dp) is { } vt)
                 {
                     vt.UpdateTarget();
                 }

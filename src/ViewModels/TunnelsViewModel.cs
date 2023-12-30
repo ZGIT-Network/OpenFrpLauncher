@@ -25,6 +25,20 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public TunnelsViewModel()
         {
+            WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
+
+            WeakReferenceMessenger.Default.Register<string>(nameof(TunnelsViewModel), async (_, str) =>
+            {
+                switch (str)
+                {
+                    case "refresh":
+                        {
+                            await event_RefreshUserTunnelCommand.ExecuteAsync(null);
+
+                            break;
+                        }
+                }
+            });
         }
 
         public Awe.Model.OpenFrp.Response.Data.UserInfo UserInfo
@@ -35,39 +49,14 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     return mv.UserInfo;
                 }
+                global::System.Diagnostics.Debugger.Break();
+
                 throw new NullReferenceException();
             }
         }
 
-        public ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> UserTunnels
-        {
-            get
-            {
-                if (App.Current?.MainWindow is { DataContext: ViewModels.MainViewModel mv })
-                {
-                    return mv.UserTunnels;
-                }
-                throw new NullReferenceException();
-            }
-            set
-            {
-                if (App.Current?.MainWindow is { DataContext: ViewModels.MainViewModel mv,Dispatcher: var dis })
-                {
-                    dis.Invoke(async () =>
-                    {
-                        mv.UserTunnels.Clear();
-
-                        foreach (var item in value)
-                        {
-                            mv.UserTunnels.Add(item);
-
-                            await Task.Delay(20);
-                        }
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
-                }
-            }
-        }
-
+        [ObservableProperty]
+        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> userTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
 
         public List<int> OnlineTunnels
         {
@@ -84,11 +73,23 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private Awe.Model.ApiResponse? tunnelResponse;
 
+        [ObservableProperty]
+        private bool requireDisplayData = false;
+
+        [ObservableProperty]
+        private bool displayError;
 
         [RelayCommand]
         private async Task @event_PageLoaded()
         {
-            await Task.CompletedTask;
+            await event_RefreshUserTunnelCommand.ExecuteAsync(null);
+            //var resp = await OpenFrp.Service.Net.OpenFrp.GetUserTunnels();
+            //if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null &&
+            //    resp.Data is not null)
+            //{
+
+            //}
+            //await Task.CompletedTask;
         }
 
         [RelayCommand]
@@ -99,7 +100,7 @@ namespace OpenFrp.Launcher.ViewModels
                 if (UserInfo.UserToken.IsNotNullOrEmpty()) 
                 {
                     string token = UserInfo.UserToken!.ToString();
-                    var bf = JsonSerializer.SerializeToUtf8Bytes(tunnel);
+                    var bf = JsonSerializer.Serialize(tunnel);
 
                     sw.Toggled += async delegate
                     {
@@ -111,11 +112,7 @@ namespace OpenFrp.Launcher.ViewModels
                             rrpc = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.LaunchAsync(new Service.Proto.Request.TunnelRequest
                             {
                                 UserToken = token,
-                                UserTunnelJson =
-                                {
-                                    Google.Protobuf.ByteString.CopyFrom(bf)
-                                }
-    
+                                UserTunnelJson = bf
                             }));
                         }
                         else
@@ -123,10 +120,7 @@ namespace OpenFrp.Launcher.ViewModels
                             rrpc = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.CloseAsync(new Service.Proto.Request.TunnelRequest
                             {
                                 UserToken = token,
-                                UserTunnelJson =
-                                {
-                                    Google.Protobuf.ByteString.CopyFrom(bf)
-                                }
+                                UserTunnelJson = bf
                             }));
                         }
 
@@ -313,19 +307,48 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_RefreshUserTunnel()
         {
+            TunnelResponse = null;
+            RequireDisplayData = false;
+
             var resp = await Service.Net.OpenFrp.GetUserTunnels();
 
             if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { List: var list})
             {
-                UserTunnels = new(list);
+                UserTunnels.Clear();
+
+                if (App.Current?.MainWindow is { Dispatcher: var dis })
+                {
+                    _ = dis.Invoke(async () =>
+                    {
+                        UserTunnels.Clear();
+                        RequireDisplayData = true;
+                        foreach (var item in resp.Data!.List!)
+                        {
+                            UserTunnels.Add(item);
+
+                            //OnPropertyChanged(nameof(UserTunnels));
+
+                            await Task.Delay(20);
+                        }
+                        OnPropertyChanged(nameof(UserTunnels));
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                }
+
                 
-                OnPropertyChanged(nameof(UserTunnels));
             }
             else
             {
-                global::System.Diagnostics.Debugger.Break();
+                await Task.Delay(100);
+                TunnelResponse = resp;
+                //global::System.Diagnostics.Debugger.Break();
             }
         }
+
+        [RelayCommand]
+        private void @event_ChangeVisibilityForException() => DisplayError = !DisplayError;
+
+        [RelayCommand]
+        private void @event_ToCreateTunnelPage() => WeakReferenceMessenger.Default.Send(typeof(Views.CreateTunnel));
 
         private T CreateObject<T>(Action<T>? func = default, params object[] args)
         {

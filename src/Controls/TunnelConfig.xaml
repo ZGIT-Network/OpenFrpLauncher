@@ -5,6 +5,7 @@
     xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:conv="clr-namespace:OpenFrp.Launcher.Converter"
+    xmlns:conv2="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:input="clr-namespace:System.Windows.Input;assembly=PresentationCore"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Controls"
@@ -16,6 +17,7 @@
     mc:Ignorable="d">
     <Control.Resources>
         <conv:DomainStringToListConverter x:Key="DomainStringToListConverter" />
+        <conv2:ContainConverter x:Key="ContainConverter" />
     </Control.Resources>
     <Control.Template>
         <ControlTemplate TargetType="local:TunnelConfig">
@@ -39,8 +41,10 @@
                         ui:WindowsHelper.LightModeRebind="True"
                         IsEnabled="{Binding IsCreateMode, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                         IsReadOnly="True"
-                        TabIndex="1" />
+                        TabIndex="1"
+                        Text="{Binding NodeInfo.Name, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
                     <awe:RwComboBox
+                        x:Name="tunnelTypeSelector"
                         Margin="0,0,0,10"
                         ui:ControlHelper.Header="链接类型"
                         ui:WindowsHelper.LightModeRebind="True"
@@ -48,17 +52,28 @@
                         IsEnabled="{Binding IsCreateMode, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                         SelectedIndex="0"
                         TabIndex="1">
-                        <behavior:Interaction.Triggers>
+                        <FrameworkElement.Style>
+                            <Style BasedOn="{StaticResource DefaultRewriteComboBoxStyle}" TargetType="awe:RwComboBox">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="True">
+                                        <Setter Property="ItemsSource" Value="{Binding ProtocolItemsView, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                        <Setter Property="SelectedValue" Value="{Binding TunnelData.Type, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                        <Setter Property="SelectedValuePath" Value="Title" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </FrameworkElement.Style>
+                        <!--<behavior:Interaction.Triggers>
                             <behavior:DataTrigger Binding="{Binding IsCreateMode, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Value="True">
                                 <behavior:ChangePropertyAction PropertyName="ItemsSource" Value="{Binding ProtocolItems, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
-                                <behavior:ChangePropertyAction PropertyName="Text" Value="{Binding TunnelData.Type, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                <behavior:ChangePropertyAction PropertyName="SelectedValue" Value="{Binding TunnelData.Type, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
                                 <behavior:ChangePropertyAction PropertyName="SelectedValuePath" Value="Title" />
                             </behavior:DataTrigger>
                             <behavior:DataTrigger Binding="{Binding IsCreateMode, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Value="False">
                                 <behavior:ChangePropertyAction PropertyName="ItemsSource" Value="{x:Null}" />
                                 <behavior:ChangePropertyAction PropertyName="SelectedValuePath" Value="." />
                             </behavior:DataTrigger>
-                        </behavior:Interaction.Triggers>
+                        </behavior:Interaction.Triggers>-->
                         <ui:ComboBoxHelper.SelectionContentTemplateRewrite>
                             <DataTemplate>
                                 <TextBlock FontSize="12" Text="{Binding Title}" />
@@ -82,7 +97,10 @@
                                             FontWeight="Medium"
                                             Text="{Binding Title, Mode=OneWay}" />
                                     </TextBlock>
-                                    <TextBlock x:Name="description" Text="{Binding Description, Mode=OneWay}" />
+                                    <TextBlock
+                                        x:Name="description"
+                                        Text="{Binding Description, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
                                 </StackPanel>
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Value="False">
@@ -94,6 +112,7 @@
 
                     </awe:RwComboBox>
                     <TextBox
+                        x:Name="tunnelHost"
                         Margin="0,0,0,10"
                         ui:ControlHelper.Header="本地链接"
                         ui:ControlHelper.Placeholder="127.0.0.1"
@@ -114,15 +133,20 @@
                         TabIndex="4"
                         Text="{Binding TunnelData.Name, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
                     <TextBox
+                        x:Name="tunnelRemotePort"
                         Margin="0,0,0,10"
                         input:InputMethod.IsInputMethodEnabled="False"
                         ui:ControlHelper.Header="远程端口"
                         ui:ControlHelper.Placeholder="25565"
                         ui:TextBoxHelper.IntInputOnly="True"
+                        ui:TextBoxHelper.IntInputRewriteBinding="{Binding TunnelData.RemotePort, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}"
                         ui:WindowsHelper.LightModeRebind="True"
                         AutomationProperties.Name="远程端口"
-                        IsEnabled="{Binding IsCreateMode, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                        IsEnabled="{Binding IsCreateMode, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                        TabIndex="4"
+                        Text="{Binding TunnelData.RemotePort, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneTime}" />
                     <TextBox
+                        x:Name="tunnelLocalPort"
                         Margin="0,0,0,10"
                         input:InputMethod.IsInputMethodEnabled="False"
                         ui:ControlHelper.Header="本地端口"
@@ -203,7 +227,8 @@
                         ui:ControlHelper.Header="域名绑定"
                         ui:ControlHelper.Placeholder="/"
                         ui:WindowsHelper.LightModeRebind="True"
-                        TabIndex="10    "
+                        IsEnabled="{Binding TunnelData.Type, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource ContainConverter}, ConverterParameter='HTTP', Mode=OneWay}"
+                        TabIndex="10"
                         Text="{Binding TunnelData.Domains, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource DomainStringToListConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
                 </StackPanel>
                 <StackPanel

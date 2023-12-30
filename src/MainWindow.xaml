@@ -6,8 +6,9 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:OpenFrp.Launcher" xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:local="clr-namespace:OpenFrp.Launcher"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
@@ -15,7 +16,8 @@
     Title="MainWindow"
     Width="900"
     Height="550"
-    d:Background="Black"
+    MinWidth="950"
+    d:Background="White"
     ui:WindowsHelper.DialogOpenned="False"
     Foreground="Black"
     Style="{StaticResource Awe.UI.DefaultWindow}"
@@ -67,13 +69,17 @@
                         </Setter>
                         <Setter Property="OverridesDefaultStyle" Value="True" />
                         <Setter Property="Cursor" Value="Hand" />
+                        <Setter Property="Background" Value="Transparent" />
 
                         <Setter Property="CommandParameter" Value="{Binding Page}" />
                         <Setter Property="Command" Value="{Binding DataContext.event_RouterItemInvokedCommand, RelativeSource={RelativeSource AncestorType=local:MainWindow}, Mode=OneWay}" />
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="RadioButton">
-                                    <Grid Background="Transparent" Focusable="False">
+                                    <Grid
+                                        Background="{TemplateBinding Background}"
+                                        Focusable="False"
+                                        TextOptions.TextHintingMode="Animated">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
@@ -85,10 +91,12 @@
                                             Margin="0,0,6,0">
                                             <Path
                                                 x:Name="cof"
-                                                Width="16"
-                                                Height="16"
+                                                Width="17"
+                                                Height="17"
                                                 Data="{Binding Icon}"
-                                                Stretch="Uniform">
+                                                SnapsToDevicePixels="True"
+                                                Stretch="Uniform"
+                                                UseLayoutRounding="True">
                                                 <Path.Fill>
                                                     <VisualBrush>
                                                         <VisualBrush.Visual>
@@ -125,53 +133,12 @@
                                                 </VisualBrush>
                                             </TextBlock.Foreground>
                                         </TextBlock>
-                                        <awe:VisibilityTranstion Grid.Column="2" IsDisplay="{Binding SubRouterItems, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}">
-                                            <ItemsControl
-                                                Height="24"
-                                                Margin="4,0,0,0"
-                                                VerticalAlignment="Center"
-                                                Background="Transparent"
-                                                Focusable="False"
-                                                ItemsSource="{Binding SubRouterItems, Mode=OneWay}"
-                                                Tag="{Binding Fill, ElementName=cof, Mode=OneWay}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <awe:NavigationButton
-                                                            Width="24"
-                                                            Height="24"
-                                                            Margin="0,0,0,0"
-                                                            Background="Transparent"
-                                                            Command="{Binding DataContext.event_RouterItemInvokedCommand, Source={x:Reference Name=windHost}, Mode=OneWay}"
-                                                            CommandParameter="{Binding Page, Mode=OneWay}"
-                                                            ToolTip="{Binding Title, Mode=OneWay}">
-                                                            <behavior:Interaction.Triggers>
-                                                                <behavior:EventTrigger EventName="Click">
-                                                                    <behavior:ChangePropertyAction
-                                                                        PropertyName="IsChecked"
-                                                                        TargetObject="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Mode=OneWay}"
-                                                                        Value="True" />
-                                                                </behavior:EventTrigger>
-                                                            </behavior:Interaction.Triggers>
-                                                            <Path
-                                                                Width="14"
-                                                                Height="14"
-                                                                Data="{Binding Icon}"
-                                                                Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
-                                                                Stretch="Uniform" />
-                                                        </awe:NavigationButton>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Horizontal" />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                            </ItemsControl>
-                                        </awe:VisibilityTranstion>
-
                                     </Grid>
                                     <ControlTemplate.Resources>
-                                        <CubicEase pf:Freeze="True" x:Key="ButtonTranstion" EasingMode="EaseOut" />
+                                        <CubicEase
+                                            x:Key="ButtonTranstion"
+                                            pf:Freeze="True"
+                                            EasingMode="EaseOut" />
                                     </ControlTemplate.Resources>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsChecked" Value="True">
@@ -258,13 +225,14 @@
                         FontFamily="Montserrat"
                         FontSize="24"
                         FontWeight="Medium"
-                        Text="Launcher" />
+                        Text="OpenFRP" />
                     <TextBlock
                         Margin="0,20,0,0"
                         FontSize="16"
-                        FontWeight="Black"
                         Opacity=".6"
-                        Text="页面" />
+                        Text="页面"
+                        TextOptions.TextHintingMode="Animated"
+                        Visibility="Visible" />
                     <ItemsControl
                         Margin="0,10,0,0"
                         Focusable="False"
@@ -307,6 +275,7 @@
         <!--  Content  -->
         <Grid Grid.Column="1">
             <ContentControl Focusable="False">
+
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Loaded">
                         <behavior:InvokeCommandAction Command="{Binding event_FrameLoadedCommand}" PassEventArgsToCommand="True" />

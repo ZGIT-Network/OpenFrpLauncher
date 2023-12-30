@@ -38,7 +38,10 @@
                 PanningMode="VerticalFirst"
                 VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="28,0">
-                    <TextBlock FontSize="16" Text="OpenFRP &amp; Natayark OpenID" />
+                    <TextBlock
+                        FontSize="16"
+                        Text="OpenFRP &amp; Natayark OpenID"
+                        TextOptions.TextHintingMode="Animated" />
 
 
                     <awe:VisibilityTranstion HorizontalAlignment="Left" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
@@ -112,7 +115,10 @@
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <StackPanel Margin="0,0,12,4" TextElement.Foreground="#6fffffff">
+                                                        <StackPanel
+                                                            Margin="0,0,12,4"
+                                                            TextElement.Foreground="#6fffffff"
+                                                            TextOptions.TextHintingMode="Animated">
                                                             <TextBlock FontSize="13" Text="{Binding Title, Mode=OneWay}" />
                                                             <TextBlock helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" FontSize="13" />
                                                         </StackPanel>
@@ -127,7 +133,8 @@
                                             Content="退出登录"
                                             Cursor="Hand"
                                             Foreground="White"
-                                            Opacity=".6" />
+                                            Opacity=".6"
+                                            TextOptions.TextHintingMode="Animated" />
                                     </Grid>
                                 </Border>
                             </Border>
