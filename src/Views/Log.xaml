@@ -1,0 +1,117 @@
+﻿<UserControl
+    x:Class="OpenFrp.Launcher.Views.Log"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:cc="clr-namespace:OpenFrp.Launcher.Converter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
+    xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <FrameworkElement.Resources>
+        <cc:IntToLogLevel x:Key="IntToLogLevel" />
+        <cc:LongToTimeZone x:Key="LongToTimeZone" />
+    </FrameworkElement.Resources>
+    <FrameworkElement.DataContext>
+        <vm:LogViewModel />
+    </FrameworkElement.DataContext>
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:InvokeCommandAction Command="{Binding event_PageLoadedCommand}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="28,48,28,8" Orientation="Horizontal">
+            <TextBlock FontSize="24" Text="日志" />
+            <awe:RwComboBox
+                MinWidth="200"
+                Margin="8,0,0,0"
+                helper:WindowsHelper.LightModeRebind="True"
+                ItemsSource="{Binding LogClients, Mode=OneWay}"
+                SelectedIndex="0"
+                SelectedValue="{Binding SelectedClient, Mode=TwoWay}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock TextTrimming="CharacterEllipsis">
+                            <Run Text="{Binding LogId, StringFormat='#{0}', Mode=OneWay}" />
+                            <Run Text="{Binding Name, Mode=OneWay}" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </awe:RwComboBox>
+            <awe:NavigationButton
+                Margin="12,0,16,0"
+                VerticalAlignment="Center"
+                Command="{Binding event_RefreshRequestCommand}"
+                Cursor="Hand"
+                ToolTip="刷新">
+                <Path
+                    Width="16"
+                    Height="16"
+                    Data="{StaticResource Awe.UI.Icons.Refresh}"
+                    Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}"
+                    Stretch="Uniform" />
+            </awe:NavigationButton>
+            <awe:NavigationButton
+                Margin="0,0,0,0"
+                VerticalAlignment="Center"
+                Command="{Binding event_SaveFileRequestCommand}"
+                Cursor="Hand"
+                ToolTip="保存文件">
+                <Path
+                    Width="16"
+                    Height="16"
+                    Data="{StaticResource Awe.UI.Icons.Report}"
+                    Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}"
+                    Stretch="Uniform" />
+            </awe:NavigationButton>
+        </StackPanel>
+        <ScrollViewer
+            Grid.Row="1"
+            helper:WindowsHelper.LightModeRebind="True"
+            VerticalScrollBarVisibility="Auto">
+            <ItemsControl
+                Margin="28,4,28,20"
+                ItemsSource="{Binding LogDatas, Mode=OneWay}"
+                TextOptions.TextHintingMode="Animated">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:InvokeCommandAction Command="{Binding event_ItemsContainerLoadedCommand}" PassEventArgsToCommand="True" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+                <ItemsControl.ItemContainerStyle>
+                    <Style TargetType="FrameworkElement">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Data, Mode=OneWay}" Value="">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Level, Mode=OneWay}" Value="1">
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource WarningOrErrorBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <awe:SelectableTextBlock FontSize="14" TextWrapping="Wrap">
+                            <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding TimeZone, Converter={StaticResource LongToTimeZone}, Mode=OneWay}" />
+                            <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding LogId,StringFormat='#{0}', Mode=OneWay}" />
+                            <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding Level, Converter={StaticResource IntToLogLevel}, Mode=OneWay}" />
+                            <Run Text="{Binding Data, Mode=OneWay}" />
+                        </awe:SelectableTextBlock>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

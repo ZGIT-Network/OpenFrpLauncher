@@ -14,11 +14,15 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (App.Current?.MainWindow is { DataContext: MainViewModel dx })
             {
+                MainViewModel = dx;
+
                 UserInfo = dx.UserInfo;
             }
         }
 
         #region UserInfo + Model # 附加后台绑定
+
+        public MainViewModel? MainViewModel { get; set; }
 
         [ObservableProperty]
         private Awe.Model.OpenFrp.Response.Data.UserInfo userInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo

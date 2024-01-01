@@ -101,9 +101,11 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     string token = UserInfo.UserToken!.ToString();
                     var bf = JsonSerializer.Serialize(tunnel);
+                    var st = false;
 
                     sw.Toggled += async delegate
                     {
+                        if (st is true) { st = false; return; }
                         sw.IsEnabled = false;
 
                         var rrpc = (default(Service.Proto.Response.TunnelResponse), default(Exception));
@@ -126,11 +128,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                         if (rrpc is (var data,var ex))
                         {
-                            if (ex is not null)
-                            {
-                                sw.IsChecked = !sw.IsChecked;
-                            }
-                            else if (data is not null && data.Flag)
+                            if (data is not null && data.Flag)
                             {
                                 if (sw.IsChecked is true)
                                 {
@@ -140,6 +138,11 @@ namespace OpenFrp.Launcher.ViewModels
                                 {
                                     OnlineTunnels.Remove(tunnel.Id);
                                 }
+                            }
+                            else
+                            {
+                                st = true;
+                                sw.IsChecked = !sw.IsChecked;
                             }
                         }
                         await Task.Delay(250);

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -10,9 +12,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Grpc.Core;
@@ -32,18 +37,26 @@ namespace OpenFrp.Launcher
 #pragma warning disable CS8618
         // 必须不为 Null
         public static OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient RemoteClient { get; set; }
+
+        public static H.NotifyIcon.TaskbarIcon TaskBarIcon { get; set; }
+
+        public static Process ServiceProcess { get; set; }
 #pragma warning restore CS8618
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            if (Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.WasCurrentProcessToastActivated())
+            if (Environment.OSVersion.Version.Major is 10)
             {
-                Environment.Exit(0);
-                return;
+                if (Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.WasCurrentProcessToastActivated())
+                {
+                    Environment.Exit(0);
+                    return;
+                }
             }
             ConfigureWindow();
             ConfigureRPC();
             ConfigureToast();
+            ConfigureProcess();
             
         }
 
@@ -58,6 +71,33 @@ namespace OpenFrp.Launcher
             Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
         }
 
+        private static void ConfigureProcess()
+        {
+            if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
+            {
+                ServiceProcess = ck.First();
+
+                return;
+            }
+            ServiceProcess = new Process()
+            {
+                StartInfo =
+                {
+                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrpService.exe"),
+                    CreateNoWindow = true,
+                    Arguments = "deamon --pn aweapp.test",
+                    UseShellExecute = false
+                },
+                EnableRaisingEvents = true
+            };
+            ServiceProcess.Start();
+            ServiceProcess.Exited += async delegate
+            {
+                await Task.Delay(500);
+
+                ConfigureProcess();
+            };
+        }
         private static void ConfigureToast()
         {
             if (Environment.OSVersion.Version.Major is not 10) return;
@@ -103,6 +143,8 @@ namespace OpenFrp.Launcher
                     try
                     {
                         var sc = RemoteClient.NotifiyStream(new Google.Protobuf.WellKnownTypes.Empty());
+
+                        WeakReferenceMessenger.Default.Send("onService");
                         // message sender here
                         while (await sc.ResponseStream.MoveNext())
                         {
@@ -122,8 +164,9 @@ namespace OpenFrp.Launcher
                                                     sb.Append(item + ",");
                                                 }
                                             }
-
-                                            new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                            if (Environment.OSVersion.Version.Major is 10)
+                                            {
+                                                new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
                                                 .AddText($"隧道 {bd.Name} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
                                                 .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
                                                 .AddText($"可用地址: {("HTTP".Contains(bd.Type) ? sb.ToString().Remove(sb.Length - 1) : bd.ConnectAddress)}")
@@ -132,11 +175,18 @@ namespace OpenFrp.Launcher
                                                 .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
                                                 .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
                                                 .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
-                                                .Show(toast => {
-                                                                   toast.Tag = bd.Name;
-                                                                   toast.ExpiresOnReboot = true;
-                                                                   toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
-                                                               });
+                                                .Show(toast =>
+                                                {
+                                                    toast.Tag = bd.Name;
+                                                    toast.ExpiresOnReboot = true;
+                                                    toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                });
+                                            }
+                                            else if (TaskBarIcon is not null)
+                                            {
+                                                TaskBarIcon.ShowNotification($"隧道 {bd.Name} 启动成功!", $"可用地址: {("HTTP".Contains(bd.Type) ? sb.ToString().Remove(sb.Length - 1) : bd.ConnectAddress)}",
+                                                    icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
+                                            }
                                             break;
                                         };
                                     case Service.Proto.Response.NotiflyStreamState.NoticeForLauncher when sc.ResponseStream.Current.Message.Contains("被 Console 要求下线"):
@@ -154,41 +204,170 @@ namespace OpenFrp.Launcher
 
                                             ;break;
                                         }
+                                    case Service.Proto.Response.NotiflyStreamState.LaunchFailed:
+                                        {
+                                            if (Environment.OSVersion.Version.Major is 10)
+                                            {
+                                                new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                 .AddText($"隧道 {bd.Name} 启动失败", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                 .AddText(sc.ResponseStream.Current.Message)
+                                                 .AddAttributionText($"{bd.Type!.ToUpper()} {bd.Host}:{bd.Port}")
+                                                 .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                 .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                 .Show(toast =>
+                                                 {
+                                                     toast.Tag = bd.Name;
+                                                     toast.ExpiresOnReboot = true;
+                                                     toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                 });
+                                            }
+                                            else if (TaskBarIcon is not null)
+                                            {
+                                                TaskBarIcon.ShowNotification($"隧道 {bd.Name} 启动失败", sc.ResponseStream.Current.Message,
+                                                    icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                            }
+                                            break;
+                                        }
                                 }
                             }
                         }
                     }
                     catch
                     {
-
+                        WeakReferenceMessenger.Default.Send("offService");
                     }
+                }
+                else
+                {
+                    WeakReferenceMessenger.Default.Send("offService");
                 }
                 await Task.Delay(1000);
             }
         }
-        private static bool _issfff;
+        //private static bool _issfff;
         private static void ConfigureWindow()
         {
+
+
+
+
             var wind = App.Current?.MainWindow;
             if (App.Current?.MainWindow is null)
             {
                 wind = new MainWindow();
 
-                int cc = 0;
-                wind.KeyDown += (e, s) =>
-                {
-                    if (s.Key is System.Windows.Input.Key.F12)
-                    {
-                        cc += 1;
-                        if (cc is 2)
-                        {
-                            ConfigureWindow();
+                //int cc = 0;
+                //wind.KeyDown += (e, s) =>
+                //{
+                //    if (s.Key is System.Windows.Input.Key.F12)
+                //    {
+                //        cc += 1;
+                //        if (cc is 2)
+                //        {
+                //            ConfigureWindow();
 
-                            cc = 0;
-                        }
-                    }
-                };
+                //            cc = 0;
+                //        }
+                //    }
+                //};
                 wind.Show();
+
+                try
+                {
+                    TaskBarIcon = new H.NotifyIcon.TaskbarIcon()
+                    {
+                        NoLeftClickDelay = true,
+                        LeftClickCommand = new RelayCommand(() =>
+                        {
+                            App.Current!.MainWindow.Visibility = Visibility.Visible;
+                            if (App.Current.MainWindow.WindowState is WindowState.Minimized)
+                            {
+                                App.Current.MainWindow.Topmost = true;
+                                App.Current.MainWindow.Topmost = false;
+                            }
+                            App.Current.MainWindow.Activate();
+                        }),
+                        ToolTipText = "OpenFrp 桌面启动器",
+                        IconSource = new BitmapImage(new Uri("pack://application:,,,/Resources/desktop.ico")),
+                        ContextMenu = CreateObject<System.Windows.Controls.ContextMenu>(x =>
+                        {
+                            x.Width = 175;
+                            x.SetValue(Awe.UI.Helper.WindowsHelper.LightModeRebindProperty, true);
+                            x.Items.Add(new MenuItem
+                            {
+                                Header = "显示窗口",
+                                Command = new RelayCommand(() =>
+                                {
+                                    App.Current!.MainWindow.Visibility = Visibility.Visible;
+                                    if (App.Current.MainWindow.WindowState is WindowState.Minimized)
+                                    {
+                                        App.Current.MainWindow.Topmost = true;
+                                        App.Current.MainWindow.Topmost = false;
+                                    }   
+                                    App.Current.MainWindow.Activate();
+                                })
+                            });
+                            x.Items.Add(new Separator() { Style = (Style)App.Current!.TryFindResource("RewriteSeparator") });
+                            x.Items.Add(new MenuItem
+                            {
+                                Header = "退出",
+                                Command = new RelayCommand(() =>
+                                {
+                                    Environment.Exit(0);
+                                })
+                            });
+                            x.Items.Add(new MenuItem
+                            {
+                                Header = "彻底退出",
+                                Command = new RelayCommand(() =>
+                                {
+                                    if (!ServiceProcess.HasExited)
+                                    {
+                                        ServiceProcess.EnableRaisingEvents = false;
+                                        ServiceProcess.Kill();
+                                    }
+                                    string platform = RuntimeInformation.ProcessArchitecture switch
+                                    {
+                                        Architecture.X64 => "amd64",
+                                        Architecture.X86 => "386",
+                                        Architecture.Arm64 => "arm64",
+                                        _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
+                                    };
+                                    if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0} ck)
+                                    {
+                                        foreach (var pro in ck)
+                                        {
+                                            try
+                                            {
+                                                if (pro.MainModule.FileName.Equals(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc", $"frpc_windows_{platform}.exe")) && !pro.HasExited)
+                                                {
+                                                    pro.Kill();
+                                                }
+                                            }
+                                            catch
+                                            {
+
+                                            }
+                                        }
+                                    }
+                                    Environment.Exit(0);
+                                })
+                            });
+                            foreach (var va in x.Items)
+                            {
+                                if (va is DependencyObject doc)
+                                {
+                                    doc.SetValue(Awe.UI.Helper.WindowsHelper.LightModeRebindProperty, true);
+                                }
+                            }
+                        })
+                    };
+                    TaskBarIcon.ForceCreate(false);
+                }
+                catch
+                {
+
+                }
             }
 
             if (Awe.UI.Win32.UserUxtheme.IsSupportDarkMode)
@@ -202,6 +381,7 @@ namespace OpenFrp.Launcher
 
             var handle = new WindowInteropHelper(wind).EnsureHandle();
 
+
             if (Environment.OSVersion.Version.Major >= 10)
             {
                 int backdropPvAttribute = (int)Awe.UI.Win32.DwmApi.DWMSBT.DWMSBT_TABBEDWINDOW;
@@ -209,9 +389,9 @@ namespace OpenFrp.Launcher
                     ref backdropPvAttribute,
                     Marshal.SizeOf(typeof(int)));
 
-                var pvAttribute = _issfff ? (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable : (int)Awe.UI.Win32.DwmApi.PvAttribute.Enable;
+                var pvAttribute = !false ? (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable : (int)Awe.UI.Win32.DwmApi.PvAttribute.Enable;
 
-                _issfff = !_issfff;
+               // _issfff = !_issfff;
 
                 var dwAttribute = Awe.UI.Win32.DwmApi.DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE;
 
@@ -246,6 +426,19 @@ namespace OpenFrp.Launcher
 
             Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
 
+        }
+
+        private static T CreateObject<T>(Action<T>? func = default, params object[] args)
+        {
+            var vc = Activator.CreateInstance(typeof(T), args);
+
+            if (vc is null) throw new NullReferenceException();
+            else if (vc is T tt)
+            {
+                if (func is not null) { func(tt); }
+                return tt;
+            }
+            throw new TypeLoadException();
         }
     }
 

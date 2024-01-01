@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using OpenFrp.Launcher.Model;
 
+
 namespace OpenFrp.Launcher.ViewModels
 {
     internal partial class MainViewModel : ObservableObject
@@ -47,6 +48,27 @@ namespace OpenFrp.Launcher.ViewModels
                     OnlineTunnels.AddRange(data);
                 });
             }
+            if (!WeakReferenceMessenger.Default.IsRegistered<string>(nameof(MainViewModel)))
+            {
+                WeakReferenceMessenger.Default.Register<string>(nameof(MainViewModel), (_, data) =>
+                {
+                    switch(data)
+                    {
+                        case "onService":
+                            {
+                                StateOfService = true;
+
+                                break;
+                            }
+                        case "offService":
+                            {
+                                StateOfService = false;
+
+                                break;
+                            }
+                    }
+                });
+            }
             this.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName is nameof(UserInfo))
@@ -65,7 +87,8 @@ namespace OpenFrp.Launcher.ViewModels
             new RouterItem
             {
                 Icon = App.Current.TryFindResource("Awe.UI.Icons.Home") as Geometry,
-                Title = "首页"
+                Title = "首页",
+                Page = typeof(Views.Home)
             },
             new RouterItem
             {
@@ -84,6 +107,12 @@ namespace OpenFrp.Launcher.ViewModels
                         RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor,typeof(ItemsControl),1)
                     }
                 }
+            },
+            new RouterItem
+            {
+                Icon = App.Current.TryFindResource("Awe.UI.Icons.Report") as Geometry,
+                Title = "日志",
+                Page = typeof(Views.Log),
             },
             new RouterItem
             {
@@ -110,6 +139,9 @@ namespace OpenFrp.Launcher.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> userTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
+
+        [ObservableProperty]
+        private bool stateOfService;
 
         private void @event_OnUserInfoChanged()
         {
@@ -144,6 +176,13 @@ namespace OpenFrp.Launcher.ViewModels
         private void @event_FrameLoaded(RoutedEventArgs e)
         {
             if (_frame is null && e.Source is ContentControl cc) _frame = cc;
+        }
+
+        [RelayCommand]
+        private void @event_CloseingWindow(System.ComponentModel.CancelEventArgs c)
+        {
+            App.Current.MainWindow.Visibility = Visibility.Hidden;
+            c.Cancel = true;
         }
     }
 }

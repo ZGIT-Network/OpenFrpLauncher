@@ -25,10 +25,16 @@
     <FrameworkElement.Resources>
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
         <converter:EqualConverter x:Key="EqualConverter" />
+        <converter:EitherConverter x:Key="EitherConverter" />
     </FrameworkElement.Resources>
     <FrameworkElement.DataContext>
         <vm:MainViewModel />
     </FrameworkElement.DataContext>
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Closing">
+            <behavior:InvokeCommandAction Command="{Binding event_CloseingWindowCommand}" PassEventArgsToCommand="True" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
     <Grid Background="#00ffffff">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -244,7 +250,21 @@
                                     ui:TwiceBindingHelper.Binding="{Binding IsEnableBinding, Mode=OneWay}"
                                     AutomationProperties.Name="{Binding Title, Mode=OneWay}"
                                     GroupName="mvr"
-                                    ToolTip="{Binding Title, Mode=OneWay}" />
+                                    ToolTip="{Binding Title, Mode=OneWay}">
+                                    <RadioButton.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource EitherConverter}">
+                                            <Binding
+                                                Converter="{StaticResource EqualConverter}"
+                                                ConverterParameter="首页"
+                                                Mode="OneWay"
+                                                Path="Title" />
+                                            <Binding
+                                                Mode="OneWay"
+                                                Path="DataContext.StateOfService"
+                                                RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                        </MultiBinding>
+                                    </RadioButton.IsEnabled>
+                                </RadioButton>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -257,18 +277,38 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
+                    <StackPanel Grid.Row="1" Margin="20,10,20,18">
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="14"
+                                Text="守护进程状态" />
+                            <awe:Tag Grid.Column="1">
+                                <behavior:Interaction.Triggers>
+                                    <behavior:DataTrigger Binding="{Binding StateOfService}" Value="True">
+                                        <behavior:ChangePropertyAction PropertyName="Content" Value="正常运行" />
+                                        <behavior:ChangePropertyAction PropertyName="TagType" Value="Normal" />
+                                    </behavior:DataTrigger>
+                                    <behavior:DataTrigger Binding="{Binding StateOfService}" Value="False">
+                                        <behavior:ChangePropertyAction PropertyName="Content" Value="未连接" />
+                                        <behavior:ChangePropertyAction PropertyName="TagType" Value="Error" />
+                                    </behavior:DataTrigger>
+                                </behavior:Interaction.Triggers>
+                            </awe:Tag>
+                        </Grid>
 
-                    <ItemsControl
-                        Grid.Row="1"
-                        Margin="20,10,20,18"
-                        Focusable="False"
-                        ItemsSource="{Binding SubRouterItems, Mode=OneWay}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <RadioButton AutomationProperties.Name="{Binding Title, Mode=OneWay}" GroupName="mvr" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        <ItemsControl Focusable="False" ItemsSource="{Binding SubRouterItems, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton AutomationProperties.Name="{Binding Title, Mode=OneWay}" GroupName="mvr" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </Grid>
             </Grid>
         </Border>
@@ -282,6 +322,7 @@
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
             </ContentControl>
+
         </Grid>
     </Grid>
 </Window>

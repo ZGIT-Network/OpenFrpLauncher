@@ -51,6 +51,7 @@
                                 Padding="16,10"
                                 Command="{Binding event_ShowLoginDialogCommand}"
                                 Content="登录账户"
+                                IsEnabled="{Binding MainViewModel.StateOfService, Mode=OneWay}"
                                 Style="{StaticResource AccentButtonStyle}">
                                 <helper:ControlHelper.Icon>
                                     <Path
@@ -77,10 +78,9 @@
                                 BorderThickness="1"
                                 CornerRadius="6">
                                 <Border.Background>
-                                    <!--  Local File used  -->
                                     <ImageBrush
                                         AlignmentY="Top"
-                                        ImageSource="E:\Desktop\Photo\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg"
+                                        ImageSource="..\Resources\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg"
                                         Opacity="1"
                                         Stretch="UniformToFill" />
                                 </Border.Background>
