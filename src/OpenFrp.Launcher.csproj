@@ -14,7 +14,11 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\desktop.ico" />
+	  <None Remove="Resources\Images\UI_EmotionIcon69.png" />
+	  <None Remove="Resources\Lexend.ttf" />
 	  <None Remove="Resources\loginBackground.png" />
+	  <None Remove="Resources\Montserrat-VariableFont_wght.ttf" />
+	  <None Remove="Resources\Montserrat.ttf" />
 	  <None Remove="Resources\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg" />
 	</ItemGroup>
 
@@ -35,8 +39,11 @@
 
 	<ItemGroup>
 	  <Resource Include="Resources\desktop.ico" />
-	  <Resource Include="Resources\loginBackground.png" />
-	  <Resource Include="Resources\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg" />
+	  <Resource Include="Resources\Images\UI_EmotionIcon69.png" />
+	  <Resource Include="Resources\Lexend.ttf" />
+	  <Resource Include="Resources\Images\loginBackground.png" />
+	  <Resource Include="Resources\Montserrat.ttf" />
+	  <Resource Include="Resources\Images\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg" />
 	</ItemGroup>
 
 </Project>

@@ -26,6 +26,7 @@
         <converter:EqualConverter x:Key="EqualConverter" />
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
         <converter:BothConverter x:Key="BothConverter" />
+        <converter:ContainConverter x:Key="ContainConverter" />
         <converter:CollectionContainConverter x:Key="CollectionContainConverter" />
     </UserControl.Resources>
     <UserControl.DataContext>
@@ -432,8 +433,26 @@
                                                                                         </Style.Triggers>
                                                                                     </Style>
                                                                                 </FrameworkElement.Style>
+                                                                                <awe:VisibilityTranstion IsDisplay="{Binding TunnelCustomConfig, Converter={StaticResource ContainConverter}, ConverterParameter='enable_client_fillter = true', Mode=OneWay}">
+                                                                                    <awe:NavigationButton
+                                                                                        Padding="8"
+                                                                                        AutomationProperties.Name="{Binding Name, StringFormat='管理隧道 {0} 的流量', Mode=OneWay}"
+                                                                                        Command="{Binding DataContext.event_GetSocketCollectionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
+                                                                                        CommandParameter="{Binding Mode=OneWay}"
+                                                                                        Cursor="Hand"
+                                                                                        IsEnabled="{Binding IsChecked, ElementName=tg, Mode=OneWay}"
+                                                                                        ToolTip="流量管理">
+
+                                                                                        <Path
+                                                                                            Width="16"
+                                                                                            Height="16"
+                                                                                            Data="{DynamicResource Awe.UI.Icons.LaptopSecure}"
+                                                                                            Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
+                                                                                            Stretch="Uniform" />
+                                                                                    </awe:NavigationButton>
+                                                                                </awe:VisibilityTranstion>
                                                                                 <awe:NavigationButton
-                                                                                    Margin="8,0,4,0"
+                                                                                    Margin="2,0,4,0"
                                                                                     Padding="8"
                                                                                     AutomationProperties.Name="{Binding Name, StringFormat='删除隧道 {0}', Mode=OneWay}"
                                                                                     Command="{Binding DataContext.event_DeleteTunnelCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
@@ -496,7 +515,7 @@
                                         <Image
                                             Width="120"
                                             HorizontalAlignment="Left"
-                                            Source="E:\Desktop\Desktop\UIAssets\UI_EmotionIcon69.png" />
+                                            Source="..\Resources\Images\UI_EmotionIcon69.png" />
                                         <TextBlock
                                             Margin="0,0,0,16"
                                             FontFamily="{StaticResource Awe.UI.DisplayFont}"
@@ -582,7 +601,7 @@
                         <Image
                             Width="120"
                             HorizontalAlignment="Left"
-                            Source="E:\Desktop\Desktop\UIAssets\UI_EmotionIcon69.png" />
+                            Source="..\Resources\Images\UI_EmotionIcon69.png" />
                         <TextBlock
                             Margin="0,0,0,16"
                             FontFamily="{StaticResource Awe.UI.DisplayFont}"

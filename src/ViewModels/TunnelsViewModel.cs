@@ -308,6 +308,19 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
+        private async Task @event_GetSocketCollection(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        {
+            var resp = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.GetActiveProxyConnectAsync(new Service.Proto.Request.ProxyConnectListRequest
+            {
+                UserTunnelJson = JsonSerializer.Serialize(tunnel)
+            }));
+            if (resp is (var data, _))
+            {
+
+            }
+        }
+
+        [RelayCommand]
         private async Task @event_RefreshUserTunnel()
         {
             TunnelResponse = null;

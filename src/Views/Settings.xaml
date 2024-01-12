@@ -42,8 +42,6 @@
                         FontSize="16"
                         Text="OpenFRP &amp; Natayark OpenID"
                         TextOptions.TextHintingMode="Animated" />
-
-
                     <awe:VisibilityTranstion HorizontalAlignment="Left" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
                         <StackPanel Margin="-2,10,-4,-4">
                             <Button
@@ -80,7 +78,7 @@
                                 <Border.Background>
                                     <ImageBrush
                                         AlignmentY="Top"
-                                        ImageSource="..\Resources\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg"
+                                        ImageSource="..\Resources\Images\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg"
                                         Opacity="1"
                                         Stretch="UniformToFill" />
                                 </Border.Background>
@@ -140,8 +138,26 @@
                             </Border>
                         </awe:VisibilityTranstion>
                     </Grid>
-
-
+                    <TextBlock
+                        Margin="0,16,0,12"
+                        FontSize="18"
+                        Text="应用外观"
+                        TextOptions.TextHintingMode="Animated" />
+                    <awe:RwComboBox
+                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
+                        MaxWidth="200"
+                        HorizontalAlignment="Left"
+                        helper:WindowsHelper.LightModeRebind="True"
+                        SelectedIndex="{Binding ApplicationTheme, Mode=TwoWay}">
+                        <ComboBoxItem Content="浅色模式" />
+                        <ComboBoxItem Content="深色模式" />
+                    </awe:RwComboBox>
+                    <TextBlock
+                        Margin="0,16,0,500"
+                        FontSize="18"
+                        Foreground="{DynamicResource DefaultForegroundColor}"
+                        Text="应用外观"
+                        TextOptions.TextHintingMode="Animated" />
                 </StackPanel>
             </ScrollViewer>
         </Grid>

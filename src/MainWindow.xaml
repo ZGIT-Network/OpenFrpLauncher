@@ -228,9 +228,10 @@
                 </Grid.RowDefinitions>
                 <StackPanel Margin="20,20,20,0">
                     <TextBlock
-                        FontFamily="Montserrat"
-                        FontSize="24"
+                        FontFamily="{StaticResource Montserrat}"
                         FontWeight="Medium"
+                        FontSize="24"
+                        
                         Text="OpenFRP" />
                     <TextBlock
                         Margin="0,20,0,0"

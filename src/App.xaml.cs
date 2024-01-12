@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
@@ -22,6 +23,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Grpc.Core;
 using OpenFrp.Launcher.Controls;
+using static Google.Protobuf.WellKnownTypes.Field.Types;
 
 namespace OpenFrp.Launcher
 {
@@ -98,6 +100,7 @@ namespace OpenFrp.Launcher
                 ConfigureProcess();
             };
         }
+
         private static void ConfigureToast()
         {
             if (Environment.OSVersion.Version.Major is not 10) return;
@@ -123,6 +126,7 @@ namespace OpenFrp.Launcher
                 thread.Start();
             };
         }
+
         private static async void ConfigureRPC()
         {
             var channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", "aweapp.test",new GrpcDotNetNamedPipes.NamedPipeChannelOptions
@@ -228,6 +232,11 @@ namespace OpenFrp.Launcher
                                             }
                                             break;
                                         }
+                                    case Service.Proto.Response.NotiflyStreamState.NoticeForProxyUpdate:
+                                        {
+                                            var selz = JsonSerializer.Deserialize<dynamic>(sc.ResponseStream.Current.Message);
+                                            break;
+                                        }
                                 }
                             }
                         }
@@ -244,36 +253,19 @@ namespace OpenFrp.Launcher
                 await Task.Delay(1000);
             }
         }
-        //private static bool _issfff;
+
         private static void ConfigureWindow()
         {
-
-
-
-
             var wind = App.Current?.MainWindow;
             if (App.Current?.MainWindow is null)
             {
                 wind = new MainWindow();
-
-                //int cc = 0;
-                //wind.KeyDown += (e, s) =>
-                //{
-                //    if (s.Key is System.Windows.Input.Key.F12)
-                //    {
-                //        cc += 1;
-                //        if (cc is 2)
-                //        {
-                //            ConfigureWindow();
-
-                //            cc = 0;
-                //        }
-                //    }
-                //};
                 wind.Show();
 
                 try
                 {
+                    if (App.Current is null) { throw null!; }
+
                     TaskBarIcon = new H.NotifyIcon.TaskbarIcon()
                     {
                         NoLeftClickDelay = true,
@@ -292,35 +284,61 @@ namespace OpenFrp.Launcher
                         ContextMenu = CreateObject<System.Windows.Controls.ContextMenu>(x =>
                         {
                             x.Width = 175;
-                            x.SetValue(Awe.UI.Helper.WindowsHelper.LightModeRebindProperty, true);
-                            x.Items.Add(new MenuItem
+                            x.SetBinding(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, new Binding
                             {
-                                Header = "显示窗口",
-                                Command = new RelayCommand(() =>
+                                Source = wind,
+                                Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
+                                Mode = BindingMode.OneWay
+                            });
+                            x.Items.Add(CreateObject<MenuItem>((xa) =>
+                            {
+                                xa.Header = "显示窗口";
+                                xa.SetBinding(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, new Binding
+                                {
+                                    Source = x,
+                                    Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
+                                    Mode = BindingMode.OneWay
+                                });
+                                xa.Command = new RelayCommand(() =>
                                 {
                                     App.Current!.MainWindow.Visibility = Visibility.Visible;
                                     if (App.Current.MainWindow.WindowState is WindowState.Minimized)
                                     {
                                         App.Current.MainWindow.Topmost = true;
                                         App.Current.MainWindow.Topmost = false;
-                                    }   
+                                    }
                                     App.Current.MainWindow.Activate();
-                                })
-                            });
+                                });
+                            }));
                             x.Items.Add(new Separator() { Style = (Style)App.Current!.TryFindResource("RewriteSeparator") });
-                            x.Items.Add(new MenuItem
+                            x.Items.Add(CreateObject<MenuItem>((xa)=>
                             {
-                                Header = "退出",
-                                Command = new RelayCommand(() =>
+                                xa.Header = "退出";
+
+                                xa.SetBinding(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, new Binding
                                 {
-                                    Environment.Exit(0);
-                                })
-                            });
-                            x.Items.Add(new MenuItem
+                                    Source = x,
+                                    Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
+                                    Mode = BindingMode.OneWay
+                                });
+                                xa.Command = new RelayCommand(() =>
+                                {
+                                    App.Current.Shutdown();
+                                    //Environment.Exit(0);
+                                });
+                            }));
+                            x.Items.Add(CreateObject<MenuItem>((xa) =>
                             {
-                                Header = "彻底退出",
-                                Command = new RelayCommand(() =>
+                                xa.Header = "彻底退出";
+                                xa.SetBinding(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, new Binding
                                 {
+                                    Source = x,
+                                    Path = new PropertyPath(Awe.UI.Helper.WindowsHelper.UseLightModeProperty),
+                                    Mode = BindingMode.OneWay
+                                }); 
+                                xa.Command = new RelayCommand(() =>
+                                {
+                                    App.Current!.MainWindow.Visibility = Visibility.Hidden;
                                     if (!ServiceProcess.HasExited)
                                     {
                                         ServiceProcess.EnableRaisingEvents = false;
@@ -333,7 +351,7 @@ namespace OpenFrp.Launcher
                                         Architecture.Arm64 => "arm64",
                                         _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
                                     };
-                                    if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0} ck)
+                                    if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0 } ck)
                                     {
                                         foreach (var pro in ck)
                                         {
@@ -351,8 +369,8 @@ namespace OpenFrp.Launcher
                                         }
                                     }
                                     Environment.Exit(0);
-                                })
-                            });
+                                });
+                            }));
                             foreach (var va in x.Items)
                             {
                                 if (va is DependencyObject doc)
@@ -364,7 +382,7 @@ namespace OpenFrp.Launcher
                     };
                     TaskBarIcon.ForceCreate(false);
                 }
-                catch
+                catch (Exception?)
                 {
 
                 }
@@ -377,8 +395,16 @@ namespace OpenFrp.Launcher
                 Awe.UI.Win32.UserUxtheme.ShouldSystemUseDarkMode();
             }
 
+            
+
             if (wind is null) { App.Current?.Shutdown(); return; }
 
+            RefreshApplicationTheme(wind, false);
+
+        }
+
+        internal static void RefreshApplicationTheme(Window wind,bool useLightMode = false)
+        {
             var handle = new WindowInteropHelper(wind).EnsureHandle();
 
 
@@ -389,9 +415,7 @@ namespace OpenFrp.Launcher
                     ref backdropPvAttribute,
                     Marshal.SizeOf(typeof(int)));
 
-                var pvAttribute = !false ? (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable : (int)Awe.UI.Win32.DwmApi.PvAttribute.Enable;
-
-               // _issfff = !_issfff;
+                var pvAttribute = useLightMode ? (int)Awe.UI.Win32.DwmApi.PvAttribute.Disable : (int)Awe.UI.Win32.DwmApi.PvAttribute.Enable;
 
                 var dwAttribute = Awe.UI.Win32.DwmApi.DWMWINDOWATTRIBUTE.DWMWA_USE_IMMERSIVE_DARK_MODE;
 
@@ -425,7 +449,6 @@ namespace OpenFrp.Launcher
             }
 
             Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
-
         }
 
         private static T CreateObject<T>(Action<T>? func = default, params object[] args)

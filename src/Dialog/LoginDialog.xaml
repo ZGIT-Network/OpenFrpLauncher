@@ -44,7 +44,7 @@
         </Border>
         <Border CornerRadius="4" SnapsToDevicePixels="True">
             <Border.Background>
-                <ImageBrush ImageSource="..\Resources\loginBackground.png" Stretch="UniformToFill" />
+                <ImageBrush ImageSource="..\Resources\Images\loginBackground.png" Stretch="UniformToFill" />
             </Border.Background>
             <Grid>
                 <Grid.ColumnDefinitions>

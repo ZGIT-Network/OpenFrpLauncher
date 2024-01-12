@@ -101,6 +101,27 @@ namespace OpenFrp.Launcher.ViewModels
 
         #endregion
 
+        public int ApplicationTheme
+        {
+            get
+            {
+                if (App.Current?.MainWindow is Window wind)
+                {
+                    return wind.GetValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty) is true ? 0 : 1;
+                }
+                return 0;
+            }
+            set
+            {
+                if (App.Current?.MainWindow is Window wind)
+                {
+                    bool v2 = value is 0 ? true : false;
+                    wind.SetValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, v2);
+                    App.RefreshApplicationTheme(wind, v2);
+                }
+            }
+        }
+
         /// <summary>
         /// 显示登录窗口
         /// </summary>

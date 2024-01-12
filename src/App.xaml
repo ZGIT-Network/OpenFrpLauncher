@@ -12,7 +12,7 @@
 
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="Montserrat">
-                pack://application:,,,/OpenFrp.Launcher;component/Resources/#Montserrat
+                ./Resources/#Montserrat
             </FontFamily>
             <CubicEase
                 x:Key="EasingFunc"
