@@ -24,6 +24,9 @@
         <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding event_PageLoadedCommand}" />
         </behavior:EventTrigger>
+        <behavior:EventTrigger EventName="Unloaded">
+            <behavior:InvokeCommandAction Command="{Binding event_PageUnloadedCommand}" />
+        </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <Grid>
         <Grid.RowDefinitions>
@@ -105,7 +108,7 @@
                     <DataTemplate>
                         <awe:SelectableTextBlock FontSize="14" TextWrapping="Wrap">
                             <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding TimeZone, Converter={StaticResource LongToTimeZone}, Mode=OneWay}" />
-                            <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding LogId,StringFormat='#{0}', Mode=OneWay}" />
+                            <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding LogId, StringFormat='#{0}', Mode=OneWay}" />
                             <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding Level, Converter={StaticResource IntToLogLevel}, Mode=OneWay}" />
                             <Run Text="{Binding Data, Mode=OneWay}" />
                         </awe:SelectableTextBlock>

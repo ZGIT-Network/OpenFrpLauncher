@@ -9,7 +9,7 @@
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
-    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:sys2="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     x:Name="windHost"
@@ -229,9 +229,8 @@
                 <StackPanel Margin="20,20,20,0">
                     <TextBlock
                         FontFamily="{StaticResource Montserrat}"
-                        FontWeight="Medium"
                         FontSize="24"
-                        
+                        FontWeight="Medium"
                         Text="OpenFRP" />
                     <TextBlock
                         Margin="0,20,0,0"
@@ -256,9 +255,15 @@
                                         <MultiBinding Converter="{StaticResource EitherConverter}">
                                             <Binding
                                                 Converter="{StaticResource EqualConverter}"
-                                                ConverterParameter="首页"
                                                 Mode="OneWay"
-                                                Path="Title" />
+                                                Path="Title">
+                                                <Binding.ConverterParameter>
+                                                    <x:Array Type="sys2:String">
+                                                        <sys2:String>首页</sys2:String>
+                                                        <sys2:String>关于</sys2:String>
+                                                    </x:Array>
+                                                </Binding.ConverterParameter>
+                                            </Binding>
                                             <Binding
                                                 Mode="OneWay"
                                                 Path="DataContext.StateOfService"

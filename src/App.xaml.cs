@@ -45,7 +45,7 @@ namespace OpenFrp.Launcher
         public static Process ServiceProcess { get; set; }
 #pragma warning restore CS8618
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             if (Environment.OSVersion.Version.Major is 10)
             {
@@ -55,6 +55,14 @@ namespace OpenFrp.Launcher
                     return;
                 }
             }
+
+            if (!await ForceCheckVersionApp())
+            {
+                Environment.Exit(0);
+                return;
+            }
+
+
             ConfigureWindow();
             ConfigureRPC();
             ConfigureToast();
@@ -99,6 +107,37 @@ namespace OpenFrp.Launcher
 
                 ConfigureProcess();
             };
+        }
+        
+        private static async Task<bool> ForceCheckVersionApp()
+        {
+            try
+            {
+                var resp = await OpenFrp.Service.Net.HttpRequest.Get<JsonElement>("https://api.mclan.icu/api/news?query=openfrpLauncherPreview");
+
+                if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK &&
+                    resp.Data.GetProperty("data") is { } data)
+                {
+                    if ("v1.0.0".Equals(data.GetProperty("url").ToString()) &&
+                        "测试中".Equals(data.GetProperty("title").ToString()))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show(data.GetProperty("subtitle").ToString(),"OpenFRP Launcher",MessageBoxButton.OK,MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"{resp.Exception?.Message} {resp.Message}", "OpenFRP Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "OpenFRP Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            return false;
         }
 
         private static void ConfigureToast()
@@ -153,7 +192,7 @@ namespace OpenFrp.Launcher
                         while (await sc.ResponseStream.MoveNext())
                         {
                             var bd = JsonSerializer.Deserialize<Awe.Model.OpenFrp.Response.Data.UserTunnel>(sc.ResponseStream.Current.TunnelJson);
-                            if (bd is not null)
+                            if (bd is not null && sc.ResponseStream.Current is { } cr)
                             {
                                 switch (sc.ResponseStream.Current.State)
                                 {
@@ -203,7 +242,7 @@ namespace OpenFrp.Launcher
 
                                                 await Task.Delay(500);
 
-                                                WeakReferenceMessenger.Default.Send("refresh");
+                                                WeakReferenceMessenger.Default.Send(new Tuple<string,object?>("refresh",default));
                                             }
 
                                             ;break;
@@ -234,12 +273,17 @@ namespace OpenFrp.Launcher
                                         }
                                     case Service.Proto.Response.NotiflyStreamState.NoticeForProxyUpdate:
                                         {
-                                            var selz = JsonSerializer.Deserialize<dynamic>(sc.ResponseStream.Current.Message);
+                                            if ("openfrp.app.closeProcessMainly".Equals(cr.Message))
+                                            {
+                                                WeakReferenceMessenger.Default.Send(new Tuple<string, object?>("openfrp.app.closeProcessMainly", bd));
+                                            }
+                                            
                                             break;
                                         }
                                 }
                             }
                         }
+
                     }
                     catch
                     {

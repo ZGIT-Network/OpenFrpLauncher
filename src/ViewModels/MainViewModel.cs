@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -117,7 +118,8 @@ namespace OpenFrp.Launcher.ViewModels
             new RouterItem
             {
                 Icon = App.Current.TryFindResource("Awe.UI.Icons.Info") as Geometry,
-                Title = "关于"
+                Title = "关于",
+                Page = typeof(Views.About)
             },
         };
 
@@ -169,6 +171,10 @@ namespace OpenFrp.Launcher.ViewModels
             if (_frame is not null && value is not null)
             {
                 _frame.Content = Activator.CreateInstance(value);
+                if (App.Current.TryFindResource("FrameChangeAnimation") is Storyboard sb)
+                {
+                    _frame.BeginStoryboard(sb);
+                }
             }
         }
 

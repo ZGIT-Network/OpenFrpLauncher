@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="450"
@@ -18,8 +19,27 @@
             Margin="28,48,28,8"
             FontSize="24"
             Text="首页" />
-        <Grid Grid.Row="1" Margin="28,0">
-            <TextBlock FontSize="24" TextWrapping="Wrap" Text="现阶段启动器处于测试档,还有许多不稳定的地方。"/>
-        </Grid>
+        <ScrollViewer
+            Grid.Row="1"
+            helper:ScrollViewerBehavior.UseSmoothScroll="True"
+            helper:WindowsHelper.LightModeRebind="True"
+            PanningMode="VerticalFirst"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="28,0">
+                <TextBlock
+                    FontSize="24"
+                    Text="现阶段启动器处于测试档,还有许多不稳定的地方。"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    FontSize="24"
+                    Text="少壮不女郎，老大何伤悲"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    FontSize="24"
+                    Text="有问题请火速反馈，谢谢！！！！！！！"
+                    TextWrapping="Wrap" />
+
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

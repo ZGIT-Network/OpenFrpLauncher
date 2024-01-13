@@ -94,6 +94,11 @@
                                                 Margin="0,12,0,12"
                                                 Focusable="False"
                                                 ItemsSource="{Binding UserTunnels, Mode=OneWay}">
+                                                <behavior:Interaction.Triggers>
+                                                    <behavior:EventTrigger EventName="Loaded">
+                                                        <behavior:InvokeCommandAction Command="{Binding event_ItemsControlLoadedCommand}" PassEventArgsToCommand="True" />
+                                                    </behavior:EventTrigger>
+                                                </behavior:Interaction.Triggers>
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
                                                         <WrapPanel Orientation="Horizontal" />
@@ -433,7 +438,7 @@
                                                                                         </Style.Triggers>
                                                                                     </Style>
                                                                                 </FrameworkElement.Style>
-                                                                                <awe:VisibilityTranstion IsDisplay="{Binding TunnelCustomConfig, Converter={StaticResource ContainConverter}, ConverterParameter='enable_client_fillter = true', Mode=OneWay}">
+                                                                                <!--<awe:VisibilityTranstion IsDisplay="{Binding TunnelCustomConfig, Converter={StaticResource ContainConverter}, ConverterParameter='enable_client_fillter = true', Mode=OneWay}">
                                                                                     <awe:NavigationButton
                                                                                         Padding="8"
                                                                                         AutomationProperties.Name="{Binding Name, StringFormat='管理隧道 {0} 的流量', Mode=OneWay}"
@@ -450,7 +455,7 @@
                                                                                             Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
                                                                                             Stretch="Uniform" />
                                                                                     </awe:NavigationButton>
-                                                                                </awe:VisibilityTranstion>
+                                                                                </awe:VisibilityTranstion>-->
                                                                                 <awe:NavigationButton
                                                                                     Margin="2,0,4,0"
                                                                                     Padding="8"

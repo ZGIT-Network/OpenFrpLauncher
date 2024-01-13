@@ -27,15 +27,34 @@ namespace OpenFrp.Launcher.ViewModels
         {
             WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
 
-            WeakReferenceMessenger.Default.Register<string>(nameof(TunnelsViewModel), async (_, str) =>
+            WeakReferenceMessenger.Default.Register<Tuple<string,object?>>(nameof(TunnelsViewModel), async (_, data) =>
             {
-                switch (str)
+                switch (data.Item1)
                 {
                     case "refresh":
                         {
                             await event_RefreshUserTunnelCommand.ExecuteAsync(null);
-
                             break;
+                        }
+                    case "openfrp.app.closeProcessMainly" when (data.Item2 is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel):
+                        {
+                            OnlineTunnels.Remove(tunnel.Id);
+                            if (itemsControl is { } itemsCont)
+                            {
+                                foreach (Awe.Model.OpenFrp.Response.Data.UserTunnel item in itemsCont.ItemContainerGenerator.Items)
+                                {
+                                    if (item.Id.Equals(tunnel.Id))
+                                    {
+                                        var app = itemsCont.ItemContainerGenerator.ContainerFromItem(item);
+                                        if (app is ContentPresenter cp && cp?.ContentTemplate?.FindName("tg", cp) is Awe.UI.Controls.ToggleSwitch ts)
+                                        {
+                                            ts.IsChecked = false;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            ;break;
                         }
                 }
             });
@@ -78,6 +97,8 @@ namespace OpenFrp.Launcher.ViewModels
 
         [ObservableProperty]
         private bool displayError;
+
+        private ItemsControl? itemsControl;
 
         [RelayCommand]
         private async Task @event_PageLoaded()
@@ -307,18 +328,34 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        [RelayCommand]
-        private async Task @event_GetSocketCollection(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
-        {
-            var resp = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.GetActiveProxyConnectAsync(new Service.Proto.Request.ProxyConnectListRequest
-            {
-                UserTunnelJson = JsonSerializer.Serialize(tunnel)
-            }));
-            if (resp is (var data, _))
-            {
+        //[RelayCommand]
+        //private async Task @event_GetSocketCollection(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        //{
+        //    var resp = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.GetActiveProxyConnectAsync(new Service.Proto.Request.ProxyConnectListRequest
+        //    {
+        //        UserTunnelJson = JsonSerializer.Serialize(tunnel)
+        //    }));
+        //    if (resp is (var data, _) && data != null)
+        //    {
+        //        var dialog = new Dialog.MessageDialog
+        //        {
+        //            Title = new TextBlock()
+        //            {
+        //                Inlines =
+        //                {
+        //                    "aweapp.appMonitor"
+        //                },
+        //                TextTrimming = TextTrimming.CharacterEllipsis,
+        //                FontSize = 24
+        //            },
+        //            Content = new Controls.SocketMonitor
+        //            {
 
-            }
-        }
+        //            }
+        //        };
+        //        await dialog.ShowDialog();
+        //    }
+        //}
 
         [RelayCommand]
         private async Task @event_RefreshUserTunnel()
@@ -365,6 +402,12 @@ namespace OpenFrp.Launcher.ViewModels
 
         [RelayCommand]
         private void @event_ToCreateTunnelPage() => WeakReferenceMessenger.Default.Send(typeof(Views.CreateTunnel));
+
+        [RelayCommand]
+        private void @event_ItemsControlLoaded(RoutedEventArgs e)
+        {
+            if (e.Source is ItemsControl ic) { itemsControl = ic; }
+        }
 
         private T CreateObject<T>(Action<T>? func = default, params object[] args)
         {
