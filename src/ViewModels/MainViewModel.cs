@@ -22,9 +22,13 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public MainViewModel()
         {
-            if (!WeakReferenceMessenger.Default.IsRegistered<Awe.Model.OpenFrp.Response.Data.UserInfo>(nameof(MainViewModel))) 
+            if (!WeakReferenceMessenger.Default.IsRegistered<Awe.Model.OpenFrp.Response.Data.UserInfo>(nameof(MainViewModel)))
             {
                 WeakReferenceMessenger.Default.Register<Awe.Model.OpenFrp.Response.Data.UserInfo>(nameof(MainViewModel), (_, info) => UserInfo = info);
+            }
+            if (!WeakReferenceMessenger.Default.IsRegistered<OpenFrp.Launcher.Model.UpdateInfo>(nameof(MainViewModel)))
+            {
+                WeakReferenceMessenger.Default.Register<OpenFrp.Launcher.Model.UpdateInfo>(nameof(MainViewModel), (_, data) => UpdateInfo = data);
             }
             if (!WeakReferenceMessenger.Default.IsRegistered<Awe.Model.OpenFrp.Response.Data.UserTunnel>(nameof(MainViewModel)))
             {
@@ -53,7 +57,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 WeakReferenceMessenger.Default.Register<string>(nameof(MainViewModel), (_, data) =>
                 {
-                    switch(data)
+                    switch (data)
                     {
                         case "onService":
                             {
@@ -143,6 +147,12 @@ namespace OpenFrp.Launcher.ViewModels
         private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> userTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
 
         [ObservableProperty]
+        private OpenFrp.Launcher.Model.UpdateInfo updateInfo = new UpdateInfo
+        {
+            Type = UpdateInfoType.None
+        };
+
+        [ObservableProperty]
         private bool stateOfService;
 
         private void @event_OnUserInfoChanged()
@@ -163,6 +173,33 @@ namespace OpenFrp.Launcher.ViewModels
                 //    global::System.Diagnostics.Debugger.Break();
                 //}
             }
+        }
+
+        [RelayCommand]
+        private async Task @event_RequesetForUpdate()
+        {
+            if (UpdateInfo.Type is UpdateInfoType.None) return;
+            var dialog = new Dialog.MessageDialog
+            {
+                Title = new TextBlock()
+                {
+                    Text = UpdateInfo.Type switch {
+                        UpdateInfoType.Launcher => "启动器更新",
+                        UpdateInfoType.FrpClient => "FRPC 更新",
+                        _ => "Unknown Update"
+                    },
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    FontSize = 24
+                },
+                Content = new TextBlock
+                {
+                    FontSize = 16,
+                    TextWrapping = TextWrapping.Wrap,
+                    Text = UpdateInfo.Log,
+                }
+            };
+            await dialog.ShowDialog(); 
+            
         }
 
         [RelayCommand]
@@ -189,6 +226,19 @@ namespace OpenFrp.Launcher.ViewModels
         {
             App.Current.MainWindow.Visibility = Visibility.Hidden;
             c.Cancel = true;
+        }
+
+        private static T CreateObject<T>(Action<T>? func = default, params object[] args)
+        {
+            var vc = Activator.CreateInstance(typeof(T), args);
+
+            if (vc is null) throw new NullReferenceException();
+            else if (vc is T tt)
+            {
+                if (func is not null) { func(tt); }
+                return tt;
+            }
+            throw new TypeLoadException();
         }
     }
 }

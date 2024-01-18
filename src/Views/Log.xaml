@@ -82,11 +82,12 @@
         <ScrollViewer
             Grid.Row="1"
             helper:WindowsHelper.LightModeRebind="True"
+            PanningMode="VerticalFirst"
             VerticalScrollBarVisibility="Auto">
             <ItemsControl
                 Margin="28,4,28,20"
-                ItemsSource="{Binding LogDatas, Mode=OneWay}"
-                TextOptions.TextHintingMode="Animated">
+                helper:TextOptionHelper.TextAutoHiting="True"
+                ItemsSource="{Binding LogDatas, Mode=OneWay}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Loaded">
                         <behavior:InvokeCommandAction Command="{Binding event_ItemsContainerLoadedCommand}" PassEventArgsToCommand="True" />

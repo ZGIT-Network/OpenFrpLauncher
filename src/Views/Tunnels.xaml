@@ -83,6 +83,7 @@
                                     helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                                     Focusable="False"
                                     IsEnabled="{Binding event_RefreshUserTunnelCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
+                                    PanningMode="VerticalFirst"
                                     VerticalScrollBarVisibility="Auto"
                                     VirtualizingPanel.CacheLength="2,2"
                                     VirtualizingPanel.ScrollUnit="Item"
@@ -295,7 +296,7 @@
                                                                                     </Style.Triggers>
                                                                                 </Style>
                                                                             </FrameworkElement.Style>
-                                                                            <WrapPanel TextOptions.TextHintingMode="Animated">
+                                                                            <WrapPanel helper:TextOptionHelper.TextAutoHiting="True">
                                                                                 <awe:VisibilityTranstion IsDisplay="{Binding UseEncryption, Mode=OneWay}">
                                                                                     <TextBlock FontSize="14" Text="启用数据加密" />
                                                                                 </awe:VisibilityTranstion>
@@ -403,9 +404,9 @@
                                                                             Grid.ColumnSpan="2">
                                                                             <TextBlock
                                                                                 VerticalAlignment="Bottom"
+                                                                                helper:TextOptionHelper.TextAutoHiting="True"
                                                                                 FontSize="14"
-                                                                                FontWeight="Medium"
-                                                                                TextOptions.TextHintingMode="Animated">
+                                                                                FontWeight="Medium">
                                                                                 <FrameworkElement.Style>
                                                                                     <Style TargetType="TextBlock">
                                                                                         <Style.Triggers>
@@ -516,7 +517,7 @@
                                         Margin="36,32,36,64"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        TextOptions.TextHintingMode="Animated">
+                                        helper:TextOptionHelper.TextAutoHiting="True">
                                         <Image
                                             Width="120"
                                             HorizontalAlignment="Left"
@@ -602,7 +603,7 @@
                         Margin="36,32,36,64"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        TextOptions.TextHintingMode="Animated">
+                        helper:TextOptionHelper.TextAutoHiting="True">
                         <Image
                             Width="120"
                             HorizontalAlignment="Left"

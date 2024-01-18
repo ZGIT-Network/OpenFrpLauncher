@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -197,6 +198,19 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 MessageBox.Show(resp.Message);
             }
+        }
+
+        [RelayCommand]
+        private void @event_CreateMask(FrameworkElement control)
+        {
+            var flyout = new Awe.UI.Controls.Flyout
+            {
+
+            };
+            Awe.UI.Helper.FlyoutHelper.CreateMask(flyout, control,(px) =>
+            {
+                return (px + (control.ActualWidth / 2)) - (flyout.ActualWidth / 2);
+            });
         }
     }
 }

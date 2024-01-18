@@ -3,8 +3,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
+    xmlns:mvvv="clr-namespace:OpenFrp.Launcher"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -18,18 +21,62 @@
             Margin="28,48,28,8"
             FontSize="24"
             Text="关于" />
-        <Grid Grid.Row="1" Margin="28,0">
-            <TextBlock FontSize="24" TextWrapping="Wrap">
-                <Run
-                    FontFamily="{StaticResource Montserrat}"
-                    FontWeight="Medium"
-                    Text="OpenFRP" />
-                <Run Text="内测版 V1" />
-                <LineBreak />
-                <Run Foreground="{DynamicResource WarningOrErrorBrush}" Text="仅供尝鲜使用，请勿用于生产环境！！！！！！！ " />
-                <LineBreak />
-                <Run Text="Author: Yue" />
-            </TextBlock>
-        </Grid>
+        <ScrollViewer
+            Grid.Row="1"
+            helper:ScrollViewerBehavior.UseSmoothScroll="True"
+            helper:WindowsHelper.LightModeRebind="True"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="28,0">
+                <Grid
+                    Height="200"
+                    MaxWidth="1000"
+                    Margin="0,0,0,12"
+                    HorizontalAlignment="Left">
+                    <Grid helper:RectangleCliper.CornerRadius="4">
+                        <Grid.Effect>
+                            <BlurEffect Radius="20" RenderingBias="Performance" />
+                        </Grid.Effect>
+                        <Image
+                            Margin="-8"
+                            Opacity=".6"
+                            Source="..\Resources\Images\loginBackground.png"
+                            Stretch="UniformToFill" />
+                    </Grid>
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <Image Height="100" Source="..\Resources\desktop.ico" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock FontSize="24" TextWrapping="Wrap">
+                    <Run
+                        FontFamily="{StaticResource Montserrat}"
+                        FontWeight="Medium"
+                        Text="OpenFRP" />
+                    <Run Text="内测版 Build" />
+                    <Run    FontWeight="Medium" FontFamily="{StaticResource Montserrat}" Text="{x:Static mvvv:App.BuildName}"/>
+                    <LineBreak />
+                    <Run Foreground="{DynamicResource WarningOrErrorBrush}" Text="仅供尝鲜使用，请勿用于生产环境！！！！！！！ " />
+                    <LineBreak />
+                    <ui:NavigationButton
+                        Padding="0"
+                        Cursor="Hand"
+                        FontSize="24"
+                        NavigateUrl="https://github.com/Yue-cn"
+                        ToolTip="https://github.com/Yue-cn">
+                        <Run Text="作者: 越越(Yue-cn)" />
+                    </ui:NavigationButton>
+                    <LineBreak />
+                    <ui:NavigationButton
+                        Padding="0"
+                        Cursor="Hand"
+                        FontSize="24"
+                        NavigateUrl="https://github.com/ZGIT-Network/OpenFrpLauncher"
+                        ToolTip="https://github.com/ZGIT-Network/OpenFrpLauncher">
+                        <Run Text="我们在 Github 上开源哦！记得点个 Star" TextDecorations="Underline" />
+                    </ui:NavigationButton>
+                    <LineBreak />
+                    <Run Text="UI 库为越越亲自编写,以 MIT 协议开源，欢迎使用！" />
+                </TextBlock>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>

@@ -156,7 +156,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <DataTemplate.Resources>
-                                        <converter:ContainConverter x:Key="ContainConverter" TurnResult="True" />
+                                        <converter:ContainConverter x:Key="ContainConverter" />
                                     </DataTemplate.Resources>
                                     <Border
                                         Width="250"
@@ -194,7 +194,7 @@
                                         </behavior:Interaction.Triggers>
                                         <Grid>
                                             <StackPanel Orientation="Vertical">
-                                                <TextBlock FontSize="17" TextOptions.TextHintingMode="Animated">
+                                                <TextBlock helper:TextOptionHelper.TextAutoHiting="True" FontSize="17">
                                                     <Run
                                                         FontFamily="{StaticResource Montserrat}"
                                                         FontWeight="Medium"
@@ -226,8 +226,8 @@
                                                                     Stretch="Uniform" />
                                                                 <TextBlock
                                                                     Margin="4,0,0,0"
-                                                                    Text="满载"
-                                                                    TextOptions.TextHintingMode="Animated" />
+                                                                    helper:TextOptionHelper.TextAutoHiting="True"
+                                                                    Text="满载" />
                                                             </StackPanel>
                                                         </awe:Tag>
                                                     </awe:VisibilityTranstion>
@@ -243,8 +243,8 @@
                                                                     Stretch="Uniform" />
                                                                 <TextBlock
                                                                     Margin="4,0,0,0"
-                                                                    Text="状态异常"
-                                                                    TextOptions.TextHintingMode="Animated" />
+                                                                    helper:TextOptionHelper.TextAutoHiting="True"
+                                                                    Text="状态异常" />
                                                             </StackPanel>
                                                         </awe:Tag>
                                                     </awe:VisibilityTranstion>
@@ -349,24 +349,70 @@
                                                     </awe:VisibilityTranstion>
                                                 </WrapPanel>
                                                 <TextBlock
+                                                    helper:TextOptionHelper.TextAutoHiting="True"
                                                     FontFamily="{StaticResource Awe.UI.DisplayFont}"
                                                     FontSize="14"
                                                     Foreground="{DynamicResource DescriptionForeground2}"
                                                     Text="{Binding Description, Mode=OneWay}"
-                                                    TextOptions.TextHintingMode="Animated"
                                                     TextWrapping="Wrap" />
 
                                             </StackPanel>
-                                            <awe:VisibilityTranstion
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Top"
-                                                IsDisplay="{Binding Group, Converter={StaticResource ContainConverter}, ConverterParameter='normal', Mode=OneWay}">
+
+                                            <awe:VisibilityTranstion HorizontalAlignment="Right" VerticalAlignment="Top">
+                                                <awe:VisibilityTranstion.IsDisplay>
+                                                    <MultiBinding Converter="{StaticResource BothConverter}">
+                                                        <Binding
+                                                            ConverterParameter="normal"
+                                                            Mode="OneWay"
+                                                            Path="Group">
+                                                            <Binding.Converter>
+                                                                <converter:ContainConverter TurnResult="True" />
+                                                            </Binding.Converter>
+                                                        </Binding>
+                                                        <Binding
+                                                            ConverterParameter=";svip"
+                                                            Mode="OneWay"
+                                                            Path="Group">
+                                                            <Binding.Converter>
+                                                                <converter:ContainConverter TurnResult="False" />
+                                                            </Binding.Converter>
+                                                        </Binding>
+                                                    </MultiBinding>
+                                                </awe:VisibilityTranstion.IsDisplay>
                                                 <awe:Tag
                                                     Content="VIP"
                                                     CornerRadius="2"
                                                     SizeEnum="Tiny"
                                                     TagType="Warning" />
                                             </awe:VisibilityTranstion>
+                                            <awe:VisibilityTranstion HorizontalAlignment="Right" VerticalAlignment="Top">
+                                                <awe:VisibilityTranstion.IsDisplay>
+                                                    <MultiBinding Converter="{StaticResource BothConverter}">
+                                                        <Binding
+                                                            ConverterParameter="normal"
+                                                            Mode="OneWay"
+                                                            Path="Group">
+                                                            <Binding.Converter>
+                                                                <converter:ContainConverter TurnResult="True" />
+                                                            </Binding.Converter>
+                                                        </Binding>
+                                                        <Binding
+                                                            ConverterParameter=";svip"
+                                                            Mode="OneWay"
+                                                            Path="Group">
+                                                            <Binding.Converter>
+                                                                <converter:ContainConverter TurnResult="True" />
+                                                            </Binding.Converter>
+                                                        </Binding>
+                                                    </MultiBinding>
+                                                </awe:VisibilityTranstion.IsDisplay>
+                                                <awe:Tag
+                                                    Content="SVIP"
+                                                    CornerRadius="2"
+                                                    SizeEnum="Tiny"
+                                                    TagType="Warning" />
+                                            </awe:VisibilityTranstion>
+
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

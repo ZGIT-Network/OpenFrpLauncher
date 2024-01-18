@@ -9,7 +9,8 @@
 		<OutputType>WinExe</OutputType>
 		<ApplicationManifest>Properties\App.manifest</ApplicationManifest>
 		<AssemblyName>OpenFrpLauncher</AssemblyName>
-		<AssemblyTitle>OpenFrp WPF 桌面启动器</AssemblyTitle>
+		<AssemblyTitle>OpenFrp 启动器</AssemblyTitle>
+		<ApplicationIcon>Resources\desktop.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>

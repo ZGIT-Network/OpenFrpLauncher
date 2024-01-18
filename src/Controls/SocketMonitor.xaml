@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
@@ -21,9 +22,9 @@
     <Grid>
         <StackPanel>
             <TextBlock
+                helper:TextOptionHelper.TextAutoHiting="True"
                 FontSize="16"
-                Text="用户侦测"
-                TextOptions.TextHintingMode="Animated" />
+                Text="用户侦测" />
             <ItemsControl />
         </StackPanel>
     </Grid>

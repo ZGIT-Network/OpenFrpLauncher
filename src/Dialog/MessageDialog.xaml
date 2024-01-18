@@ -108,6 +108,7 @@
                                     ui:ScrollViewerBehavior.UseSmoothScroll="True"
                                     ui:WindowsHelper.UseLightMode="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                     FocusVisualStyle="{x:Null}"
+                                    PanningMode="VerticalFirst"
                                     VerticalScrollBarVisibility="Auto">
                                     <ContentPresenter
                                         x:Name="svc"

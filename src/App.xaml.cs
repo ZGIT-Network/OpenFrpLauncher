@@ -23,6 +23,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Grpc.Core;
 using OpenFrp.Launcher.Controls;
+using Windows.UI.ViewManagement;
 using static Google.Protobuf.WellKnownTypes.Field.Types;
 
 namespace OpenFrp.Launcher
@@ -36,6 +37,11 @@ namespace OpenFrp.Launcher
         {
             
         }
+
+        public static string BuildName { get; } = "v101";
+
+        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v10";
+
 #pragma warning disable CS8618
         // 必须不为 Null
         public static OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient RemoteClient { get; set; }
@@ -44,6 +50,8 @@ namespace OpenFrp.Launcher
 
         public static Process ServiceProcess { get; set; }
 #pragma warning restore CS8618
+
+    
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -67,19 +75,67 @@ namespace OpenFrp.Launcher
             ConfigureRPC();
             ConfigureToast();
             ConfigureProcess();
-            
+            ConfigureVersionCheck();
         }
 
-        protected override void OnExit(ExitEventArgs e)
-        {
-            ClearToast();
-        }
+        protected override void OnExit(ExitEventArgs e) => ClearToast();
 
         private static void ClearToast()
         {
             if (Environment.OSVersion.Version.Major is not 10) return;
             Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
         }
+
+        private static bool IsDarkBackground(Windows.UI.Color color)
+        {
+            return color.R + color.G + color.B < (255 * 3 - color.R - color.G - color.B);
+        }
+
+        /// <exception cref="NotSupportedException"></exception>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="NullReferenceException"></exception>
+        private static async Task<string> GetFrpcVersionAsync()
+        {
+            string platform = RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.X64 => "amd64",
+                Architecture.X86 => "386",
+                Architecture.Arm64 => "arm64",
+                _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
+            };
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc");
+            var pathForFile = Path.Combine(path, $"frpc_windows_{platform}.exe");
+
+            if (!File.Exists(pathForFile))
+            {
+                throw new FileNotFoundException("FRPC 文件丢失");
+            }
+
+            var vk = Process.Start(new ProcessStartInfo
+            {
+                WorkingDirectory = path,
+                RedirectStandardOutput = true,
+                FileName = pathForFile,
+                Arguments = "-v",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+
+            await Task.Run(vk.WaitForExit);
+
+            while (!vk.StandardOutput.EndOfStream)
+            {
+                string str = await vk.StandardOutput.ReadLineAsync();
+                if (str.Contains("OpenFRP_"))
+                {
+                    return str;
+                }
+            }
+
+            throw new NullReferenceException();
+        }
+
+        #region Configure
 
         private static void ConfigureProcess()
         {
@@ -108,38 +164,43 @@ namespace OpenFrp.Launcher
                 ConfigureProcess();
             };
         }
-        
-        private static async Task<bool> ForceCheckVersionApp()
+
+        private static async void ConfigureVersionCheck()
         {
-            try
-            {
-                var resp = await OpenFrp.Service.Net.HttpRequest.Get<JsonElement>("https://api.mclan.icu/api/news?query=openfrpLauncherPreview");
+            var versionData = await OpenFrp.Service.Net.OpenFrp.GetSoftwareVersionInfo();
 
-                if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK &&
-                    resp.Data.GetProperty("data") is { } data)
-                {
-                    if ("v1.0.0".Equals(data.GetProperty("url").ToString()) &&
-                        "测试中".Equals(data.GetProperty("title").ToString()))
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        MessageBox.Show(data.GetProperty("subtitle").ToString(),"OpenFRP Launcher",MessageBoxButton.OK,MessageBoxImage.Error);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show($"{resp.Exception?.Message} {resp.Message}", "OpenFRP Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
+            if (versionData.Exception is null && versionData.StatusCode is System.Net.HttpStatusCode.OK)
             {
-                MessageBox.Show(ex.ToString(), "OpenFRP Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!VersionString.Equals(versionData.Data?.Launcher.Latest))
+                {
+                    WeakReferenceMessenger.Default.Send(new Model.UpdateInfo
+                    {
+                        Type = Model.UpdateInfoType.Launcher,
+                        SoftWareVersionData = versionData.Data,
+                    });
+                    return;
+                }
+                try
+                {
+                    var frpcVersion = await GetFrpcVersionAsync();
+                    if (!frpcVersion.Equals(versionData.Data?.Latest))
+                    {
+                        WeakReferenceMessenger.Default.Send(new Model.UpdateInfo
+                        {
+                            Type = Model.UpdateInfoType.FrpClient,
+                            SoftWareVersionData = versionData.Data,
+                            Log = versionData.Data?.FrpcUpdateLog + "\nCONTINUE: CLOSE ALL TUNNELS AT FIRST"
+                        });
+                        // frpc has update
+                    }
+                }
+                catch
+                {
+                    // frpc version check failed
+                }
             }
-            return false;
         }
-
+        
         private static void ConfigureToast()
         {
             if (Environment.OSVersion.Version.Major is not 10) return;
@@ -443,8 +504,55 @@ namespace OpenFrp.Launcher
 
             if (wind is null) { App.Current?.Shutdown(); return; }
 
-            RefreshApplicationTheme(wind, false);
+            var useLightMode = true;
+            if (Environment.OSVersion.Version.Major is 10)
+            {
+                var uiSettings = new Windows.UI.ViewManagement.UISettings();
 
+                if (IsDarkBackground(uiSettings.GetColorValue(UIColorType.Background)))
+                {
+                    useLightMode = false;
+                }
+            }
+            RefreshApplicationTheme(wind, useLightMode);
+
+        }
+
+        #endregion
+
+        private static async Task<bool> ForceCheckVersionApp()
+        {
+            if (Debugger.IsAttached) return true;
+            try
+            {
+                var resp = await OpenFrp.Service.Net.HttpRequest.Get<JsonElement>("https://api.mclan.icu/api/news?query=openfrpLauncherPreview");
+
+                if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK &&
+                    resp.Data.GetProperty("data") is { } data)
+                {
+                    if (BuildName.Equals(data.GetProperty("url").ToString()) &&
+                        "测试中".Equals(data.GetProperty("title").ToString()))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        MessageBox.Show(data.GetProperty("subtitle").ToString(), "OpenFRP Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"{resp.Exception?.Message} {resp.Message}", "OpenFRP Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (MessageBox.Show(ex.ToString() + "\n点击\"确定\"将继续进入 App，老版本造成的问题一律不解决。", "OpenFRP Launcher", MessageBoxButton.OKCancel, MessageBoxImage.Warning) is MessageBoxResult.OK)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         internal static void RefreshApplicationTheme(Window wind,bool useLightMode = false)

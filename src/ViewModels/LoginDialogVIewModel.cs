@@ -14,10 +14,10 @@ namespace OpenFrp.Launcher.ViewModels
         public CancellationTokenSource CancellationTokenSource { get; set; } = new CancellationTokenSource();
 
         [ObservableProperty]
-        private string? username;
+        private string? username = "loliwa";
 
         [ObservableProperty]
-        private string? password;
+        private string? password = "/#/#123456789Abc";
 
 
 
