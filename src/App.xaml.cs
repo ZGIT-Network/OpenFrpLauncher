@@ -622,22 +622,25 @@ namespace OpenFrp.Launcher
 
             if (Environment.OSVersion.Version.Major is 10)
             {
-                try
+                if (OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme)
                 {
-                    var uiSettings = new Windows.UI.ViewManagement.UISettings();
-
-                    if (IsDarkBackground(uiSettings.GetColorValue(UIColorType.Background)))
+                    try
                     {
-                        RefreshApplicationTheme(wind, false);
-                        return;
+                        var uiSettings = new Windows.UI.ViewManagement.UISettings();
+
+                        if (IsDarkBackground(uiSettings.GetColorValue(UIColorType.Background)))
+                        {
+                            RefreshApplicationTheme(wind, false);
+                            return;
+                        }
+                    }
+                    catch
+                    {
+                        // not support query
                     }
                 }
-                catch
-                {
-                    // not support query
-                }
             }
-            OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme = false;
+            else OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme = false;
             RefreshApplicationTheme(wind, useLightMode);
 
         }
