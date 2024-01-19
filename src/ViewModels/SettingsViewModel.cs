@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -6,11 +8,16 @@ using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using static Google.Protobuf.WellKnownTypes.Field.Types;
+
+
 
 namespace OpenFrp.Launcher.ViewModels
 {
     internal partial class SettingsViewModel : ObservableObject
     {
+        private static System.Windows.Markup.XmlLanguage userLang = System.Windows.Markup.XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag);
+
         public SettingsViewModel()
         {
             if (App.Current?.MainWindow is { DataContext: MainViewModel dx })
@@ -20,6 +27,14 @@ namespace OpenFrp.Launcher.ViewModels
                 UserInfo = dx.UserInfo;
             }
         }
+
+        [ObservableProperty]
+        private ObservableCollection<Model.FontDisplay> fonts = new ObservableCollection<Model.FontDisplay>(System.Windows.Media.Fonts.SystemFontFamilies.Select(x => new Model.FontDisplay
+        {
+            FontFamily = x,
+            FontName = x.FamilyNames.ContainsKey(userLang) ? x.FamilyNames[userLang] : x.FamilyNames.First().Value,
+        }));
+
 
         #region UserInfo + Model # 附加后台绑定
 
@@ -108,7 +123,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 if (App.Current?.MainWindow is Window wind)
                 {
-                    return wind.GetValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty) is true ? 0 : 1;
+                    return (wind.GetValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty) is true && Properties.Settings.Default.UseLightMode) ? 0 : 1;
                 }
                 return 0;
             }
@@ -117,10 +132,59 @@ namespace OpenFrp.Launcher.ViewModels
                 if (App.Current?.MainWindow is Window wind)
                 {
                     bool v2 = value is 0 ? true : false;
+
                     wind.SetValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, v2);
                     App.RefreshApplicationTheme(wind, v2);
+
+                    Properties.Settings.Default.UseLightMode = v2;
+                    if (FollowBySystem is true)
+                    {
+                        Properties.Settings.Default.FollowSystemTheme = false;
+                        OnPropertyChanged(nameof(FollowBySystem));
+                    }
                 }
             }
+        }
+
+        public bool FollowBySystem
+        {
+            get
+            {
+                return OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme;
+            }
+            set
+            {
+                if (value is true && Environment.OSVersion.Version.Major is 10 &&
+                    App.Current?.MainWindow is { } wind)
+                {
+                    try
+                    {
+                        var uiSettings = new Windows.UI.ViewManagement.UISettings();
+
+                        if (IsDarkBackground(uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background)))
+                        {
+                            App.RefreshApplicationTheme(wind, false);
+                            Properties.Settings.Default.FollowSystemTheme = value;
+                            OnPropertyChanged(nameof(ApplicationTheme));
+                            return;
+                        }
+                    }
+                    catch
+                    {
+                        // not support query
+                        return;
+                    }
+                }
+                else
+                {
+                    Properties.Settings.Default.FollowSystemTheme = false;
+                }
+            }
+        }
+
+        private bool IsDarkBackground(Windows.UI.Color color)
+        {
+            return color.R + color.G + color.B < (255 * 3 - color.R - color.G - color.B);
         }
 
         /// <summary>
@@ -181,7 +245,7 @@ namespace OpenFrp.Launcher.ViewModels
                         if (data.Flag)
                         {
                             Service.Net.OpenFrp.Logout();
-
+                            Properties.Settings.Default.UserPwn = string.Empty;
                             WeakReferenceMessenger.Default.Send(UserInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
                             {
                                 UserName = "not-allow-display"
@@ -198,19 +262,6 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 MessageBox.Show(resp.Message);
             }
-        }
-
-        [RelayCommand]
-        private void @event_CreateMask(FrameworkElement control)
-        {
-            var flyout = new Awe.UI.Controls.Flyout
-            {
-
-            };
-            Awe.UI.Helper.FlyoutHelper.CreateMask(flyout, control,(px) =>
-            {
-                return (px + (control.ActualWidth / 2)) - (flyout.ActualWidth / 2);
-            });
         }
     }
 }

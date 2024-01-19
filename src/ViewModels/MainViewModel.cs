@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -79,6 +83,10 @@ namespace OpenFrp.Launcher.ViewModels
                 if (e.PropertyName is nameof(UserInfo))
                 {
                     event_OnUserInfoChanged();
+                    if (_frame is { Content: var c } && c?.GetType() == typeof(Views.Settings))
+                    {
+                        event_RouterItemInvoked(typeof(Views.Settings));
+                    }
                 }
             };
         }
@@ -196,6 +204,54 @@ namespace OpenFrp.Launcher.ViewModels
                     FontSize = 16,
                     TextWrapping = TextWrapping.Wrap,
                     Text = UpdateInfo.Log,
+                },
+                PrimaryButtonText = "更新",
+                PrimaryButtonIcon = CreateObject<Path>(x =>
+                {
+                    x.SetResourceReference(Path.DataProperty, "Awe.UI.Icons.Update");
+                    x.SetBinding(Path.FillProperty, new Binding
+                    {
+                        Mode = BindingMode.OneWay,
+                        RelativeSource = RelativeSource.Self,
+                        Path = new PropertyPath(TextElement.ForegroundProperty)
+                    });
+                    x.Stretch = Stretch.Uniform;
+                    x.Margin = new Thickness(0, 0, 4, 0);
+                    x.Width = x.Height = 16;
+                }),
+                CloseButtonText = "我再想想...",
+                InvokeAction = delegate
+                {
+                    if (App.Current?.MainWindow is { } wind)
+                    {
+                        wind.IsHitTestVisible = false;
+                        try
+                        {
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = Assembly.GetExecutingAssembly().Location,
+                                Verb = "runas",
+                                Arguments = "--update",
+                                ErrorDialog = false
+                            });
+                        }
+                        catch
+                        {
+                            wind.IsHitTestVisible = true;
+                            return Task.FromResult(false);
+                        }
+
+                        wind.IsHitTestVisible = true;
+                        if (App.ServiceProcess != null && !App.ServiceProcess.HasExited)
+                        {
+                            App.ServiceProcess.EnableRaisingEvents = false;
+                            App.ServiceProcess.Kill();
+                        }
+
+                        Environment.Exit(0);
+                        return Task.FromResult(true);
+                    }
+                    return Task.FromResult(false);
                 }
             };
             await dialog.ShowDialog(); 

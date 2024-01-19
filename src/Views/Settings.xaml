@@ -8,6 +8,7 @@
     xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -37,7 +38,7 @@
                 Focusable="False"
                 PanningMode="VerticalFirst"
                 VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="28,0">
+                <StackPanel Margin="28,0,28,32">
                     <TextBlock
                         helper:TextOptionHelper.TextAutoHiting="True"
                         FontSize="16"
@@ -147,24 +148,26 @@
                         Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
                         MaxWidth="200"
                         HorizontalAlignment="Left"
+                        helper:ControlHelper.Header="主题色"
                         helper:WindowsHelper.LightModeRebind="True"
                         SelectedIndex="{Binding ApplicationTheme, Mode=TwoWay}">
                         <ComboBoxItem Content="浅色模式" />
                         <ComboBoxItem Content="深色模式" />
                     </awe:RwComboBox>
 
-                    <Button
-                        helper:WindowsHelper.LightModeRebind="True"
-                        Command="{Binding event_CreateMaskCommand}"
-                        CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
-                        Content="try to create mask" />
-                    <TextBlock
+                    <awe:ToggleSwitch
+                        Margin="0,16,0,12"
+                        helper:ControlHelper.Header="使用系统主题"
+                        IsChecked="{Binding FollowBySystem}"
+                        IsEnabled="{Binding Version.Major, Source={x:Static sys:Environment.OSVersion}, Converter={StaticResource EqualConverter}, ConverterParameter='10', Mode=OneWay}" />
+
+                    <!--<TextBlock
                         Margin="0,16,0,500"
                         helper:TextOptionHelper.TextAutoHiting="True"
                         FontSize="18"
                         Foreground="{DynamicResource DefaultForegroundColor}"
-                        Text="应用外观" />
-
+                        Text="{Binding Version.Major, Source={x:Static sys:Environment.OSVersion}, Converter={StaticResource EqualConverter}, ConverterParameter='10', Mode=OneWay}" />-->
+             
                 </StackPanel>
             </ScrollViewer>
         </Grid>
