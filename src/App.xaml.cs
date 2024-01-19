@@ -722,7 +722,7 @@ namespace OpenFrp.Launcher
 
             if (Environment.OSVersion.Version.Major >= 10)
             {
-                int backdropPvAttribute = (int)Awe.UI.Win32.DwmApi.DWMSBT.DWMSBT_TABBEDWINDOW;
+                int backdropPvAttribute = (int)Awe.UI.Win32.DwmApi.DWMSBT.DWMSBT_MAINWINDOW;
                 Awe.UI.Win32.DwmApi.DwmSetWindowAttribute(handle, Awe.UI.Win32.DwmApi.DWMWINDOWATTRIBUTE.DWMWA_SYSTEMBACKDROP_TYPE,
                     ref backdropPvAttribute,
                     Marshal.SizeOf(typeof(int)));

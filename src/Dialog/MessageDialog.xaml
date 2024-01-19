@@ -14,6 +14,7 @@
     d:DesignHeight="768"
     d:DesignWidth="1366"
     d:Foreground="White"
+    Foreground="White"
     mc:Ignorable="d">
     <UserControl.Style>
         <Style TargetType="local:MessageDialog">

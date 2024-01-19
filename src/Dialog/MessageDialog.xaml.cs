@@ -53,6 +53,15 @@ namespace OpenFrp.Launcher.Dialog
 
 
 
+        public Window MainWindow
+        {
+            get { return (Window)GetValue(MainWindowProperty); }
+            set { SetValue(MainWindowProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for MainWindow.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty MainWindowProperty =
+            DependencyProperty.Register("MainWindow", typeof(Window), typeof(MessageDialog), new PropertyMetadata());
 
 
 
@@ -168,7 +177,8 @@ namespace OpenFrp.Launcher.Dialog
         {
             if (App.Current?.MainWindow is Window wind)
             {
-               
+                MainWindow = wind;
+
                 wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogOpennedProperty, true);
                 wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogContentProperty, this);
 

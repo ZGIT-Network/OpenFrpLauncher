@@ -16,5 +16,8 @@ namespace OpenFrp.Launcher.Model
         public Type? Page { get; set; }
 
         public Awe.UI.Helper.TwiceBindingHelper? IsEnableBinding { get; set; }
+
+        // 子路由
+        public RouterItem[]? SubRouterItems { get; set; }
     }
 }
