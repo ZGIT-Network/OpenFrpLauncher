@@ -24,16 +24,16 @@
                         <CircleEase EasingMode="EaseOut" />
                     </DoubleAnimation.EasingFunction>
                 </DoubleAnimation>
-                <ThicknessAnimation
+                <DoubleAnimation
                     FillBehavior="Stop"
-                    Storyboard.TargetProperty="Margin"
-                    From="0,12,0,0"
+                    Storyboard.TargetProperty="RenderTransform.Y"
+                    From="12"
                     To="0"
                     Duration="0:0:.45">
-                    <ThicknessAnimation.EasingFunction>
+                    <DoubleAnimation.EasingFunction>
                         <CircleEase EasingMode="EaseOut" />
-                    </ThicknessAnimation.EasingFunction>
-                </ThicknessAnimation>
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
             </Storyboard>
             <CubicEase
                 x:Key="EasingFunc"

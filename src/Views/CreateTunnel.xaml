@@ -227,7 +227,8 @@
                                                                 <TextBlock
                                                                     Margin="4,0,0,0"
                                                                     helper:TextOptionHelper.TextAutoHiting="True"
-                                                                    Text="满载" />
+                                                                    Text="满载"
+                                                                    TextOptions.TextFormattingMode="Display" />
                                                             </StackPanel>
                                                         </awe:Tag>
                                                     </awe:VisibilityTranstion>
@@ -244,7 +245,8 @@
                                                                 <TextBlock
                                                                     Margin="4,0,0,0"
                                                                     helper:TextOptionHelper.TextAutoHiting="True"
-                                                                    Text="状态异常" />
+                                                                    Text="状态异常"
+                                                                    TextOptions.TextFormattingMode="Display" />
                                                             </StackPanel>
                                                         </awe:Tag>
                                                     </awe:VisibilityTranstion>

@@ -85,64 +85,63 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="RadioButton">
-                                    <Grid
-                                        helper:TextOptionHelper.TextAutoHiting="True"
-                                        Background="{TemplateBinding Background}"
-                                        Focusable="False">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border
-                                            Width="20"
-                                            Height="24"
-                                            Margin="0,0,6,0">
-                                            <Path
-                                                x:Name="cof"
-                                                Width="17"
-                                                Height="17"
-                                                Data="{Binding Icon}"
-                                                SnapsToDevicePixels="True"
-                                                Stretch="Uniform"
-                                                UseLayoutRounding="True">
-                                                <Path.Fill>
+                                    <Border x:Name="border" Background="Transparent">
+                                        <Grid helper:TextOptionHelper.TextAutoHiting="True" Focusable="False">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border
+                                                Width="20"
+                                                Height="24"
+                                                Margin="0,0,6,0">
+                                                <Path
+                                                    x:Name="cof"
+                                                    Width="17"
+                                                    Height="17"
+                                                    Data="{Binding Icon}"
+                                                    SnapsToDevicePixels="True"
+                                                    Stretch="Uniform"
+                                                    UseLayoutRounding="True">
+                                                    <Path.Fill>
+                                                        <VisualBrush>
+                                                            <VisualBrush.Visual>
+                                                                <Grid Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+                                                                    <Rectangle Fill="{TemplateBinding Foreground}" />
+                                                                    <Rectangle
+                                                                        x:Name="checked_icon"
+                                                                        Fill="{DynamicResource Awe.UI.AccentColor}"
+                                                                        Opacity="0" />
+                                                                </Grid>
+                                                            </VisualBrush.Visual>
+                                                        </VisualBrush>
+                                                    </Path.Fill>
+                                                </Path>
+                                            </Border>
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                Padding="0,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Background="Transparent"
+                                                FontSize="14"
+                                                Text="{Binding Title}">
+                                                <TextBlock.Foreground>
                                                     <VisualBrush>
                                                         <VisualBrush.Visual>
                                                             <Grid Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
                                                                 <Rectangle Fill="{TemplateBinding Foreground}" />
                                                                 <Rectangle
-                                                                    x:Name="checked_icon"
+                                                                    x:Name="checked_text"
                                                                     Fill="{DynamicResource Awe.UI.AccentColor}"
                                                                     Opacity="0" />
                                                             </Grid>
                                                         </VisualBrush.Visual>
                                                     </VisualBrush>
-                                                </Path.Fill>
-                                            </Path>
-                                        </Border>
-                                        <TextBlock
-                                            Grid.Column="1"
-                                            Padding="0,0,0,0"
-                                            VerticalAlignment="Center"
-                                            Background="Transparent"
-                                            FontSize="14"
-                                            Text="{Binding Title}">
-                                            <TextBlock.Foreground>
-                                                <VisualBrush>
-                                                    <VisualBrush.Visual>
-                                                        <Grid Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
-                                                            <Rectangle Fill="{TemplateBinding Foreground}" />
-                                                            <Rectangle
-                                                                x:Name="checked_text"
-                                                                Fill="{DynamicResource Awe.UI.AccentColor}"
-                                                                Opacity="0" />
-                                                        </Grid>
-                                                    </VisualBrush.Visual>
-                                                </VisualBrush>
-                                            </TextBlock.Foreground>
-                                        </TextBlock>
-                                    </Grid>
+                                                </TextBlock.Foreground>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
                                     <ControlTemplate.Resources>
                                         <CubicEase
                                             x:Key="ButtonTranstion"
@@ -150,6 +149,9 @@
                                             EasingMode="EaseOut" />
                                     </ControlTemplate.Resources>
                                     <ControlTemplate.Triggers>
+                                        <!--<Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="border" Property="Background" Value="Red" />
+                                        </Trigger>-->
                                         <Trigger Property="IsChecked" Value="True">
                                             <Trigger.EnterActions>
                                                 <BeginStoryboard>
@@ -234,16 +236,16 @@
                         FontFamily="{StaticResource Montserrat}"
                         FontSize="24"
                         FontWeight="Medium"
-                        Text="OpenFRP" />
+                        Text="OPENFRP" />
                     <TextBlock
                         Margin="0,20,0,0"
                         ui:TextOptionHelper.TextAutoHiting="True"
                         FontSize="16"
                         Opacity=".6"
                         Text="页面"
-                        Visibility="Visible" />
+                        Visibility="Collapsed" />
                     <ItemsControl
-                        Margin="0,10,0,0"
+                        Margin="0,20,0,0"
                         Focusable="False"
                         ItemsSource="{Binding MainRouterItems, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
@@ -335,8 +337,8 @@
                                         Stretch="Uniform" />
                                     <TextBlock
                                         Margin="4,0,0,0"
-                                        helper:TextOptionHelper.TextAutoHiting="True"
-                                        Text="守护进程异常" />
+                                        Text="守护进程异常"
+                                        TextOptions.TextFormattingMode="Display" />
                                 </StackPanel>
                             </awe:Tag>
                         </awe:VisibilityTranstion>
@@ -378,7 +380,9 @@
         <Grid Grid.Column="1">
 
             <ContentControl Focusable="False">
-
+                <ContentControl.RenderTransform>
+                    <TranslateTransform X="0" Y="0" />
+                </ContentControl.RenderTransform>
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Loaded">
                         <behavior:InvokeCommandAction Command="{Binding event_FrameLoadedCommand}" PassEventArgsToCommand="True" />

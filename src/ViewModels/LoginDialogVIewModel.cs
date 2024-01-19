@@ -14,24 +14,24 @@ namespace OpenFrp.Launcher.ViewModels
         public CancellationTokenSource CancellationTokenSource { get; set; } = new CancellationTokenSource();
 
         [ObservableProperty]
-        private string? username = "loliwa";
+        private string? username;
 
         [ObservableProperty]
-        private string? password = "/#/#123456789Abc";
+        private string? password;
 
 
 
         [ObservableProperty]
         private string? reason;
 
-        private TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>? fallbackTask;
+        internal TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>? UserInfoFallback;
 
         [RelayCommand]
         private void @event_ContainerLoaded(RoutedEventArgs e)
         {
             if (e.Source is Dialog.LoginDialog ld)
             {
-                fallbackTask = ld.DialogFallback;
+                UserInfoFallback = ld.DialogFallback;
             }
         }
 
@@ -40,10 +40,10 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (App.Current?.MainWindow is Window wind)
             {
-                if (fallbackTask?.Task.IsCompleted is false)
+                if (UserInfoFallback?.Task.IsCompleted is false)
                 {
                     CancellationTokenSource.Cancel();
-                    fallbackTask?.TrySetCanceled();
+                    UserInfoFallback?.TrySetCanceled();
                     Service.Net.OpenFrp.Logout();
                     if (Reason is "UserTag 不匹配" || Reason?.Contains("后台") is true)
                     {
@@ -94,7 +94,13 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         if (data.Flag)
                         {
-                            fallbackTask?.SetResult(userInfo);
+                            Properties.Settings.Default.UserPwn = System.Text.Json.JsonSerializer.Serialize(new Awe.Model.OAuth.Request.LoginRequest
+                            {
+                                Username = Username,
+                                Password = Properties.PndCodec.EncryptString(Encoding.UTF8.GetBytes(Password))
+                            });
+
+                            UserInfoFallback?.SetResult(userInfo);
                             await event_CloseDialog();
 
                             return;

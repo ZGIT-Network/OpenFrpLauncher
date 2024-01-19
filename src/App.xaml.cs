@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Contexts;
@@ -18,10 +19,14 @@ using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Awe.Model.OpenFrp.Response.Data;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using Grpc.Core;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using OpenFrp.Launcher.Controls;
 using Windows.UI.ViewManagement;
 using static Google.Protobuf.WellKnownTypes.Field.Types;
@@ -38,7 +43,7 @@ namespace OpenFrp.Launcher
             
         }
 
-        public static string BuildName { get; } = "v101";
+        public static string BuildName { get; } = "v104";
 
         public static string VersionString { get; } = "Yue.OpenFRPLauncher.v10";
 
@@ -69,16 +74,76 @@ namespace OpenFrp.Launcher
                 Environment.Exit(0);
                 return;
             }
+            
+            if (e.Args.Contains("--update"))
+            {
+                if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
+                {
+                    foreach (var item in ck)
+                    {
+                        item.Kill();
+                    }
 
+                    return;
+                }
+                ConfigureUpdateApp();
+                Environment.Exit(0);
+            }
+            var frpVersion = await GetFrpcVersionAsync();
 
+            if (!await ForceCheckVersionApp())
+            {
+                Environment.Exit(0);
+                return;
+            }
+            if ("non-frp".Equals(frpVersion))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = Assembly.GetExecutingAssembly().Location,
+                    Verb = "runas",
+                    Arguments = "--update",
+                    ErrorDialog = false
+                });
+                Environment.Exit(0);
+                return;
+            }
+
+            ConfigureAppCenter();
             ConfigureWindow();
+            TryAutoLogin();
             ConfigureRPC();
             ConfigureToast();
             ConfigureProcess();
-            ConfigureVersionCheck();
+            ConfigureVersionCheck(frpVersion);
         }
 
         protected override void OnExit(ExitEventArgs e) => ClearToast();
+
+
+        private static async void ConfigureAppCenter()
+        {
+            var id = (await AppCenter.GetInstallIdAsync()).ToString();
+            await AppCenter.SetEnabledAsync(true);
+
+            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            {
+                if (e.ExceptionObject is Exception ex)
+                {
+                    Crashes.TrackError(ex);
+                    Clipboard.SetText(ex.ToString());
+
+                    MessageBox.Show($"错误内容已复制，按下Ctrl+V | 粘贴 来显示内容。" +
+                    $"\n您也可以不反馈该问题，因为问题已上传到云端。\n会话 ID: {id}\n", "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            };
+
+            Analytics.EnableManualSessionTracker();
+            AppCenter.Start("07ba1344-c34b-42ec-83f5-511448b065a1", typeof(Crashes), typeof(Analytics));
+            AppCenter.SetUserId(id.ToString());
+            AppCenter.SetCountryCode(System.Globalization.CultureInfo.CurrentUICulture.EnglishName);
+
+        }
 
         private static void ClearToast()
         {
@@ -94,7 +159,7 @@ namespace OpenFrp.Launcher
         /// <exception cref="NotSupportedException"></exception>
         /// <exception cref="FileNotFoundException"></exception>
         /// <exception cref="NullReferenceException"></exception>
-        private static async Task<string> GetFrpcVersionAsync()
+        internal static async Task<string> GetFrpcVersionAsync()
         {
             string platform = RuntimeInformation.ProcessArchitecture switch
             {
@@ -108,7 +173,8 @@ namespace OpenFrp.Launcher
 
             if (!File.Exists(pathForFile))
             {
-                throw new FileNotFoundException("FRPC 文件丢失");
+                return "non-frp";
+                //throw new FileNotFoundException("FRPC 文件丢失");
             }
 
             var vk = Process.Start(new ProcessStartInfo
@@ -132,10 +198,44 @@ namespace OpenFrp.Launcher
                 }
             }
 
-            throw new NullReferenceException();
+
+            Analytics.TrackEvent("User's FRPC detect failed!",new Dictionary<string, string>(){
+                { "File",$"{pathForFile}" }
+            });
+
+            return string.Empty;
+            //throw new NullReferenceException();
         }
 
         #region Configure
+
+        private static void ConfigureUpdateApp()
+        {
+            var dialog = new UpdateWindow()
+            {
+
+            };
+
+            if (Awe.UI.Win32.UserUxtheme.IsSupportDarkMode)
+            {
+                Awe.UI.Win32.UserUxtheme.AllowDarkModeForApp(true);
+                Awe.UI.Win32.UserUxtheme.ShouldAppsUseDarkMode();
+                Awe.UI.Win32.UserUxtheme.ShouldSystemUseDarkMode();
+            }
+            var useLightMode = true;
+            if (Environment.OSVersion.Version.Major is 10)
+            {
+                var uiSettings = new Windows.UI.ViewManagement.UISettings();
+
+                if (IsDarkBackground(uiSettings.GetColorValue(UIColorType.Background)))
+                {
+                    useLightMode = false;
+                }
+            }
+            RefreshApplicationTheme(dialog, useLightMode);
+
+            dialog.ShowDialog();
+        }
 
         private static void ConfigureProcess()
         {
@@ -165,7 +265,7 @@ namespace OpenFrp.Launcher
             };
         }
 
-        private static async void ConfigureVersionCheck()
+        private static async void ConfigureVersionCheck(string frpVersion)
         {
             var versionData = await OpenFrp.Service.Net.OpenFrp.GetSoftwareVersionInfo();
 
@@ -182,14 +282,15 @@ namespace OpenFrp.Launcher
                 }
                 try
                 {
-                    var frpcVersion = await GetFrpcVersionAsync();
-                    if (!frpcVersion.Equals(versionData.Data?.Latest))
+                    if (!frpVersion.Equals(versionData.Data?.Latest))
                     {
                         WeakReferenceMessenger.Default.Send(new Model.UpdateInfo
                         {
                             Type = Model.UpdateInfoType.FrpClient,
                             SoftWareVersionData = versionData.Data,
-                            Log = versionData.Data?.FrpcUpdateLog + "\nCONTINUE: CLOSE ALL TUNNELS AT FIRST"
+                            Log = versionData.Data?.FrpcUpdateLog + 
+                            $"\nUpdate: {frpVersion} => {versionData.Data?.Latest}" +
+                            $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！"
                         });
                         // frpc has update
                     }
@@ -428,6 +529,7 @@ namespace OpenFrp.Launcher
                                 });
                                 xa.Command = new RelayCommand(() =>
                                 {
+                                    OpenFrp.Launcher.Properties.Settings.Default.Save();
                                     App.Current.Shutdown();
                                     //Environment.Exit(0);
                                 });
@@ -444,11 +546,22 @@ namespace OpenFrp.Launcher
                                 xa.Command = new RelayCommand(() =>
                                 {
                                     App.Current!.MainWindow.Visibility = Visibility.Hidden;
-                                    if (!ServiceProcess.HasExited)
+                                    try
                                     {
-                                        ServiceProcess.EnableRaisingEvents = false;
-                                        ServiceProcess.Kill();
+                                        if (!ServiceProcess.HasExited)
+                                        {
+                                            ServiceProcess.EnableRaisingEvents = false;
+                                            ServiceProcess.Kill();
+                                        }
                                     }
+                                    catch
+                                    {
+
+                                    }
+
+
+                                    OpenFrp.Launcher.Properties.Settings.Default.Save();
+
                                     string platform = RuntimeInformation.ProcessArchitecture switch
                                     {
                                         Architecture.X64 => "amd64",
@@ -504,22 +617,69 @@ namespace OpenFrp.Launcher
 
             if (wind is null) { App.Current?.Shutdown(); return; }
 
-            var useLightMode = true;
+            var useLightMode = OpenFrp.Launcher.Properties.Settings.Default.UseLightMode;
+
+
             if (Environment.OSVersion.Version.Major is 10)
             {
-                var uiSettings = new Windows.UI.ViewManagement.UISettings();
-
-                if (IsDarkBackground(uiSettings.GetColorValue(UIColorType.Background)))
+                try
                 {
-                    useLightMode = false;
+                    var uiSettings = new Windows.UI.ViewManagement.UISettings();
+
+                    if (IsDarkBackground(uiSettings.GetColorValue(UIColorType.Background)))
+                    {
+                        RefreshApplicationTheme(wind, false);
+                        return;
+                    }
+                }
+                catch
+                {
+                    // not support query
                 }
             }
+            OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme = false;
             RefreshApplicationTheme(wind, useLightMode);
 
         }
 
         #endregion
 
+        private static async void TryAutoLogin()
+        {
+            try
+            {
+                var ot = JsonSerializer.Deserialize<Awe.Model.OAuth.Request.LoginRequest>(OpenFrp.Launcher.Properties.Settings.Default.UserPwn);
+                if (ot is { } c && !string.IsNullOrEmpty(c.Password))
+                {
+                    var pwn = Encoding.UTF8.GetString(OpenFrp.Launcher.Properties.PndCodec.Descrypt(c.Password!));
+
+                    var fallbackTask = new TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>();
+                    var mwn = new ViewModels.LoginDialogVIewModel()
+                    {
+                        Username = c.Username,
+                        Password = pwn,
+                        UserInfoFallback = fallbackTask
+                    };
+                    
+
+
+                    await mwn.event_LoginCommand.ExecuteAsync(null);
+
+                    if (string.IsNullOrEmpty(mwn.Reason))
+                    {
+                        if (await fallbackTask.Task is { } info)
+                        {
+                            WeakReferenceMessenger.Default.Send(info);
+                        }
+                        // success
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
         private static async Task<bool> ForceCheckVersionApp()
         {
             if (Debugger.IsAttached) return true;
