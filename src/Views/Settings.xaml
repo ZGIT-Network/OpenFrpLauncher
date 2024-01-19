@@ -39,9 +39,9 @@
                 VerticalScrollBarVisibility="Auto">
                 <StackPanel Margin="28,0">
                     <TextBlock
+                        helper:TextOptionHelper.TextAutoHiting="True"
                         FontSize="16"
-                        Text="OpenFRP &amp; Natayark OpenID"
-                        TextOptions.TextHintingMode="Animated" />
+                        Text="OpenFRP &amp; Natayark OpenID" />
                     <awe:VisibilityTranstion HorizontalAlignment="Left" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
                         <StackPanel Margin="-2,10,-4,-4">
                             <Button
@@ -115,8 +115,8 @@
                                                     <DataTemplate>
                                                         <StackPanel
                                                             Margin="0,0,12,4"
-                                                            TextElement.Foreground="#6fffffff"
-                                                            TextOptions.TextHintingMode="Animated">
+                                                            helper:TextOptionHelper.TextAutoHiting="True"
+                                                            TextElement.Foreground="#6fffffff">
                                                             <TextBlock FontSize="13" Text="{Binding Title, Mode=OneWay}" />
                                                             <TextBlock helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" FontSize="13" />
                                                         </StackPanel>
@@ -127,12 +127,12 @@
                                         <awe:NavigationButton
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Bottom"
+                                            helper:TextOptionHelper.TextAutoHiting="True"
                                             Command="{Binding event_LogoutCommand}"
                                             Content="退出登录"
                                             Cursor="Hand"
                                             Foreground="White"
-                                            Opacity=".6"
-                                            TextOptions.TextHintingMode="Animated" />
+                                            Opacity=".6" />
                                     </Grid>
                                 </Border>
                             </Border>
@@ -140,9 +140,9 @@
                     </Grid>
                     <TextBlock
                         Margin="0,16,0,12"
+                        helper:TextOptionHelper.TextAutoHiting="True"
                         FontSize="18"
-                        Text="应用外观"
-                        TextOptions.TextHintingMode="Animated" />
+                        Text="应用外观" />
                     <awe:RwComboBox
                         Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
                         MaxWidth="200"
@@ -152,12 +152,19 @@
                         <ComboBoxItem Content="浅色模式" />
                         <ComboBoxItem Content="深色模式" />
                     </awe:RwComboBox>
+
+                    <Button
+                        helper:WindowsHelper.LightModeRebind="True"
+                        Command="{Binding event_CreateMaskCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                        Content="try to create mask" />
                     <TextBlock
                         Margin="0,16,0,500"
+                        helper:TextOptionHelper.TextAutoHiting="True"
                         FontSize="18"
                         Foreground="{DynamicResource DefaultForegroundColor}"
-                        Text="应用外观"
-                        TextOptions.TextHintingMode="Animated" />
+                        Text="应用外观" />
+
                 </StackPanel>
             </ScrollViewer>
         </Grid>

@@ -24,6 +24,9 @@
         <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding event_PageLoadedCommand}" />
         </behavior:EventTrigger>
+        <behavior:EventTrigger EventName="Unloaded">
+            <behavior:InvokeCommandAction Command="{Binding event_PageUnloadedCommand}" />
+        </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <Grid>
         <Grid.RowDefinitions>
@@ -79,11 +82,12 @@
         <ScrollViewer
             Grid.Row="1"
             helper:WindowsHelper.LightModeRebind="True"
+            PanningMode="VerticalFirst"
             VerticalScrollBarVisibility="Auto">
             <ItemsControl
                 Margin="28,4,28,20"
-                ItemsSource="{Binding LogDatas, Mode=OneWay}"
-                TextOptions.TextHintingMode="Animated">
+                helper:TextOptionHelper.TextAutoHiting="True"
+                ItemsSource="{Binding LogDatas, Mode=OneWay}">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Loaded">
                         <behavior:InvokeCommandAction Command="{Binding event_ItemsContainerLoadedCommand}" PassEventArgsToCommand="True" />
@@ -105,7 +109,7 @@
                     <DataTemplate>
                         <awe:SelectableTextBlock FontSize="14" TextWrapping="Wrap">
                             <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding TimeZone, Converter={StaticResource LongToTimeZone}, Mode=OneWay}" />
-                            <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding LogId,StringFormat='#{0}', Mode=OneWay}" />
+                            <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding LogId, StringFormat='#{0}', Mode=OneWay}" />
                             <Run Foreground="{DynamicResource DescriptionForeground2}" Text="{Binding Level, Converter={StaticResource IntToLogLevel}, Mode=OneWay}" />
                             <Run Text="{Binding Data, Mode=OneWay}" />
                         </awe:SelectableTextBlock>

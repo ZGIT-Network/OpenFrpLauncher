@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,12 +13,12 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using OpenFrp.Launcher.Controls;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -27,15 +28,34 @@ namespace OpenFrp.Launcher.ViewModels
         {
             WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
 
-            WeakReferenceMessenger.Default.Register<string>(nameof(TunnelsViewModel), async (_, str) =>
+            WeakReferenceMessenger.Default.Register<Tuple<string,object?>>(nameof(TunnelsViewModel), async (_, data) =>
             {
-                switch (str)
+                switch (data.Item1)
                 {
                     case "refresh":
                         {
                             await event_RefreshUserTunnelCommand.ExecuteAsync(null);
-
                             break;
+                        }
+                    case "openfrp.app.closeProcessMainly" when (data.Item2 is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel):
+                        {
+                            OnlineTunnels.Remove(tunnel.Id);
+                            if (itemsControl is { } itemsCont)
+                            {
+                                foreach (Awe.Model.OpenFrp.Response.Data.UserTunnel item in itemsCont.ItemContainerGenerator.Items)
+                                {
+                                    if (item.Id.Equals(tunnel.Id))
+                                    {
+                                        var app = itemsCont.ItemContainerGenerator.ContainerFromItem(item);
+                                        if (app is ContentPresenter cp && cp?.ContentTemplate?.FindName("tg", cp) is Awe.UI.Controls.ToggleSwitch ts)
+                                        {
+                                            ts.IsChecked = false;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            ;break;
                         }
                 }
             });
@@ -78,6 +98,8 @@ namespace OpenFrp.Launcher.ViewModels
 
         [ObservableProperty]
         private bool displayError;
+
+        private ItemsControl? itemsControl;
 
         [RelayCommand]
         private async Task @event_PageLoaded()
@@ -231,94 +253,134 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private async Task @event_DeleteTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        private void @event_DeleteTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
         {
-            var dialog = new Dialog.MessageDialog
+            if (App.Current?.MainWindow is { } wind)
             {
-                Title = new TextBlock()
+                var flyoutContent = new Controls.DeleteFlyoutContent
                 {
-                    Inlines =
+                    UserTunnel = tunnel,
+                    Description = CreateObject<TextBlock>((x) =>
                     {
-                        "删除隧道",
-                        CreateObject<Run>((run) =>
-                        {
-                            run.SetResourceReference(Run.FontFamilyProperty, "Montserrat");
-                            run.FontWeight = FontWeight.FromOpenTypeWeight(500);
-                        }, $" #{tunnel.Id} {tunnel.Name} ")
-                    },
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                    FontSize = 24
-                },
-                PrimaryButtonText = "确定删除",
-                PrimaryButtonIcon = CreateObject<Path>(x =>
+                        x.FontSize = 16;
+                        x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
+                    }),
+                };
+                var flyout = new Awe.UI.Controls.Flyout
                 {
-                    x.SetResourceReference(Path.DataProperty, "Awe.UI.Icons.Delete");
-                    x.SetBinding(Path.FillProperty, new Binding
-                    {
-                        Mode = BindingMode.OneWay,
-                        RelativeSource = RelativeSource.Self,
-                        Path = new PropertyPath(TextElement.ForegroundProperty)
-                    });
-                    //x.Fill = new SolidColorBrush { Color = Colors.Red };
-                    x.Stretch = Stretch.Uniform;
-                    x.Margin = new Thickness(0, 0, 4, 0);
-                    x.Width = x.Height = 16;
-                }),
-                CloseButtonText = "取消",
-                InvokeAction = async (dialog,cancellationToken) =>
-                {
-                    var resp = await Service.Net.OpenFrp.RemoveUserTunnel(tunnel.Id, cancellationToken);
+                    Padding = new Thickness(16, 16, 16, 16),
+                    Content = flyoutContent
+                };
 
-                    if ("提交的数据有误".Contains(resp.Message) || (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null))
+                Keyboard.ClearFocus();
+
+                flyoutContent.InvokeAction = async () =>
+                {
+                    var resp = await Service.Net.OpenFrp.RemoveUserTunnel(tunnel.Id);
+
+                    if ("未找到指定的隧道".Contains(resp.Message) || (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null))
                     {
-                        return true;
+                        UserTunnels.Remove(tunnel);
+                        Awe.UI.Helper.FlyoutHelper.RemoveAllMask();
                     }
 
                     // message :::
-                    if (dialog.Description is TextBlock tb)
+                    if (flyoutContent.Description is TextBlock tb)
                     {
                         tb.Text = resp.Message;
                     }
-                    return false;
-                },
-             };
-
-            dialog.Description = CreateObject<TextBlock>((x) =>
-            {
-                x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
-            });
-            dialog.Content = CreateObject<TextBlock>((tb) =>
-            {
-                tb.FontSize = 16;
-                tb.TextWrapping = TextWrapping.Wrap;
-                tb.Text = "确定要删除该隧道吗？会失去真的很久很久(是永久)哦。";
-                tb.SetBinding(TextBlock.ForegroundProperty, new Binding
-                {
-                    Mode = BindingMode.OneWay,
-                    Source = dialog,
-                    Path = new PropertyPath(Dialog.MessageDialog.ForegroundProperty)
-                });
-            });
-
-            var result = await dialog.ShowDialog();
-            if (result is Dialog.MessageDialogResult.Primary)
-            {
-                UserTunnels.Remove(tunnel);
+                };
+                Awe.UI.Helper.FlyoutHelper.CreateMask(
+                    flyout,
+                    () =>
+                    {
+                        return new Point(
+                            (wind.ActualWidth / 2) - (flyout.ActualWidth / 2),
+                            (wind.ActualHeight - flyout.ActualHeight) - 16
+                        );
+                    },
+                    (container) =>
+                    {
+                        container.BeginAnimation(ContentControl.MarginProperty, new ThicknessAnimation
+                        {
+                            Duration = TimeSpan.FromMilliseconds(300),
+                            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+                            To = new Thickness(0),
+                            From = new Thickness(0,16,0,0)
+                        });
+                    }
+                );
             }
+            //var dialog = new Dialog.MessageDialog
+            //{
+            //    Title = new TextBlock()
+            //    {
+            //        Inlines =
+            //        {
+            //            "删除隧道",
+            //            CreateObject<Run>((run) =>
+            //            {
+            //                run.SetResourceReference(Run.FontFamilyProperty, "Montserrat");
+            //                run.FontWeight = FontWeight.FromOpenTypeWeight(500);
+            //            }, $" #{tunnel.Id} {tunnel.Name} ")
+            //        },
+            //        TextTrimming = TextTrimming.CharacterEllipsis,
+            //        FontSize = 24
+            //    },
+            //    PrimaryButtonText = "确定删除",
+            //    PrimaryButtonIcon = CreateObject<Path>(x =>
+            //    {
+            //        x.SetResourceReference(Path.DataProperty, "Awe.UI.Icons.Delete");
+            //        x.SetBinding(Path.FillProperty, new Binding
+            //        {
+            //            Mode = BindingMode.OneWay,
+            //            RelativeSource = RelativeSource.Self,
+            //            Path = new PropertyPath(TextElement.ForegroundProperty)
+            //        });
+            //        //x.Fill = new SolidColorBrush { Color = Colors.Red };
+            //        x.Stretch = Stretch.Uniform;
+            //        x.Margin = new Thickness(0, 0, 4, 0);
+            //        x.Width = x.Height = 16;
+            //    }),
+            //    Content = new TextBlock()
+            //    {
+            //        FontSize = 16,
+            //        TextWrapping = TextWrapping.Wrap,
+            //        Text = "确定要删除该隧道吗？会失去真的很久很久(是永久)哦。"
+            //    },
+            //    CloseButtonText = "取消",
+            //    InvokeAction = async (dialog,cancellationToken) =>
+            //    {
+            //        var resp = await Service.Net.OpenFrp.RemoveUserTunnel(tunnel.Id, cancellationToken);
+
+            //        if ("提交的数据有误".Contains(resp.Message) || (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null))
+            //        {
+            //            return true;
+            //        }
+
+            //        // message :::
+            //        if (dialog.Description is TextBlock tb)
+            //        {
+            //            tb.Text = resp.Message;
+            //        }
+            //        return false;
+            //    },
+            // };
+
+            //dialog.Description = CreateObject<TextBlock>((x) =>
+            //{
+            //    x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
+            //});
+
+            //var result = await dialog.ShowDialog();
+            //if (result is Dialog.MessageDialogResult.Primary)
+            //{
+            //    UserTunnels.Remove(tunnel);
+            //}
         }
 
-        [RelayCommand]
-        private async Task @event_GetSocketCollection(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
-        {
-            var resp = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.GetActiveProxyConnectAsync(new Service.Proto.Request.ProxyConnectListRequest
-            {
-                UserTunnelJson = JsonSerializer.Serialize(tunnel)
-            }));
-            if (resp is (var data, _))
-            {
 
-            }
-        }
+
 
         [RelayCommand]
         private async Task @event_RefreshUserTunnel()
@@ -365,6 +427,12 @@ namespace OpenFrp.Launcher.ViewModels
 
         [RelayCommand]
         private void @event_ToCreateTunnelPage() => WeakReferenceMessenger.Default.Send(typeof(Views.CreateTunnel));
+
+        [RelayCommand]
+        private void @event_ItemsControlLoaded(RoutedEventArgs e)
+        {
+            if (e.Source is ItemsControl ic) { itemsControl = ic; }
+        }
 
         private T CreateObject<T>(Action<T>? func = default, params object[] args)
         {

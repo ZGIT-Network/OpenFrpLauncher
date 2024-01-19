@@ -64,7 +64,7 @@ namespace OpenFrp.Launcher.Dialog
 
         // Using a DependencyProperty as the backing store for PrimaryText.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty PrimaryButtonTextProperty =
-            DependencyProperty.Register("PrimaryButtonText", typeof(string), typeof(MessageDialog), new PropertyMetadata());
+            DependencyProperty.Register("PrimaryButtonText", typeof(string), typeof(MessageDialog), new PropertyMetadata(""));
 
 
 
@@ -88,7 +88,7 @@ namespace OpenFrp.Launcher.Dialog
 
         // Using a DependencyProperty as the backing store for CloseButtonText.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty CloseButtonTextProperty =
-            DependencyProperty.Register("CloseButtonText", typeof(string), typeof(MessageDialog), new PropertyMetadata());
+            DependencyProperty.Register("CloseButtonText", typeof(string), typeof(MessageDialog), new PropertyMetadata(""));
 
         public TaskCompletionSource<MessageDialogResult> OutTaskCompletionSource { get; private set; } = new TaskCompletionSource<MessageDialogResult>();
 

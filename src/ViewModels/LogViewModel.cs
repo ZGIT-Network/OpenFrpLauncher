@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,6 +15,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
 using Microsoft.Win32;
 using OpenFrp.Service.Proto.Request;
 
@@ -64,6 +66,8 @@ namespace OpenFrp.Launcher.ViewModels
             base.OnPropertyChanged(e);
         }
 
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
         [RelayCommand]
         private async Task @event_PageLoaded()
         {
@@ -83,7 +87,7 @@ namespace OpenFrp.Launcher.ViewModels
                         });
                         if (asyncDuplexStreaming is not null)
                         {
-                            while (await asyncDuplexStreaming.ResponseStream.MoveNext(CancellationToken.None))
+                            while (await asyncDuplexStreaming.ResponseStream.MoveNext(cancellationTokenSource.Token))
                             {
                                 dis.Dispatcher.Invoke(() =>
                                 {
@@ -106,12 +110,24 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                 }
             }
+            catch(RpcException x) when (x.StatusCode is StatusCode.Cancelled)
+            {
+                return;
+            }
             catch
             {
                 await Task.Delay(1500);
 
                 await event_PageLoadedCommand.ExecuteAsync(null);
             }
+        }
+
+        [RelayCommand]
+        private void @event_PageUnloaded()
+        {
+            cancellationTokenSource.Cancel(true);
+
+            asyncDuplexStreaming?.Dispose();
         }
 
         [RelayCommand]

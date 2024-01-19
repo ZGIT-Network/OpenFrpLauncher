@@ -108,6 +108,7 @@
                                     ui:ScrollViewerBehavior.UseSmoothScroll="True"
                                     ui:WindowsHelper.UseLightMode="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                     FocusVisualStyle="{x:Null}"
+                                    PanningMode="VerticalFirst"
                                     VerticalScrollBarVisibility="Auto">
                                     <ContentPresenter
                                         x:Name="svc"
@@ -159,11 +160,11 @@
                                 </Grid.Style>
                                 <ContentPresenter Content="{TemplateBinding Description}" Focusable="False" />
                             </Grid>
-                            <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal">
                                 <awe:VisibilityTranstion IsDisplay="{TemplateBinding PrimaryButtonText, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}">
                                     <Button
                                         x:Name="primary"
-                                        Margin="0,0,8,0"
+                                        Margin="0,16,8,0"
                                         ui:ControlHelper.Icon="{TemplateBinding PrimaryButtonIcon}"
                                         Content="{TemplateBinding PrimaryButtonText}"
                                         IsEnabled="{TemplateBinding IsLoading,
@@ -175,6 +176,7 @@
                                 <awe:VisibilityTranstion IsDisplay="{TemplateBinding CloseButtonText, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}">
                                     <Button
                                         x:Name="close"
+                                        Margin="0,16,0,0"
                                         ui:WindowsHelper.UseLightMode="{Binding (ui:WindowsHelper.UseLightMode), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                         Content="{TemplateBinding CloseButtonText}"
                                         IsEnabled="{TemplateBinding IsLoading,

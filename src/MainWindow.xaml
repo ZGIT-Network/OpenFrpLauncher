@@ -6,18 +6,21 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:OpenFrp.Launcher.Model"
     xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
-    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:sys2="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     x:Name="windHost"
-    Title="MainWindow"
+    Title="OpenFRP 启动器"
     Width="900"
     Height="550"
     MinWidth="950"
     d:Background="White"
+    helper:WindowsHelper.WindowTextHitingMode="True"
     ui:WindowsHelper.DialogOpenned="False"
     Foreground="Black"
     Style="{StaticResource Awe.UI.DefaultWindow}"
@@ -83,9 +86,9 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="RadioButton">
                                     <Grid
+                                        helper:TextOptionHelper.TextAutoHiting="True"
                                         Background="{TemplateBinding Background}"
-                                        Focusable="False"
-                                        TextOptions.TextHintingMode="Animated">
+                                        Focusable="False">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
@@ -229,16 +232,15 @@
                 <StackPanel Margin="20,20,20,0">
                     <TextBlock
                         FontFamily="{StaticResource Montserrat}"
-                        FontWeight="Medium"
                         FontSize="24"
-                        
+                        FontWeight="Medium"
                         Text="OpenFRP" />
                     <TextBlock
                         Margin="0,20,0,0"
+                        ui:TextOptionHelper.TextAutoHiting="True"
                         FontSize="16"
                         Opacity=".6"
                         Text="页面"
-                        TextOptions.TextHintingMode="Animated"
                         Visibility="Visible" />
                     <ItemsControl
                         Margin="0,10,0,0"
@@ -256,9 +258,15 @@
                                         <MultiBinding Converter="{StaticResource EitherConverter}">
                                             <Binding
                                                 Converter="{StaticResource EqualConverter}"
-                                                ConverterParameter="首页"
                                                 Mode="OneWay"
-                                                Path="Title" />
+                                                Path="Title">
+                                                <Binding.ConverterParameter>
+                                                    <x:Array Type="sys2:String">
+                                                        <sys2:String>首页</sys2:String>
+                                                        <sys2:String>关于</sys2:String>
+                                                    </x:Array>
+                                                </Binding.ConverterParameter>
+                                            </Binding>
                                             <Binding
                                                 Mode="OneWay"
                                                 Path="DataContext.StateOfService"
@@ -279,7 +287,60 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="1" Margin="20,10,20,18">
-                        <Grid Margin="0,0,0,10">
+                        <awe:VisibilityTranstion Margin="-4,0,0,10" IsDisplay="{Binding UpdateInfo.Type, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.None}, Mode=OneWay}">
+                            <awe:NavigationButton
+                                Command="{Binding event_RequesetForUpdateCommand}"
+                                Cursor="Hand"
+                                ToolTip="点击进行更新">
+                                <awe:Tag
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Bottom"
+                                    TagType="Success">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path
+                                            Width="12"
+                                            Height="12"
+                                            Margin="2,0,0,0"
+                                            Data="{DynamicResource Awe.UI.Icons.Update}"
+                                            Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=awe:Tag}, Mode=OneWay}"
+                                            Stretch="Uniform" />
+                                        <TextBlock Margin="4,0,0,0" TextOptions.TextFormattingMode="Display">
+                                            <behavior:Interaction.Triggers>
+                                                <behavior:DataTrigger Binding="{Binding UpdateInfo.Type}" Value="Launcher">
+                                                    <behavior:ChangePropertyAction PropertyName="Text" Value="启动器有更新!" />
+                                                </behavior:DataTrigger>
+                                                <behavior:DataTrigger Binding="{Binding UpdateInfo.Type}" Value="FrpClient">
+                                                    <behavior:ChangePropertyAction PropertyName="Text" Value="FRPC 有更新!" />
+                                                </behavior:DataTrigger>
+                                            </behavior:Interaction.Triggers>
+                                        </TextBlock>
+
+                                    </StackPanel>
+                                </awe:Tag>
+                            </awe:NavigationButton>
+                        </awe:VisibilityTranstion>
+                        <awe:VisibilityTranstion IsDisplay="{Binding StateOfService, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static sys2:Boolean.TrueString}}">
+                            <awe:Tag
+                                Margin="-4,0,0,10"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Bottom"
+                                TagType="Error">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path
+                                        Width="12"
+                                        Height="12"
+                                        Margin="2,0,0,0"
+                                        Data="{DynamicResource Awe.UI.Icons.Warning}"
+                                        Fill="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=awe:Tag}, Mode=OneWay}"
+                                        Stretch="Uniform" />
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        helper:TextOptionHelper.TextAutoHiting="True"
+                                        Text="守护进程异常" />
+                                </StackPanel>
+                            </awe:Tag>
+                        </awe:VisibilityTranstion>
+                        <!--<Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -300,7 +361,7 @@
                                     </behavior:DataTrigger>
                                 </behavior:Interaction.Triggers>
                             </awe:Tag>
-                        </Grid>
+                        </Grid>-->
 
                         <ItemsControl Focusable="False" ItemsSource="{Binding SubRouterItems, Mode=OneWay}">
                             <ItemsControl.ItemTemplate>
@@ -315,6 +376,7 @@
         </Border>
         <!--  Content  -->
         <Grid Grid.Column="1">
+
             <ContentControl Focusable="False">
 
                 <behavior:Interaction.Triggers>
@@ -323,7 +385,36 @@
                     </behavior:EventTrigger>
                 </behavior:Interaction.Triggers>
             </ContentControl>
+            <!--<Grid>
+                <Canvas>
+                    <Grid Canvas.Left="130" Canvas.Top="250">
+                        <Border
+                            x:Name="shad"
+                            Margin="16"
+                            Background="#1f111111"
+                            CornerRadius="4">
+                            <Border.Effect>
+                                <BlurEffect Radius="20" />
+                            </Border.Effect>
+                        </Border>
+                        <Border
+                            Width="250"
+                            Height="100"
+                            Margin="16"
+                            Padding="16"
+                            Background="White"
+                            BorderBrush="#d0d0d0"
+                            BorderThickness="1"
+                            CornerRadius="4">
+                            <StackPanel>
+                                <TextBlock TextTrimming="CharacterEllipsis" FontSize="16" Text="删除隧道 #114514 SUNXIAOC" />
+                                <Button helper:WindowsHelper.LightModeRebind="True" Content="dELETE"/>
+                            </StackPanel>
+                        </Border>
 
+                    </Grid>
+                </Canvas>
+            </Grid>-->
         </Grid>
     </Grid>
 </Window>

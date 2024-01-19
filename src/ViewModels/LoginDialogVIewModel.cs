@@ -16,13 +16,9 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private string? username = "loliwa";
 
-#if DEBUG
         [ObservableProperty]
         private string? password = "/#/#123456789Abc";
-#else
-        [ObservableProperty]
-        private string? password;
-#endif
+
 
 
         [ObservableProperty]

@@ -9,11 +9,32 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Awe.UI;component/Theme.xaml" />
-
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="Montserrat">
                 ./Resources/#Montserrat
             </FontFamily>
+            <Storyboard x:Key="FrameChangeAnimation">
+                <DoubleAnimation
+                    FillBehavior="Stop"
+                    Storyboard.TargetProperty="Opacity"
+                    From="0"
+                    To="1"
+                    Duration="0:0:.45">
+                    <DoubleAnimation.EasingFunction>
+                        <CircleEase EasingMode="EaseOut" />
+                    </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <ThicknessAnimation
+                    FillBehavior="Stop"
+                    Storyboard.TargetProperty="Margin"
+                    From="0,12,0,0"
+                    To="0"
+                    Duration="0:0:.45">
+                    <ThicknessAnimation.EasingFunction>
+                        <CircleEase EasingMode="EaseOut" />
+                    </ThicknessAnimation.EasingFunction>
+                </ThicknessAnimation>
+            </Storyboard>
             <CubicEase
                 x:Key="EasingFunc"
                 pf:Freeze="True"
@@ -36,8 +57,9 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
-
             </Style>
+
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

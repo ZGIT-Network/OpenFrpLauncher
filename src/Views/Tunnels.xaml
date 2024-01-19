@@ -83,6 +83,7 @@
                                     helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
                                     Focusable="False"
                                     IsEnabled="{Binding event_RefreshUserTunnelCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}"
+                                    PanningMode="VerticalFirst"
                                     VerticalScrollBarVisibility="Auto"
                                     VirtualizingPanel.CacheLength="2,2"
                                     VirtualizingPanel.ScrollUnit="Item"
@@ -94,6 +95,11 @@
                                                 Margin="0,12,0,12"
                                                 Focusable="False"
                                                 ItemsSource="{Binding UserTunnels, Mode=OneWay}">
+                                                <behavior:Interaction.Triggers>
+                                                    <behavior:EventTrigger EventName="Loaded">
+                                                        <behavior:InvokeCommandAction Command="{Binding event_ItemsControlLoadedCommand}" PassEventArgsToCommand="True" />
+                                                    </behavior:EventTrigger>
+                                                </behavior:Interaction.Triggers>
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
                                                         <WrapPanel Orientation="Horizontal" />
@@ -290,7 +296,7 @@
                                                                                     </Style.Triggers>
                                                                                 </Style>
                                                                             </FrameworkElement.Style>
-                                                                            <WrapPanel TextOptions.TextHintingMode="Animated">
+                                                                            <WrapPanel helper:TextOptionHelper.TextAutoHiting="True">
                                                                                 <awe:VisibilityTranstion IsDisplay="{Binding UseEncryption, Mode=OneWay}">
                                                                                     <TextBlock FontSize="14" Text="启用数据加密" />
                                                                                 </awe:VisibilityTranstion>
@@ -398,9 +404,9 @@
                                                                             Grid.ColumnSpan="2">
                                                                             <TextBlock
                                                                                 VerticalAlignment="Bottom"
+                                                                                helper:TextOptionHelper.TextAutoHiting="True"
                                                                                 FontSize="14"
-                                                                                FontWeight="Medium"
-                                                                                TextOptions.TextHintingMode="Animated">
+                                                                                FontWeight="Medium">
                                                                                 <FrameworkElement.Style>
                                                                                     <Style TargetType="TextBlock">
                                                                                         <Style.Triggers>
@@ -433,7 +439,7 @@
                                                                                         </Style.Triggers>
                                                                                     </Style>
                                                                                 </FrameworkElement.Style>
-                                                                                <awe:VisibilityTranstion IsDisplay="{Binding TunnelCustomConfig, Converter={StaticResource ContainConverter}, ConverterParameter='enable_client_fillter = true', Mode=OneWay}">
+                                                                                <!--<awe:VisibilityTranstion IsDisplay="{Binding TunnelCustomConfig, Converter={StaticResource ContainConverter}, ConverterParameter='enable_client_fillter = true', Mode=OneWay}">
                                                                                     <awe:NavigationButton
                                                                                         Padding="8"
                                                                                         AutomationProperties.Name="{Binding Name, StringFormat='管理隧道 {0} 的流量', Mode=OneWay}"
@@ -450,7 +456,7 @@
                                                                                             Fill="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
                                                                                             Stretch="Uniform" />
                                                                                     </awe:NavigationButton>
-                                                                                </awe:VisibilityTranstion>
+                                                                                </awe:VisibilityTranstion>-->
                                                                                 <awe:NavigationButton
                                                                                     Margin="2,0,4,0"
                                                                                     Padding="8"
@@ -511,7 +517,7 @@
                                         Margin="36,32,36,64"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        TextOptions.TextHintingMode="Animated">
+                                        helper:TextOptionHelper.TextAutoHiting="True">
                                         <Image
                                             Width="120"
                                             HorizontalAlignment="Left"
@@ -597,7 +603,7 @@
                         Margin="36,32,36,64"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        TextOptions.TextHintingMode="Animated">
+                        helper:TextOptionHelper.TextAutoHiting="True">
                         <Image
                             Width="120"
                             HorizontalAlignment="Left"
