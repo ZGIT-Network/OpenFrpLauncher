@@ -4,60 +4,42 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
-    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:ui="http://schemas.modernwpf.com/2019"
+    ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Awe.UI;component/Theme.xaml" />
+                <ResourceDictionary>
+                    <FontFamily x:Key="Montserrat">
+                        ./Resources/#Montserrat
+                    </FontFamily>
+                </ResourceDictionary>
+                <ResourceDictionary Source="/ModernWpf.Controls;component/ToggleSwitch/ToggleSwitch.xaml" />
+                <ResourceDictionary Source="/ModernWpf;component/DesignTime/SystemColors.xaml" />
+                <ResourceDictionary Source="/ModernWpf;component/ThemeResources/Light.xaml" />
+                <ResourceDictionary Source="/ModernWpf;component/ControlsResources.xaml" />
+
+                <ResourceDictionary Source="./Controls/SettingItem/SettingItem.xaml" />
+                <ResourceDictionary Source="./Controls/TunnelEditor/TunnelEditor.xaml" />
+
+                <ui:XamlControlsResources />
+                <ui:ThemeResources>
+                    <ui:ThemeResources.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light" ui:ThemeDictionary.Key="Light">
+                            <SolidColorBrush x:Key="AweAppGoldenColor" Color="#F0A020" />
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark" ui:ThemeDictionary.Key="Dark">
+                            <SolidColorBrush x:Key="AweAppGoldenColor" Color="#F2C97D" />
+                        </ResourceDictionary>
+                    </ui:ThemeResources.ThemeDictionaries>
+                </ui:ThemeResources>
+
             </ResourceDictionary.MergedDictionaries>
-            <FontFamily x:Key="Montserrat">
-                ./Resources/#Montserrat
-            </FontFamily>
-            <Storyboard x:Key="FrameChangeAnimation">
-                <DoubleAnimation
-                    FillBehavior="Stop"
-                    Storyboard.TargetProperty="Opacity"
-                    From="0"
-                    To="1"
-                    Duration="0:0:.45">
-                    <DoubleAnimation.EasingFunction>
-                        <CircleEase EasingMode="EaseOut" />
-                    </DoubleAnimation.EasingFunction>
-                </DoubleAnimation>
-                <DoubleAnimation
-                    FillBehavior="Stop"
-                    Storyboard.TargetProperty="RenderTransform.Y"
-                    From="12"
-                    To="0"
-                    Duration="0:0:.45">
-                    <DoubleAnimation.EasingFunction>
-                        <CircleEase EasingMode="EaseOut" />
-                    </DoubleAnimation.EasingFunction>
-                </DoubleAnimation>
-            </Storyboard>
-            <CubicEase
-                x:Key="EasingFunc"
-                pf:Freeze="True"
-                EasingMode="EaseOut" />
-            <sys:Double x:Key="DialogMaxWidth">850</sys:Double>
-            <sys:Double x:Key="DialogMaxHeight">485</sys:Double>
-            <Style x:Key="RewriteSeparator" TargetType="Separator">
-                <Setter Property="Background" Value="#3fffffff" />
-                <Setter Property="Focusable" Value="false" />
-                <Setter Property="Margin" Value="-2,0,-2,0" />
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type Separator}">
-                            <Border
-                                Height="1"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                SnapsToDevicePixels="true" />
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
+            <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
+            <Thickness x:Key="TopNavigationViewOverflowMenuPadding">0,4,0,2</Thickness>
+
 
 
         </ResourceDictionary>

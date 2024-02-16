@@ -12,19 +12,42 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ModernWpf.Controls;
 
 namespace OpenFrp.Launcher.Dialog
 {
     /// <summary>
     /// LoginDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class LoginDialog : UserControl
+    public partial class LoginDialog : ContentDialog
     {
         public LoginDialog()
         {
             InitializeComponent();
         }
 
-        public TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>? DialogFallback { get; set; }
+        public TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo> TaskCompletionSource { get; set; } = new TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>();
+
+        public new async Task<Awe.Model.OpenFrp.Response.Data.UserInfo?> ShowAsync()
+        {
+            try
+            {
+                var showDialog = base.ShowAsync();
+                var task = await Task.WhenAny(TaskCompletionSource.Task, showDialog);
+
+                base.Hide();
+
+                if (!task.Equals(showDialog))
+                {
+                    return await TaskCompletionSource.Task;
+                }
+            }
+            catch(TaskCanceledException)
+            {
+                
+            }
+            base.Hide();
+            return default;
+        }
     }
 }

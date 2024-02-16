@@ -5,197 +5,149 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Markup;
-using Awe.Model.OpenFrp.Response.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Win32;
-using OpenFrp.Service.Proto.Request;
+using static OpenFrp.Service.Proto.Response.LogResponse.Types;
 
 namespace OpenFrp.Launcher.ViewModels
 {
     internal partial class LogViewModel : ObservableObject
     {
-        [ObservableProperty]
-        private ObservableCollection<OpenFrp.Service.Proto.Response.LogClientResponse.Types.LogClient>? logClients;
+        private CancellationTokenSource? _cancellationTokenSource;
 
         [ObservableProperty]
-        private ObservableCollection<OpenFrp.Service.Proto.Response.LogDataResponse.Types.LogData> logDatas = new ObservableCollection<Service.Proto.Response.LogDataResponse.Types.LogData>();
+        private ObservableCollection<Service.Proto.Response.LogResponse.Types.LogData>? logs;
 
         [ObservableProperty]
-        private OpenFrp.Service.Proto.Response.LogClientResponse.Types.LogClient? selectedClient;
-        //private ObservableCollection<>
+        private ObservableCollection<Service.Proto.Response.ActiveProcessResponse.Types.ActiveProcess>? processes;
+
+        [ObservableProperty]
+        private Service.Proto.Response.ActiveProcessResponse.Types.ActiveProcess? selectedProcess;
+
+        [ObservableProperty]
+        private int selectedIndex;
 
         private ItemsControl? itemsControl;
 
-        private Grpc.Core.AsyncDuplexStreamingCall<LogDataRequest,Service.Proto.Response.LogDataResponse>? asyncDuplexStreaming;
-
-        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        [RelayCommand]
+        private void @event_PageLoaded(RoutedEventArgs arg)
         {
-            if (e.PropertyName == nameof(SelectedClient))
+            _cancellationTokenSource = new CancellationTokenSource();
+            Logs = new ObservableCollection<Service.Proto.Response.LogResponse.Types.LogData>();
+            Processes = new ObservableCollection<Service.Proto.Response.ActiveProcessResponse.Types.ActiveProcess>();
+            if (arg.Source is FrameworkElement fe)
             {
-                if (SelectedClient is not null && itemsControl is not null)
+                fe.Unloaded += delegate
                 {
-                    if (SelectedClient.LogId is 0)
+                    _cancellationTokenSource?.Cancel();
+                };
+                //@event_RefreshData();
+                _ = fe.Dispatcher.Invoke(async () =>
+                {
+                    await RpcManager.LogStream((x) =>
                     {
-                        itemsControl.Items.Filter = null;
-
-                        return;
-                    }
-                    itemsControl.Items.Filter = new Predicate<object>((x) =>
-                    {
-                        if (x is OpenFrp.Service.Proto.Response.LogDataResponse.Types.LogData ld)
+                        foreach (var item in x.Logs)
                         {
-                            if (ld.LogId.Equals(SelectedClient.LogId))
-                            {
-                                return true;
-                            }
+                            Logs?.Add(item);
                         }
-                        return false;
-                    });
-                }
-            }
-
-            base.OnPropertyChanged(e);
-        }
-
-        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-        [RelayCommand]
-        private async Task @event_PageLoaded()
-        {
-            try
-            {
-                asyncDuplexStreaming = App.RemoteClient.GetLogStream();
-
-                var va = await App.RemoteClient.GetLogClientAsync(new Service.Proto.Request.LogClientRequest { });
-
-                if (App.Current is { MainWindow: var dis })
+                    }, cancellationToken: _cancellationTokenSource.Token);
+                });
+                _ = fe.Dispatcher.Invoke(async () =>
                 {
-                    Task.Run(async () =>
+                    var resp = await RpcManager.GetActiveProcess();
+                    if (resp.IsSuccess && resp.Data is { Processes.Count: > 0 } data)
                     {
-                        await asyncDuplexStreaming.RequestStream.WriteAsync(new LogDataRequest
+                        foreach (var item in data.Processes)
                         {
-                            LogId = 0
-                        });
-                        if (asyncDuplexStreaming is not null)
-                        {
-                            while (await asyncDuplexStreaming.ResponseStream.MoveNext(cancellationTokenSource.Token))
-                            {
-                                dis.Dispatcher.Invoke(() =>
-                                {
-                                    foreach (var item in asyncDuplexStreaming.ResponseStream.Current.LogData)
-                                    {
-                                        LogDatas.Add(item);
-                                    }
-                                    OnPropertyChanged(nameof(LogDatas));
-                                }, priority: System.Windows.Threading.DispatcherPriority.Background);
-                            }
-                            await Task.Delay(200);
+                            Processes?.Add(item);
                         }
-                    }).GetAwaiter();
-
-                    if (LogClients is null)
-                    {
-                        LogClients = new ObservableCollection<Service.Proto.Response.LogClientResponse.Types.LogClient>(va.LogClient);
-
-                        return;
                     }
-                }
-            }
-            catch(RpcException x) when (x.StatusCode is StatusCode.Cancelled)
-            {
-                return;
-            }
-            catch
-            {
-                await Task.Delay(1500);
-
-                await event_PageLoadedCommand.ExecuteAsync(null);
+                });
             }
         }
 
         [RelayCommand]
-        private void @event_PageUnloaded()
+        private void @event_ItemsControlLoaded(RoutedEventArgs arg)
         {
-            cancellationTokenSource.Cancel(true);
-
-            asyncDuplexStreaming?.Dispose();
-        }
-
-        [RelayCommand]
-        private void @event_ItemsContainerLoaded(RoutedEventArgs e)
-        {
-            if (e.Source is ItemsControl isc)
+            if (arg.Source is ItemsControl ic)
             {
-                itemsControl = isc;
-
-                // 在这做个筛选器是个聪明的选择
-                isc.Items.IsLiveFiltering = true;
-                isc.Items.Filter = null;
-                isc.Items.SortDescriptions.Add(new SortDescription("TimeZone", ListSortDirection.Ascending));
+                ic.Items.SortDescriptions.Add(new SortDescription("Date", ListSortDirection.Ascending));
+                itemsControl = ic;
             }
         }
 
         [RelayCommand]
-        private async Task @event_RefreshRequest()
+        private async Task @event_SaveLog()
         {
-            try
-            {
-                LogDatas.Clear();
+            if (Logs is null) return;
 
-                if (asyncDuplexStreaming is not null)
-                {
-                    await asyncDuplexStreaming.RequestStream.WriteAsync(new LogDataRequest
-                    {
-                        LogId = 0
-                    });
-                }
-            }
-            catch
-            {
-
-            }
-        }
-
-        [RelayCommand]
-        private async Task @event_SaveFileRequest()
-        {
-            var dialog = new SaveFileDialog()
+            var fDialog = new Microsoft.Win32.SaveFileDialog
             {
                 OverwritePrompt = true,
                 AddExtension = true,
-                
                 ValidateNames = true,
                 Filter = "日志文件(*.log)|*.log"
             };
-            if (dialog.ShowDialog() is true)
+            if (fDialog.ShowDialog() is true)
             {
-                var fs = File.Open(dialog.FileName, FileMode.OpenOrCreate);
-                foreach (var item in LogDatas)
+                FileStream fs = File.Open(fDialog.FileName, FileMode.OpenOrCreate);
+
+                fs.SetLength(0);
+
+                foreach (LogData logData in Logs)
                 {
-                    var data = Encoding.UTF8.GetBytes($"{DateTimeOffset.FromUnixTimeMilliseconds(item.TimeZone).ToOffset(TimeSpan.FromHours(8)).ToString("yyyy/MM/dd HH:mm:ss")} [{IntToLevel(item.Level)}] {item.Data}\n");
-                    await fs.WriteAsync(data,0,data.Length);
+                    if (SelectedProcess?.Id is 0 || logData.Id != SelectedProcess?.Id) continue;
+
+                    byte[] bytes = new byte[] { 10 };
+                    if (logData.Content.Length > 0)
+                    {
+                        bytes = Encoding.UTF8.GetBytes($"{DateTimeOffset.FromUnixTimeMilliseconds(logData.Date).LocalDateTime.ToString("yyyy/MM/dd HH:mm:ss")} {logData.Executor} {logData.Content}\n");
+                    }
+                    await fs.WriteAsync(bytes, 0, bytes.Length);
                 }
                 fs.Close();
             }
+        }
 
-            await Task.CompletedTask;
-
-            string IntToLevel(int val) => val switch
+        [RelayCommand]
+        private async Task @event_ClearLog()
+        {
+            var resp = await RpcManager.ClearLogStream();
+            if (resp.IsSuccess)
             {
-                1 => "[E]",
-                2 => "[W]",
-                3 => "[I]",
-                _ => "[D]"
-            };
+                Logs?.Clear();
+            }
+            else
+            {
+                MessageBox.Show(resp.Message);
+            }
+        }
+
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SelectedProcess) && SelectedProcess != null && itemsControl != null)
+            {
+                if (SelectedProcess.Id == 0)
+                {
+                    itemsControl.Items.Filter = null;
+                    return;
+                }
+                itemsControl.Items.Filter = delegate (object x)
+                {
+                    if (x is Service.Proto.Response.LogResponse.Types.LogData data && SelectedProcess is not null)
+                    {
+                        return data.Id.Equals(SelectedProcess.Id);
+                    }
+                    return false;
+                };
+            }
+
+            base.OnPropertyChanged(e);
         }
     }
 }

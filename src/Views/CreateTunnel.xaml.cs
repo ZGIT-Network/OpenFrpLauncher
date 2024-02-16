@@ -18,7 +18,7 @@ namespace OpenFrp.Launcher.Views
     /// <summary>
     /// CreateTunnel.xaml 的交互逻辑
     /// </summary>
-    public partial class CreateTunnel : UserControl
+    public partial class CreateTunnel : ModernWpf.Controls.Page
     {
         public CreateTunnel()
         {

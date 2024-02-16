@@ -6,109 +6,98 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
+using System.Windows.Controls;
 using Awe.Model.OpenFrp.Response.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using OpenFrp.Launcher.Model;
+using AppNetwork = OpenFrp.Service.Net;
 
 namespace OpenFrp.Launcher.ViewModels
 {
     internal partial class CreateTunnelViewModel : ObservableObject
     {
         [ObservableProperty]
-        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.NodeInfo> nodeList = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.NodeInfo>();
+        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.NodeInfo>? nodes;
 
-        private Controls.TunnelConfig? _configWrapper;
-
-        [RelayCommand]
-        private void @event_ConfigWrapperLoaded(RoutedEventArgs e)
-        {
-            if (e is { Source: Controls.TunnelConfig tc })
-            {
-                _configWrapper = tc;
-
-                tc.TunnelData = new UserTunnel();
-            }
-        }
+        [ObservableProperty]
+        private Awe.Model.ApiResponse<Awe.Model.OpenFrp.Response.Data.NodeInfoData>? response;
 
         [RelayCommand]
-        private async Task @event_PageLoaded(RoutedEventArgs e)
+        private async Task @event_RefreshNodeCollection()
         {
-            if (e is { Source: Views.CreateTunnel page })
-            {
-                var resp = await Service.Net.OpenFrp.GetNodes();
+            Response = await AppNetwork.OpenFrp.GetNodes();
 
-                if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { List: var list })
+            if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
+                Response.Data is { List: var list } && list is not null)
+            {
+                Nodes = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.NodeInfo>();
+
+                if (App.Current is { Dispatcher: var dispatcher })
                 {
-                    NodeList.Clear();
+                    await Task.Delay(1500);
 
-                    if (page.FindName("sortContainer") is System.Windows.Controls.ListBox lb)
+                    _ = dispatcher.Invoke(async () =>
                     {
-                        lb.Items.SortDescriptions.Clear();
-                        if (App.Current?.MainWindow is { Dispatcher: var dis })
+                        Nodes.Add(new NodeInfo
                         {
-                            _ = dis.Invoke(async () =>
-                            {
-                                NodeList.Clear();
+                            Id = 0,
+                            Name = "中国大陆",
+                            Classify = NodeClassify.ChinaMainland,
+                            Status = System.Net.HttpStatusCode.OK
+                        });
+                        Nodes.Add(new NodeInfo
+                        {
+                            Id = 0,
+                            Name = "\n中国香港 | 中国台湾 | 中国澳门",
+                            Classify = NodeClassify.ChinaHongKong,
+                            Status = System.Net.HttpStatusCode.OK
+                        });
+                        Nodes.Add(new NodeInfo
+                        {
+                            Id = 0,
+                            Name = "\n外国节点",
+                            Classify = NodeClassify.Foreign,
+                            Status = System.Net.HttpStatusCode.OK
+                        });
 
-                                NodeList.Add(new NodeInfo
-                                {
-                                    Id = 0,
-                                    Name = "中国大陆",
-                                    Classify = NodeClassify.ChinaMainland
-                                });
-                                NodeList.Add(new NodeInfo
-                                {
-                                    Id = 0,
-                                    Name = "中国香港 | 中国台湾 | 中国澳门",
-                                    Classify = NodeClassify.ChinaHongKong
-                                });
-                                NodeList.Add(new NodeInfo
-                                {
-                                    Id = 0,
-                                    Name = "外国节点",
-                                    Classify = NodeClassify.Foreign
-                                });
+                        foreach (var tunnel in list)
+                        {
+                            Nodes.Add(tunnel);
 
-                                lb.Items.SortDescriptions.Add(new SortDescription("Classify", ListSortDirection.Ascending));
-                                lb.Items.SortDescriptions.Add(new SortDescription("Id", ListSortDirection.Ascending));
-
-                                foreach (var item in resp.Data!.List!)
-                                {
-                                    NodeList.Add(item);
-                                    
-                                    await Task.Delay(20);
-                                }
-
-                               
-
-
-                                OnPropertyChanged(nameof(NodeList));
-                            }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                            await Task.Delay(50);
                         }
-                    }
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
                 }
             }
         }
 
         [RelayCommand]
-        private async Task @event_CreateTunnel()
+        private async Task @event_ShowEditConfigDialog(Awe.Model.OpenFrp.Response.Data.NodeInfo ni)
         {
-            if (_configWrapper is null) return;
-
-            var conf = _configWrapper.GetCreateConfig();
-
-            var resp = await Service.Net.OpenFrp.CreateUserTunnel(conf);
-
-            if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK)
+            var dialog = new Dialog.EditTunnelDialog
             {
-                // success
-                WeakReferenceMessenger.Default.Send(typeof(Views.Tunnels));
+                
+            };
+            dialog.SetValue(Controls.TunnelEditor.NodeInfoProperty, ni);
+            dialog.SetValue(Controls.TunnelEditor.IsCreateModeProperty, true);
+
+            if (await dialog.WaitForFinishAsync() is true)
+            {
+                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.Tunnels)));
+                //_ = event_RefreshNodeCollectionCommand.ExecuteAsync(null);
             }
-            else
+            
+        }
+
+        [RelayCommand]
+        private void @event_ConfigureSorter(RoutedEventArgs arg)
+        {
+            if (arg is { Source: ItemsControl c })
             {
-                MessageBox.Show(resp.Message, "Create Tunnel", MessageBoxButton.OK, MessageBoxImage.Stop); ;
+                c.Items.SortDescriptions.Add(new SortDescription("Classify", ListSortDirection.Ascending));
+                c.Items.SortDescriptions.Add(new SortDescription("Id", ListSortDirection.Ascending));
             }
         }
     }

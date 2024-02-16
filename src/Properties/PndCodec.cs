@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenFrp.Launcher.Properties
+namespace OpenFrp.Launcher
 {
-    internal class PndCodec
+    public class PndCodec
     {
         public static byte[] KeyIV
         {

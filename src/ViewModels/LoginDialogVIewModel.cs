@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -19,96 +22,103 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private string? password;
 
-
+        [ObservableProperty]
+        private string? reason = string.Empty;
 
         [ObservableProperty]
-        private string? reason;
+        private Exception? exception;
 
-        internal TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>? UserInfoFallback;
+        public TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>? taskCompletionSource;
 
         [RelayCommand]
-        private void @event_ContainerLoaded(RoutedEventArgs e)
+        private void @event_DialogLoaded(RoutedEventArgs e)
         {
-            if (e.Source is Dialog.LoginDialog ld)
+            if (e.Source is Dialog.LoginDialog dialog)
             {
-                UserInfoFallback = ld.DialogFallback;
+                dialog.PrimaryButtonClick += @event_Dialog_PrimaryButtonClick;
+                
+                taskCompletionSource = dialog.TaskCompletionSource;
+            }
+        }
+
+        private async void @event_Dialog_PrimaryButtonClick(ModernWpf.Controls.ContentDialog sender, ModernWpf.Controls.ContentDialogButtonClickEventArgs args)
+        {
+            args.Cancel = true;
+
+            await event_LoginCommand.ExecuteAsync(default);
+
+            
+            if (string.IsNullOrEmpty(Reason) && taskCompletionSource != null)
+            {
+                if (await taskCompletionSource.Task is { } info)
+                {
+                    WeakReferenceMessenger.Default.Send(info);
+                }
             }
         }
 
         [RelayCommand]
         private async Task @event_CloseDialog()
         {
-            if (App.Current?.MainWindow is Window wind)
+            if (taskCompletionSource is { Task.IsCompleted: false})
             {
-                if (UserInfoFallback?.Task.IsCompleted is false)
+                CancellationTokenSource.Cancel();
+                Service.Net.OpenFrp.Logout();
+                if (Reason is "用户标识符不匹配" || Reason?.Contains("后台") is true)
                 {
-                    CancellationTokenSource.Cancel();
-                    UserInfoFallback?.TrySetCanceled();
-                    Service.Net.OpenFrp.Logout();
-                    if (Reason is "UserTag 不匹配" || Reason?.Contains("后台") is true)
-                    {
-                        await Service.Net.OAuthApp.Logout().ConfigureAwait(false);
-                    }
+                    await Service.Net.OAuthApp.Logout().ConfigureAwait(false);
                 }
-
-                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogOpennedProperty, false);
-                await Task.Delay(250);
-                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogContentProperty,DependencyProperty.UnsetValue);
+                taskCompletionSource?.TrySetCanceled(CancellationTokenSource.Token);
             }
         }
+
+        private Task @event_LoginDelay() => Task.Delay(200);
 
         [RelayCommand]
         private async Task @event_Login()
         {
-            Reason = default;
+            Reason = string.Empty;
+            Exception = default;
 
-            var oauthLogin = await OpenFrp.Service.Net.OAuthApp.Login(Username,Password, CancellationTokenSource.Token);
-            if (!event_UploadState(oauthLogin)) return;
+            var oauthLogin = await OpenFrp.Service.Net.OAuthApp.Login(Username, Password, CancellationTokenSource.Token);
+            if (!event_UploadState(oauthLogin)){ await @event_LoginDelay(); return; }
 
             var oauthAuthorize = await OpenFrp.Service.Net.OAuthApp.AuthorizeOpenFrp(CancellationTokenSource.Token);
-            if (!event_UploadState(oauthAuthorize,() => oauthAuthorize.Data is not null && oauthAuthorize.Data.Code.IsNotNullOrEmpty())) return;
+            if (!event_UploadState(oauthAuthorize,() => oauthAuthorize.Data is not null && oauthAuthorize.Data.Code.IsNotNullOrEmpty())) { await @event_LoginDelay(); return; }
 
             var openfrpLogin = await OpenFrp.Service.Net.OpenFrp.Login(oauthAuthorize.Data!.Code!,CancellationTokenSource.Token);
-            if (!event_UploadState(openfrpLogin)) return;
+            if (!event_UploadState(openfrpLogin)) { await @event_LoginDelay(); return; }
 
             var openfrpUserinfo = await OpenFrp.Service.Net.OpenFrp.GetUserInfo(CancellationTokenSource.Token);
-            if (!event_UploadState(openfrpUserinfo, () => openfrpUserinfo.Data is not null)) return;
+            if (!event_UploadState(openfrpUserinfo, () => openfrpUserinfo.Data is not null)) { await @event_LoginDelay(); return; }
             else if (openfrpUserinfo.Data is { } userInfo)
             {
-                var rrpc = await ExtendMethod.RunWithTryCatch(async () =>
+                var rrpc = await RpcManager.LoginAsync(new Service.Proto.Request.LoginRequest
                 {
-                    return await App.RemoteClient.LoginAsync(new Service.Proto.Request.LoginRequest
-                    {
-                        UserToken = userInfo.UserToken,
-                        UserTag = userInfo.UserID
-                    }, deadline: DateTime.UtcNow.AddMinutes(10), cancellationToken: CancellationTokenSource.Token);
-                });
+                    UserToken = userInfo.UserToken,
+                    UserTag = $"@!{userInfo.UserID}+{userInfo.UserName}"
+                }, TimeSpan.FromSeconds(10), cancellationToken: CancellationTokenSource.Token);
 
-                if (rrpc is (var data, var ex))
+                if (rrpc.IsSuccess)
                 {
-                    if (ex is not null)
+                    Properties.Settings.Default.UserPwn = System.Text.Json.JsonSerializer.Serialize(new Awe.Model.OAuth.Request.LoginRequest
                     {
-                        Reason = ex.Message;
-                    }
-                    else if (data is not null)
-                    {
-                        if (data.Flag)
-                        {
-                            Properties.Settings.Default.UserPwn = System.Text.Json.JsonSerializer.Serialize(new Awe.Model.OAuth.Request.LoginRequest
-                            {
-                                Username = Username,
-                                Password = Properties.PndCodec.EncryptString(Encoding.UTF8.GetBytes(Password))
-                            });
+                        Username = Username,
+                        Password = Launcher.PndCodec.EncryptString(Encoding.UTF8.GetBytes(Password))
+                    });
+                    RpcManager.UserSecureCode = rrpc.Data;
 
-                            UserInfoFallback?.SetResult(userInfo);
-                            await event_CloseDialog();
+                    taskCompletionSource?.TrySetResult(userInfo);
 
-                            return;
-                        }
-                        else { Reason = data.Message; }                        
-                    }
-                    Service.Net.OpenFrp.Logout();
+                    //Service.Net.OpenFrp.Logout();
+                    return;
                 }
+                else
+                {
+                    Reason = rrpc.Message ?? "发生了未知错误";
+                    Exception = rrpc.Exception;
+                }
+                Service.Net.OpenFrp.Logout();
             }
         }
 
@@ -121,9 +131,17 @@ namespace OpenFrp.Launcher.ViewModels
             }
             else
             {
-                Reason = resp.Message ?? resp.Exception?.Message ?? resp.StatusCode.ToString();
+                Exception = resp.Exception;
+                Reason = resp.Message ?? resp.StatusCode.ToString();
             }
             return false;
+        }
+
+        [RelayCommand]
+        private void @event_DisplayError()
+        {
+            Debug.WriteLine(Exception);
+            MessageBox.Show(Exception?.ToString(), "OpenFRP Launcher", MessageBoxButton.OK, MessageBoxImage.Hand);
         }
     }
 }

@@ -17,7 +17,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using H.NotifyIcon;
+using ModernWpf.Controls;
 using OpenFrp.Launcher.Model;
+using static Google.Protobuf.WellKnownTypes.Field.Types;
 
 
 namespace OpenFrp.Launcher.ViewModels
@@ -26,42 +29,67 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public MainViewModel()
         {
-            if (!WeakReferenceMessenger.Default.IsRegistered<Awe.Model.OpenFrp.Response.Data.UserInfo>(nameof(MainViewModel)))
+            if (!WeakReferenceMessenger.Default.IsRegistered<Model.RouteMessage<MainViewModel, Awe.Model.OpenFrp.Response.Data.UserInfo>>(nameof(MainViewModel)))
             {
-                WeakReferenceMessenger.Default.Register<Awe.Model.OpenFrp.Response.Data.UserInfo>(nameof(MainViewModel), (_, info) => UserInfo = info);
+                WeakReferenceMessenger.Default.Register<Model.RouteMessage<MainViewModel, Awe.Model.OpenFrp.Response.Data.UserInfo>>(nameof(MainViewModel), (_, info) => UserInfo = info.Data ?? throw new NullReferenceException());
             }
-            if (!WeakReferenceMessenger.Default.IsRegistered<OpenFrp.Launcher.Model.UpdateInfo>(nameof(MainViewModel)))
+            if (!WeakReferenceMessenger.Default.IsRegistered<Model.RouteMessage<MainViewModel, Model.UpdateInfo>>(nameof(MainViewModel)))
             {
-                WeakReferenceMessenger.Default.Register<OpenFrp.Launcher.Model.UpdateInfo>(nameof(MainViewModel), (_, data) => UpdateInfo = data);
-            }
-            if (!WeakReferenceMessenger.Default.IsRegistered<Awe.Model.OpenFrp.Response.Data.UserTunnel>(nameof(MainViewModel)))
-            {
-                WeakReferenceMessenger.Default.Register<Awe.Model.OpenFrp.Response.Data.UserTunnel>(nameof(MainViewModel), (_, info) =>
+                WeakReferenceMessenger.Default.Register<Model.RouteMessage<MainViewModel, Model.UpdateInfo>>(nameof(MainViewModel), (_, info) =>
                 {
-                    OnlineTunnels.Add(info.Id);
+                    if (info.Data is not null)
+                    {
+                        UpdateInfo = info.Data;
+                        if (_navigationView?.FooterMenuItems is { Count: 1 } footer &&
+                            footer[0] is NavigationViewItem nvi)
+                        {
+                            nvi.GetBindingExpression(FrameworkElement.VisibilityProperty)?.UpdateTarget();
+                        }
+                    }
                 });
             }
-            if (!WeakReferenceMessenger.Default.IsRegistered<Type>(nameof(MainViewModel)))
+            if (!WeakReferenceMessenger.Default.IsRegistered<Model.RouteMessage<MainViewModel, Awe.Model.OpenFrp.Response.Data.UserTunnel>>(nameof(MainViewModel)))
             {
-                WeakReferenceMessenger.Default.Register<Type>(nameof(MainViewModel), (_, page) =>
+                WeakReferenceMessenger.Default.Register<RouteMessage<MainViewModel, Awe.Model.OpenFrp.Response.Data.UserTunnel>>(nameof(MainViewModel), (_, info) =>
                 {
-                    event_RouterItemInvoked(page);
+                    OnlineTunnels.Add(info.Data?.Id ?? throw new NullReferenceException());
                 });
             }
-            if (!WeakReferenceMessenger.Default.IsRegistered<int[]>(nameof(MainViewModel)))
+            if (!WeakReferenceMessenger.Default.IsRegistered<RouteMessage<MainViewModel, Type>>(nameof(MainViewModel)))
             {
-                WeakReferenceMessenger.Default.Register<int[]>(nameof(MainViewModel), (_, data) =>
+                WeakReferenceMessenger.Default.Register<RouteMessage<MainViewModel, Type>>(nameof(MainViewModel), (_, data) =>
+                {
+                    if (_navigationView != null) 
+                    {
+                        foreach (var item in _navigationView.MenuItems)
+                        {
+                            if (item is NavigationViewItem vv && vv.Tag.Equals(typeof(Views.Tunnels)))
+                            {
+                                _navigationView.SelectedItem = item;
+                                break;
+                            }
+                        }
+                        _frame?.Navigate(data.Data);
+                    }
+                });
+            }
+            if (!WeakReferenceMessenger.Default.IsRegistered<RouteMessage<MainViewModel, int[]>>(nameof(MainViewModel)))
+            {
+                WeakReferenceMessenger.Default.Register<RouteMessage<MainViewModel, int[]>>(nameof(MainViewModel), (_, data) =>
                 {
                     OnlineTunnels.Clear();
 
-                    OnlineTunnels.AddRange(data);
+                    foreach (var item in data.Data ?? new int[0])
+                    {
+                        OnlineTunnels.Add(item);
+                    }
                 });
             }
-            if (!WeakReferenceMessenger.Default.IsRegistered<string>(nameof(MainViewModel)))
+            if (!WeakReferenceMessenger.Default.IsRegistered<RouteMessage<MainViewModel, string>>(nameof(MainViewModel)))
             {
-                WeakReferenceMessenger.Default.Register<string>(nameof(MainViewModel), (_, data) =>
+                WeakReferenceMessenger.Default.Register<RouteMessage<MainViewModel, string>>(nameof(MainViewModel), (_, data) =>
                 {
-                    switch (data)
+                    switch (data.Data)
                     {
                         case "onService":
                             {
@@ -83,67 +111,20 @@ namespace OpenFrp.Launcher.ViewModels
                 if (e.PropertyName is nameof(UserInfo))
                 {
                     event_OnUserInfoChanged();
-                    if (_frame is { Content: var c } && c?.GetType() == typeof(Views.Settings))
+                    if (_frame is { Content: var c } && 
+                        c is Views.Home or Views.Settings)
                     {
-                        event_RouterItemInvoked(typeof(Views.Settings));
+                        //event_RouterItemInvoked(c.GetType());
                     }
                 }
             };
+           // AvatorFilePath = Properties.Settings.Default.UserAvator;
         }
 
-        public List<int> OnlineTunnels { get; } = new List<int>();
+        public HashSet<int> OnlineTunnels { get; } = new HashSet<int>();
 
-        private ContentControl? _frame;
-
-        public RouterItem[] MainRouterItems { get; } = new RouterItem[]
-        {
-            new RouterItem
-            {
-                Icon = App.Current.TryFindResource("Awe.UI.Icons.Home") as Geometry,
-                Title = "首页",
-                Page = typeof(Views.Home)
-            },
-            new RouterItem
-            {
-                Icon = App.Current.TryFindResource("Awe.UI.Icons.WirelessBroadcast") as Geometry,
-                Title = "隧道",
-                Page = typeof(Views.Tunnels),
-                IsEnableBinding = new Awe.UI.Helper.TwiceBindingHelper
-                {
-                    Property = RadioButton.IsEnabledProperty,
-                    Binding = new Binding
-                    {
-                        Mode = BindingMode.OneWay,
-                        Path = new PropertyPath("DataContext.UserInfo.UserName"),
-                        Converter = new Awe.UI.Converter.NotEqualConverter(),
-                        ConverterParameter = "not-allow-display",
-                        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor,typeof(ItemsControl),1)
-                    }
-                }
-            },
-            new RouterItem
-            {
-                Icon = App.Current.TryFindResource("Awe.UI.Icons.Report") as Geometry,
-                Title = "日志",
-                Page = typeof(Views.Log),
-            },
-            new RouterItem
-            {
-                Icon = App.Current.TryFindResource("Awe.UI.Icons.Info") as Geometry,
-                Title = "关于",
-                Page = typeof(Views.About)
-            },
-        };
-
-        public RouterItem[] SubRouterItems { get; } = new RouterItem[]
-        {
-            new RouterItem
-            {
-                Icon = App.Current.TryFindResource("Awe.UI.Icons.Setting") as Geometry,
-                Title = "设置",
-                Page = typeof(Views.Settings)
-            },
-        };
+        private ModernWpf.Controls.Frame? _frame;
+        private ModernWpf.Controls.NavigationView? _navigationView;
 
         [ObservableProperty]
         private Awe.Model.OpenFrp.Response.Data.UserInfo userInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
@@ -152,21 +133,23 @@ namespace OpenFrp.Launcher.ViewModels
         };
 
         [ObservableProperty]
-        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> userTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
+        private Model.UpdateInfo updateInfo = new UpdateInfo();
 
         [ObservableProperty]
-        private OpenFrp.Launcher.Model.UpdateInfo updateInfo = new UpdateInfo
-        {
-            Type = UpdateInfoType.None
-        };
+        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> userTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
 
         [ObservableProperty]
         private bool stateOfService;
 
-        private void @event_OnUserInfoChanged()
+        [ObservableProperty]
+        private string avatorFilePath = @"pack://application:,,,/Resources/Images/share_5bb469267f65d0c7171470739108cdae.png";
+
+        private async void @event_OnUserInfoChanged()
         {
             if (UserInfo.UserName.Equals("not-allow-display"))
             {
+                AvatorFilePath = "";
+
                 UserTunnels.Clear();
             }
             else
@@ -180,93 +163,74 @@ namespace OpenFrp.Launcher.ViewModels
                 //{
                 //    global::System.Diagnostics.Debugger.Break();
                 //}
+                
+                var avator = await Service.Net.HttpRequest.Get($"https://api.zyghit.cn/avatar/?email={UserInfo.Email}&s=100");
+
+                if (avator.StatusCode is System.Net.HttpStatusCode.OK && avator.Data.Count() > 0)
+                {
+                    Properties.Settings.Default.UserAvator = System.IO.Path.GetTempFileName();
+
+                    try
+                    {
+                        using var fs = System.IO.File.OpenWrite(Properties.Settings.Default.UserAvator);
+
+                        await fs.WriteAsync(avator.Data.ToArray(), 0, avator.Data.Count());
+
+                        
+
+                        await fs.FlushAsync();
+                    }
+                    catch
+                    {
+                        Properties.Settings.Default.UserAvator = "";
+
+                        return;
+                    }
+
+                    AvatorFilePath = Properties.Settings.Default.UserAvator;
+                }
             }
         }
 
         [RelayCommand]
-        private async Task @event_RequesetForUpdate()
+        private void @event_NavigationViewLoaded(RoutedEventArgs arg)
         {
-            if (UpdateInfo.Type is UpdateInfoType.None) return;
-            var dialog = new Dialog.MessageDialog
+            if (arg.Source is NavigationView nv)
             {
-                Title = new TextBlock()
-                {
-                    Text = UpdateInfo.Type switch {
-                        UpdateInfoType.Launcher => "启动器更新",
-                        UpdateInfoType.FrpClient => "FRPC 更新",
-                        _ => "Unknown Update"
-                    },
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                    FontSize = 24
-                },
-                Content = new TextBlock
-                {
-                    FontSize = 16,
-                    TextWrapping = TextWrapping.Wrap,
-                    Text = UpdateInfo.Log,
-                },
-                PrimaryButtonText = "更新",
-                PrimaryButtonIcon = CreateObject<Path>(x =>
-                {
-                    x.SetResourceReference(Path.DataProperty, "Awe.UI.Icons.Update");
-                    x.SetBinding(Path.FillProperty, new Binding
-                    {
-                        Mode = BindingMode.OneWay,
-                        RelativeSource = RelativeSource.Self,
-                        Path = new PropertyPath(TextElement.ForegroundProperty)
-                    });
-                    x.Stretch = Stretch.Uniform;
-                    x.Margin = new Thickness(0, 0, 4, 0);
-                    x.Width = x.Height = 16;
-                }),
-                CloseButtonText = "我再想想...",
-                InvokeAction = delegate
-                {
-                    if (App.Current?.MainWindow is { } wind)
-                    {
-                        wind.IsHitTestVisible = false;
-                        try
-                        {
-                            Process.Start(new ProcessStartInfo
-                            {
-                                FileName = Assembly.GetExecutingAssembly().Location,
-                                Verb = "runas",
-                                Arguments = "--update",
-                                ErrorDialog = false
-                            });
-                        }
-                        catch
-                        {
-                            wind.IsHitTestVisible = true;
-                            return Task.FromResult(false);
-                        }
-
-                        wind.IsHitTestVisible = true;
-                        if (App.ServiceProcess != null && !App.ServiceProcess.HasExited)
-                        {
-                            App.ServiceProcess.EnableRaisingEvents = false;
-                            App.ServiceProcess.Kill();
-                        }
-
-                        Environment.Exit(0);
-                        return Task.FromResult(true);
-                    }
-                    return Task.FromResult(false);
-                }
-            };
-            await dialog.ShowDialog(); 
-            
+                _navigationView = nv;
+            }
         }
 
         [RelayCommand]
-        private void @event_RouterItemInvoked(Type? value)
+        private void @event_RouterItemInvoked(NavigationViewItemInvokedEventArgs? value)
         { 
-            if (_frame is not null && value is not null)
+            if (_frame is not null)
             {
-                _frame.Content = Activator.CreateInstance(value);
-                if (App.Current.TryFindResource("FrameChangeAnimation") is Storyboard sb)
+                if (value is { InvokedItemContainer.Tag: Type v })
                 {
-                    _frame.BeginStoryboard(sb);
+                    _frame.Navigate(v);
+                }
+                else if (value is { IsSettingsInvoked: true })
+                {
+                    _frame.Navigate(typeof(Views.Settings));
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void @event_NavigateToSettings()
+        {
+            if (_navigationView is not null)
+            {
+                _navigationView.SelectedItem = _navigationView.SettingsItem;
+            }
+            
+
+            if (_frame?.Navigate(typeof(Views.Settings)) is true && _frame?.Content is Views.Settings { DataContext: ViewModels.SettingsViewModel v })
+            {
+                if ("not-allow-display".Equals(UserInfo.UserName))
+                {
+                    _ = v.event_ShowLoginDialogCommand.ExecuteAsync(null);
                 }
             }
         }
@@ -274,14 +238,27 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_FrameLoaded(RoutedEventArgs e)
         {
-            if (_frame is null && e.Source is ContentControl cc) _frame = cc;
+            if (_frame is null && e.Source is ModernWpf.Controls.Frame cc) _frame = cc;
         }
 
         [RelayCommand]
         private void @event_CloseingWindow(System.ComponentModel.CancelEventArgs c)
         {
-            App.Current.MainWindow.Visibility = Visibility.Hidden;
-            c.Cancel = true;
+            if (App.Current is { MainWindow: var mw})
+            {
+                
+
+                Properties.Settings.Default.ApplicationTheme = (ModernWpf.ElementTheme)App.Current.MainWindow.GetValue(ModernWpf.ThemeManager.RequestedThemeProperty);
+                Properties.Settings.Default.ApplicationBackdrop = (ModernWpf.Controls.Primitives.BackdropType)App.Current.MainWindow.GetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty);
+                Properties.Settings.Default.Save();
+
+                if (Debugger.IsAttached) return;
+
+                mw.HideInTaskbar();
+                mw.Hide();
+
+                c.Cancel = true;
+            }
         }
 
         private static T CreateObject<T>(Action<T>? func = default, params object[] args)

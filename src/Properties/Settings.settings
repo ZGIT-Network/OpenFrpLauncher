@@ -2,13 +2,28 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OpenFrp.Launcher.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="UseLightMode" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="FollowSystemTheme" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+    <Setting Name="ApplicationTheme" Type="ModernWpf.ElementTheme" Scope="User">
+      <Value Profile="(Default)">Default</Value>
     </Setting>
     <Setting Name="UserPwn" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ZoomErrorMessage" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ApplicationBackdrop" Type="ModernWpf.Controls.Primitives.BackdropType" Scope="User">
+      <Value Profile="(Default)">None</Value>
+    </Setting>
+    <Setting Name="FontSize" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">14</Value>
+    </Setting>
+    <Setting Name="FontFamily" Type="System.Windows.Media.FontFamily" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="EnableTextAnimatedHitting" Type="System.Windows.Media.TextHintingMode" Scope="User">
+      <Value Profile="(Default)">Animated</Value>
+    </Setting>
+    <Setting Name="UserAvator" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

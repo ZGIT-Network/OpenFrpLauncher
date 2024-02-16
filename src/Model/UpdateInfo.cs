@@ -13,6 +13,8 @@ namespace OpenFrp.Launcher.Model
         /// </summary>
         public string? Log { get; set; }
 
+        public string? Title { get; set; }
+
         public UpdateInfoType Type { get; set; }
 
         public Awe.Model.OpenFrp.Response.Data.SoftWareVersionData? SoftWareVersionData { get; set; }

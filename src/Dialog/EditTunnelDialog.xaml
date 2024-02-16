@@ -1,0 +1,105 @@
+﻿<ui:ContentDialog
+    x:Class="OpenFrp.Launcher.Dialog.EditTunnelDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:app="clr-namespace:OpenFrp.Launcher.Properties"
+    xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
+    xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:OpenFrp.Launcher.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.modernwpf.com/2019"
+    x:Name="wfDialog"
+    Title="编辑隧道"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    ui:ClipToBounds="True"
+    CloseButtonText="关闭"
+    DefaultButton="Primary"
+    PrimaryButtonText="上传"
+    mc:Ignorable="d">
+    <behavior:Interaction.Triggers>
+        <behavior:DataTrigger Binding="{Binding IsPortImportOpen, ElementName=Editor, Mode=OneWay}" Value="True">
+            <behavior:ChangePropertyAction PropertyName="PrimaryButtonText" Value="返回" />
+        </behavior:DataTrigger>
+        <behavior:DataTrigger Binding="{Binding IsPortImportOpen, ElementName=Editor, Mode=OneWay}" Value="False">
+            <behavior:ChangePropertyAction PropertyName="PrimaryButtonText" Value="上传" />
+        </behavior:DataTrigger>
+    </behavior:Interaction.Triggers>
+    <ui:ContentDialog.Resources>
+        <Thickness x:Key="ContentDialogPadding">0</Thickness>
+        <converter:RollbackConverter x:Key="RollbackConverter" />
+        <converter:BothConverter x:Key="BothConverter" />
+        <converter:NotEqualConverter x:Key="NotEqualConverter" />
+        <converter:EqualConverter x:Key="EqualConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </ui:ContentDialog.Resources>
+    <ui:ContentDialog.TitleTemplate>
+        <DataTemplate>
+            <TextBlock Margin="24,24,0,0" Text="{Binding}" />
+        </DataTemplate>
+    </ui:ContentDialog.TitleTemplate>
+    <Grid Width="500">
+        <Grid>
+            <awe:VisibilityTranstion IsDisplay="{Binding IsPrimaryButtonEnabled, RelativeSource={RelativeSource AncestorType=ui:ContentDialog}, Mode=OneWay}">
+                <ui:ScrollViewerEx
+                    PanningMode="VerticalFirst"
+                    RewriteWheelChange="True"
+                    VerticalScrollBarVisibility="Auto">
+                    <ui:SimpleStackPanel>
+                        <awe:VisibilityTranstion>
+                            <awe:VisibilityTranstion.IsDisplay>
+                                <MultiBinding Converter="{StaticResource BothConverter}">
+                                    <Binding
+                                        Converter="{StaticResource NotEqualConverter}"
+                                        ConverterParameter="创建成功"
+                                        Mode="OneWay"
+                                        Path="Response.Message"
+                                        RelativeSource="{RelativeSource AncestorType=local:EditTunnelDialog}" />
+                                    <Binding
+                                        Converter="{StaticResource RollbackConverter}"
+                                        ElementName="Editor"
+                                        Mode="OneWay"
+                                        Path="IsPortImportOpen" />
+                                </MultiBinding>
+                            </awe:VisibilityTranstion.IsDisplay>
+                            <ui:InfoBar
+                                Title="上传失败"
+                                Margin="22,0,24,8"
+                                IsClosable="False"
+                                IsOpen="True"
+                                Message="{Binding Response.Message, RelativeSource={RelativeSource AncestorType=local:EditTunnelDialog}, Mode=OneWay}"
+                                Severity="Error">
+                                <ui:InfoBar.Resources>
+                                    <ui:BindingProxy x:Key="IsShowActionButton" Value="{Binding Response.Exception, Converter={StaticResource EqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource AncestorType=local:EditTunnelDialog}, Mode=OneWay}" />
+                                </ui:InfoBar.Resources>
+
+                                <ui:InfoBar.ActionButton>
+                                    <Button Content="显示错误" Visibility="{Binding Converter={StaticResource BooleanToVisibilityConverter}, Source={StaticResource IsShowActionButton}, Mode=OneWay}" />
+                                </ui:InfoBar.ActionButton>
+                            </ui:InfoBar>
+                        </awe:VisibilityTranstion>
+
+                        <ctrl:TunnelEditor
+                            x:Name="Editor" TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}"
+                            Margin="24,0,24,24"
+                            IsCreateMode="{Binding (ctrl:TunnelEditor.IsCreateMode), RelativeSource={RelativeSource AncestorType=local:EditTunnelDialog}, Mode=OneWay}"
+                            NodeInfo="{Binding (ctrl:TunnelEditor.NodeInfo), RelativeSource={RelativeSource AncestorType=ui:ContentDialog}, Mode=OneWay}"
+                            Tunnel="{Binding (ctrl:TunnelEditor.Tunnel), RelativeSource={RelativeSource AncestorType=local:EditTunnelDialog}, Mode=OneWay}" />
+                    </ui:SimpleStackPanel>
+                </ui:ScrollViewerEx>
+            </awe:VisibilityTranstion>
+            <awe:VisibilityTranstion IsDisplay="{Binding IsPrimaryButtonEnabled, Converter={StaticResource RollbackConverter}, RelativeSource={RelativeSource AncestorType=ui:ContentDialog}, Mode=OneWay}">
+                <Grid Height="200">
+                    <ui:ProgressRing
+                        Width="100"
+                        Height="100"
+                        IsActive="{Binding IsPrimaryButtonEnabled, Converter={StaticResource RollbackConverter}, RelativeSource={RelativeSource AncestorType=ui:ContentDialog}, Mode=OneWay}" />
+                </Grid>
+            </awe:VisibilityTranstion>
+        </Grid>
+    </Grid>
+
+</ui:ContentDialog>

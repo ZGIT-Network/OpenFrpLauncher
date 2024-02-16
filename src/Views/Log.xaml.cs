@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,11 +19,13 @@ namespace OpenFrp.Launcher.Views
     /// <summary>
     /// Log.xaml 的交互逻辑
     /// </summary>
-    public partial class Log : UserControl
+    public partial class Log : ModernWpf.Controls.Page
     {
+        [DebuggerNonUserCode]
         public Log()
         {
             InitializeComponent();
+            
         }
     }
 }

@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace OpenFrp.Launcher.Controls
+namespace OpenFrp.Launcher.Views
 {
     /// <summary>
-    /// SocketMonitor.xaml 的交互逻辑
+    /// UpdateComment.xaml 的交互逻辑
     /// </summary>
-    public partial class SocketMonitor : UserControl
+    public partial class UpdateComment : ModernWpf.Controls.Page
     {
-        public SocketMonitor()
+        public UpdateComment()
         {
             InitializeComponent();
         }

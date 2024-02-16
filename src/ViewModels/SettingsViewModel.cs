@@ -1,14 +1,19 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using static Google.Protobuf.WellKnownTypes.Field.Types;
+using ModernWpf.Controls;
+using OpenFrp.Launcher.Model;
+using FileManager = OpenFrp.Service.Commands.FileDictionary;
 
 
 
@@ -23,8 +28,18 @@ namespace OpenFrp.Launcher.ViewModels
             if (App.Current?.MainWindow is { DataContext: MainViewModel dx })
             {
                 MainViewModel = dx;
-
                 UserInfo = dx.UserInfo;
+
+
+                dx.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName is nameof(UserInfo))
+                    {
+                        UserInfo = dx.UserInfo;
+                        OnPropertyChanged(nameof(UserInfo));
+                    }
+                };
+                
             }
         }
 
@@ -51,7 +66,6 @@ namespace OpenFrp.Launcher.ViewModels
             // 实际上创建了 Binding 属性，数据好更新。 
 
             __createUserInfoItem("用户组","GroupCName"),
-            __createUserInfoItem("ID","UserID"),
             __createUserInfoItem("实名状态","IsRealname",new Awe.UI.Converter.BooleanToStringConverter("已实名","未实名")),
             __createUserInfoItem("隧道数",new string[]{ "UsedProxies", "MaxProxies" }),
             __createUserInfoItem("速率 (上/下)",new string[]{ "InputLimit", "OutputLimit" },new Awe.UI.Converter.CustomMathConverter(__limitSpeedCalc),"{0} Mbps / {1} Mbps"),
@@ -73,7 +87,7 @@ namespace OpenFrp.Launcher.ViewModels
                 Title = title,
                 Binding = new Awe.UI.Helper.TwiceBindingHelper
                 {
-                    Property = TextBlock.TextProperty,
+                    Property = Run.TextProperty,
                     Binding = new Binding()
                     {
                         Mode = BindingMode.OneWay,
@@ -109,7 +123,7 @@ namespace OpenFrp.Launcher.ViewModels
                 Title = title,
                 Binding = new Awe.UI.Helper.TwiceBindingHelper
                 {
-                    Property = TextBlock.TextProperty,
+                    Property = Run.TextProperty,
                     Binding = mb
                 }
             };
@@ -117,106 +131,141 @@ namespace OpenFrp.Launcher.ViewModels
 
         #endregion
 
+
+        
         public int ApplicationTheme
         {
             get
             {
-                if (App.Current?.MainWindow is Window wind)
+                if (App.Current is { MainWindow: var wind })
                 {
-                    return (wind.GetValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty) is true && Properties.Settings.Default.UseLightMode) ? 0 : 1;
+                    return (int)wind.GetValue(ModernWpf.ThemeManager.RequestedThemeProperty);
                 }
-                return 0;
+                throw new NullReferenceException();
             }
             set
             {
-                if (App.Current?.MainWindow is Window wind)
+                if (App.Current is { MainWindow: var wind })
                 {
-                    bool v2 = value is 0 ? true : false;
-
-                    wind.SetValue(Awe.UI.Helper.WindowsHelper.UseLightModeProperty, v2);
-                    App.RefreshApplicationTheme(wind, v2);
-
-                    Properties.Settings.Default.UseLightMode = v2;
-                    if (FollowBySystem is true)
-                    {
-                        Properties.Settings.Default.FollowSystemTheme = false;
-                        OnPropertyChanged(nameof(FollowBySystem));
-                    }
+                    wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, (ModernWpf.ElementTheme)value);
                 }
             }
         }
-
-        public bool FollowBySystem
+        public int FontHittingMode
         {
             get
             {
-                return OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme;
+                return (int)Properties.Settings.Default.EnableTextAnimatedHitting;
             }
             set
             {
-                if (value is true && Environment.OSVersion.Version.Major is 10 &&
-                    App.Current?.MainWindow is { } wind)
+                Properties.Settings.Default.EnableTextAnimatedHitting = (TextHintingMode)value;
+            }
+        }
+        public int ApplicationBackdrop
+        {
+            get
+            {
+                if (App.Current is { MainWindow: var wind })
                 {
-                    try
-                    {
-                        var uiSettings = new Windows.UI.ViewManagement.UISettings();
-
-                        if (IsDarkBackground(uiSettings.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background)))
-                        {
-                            App.RefreshApplicationTheme(wind, false);
-                            Properties.Settings.Default.FollowSystemTheme = value;
-                            OnPropertyChanged(nameof(ApplicationTheme));
-                            return;
-                        }
-                    }
-                    catch
-                    {
-                        // not support query
-                        return;
-                    }
+                    int vl = (int)wind.GetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty);
+                    if (vl is 1 or 0) return 0;
+                    return  vl- 1;
                 }
-                else
+                throw new NullReferenceException();
+            }
+            set
+            {
+                if (App.Current is { MainWindow: var wind })
                 {
-                    Properties.Settings.Default.FollowSystemTheme = false;
+                    wind.SetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty, (ModernWpf.Controls.Primitives.BackdropType)(value+1));
                 }
             }
         }
-
-        private bool IsDarkBackground(Windows.UI.Color color)
+        public bool ZoomErrorMessage
         {
-            return color.R + color.G + color.B < (255 * 3 - color.R - color.G - color.B);
+            get
+            {
+                return Properties.Settings.Default.ZoomErrorMessage;
+            }
+            set
+            {
+                Properties.Settings.Default.ZoomErrorMessage = value;
+            }
         }
 
+        public double FontSize
+        {
+            get
+            {
+                return Properties.Settings.Default.FontSize;
+            }
+            set
+            {
+                Properties.Settings.Default.FontSize = value;
+            }
+        }
+
+
+        public System.Windows.Media.FontFamily FontFamily
+        {
+            get
+            {
+                return Properties.Settings.Default.FontFamily;
+            }
+            set
+            {
+                Properties.Settings.Default.FontFamily = value;
+            }
+        }
+
+
+        public bool AutoStartup
+        {
+            get
+            {
+                return System.IO.File.Exists(FileManager.GetAutoStartupFile());
+            }
+            set
+            {
+                var fe = FileManager.GetAutoStartupFile();
+                if (value)
+                {
+                    var shortcut = (IWshRuntimeLibrary.IWshShortcut)new IWshRuntimeLibrary.WshShell().CreateShortcut(fe);
+                    shortcut.TargetPath = Assembly.GetExecutingAssembly().Location;
+                    shortcut.Arguments = "--minimize";
+                    shortcut.Description = "OpenFrp Launcher v4 开机自启动";
+                    shortcut.Save();
+                }
+                else
+                {
+                    try
+                    {
+                        System.IO.File.Delete(fe);
+                    }
+                    catch(Exception ex)
+                    {
+                        MessageBox.Show(ex.ToString());
+                    }
+                }
+            }
+        }
         /// <summary>
         /// 显示登录窗口
         /// </summary>
         [RelayCommand]
         private async Task @event_ShowLoginDialog()
         {
-            if (App.Current?.MainWindow is Window wind)
+            var loginDialog = new Dialog.LoginDialog();
+
+            var result = await loginDialog.ShowAsync();
+
+            if (result is not null)
             {
-                var tcs = new TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>();
-
-                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogOpennedProperty, true);
-                wind.SetCurrentValue(Awe.UI.Helper.WindowsHelper.DialogContentProperty, new Dialog.LoginDialog
-                {
-                    DialogFallback = tcs
-                });
-
-                try
-                {
-                    var rti = await tcs.Task;
-                    if (rti is not null)
-                    {
-                        WeakReferenceMessenger.Default.Send(UserInfo = rti);
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-
-                }
-
+                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(UserInfo = result));
             }
+
+            
         }
 
         [RelayCommand]
@@ -226,36 +275,23 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null)
             {
-                var rrpc = await ExtendMethod.RunWithTryCatch(async () =>
+                var reso = await RpcManager.LogoutAsync(new Service.Proto.Request.LogoutRequest
                 {
-                    return await App.RemoteClient.LogoutAsync(new Service.Proto.Request.LogoutRequest
-                    {
-                        UserTag = this.UserInfo.UserID,
-                    }, deadline: DateTime.UtcNow.AddMinutes(10));
-                });
+                    SecureCode = RpcManager.UserSecureCode,
+                }, TimeSpan.FromSeconds(10));
 
-                if (rrpc is (var data,var ex))
+                if (reso.IsSuccess)
                 {
-                    if (ex is not null)
+                    Service.Net.OpenFrp.Logout();
+                    Properties.Settings.Default.UserPwn = string.Empty;
+                    WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(UserInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
                     {
-                        MessageBox.Show(ex.ToString());
-                    }
-                    else if (data is not null)
-                    {
-                        if (data.Flag)
-                        {
-                            Service.Net.OpenFrp.Logout();
-                            Properties.Settings.Default.UserPwn = string.Empty;
-                            WeakReferenceMessenger.Default.Send(UserInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
-                            {
-                                UserName = "not-allow-display"
-                            });
-                        }
-                        else
-                        {
-                            MessageBox.Show(data.Message);
-                        }
-                    }
+                        UserName = "not-allow-display"
+                    }));
+                }
+                else
+                {
+                    MessageBox.Show(reso.Message ?? reso.Exception?.ToString());
                 }
             }
             else
@@ -265,16 +301,26 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private void @event_CreateMask(FrameworkElement control)
+        private void @event_OpenOpenFrpWebsite()
         {
-            var flyout = new Awe.UI.Controls.Flyout
-            {
+            try { Process.Start("http://console.openfrp.net/"); return; } catch { }
+            try { Process.Start("start","http://console.openfrp.net/"); } catch { }
+        }
 
-            };
-            Awe.UI.Helper.FlyoutHelper.CreateMask(flyout, control,(px) =>
+        [RelayCommand]
+        public void @event_NumberBoxLoaded(RoutedEventArgs arg)
+        {
+            if (arg.Source is ModernWpf.Controls.NumberBox nb)
             {
-                return (px + (control.ActualWidth / 2)) - (flyout.ActualWidth / 2);
-            });
+                nb.ValidationMode = NumberBoxValidationMode.Disabled;
+                nb.ValueChanged += (_, e) =>
+                {
+                    if (e.NewValue is double.NaN)
+                    {
+                        nb.Value = e.OldValue;
+                    }
+                };
+            }
         }
     }
 }

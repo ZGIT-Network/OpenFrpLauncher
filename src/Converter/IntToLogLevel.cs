@@ -21,19 +21,19 @@ namespace OpenFrp.Launcher.Converter
                 {
                     case 1:
                         {
-                            return "[E]";
+                            return "E";
                         }
                     case 2:
                         {
-                            return "[W]";
+                            return "W";
                         }
                     case 3:
                         {
-                            return "[I]";
+                            return "I";
                         }
                     case 4:
                         {
-                            return "[D]";
+                            return "D";
                         }
                 }
             }

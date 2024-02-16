@@ -1,27 +1,32 @@
-﻿<UserControl
+﻿<ui:ContentDialog
     x:Class="OpenFrp.Launcher.Dialog.LoginDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:ctrl="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
+    xmlns:hv="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Dialog"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-    xmlns:ui="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
+    xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
+    xmlns:wv="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+    Title="登录"
     d:Background="White"
     d:DesignHeight="768"
     d:DesignWidth="1366"
     d:Foreground="White"
-    FocusManager.FocusedElement="{Binding ElementName=fct}"
-    Foreground="White"
+    CloseButtonText="关闭"
+    DefaultButton="Primary"
+    PrimaryButtonText="登录"
     mc:Ignorable="d">
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
-            <behavior:InvokeCommandAction Command="{Binding event_ContainerLoadedCommand}" PassEventArgsToCommand="True" />
+            <behavior:InvokeCommandAction Command="{Binding event_DialogLoadedCommand}" PassEventArgsToCommand="True" />
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <FrameworkElement.DataContext>
@@ -29,131 +34,83 @@
     </FrameworkElement.DataContext>
     <FrameworkElement.Resources>
         <converter:EqualConverter x:Key="EqualConverter" />
+        <converter:NotEqualConverter x:Key="NotEqualConverter" />
     </FrameworkElement.Resources>
-    <Grid
-        MaxWidth="{DynamicResource DialogMaxWidth}"
-        MaxHeight="{DynamicResource DialogMaxHeight}"
-        Margin="56">
-        <Border
-            Margin="4"
-            Background="#4f222222"
-            CornerRadius="0">
-            <Border.Effect>
-                <BlurEffect Radius="100" RenderingBias="Performance" />
-            </Border.Effect>
-        </Border>
-        <Border CornerRadius="4" SnapsToDevicePixels="True">
-            <Border.Background>
-                <ImageBrush ImageSource="..\Resources\Images\loginBackground.png" Stretch="UniformToFill" />
-            </Border.Background>
-            <Grid>
+    <ui:ContentDialog.IsPrimaryButtonEnabled>
+        <Binding
+            Converter="{StaticResource EqualConverter}"
+            ConverterParameter="False"
+            Mode="OneWay"
+            Path="event_LoginCommand.IsRunning" />
+    </ui:ContentDialog.IsPrimaryButtonEnabled>
+    <ui:ScrollViewerEx Width="500" PanningMode="VerticalFirst">
+        <Grid ui:ClipHelper.CornerRadius="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid
+                Grid.Row="0"
+                Height="150"
+                Margin="0,0,0,36">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
                 </Grid.ColumnDefinitions>
-                <Border
-                    Grid.Column="0"
-                    Width="250"
-                    Background="#99000000"
-                    CornerRadius="3,0,0,3"
-                    SnapsToDevicePixels="True">
-                    <Grid>
-                        <ScrollViewer x:Name="fct" VerticalScrollBarVisibility="Auto">
-                            <Grid Margin="24,36,24,0" IsEnabled="{Binding event_LoginCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static sys:Boolean.FalseString}, Mode=OneWay}">
-                                <FrameworkElement.Style>
-                                    <Style TargetType="Grid">
-                                        <Style.Triggers>
-                                            <Trigger Property="IsEnabled" Value="True">
-                                                <Trigger.EnterActions>
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <DoubleAnimation
-                                                                Storyboard.TargetProperty="Opacity"
-                                                                To="1"
-                                                                Duration="0:0:.25">
-                                                                <DoubleAnimation.EasingFunction>
-                                                                    <CircleEase EasingMode="EaseOut" />
-                                                                </DoubleAnimation.EasingFunction>
-                                                            </DoubleAnimation>
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </Trigger.EnterActions>
-                                                <Trigger.ExitActions>
-                                                    <BeginStoryboard>
-                                                        <Storyboard>
-                                                            <DoubleAnimation
-                                                                Storyboard.TargetProperty="Opacity"
-                                                                To="0.6"
-                                                                Duration="0:0:.25">
-                                                                <DoubleAnimation.EasingFunction>
-                                                                    <CircleEase EasingMode="EaseOut" />
-                                                                </DoubleAnimation.EasingFunction>
-                                                            </DoubleAnimation>
-                                                        </Storyboard>
-                                                    </BeginStoryboard>
-                                                </Trigger.ExitActions>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </FrameworkElement.Style>
-                                <StackPanel>
-
-                                    <TextBlock FontSize="20" Text="登录" />
-
-                                    <TextBlock
-                                        Margin="0,16,0,8"
-                                        FontSize="14"
-                                        Text="账户" />
-                                    <TextBox Text="{Binding Username}" />
-
-                                    <TextBlock
-                                        Margin="0,16,0,8"
-                                        FontSize="14"
-                                        Text="密码" />
-                                    <PasswordBox helper:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" />
-                                    <Button
-                                        Margin="0,20,0,0"
-                                        Padding="22,8"
-                                        Command="{Binding event_LoginCommand}"
-                                        Content="登录"
-                                        Style="{StaticResource AccentButtonStyle}" />
-                                    <TextBlock
-                                        Margin="0,16,0,0"
-                                        FontSize="14"
-                                        Foreground="Yellow"
-                                        Text="{Binding Reason, Mode=OneWay}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Grid>
-                        </ScrollViewer>
-                        <Grid>
-                            <ctrl:Loading
-                                Width="100"
-                                Height="100"
-                                FontSize="7"
-                                IsEnabled="{Binding event_LoginCommand.IsRunning}"
-                                Style="{StaticResource Default2}" />
-                        </Grid>
-                    </Grid>
-                </Border>
-                <ctrl:NavigationButton
+                <Grid Grid.Column="0" Margin="0,0,8,0">
+                    <awe:VisibilityTranstion IsDisplay="{Binding event_LoginCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter='False'}">
+                        <ui:SimpleStackPanel Spacing="12">
+                            <TextBox ui:ControlHelper.Header="账户" Text="{Binding Username}" />
+                            <PasswordBox hv:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" ui:ControlHelper.Header="密码" />
+                        </ui:SimpleStackPanel>
+                    </awe:VisibilityTranstion>
+                    <awe:VisibilityTranstion IsDisplay="{Binding event_LoginCommand.IsRunning}">
+                        <ui:ProgressRing
+                            Width="75"
+                            Height="75"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsActive="{Binding event_LoginCommand.IsRunning}" />
+                    </awe:VisibilityTranstion>
+                </Grid>
+                <ui:SimpleStackPanel
+                    Grid.Row="0"
                     Grid.Column="1"
-                    Margin="0,16,16,0"
-                    Padding="12"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    AutomationProperties.Name="关闭窗口"
-                    Command="{Binding event_CloseDialogCommand}"
-                    Cursor="Hand"
-                    ToolTip="关闭">
-                    <Path
-                        Width="16"
-                        Height="16"
-                        Data="{StaticResource Awe.UI.Icons.Close}"
-                        Fill="White"
-                        Stretch="Uniform" />
-                </ctrl:NavigationButton>
+                    Margin="8,0,0,0"
+                    Spacing="8">
+                    <TextBlock Text="针对于 Windows 的解决方案" />
+                </ui:SimpleStackPanel>
             </Grid>
-        </Border>
-    </Grid>
-</UserControl>
+
+            <awe:VisibilityTranstion Grid.Row="1" IsDisplay="{Binding Reason, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}">
+                <ui:InfoBar
+                    MinHeight="55"
+                    IsClosable="False"
+                    IsOpen="{Binding Reason, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}"
+                    Message="{Binding Reason}"
+                    Severity="Error">
+                    <ui:InfoBar.ActionButton>
+                        <Button Command="{Binding event_DisplayErrorCommand}" Content="显示错误">
+                            <behavior:Interaction.Triggers>
+                                <behavior:DataTrigger
+                                    Binding="{Binding Exception, Mode=OneWay}"
+                                    Comparison="Equal"
+                                    Value="{x:Null}">
+                                    <behavior:ChangePropertyAction PropertyName="Visibility" Value="{x:Static Visibility.Collapsed}" />
+                                </behavior:DataTrigger>
+                                <behavior:DataTrigger
+                                    Binding="{Binding Exception, Mode=OneWay}"
+                                    Comparison="NotEqual"
+                                    Value="{x:Null}">
+                                    <behavior:ChangePropertyAction PropertyName="Visibility" Value="{x:Static Visibility.Visible}" />
+                                </behavior:DataTrigger>
+                            </behavior:Interaction.Triggers>
+                        </Button>
+                    </ui:InfoBar.ActionButton>
+                </ui:InfoBar>
+            </awe:VisibilityTranstion>
+
+        </Grid>
+    </ui:ScrollViewerEx>
+</ui:ContentDialog>

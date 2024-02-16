@@ -1,7 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<PropertyGroup Label="Globals">
+	  <WebView2LoaderPreference>Static</WebView2LoaderPreference>
+	</PropertyGroup>
+
 	<PropertyGroup>
-		<TargetFramework>net462</TargetFramework>
+		<TargetFrameworks>net462;net481</TargetFrameworks>
 		<LangVersion>10</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -11,15 +15,18 @@
 		<AssemblyName>OpenFrpLauncher</AssemblyName>
 		<AssemblyTitle>OpenFrp 启动器</AssemblyTitle>
 		<ApplicationIcon>Resources\desktop.ico</ApplicationIcon>
+		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>
 	  <None Remove="Resources\desktop.ico" />
+	  <None Remove="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <None Remove="Resources\Images\UI_EmotionIcon69.png" />
 	  <None Remove="Resources\Lexend.ttf" />
 	  <None Remove="Resources\loginBackground.png" />
 	  <None Remove="Resources\Montserrat-VariableFont_wght.ttf" />
 	  <None Remove="Resources\Montserrat.ttf" />
+	  <None Remove="Resources\SignWebView\index.html" />
 	  <None Remove="Resources\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg" />
 	</ItemGroup>
 
@@ -38,16 +45,32 @@
 	  <PackageReference Include="Microsoft.AppCenter.Analytics" Version="5.0.3" />
 	  <PackageReference Include="Microsoft.AppCenter.Crashes" Version="5.0.3" />
 	  <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
+	  <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2210.55" />
 	  <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
+	  <PackageReference Include="ModernWpfUI" Version="11.0.4" />
+	  <COMReference Include="IWshRuntimeLibrary">
+	    <WrapperTool>tlbimp</WrapperTool>
+	    <VersionMinor>0</VersionMinor>
+	    <VersionMajor>1</VersionMajor>
+	    <Guid>f935dc20-1cf0-11d0-adb9-00c04fd58a0b</Guid>
+	    <Lcid>0</Lcid>
+	    <Isolated>false</Isolated>
+	    <EmbedInteropTypes>true</EmbedInteropTypes>
+	  </COMReference>
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='net481'">
+		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Resource Include="Resources\desktop.ico" />
+	  <Resource Include="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <Resource Include="Resources\Images\UI_EmotionIcon69.png" />
 	  <Resource Include="Resources\Lexend.ttf" />
 	  <Resource Include="Resources\Images\loginBackground.png" />
 	  <Resource Include="Resources\Montserrat.ttf" />
 	  <Resource Include="Resources\Images\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg" />
+	  <Resource Include="Resources\SignWebView\index.html" />
 	</ItemGroup>
 
 	<ItemGroup>

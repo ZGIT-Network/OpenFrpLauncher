@@ -1,450 +1,250 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using OpenFrp.Launcher.Controls;
+using ModernWpf.Controls;
+using OpenFrp.Launcher.Model;
+using AppNetwork = OpenFrp.Service.Net;
 
 namespace OpenFrp.Launcher.ViewModels
 {
     internal partial class TunnelsViewModel : ObservableObject
     {
-        public TunnelsViewModel()
+        public TunnelsViewModel ()
         {
             WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
 
-            WeakReferenceMessenger.Default.Register<Tuple<string,object?>>(nameof(TunnelsViewModel), async (_, data) =>
+            WeakReferenceMessenger.Default.Register<RouteMessage<TunnelsViewModel, OpenFrp.Service.Proto.Response.NotiflyStreamResponse>>(nameof(TunnelsViewModel), (_, data) =>
             {
-                switch (data.Item1)
+                if (data.Data is { State: Service.Proto.Response.NotiflyStreamState.NoticeForTunnelClosed } dac)
                 {
-                    case "refresh":
-                        {
-                            await event_RefreshUserTunnelCommand.ExecuteAsync(null);
-                            break;
-                        }
-                    case "openfrp.app.closeProcessMainly" when (data.Item2 is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel):
+                    try
+                    {
+                        var tunnel = JsonSerializer.Deserialize<Awe.Model.OpenFrp.Response.Data.UserTunnel>(dac.TunnelJson);
+
+                        if (tunnel is null) return;
+
+                        if (Tunnels is { Count: > 0 } && itemsControl != null)
                         {
                             OnlineTunnels.Remove(tunnel.Id);
-                            if (itemsControl is { } itemsCont)
+
+                            foreach (var tal in Tunnels)
                             {
-                                foreach (Awe.Model.OpenFrp.Response.Data.UserTunnel item in itemsCont.ItemContainerGenerator.Items)
+                                if (tal.Id.Equals(tunnel.Id))
                                 {
-                                    if (item.Id.Equals(tunnel.Id))
+                                    var vi = itemsControl.ItemContainerGenerator.ContainerFromItem(tal);
+                                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("switcher", cp) is ToggleSwitch tg)
                                     {
-                                        var app = itemsCont.ItemContainerGenerator.ContainerFromItem(item);
-                                        if (app is ContentPresenter cp && cp?.ContentTemplate?.FindName("tg", cp) is Awe.UI.Controls.ToggleSwitch ts)
+                                        tg.IsEnabled = false;
+                                        tg.Tag = "ccv";
+                                        if (Environment.OSVersion.Version.Major is 10)
                                         {
-                                            ts.IsChecked = false;
+                                            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
                                         }
-                                        break;
+                                        tg.IsOn = false;
                                     }
+                                    break;
                                 }
                             }
-                            ;break;
                         }
+                    }
+                    catch
+                    {
+
+                    }
                 }
             });
         }
 
-        public Awe.Model.OpenFrp.Response.Data.UserInfo UserInfo
+        public HashSet<int> OnlineTunnels
         {
             get
             {
-                if (App.Current?.MainWindow is { DataContext: ViewModels.MainViewModel mv })
-                {
-                    return mv.UserInfo;
-                }
-                global::System.Diagnostics.Debugger.Break();
-
-                throw new NullReferenceException();
-            }
-        }
-
-        [ObservableProperty]
-        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel> userTunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
-
-        public List<int> OnlineTunnels
-        {
-            get
-            {
-                if (App.Current?.MainWindow is { DataContext: ViewModels.MainViewModel mv })
+                if (App.Current is { MainWindow: { DataContext: ViewModels.MainViewModel mv} })
                 {
                     return mv.OnlineTunnels;
                 }
-                throw new NullReferenceException();
+                global::System.Diagnostics.Debugger.Break();
+                throw new KeyNotFoundException();
             }
         }
 
-        [ObservableProperty]
-        private Awe.Model.ApiResponse? tunnelResponse;
-
-        [ObservableProperty]
-        private bool requireDisplayData = false;
-
-        [ObservableProperty]
-        private bool displayError;
-
-        private ItemsControl? itemsControl;
-
         [RelayCommand]
-        private async Task @event_PageLoaded()
+        private void @event_CopyConnectUrl(ModernWpf.Controls.HyperlinkButton hlb)
         {
-            await event_RefreshUserTunnelCommand.ExecuteAsync(null);
-            //var resp = await OpenFrp.Service.Net.OpenFrp.GetUserTunnels();
-            //if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null &&
-            //    resp.Data is not null)
-            //{
+            if (hlb.DataContext is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+            {
+                try
+                {
+                    Clipboard.SetText(tunnel.ConnectAddress);
 
-            //}
-            //await Task.CompletedTask;
+                    hlb.Dispatcher.Invoke(async () =>
+                    {
+                        hlb.Tag = "success";
+                        await Task.Delay(1000);
+                        hlb.ClearValue(FrameworkElement.TagProperty);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _ = ex;
+                }
+            }
         }
 
         [RelayCommand]
-        private void @event_SwitchLoaded(RoutedEventArgs e)
+        private async Task @event_RefreshTunnelsCollection()
         {
-            if (e is { Source : Awe.UI.Controls.ToggleSwitch sw } && sw.DataContext is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+            Response = await AppNetwork.OpenFrp.GetUserTunnels();
+
+            if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
+                Response.Data is { List: var list } && list is not null)
             {
-                if (UserInfo.UserToken.IsNotNullOrEmpty()) 
+                Tunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
+
+                if (App.Current is { Dispatcher: var dispatcher })
                 {
-                    string token = UserInfo.UserToken!.ToString();
-                    var bf = JsonSerializer.Serialize(tunnel);
-                    var st = false;
+                    await Task.Delay(200);
 
-                    sw.Toggled += async delegate
+                    _ = dispatcher.Invoke(async () =>
                     {
-                        if (st is true) { st = false; return; }
-                        sw.IsEnabled = false;
+                        foreach (var tunnel in list)
+                        {
+                            Tunnels.Add(tunnel);
 
-                        var rrpc = (default(Service.Proto.Response.TunnelResponse), default(Exception));
-                        if (sw.IsChecked is true)
-                        {
-                            rrpc = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.LaunchAsync(new Service.Proto.Request.TunnelRequest
-                            {
-                                UserToken = token,
-                                UserTunnelJson = bf
-                            }));
+                            await Task.Delay(50);
                         }
-                        else
-                        {
-                            rrpc = await ExtendMethod.RunWithTryCatch(async () => await App.RemoteClient.CloseAsync(new Service.Proto.Request.TunnelRequest
-                            {
-                                UserToken = token,
-                                UserTunnelJson = bf
-                            }));
-                        }
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
 
-                        if (rrpc is (var data,var ex))
+                    _ = dispatcher.Invoke(async () =>
+                    {
+                        var resp = await RpcManager.SyncAsync();
+
+                        if (resp.IsSuccess)
                         {
-                            if (data is not null && data.Flag)
+                            OnlineTunnels.Clear();
+                            OnPropertyChanged(nameof(OnlineTunnels));
+                            foreach (var item in resp.Data?.TunnelId ?? new Google.Protobuf.Collections.RepeatedField<int>())
                             {
-                                if (sw.IsChecked is true)
-                                {
-                                    WeakReferenceMessenger.Default.Send(tunnel);
-                                }
-                                else
-                                {
-                                    OnlineTunnels.Remove(tunnel.Id);
-                                }
+                                OnlineTunnels.Add(item);
                             }
-                            else
-                            {
-                                st = true;
-                                sw.IsChecked = !sw.IsChecked;
-                            }
+                            OnPropertyChanged(nameof(OnlineTunnels));
                         }
-                        await Task.Delay(250);
-                        sw.IsEnabled = true;
-                    };
-                    return;
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
                 }
-                global::System.Diagnostics.Debugger.Break();
             }
         }
 
         [RelayCommand]
         private async Task @event_EditTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
         {
-            var dialog = new Dialog.MessageDialog
+            var dialog = new Dialog.EditTunnelDialog
             {
-                Title = new TextBlock()
-                {
-                    Inlines =
-                    {
-                        "编辑隧道",
-                        CreateObject<Run>((run) =>
-                        {
-                            run.SetResourceReference(Run.FontFamilyProperty, "Montserrat");
-                            run.FontWeight = FontWeight.FromOpenTypeWeight(500);
-                        }, $" #{tunnel.Id} {tunnel.Name} ")
-                    },
-                    TextTrimming = TextTrimming.CharacterEllipsis,
-                    FontSize = 24
-                },
-                PrimaryButtonText = "编辑数据",
-                PrimaryButtonIcon = CreateObject<Path>(x =>
-                {
-                    x.SetResourceReference(Path.DataProperty, "Awe.UI.Icons.Edit");
-                    x.SetBinding(Path.FillProperty, new Binding
-                    {
-                        Mode = BindingMode.OneWay,
-                        RelativeSource = RelativeSource.Self,
-                        Path = new PropertyPath(TextElement.ForegroundProperty)
-                    });
-                    //x.Fill = new SolidColorBrush { Color = Colors.Red };
-                    x.Stretch = Stretch.Uniform;
-                    x.Margin = new Thickness(0, 0, 4, 0);
-                    x.Width = x.Height = 16;
-                }),
-                CloseButtonText = "取消",
-                Content = new Controls.TunnelConfig()
-                {
-                    TunnelData = tunnel.CloneUserTunnel(),
-                    IsCreateMode = false,
-                },
-                InvokeAction = async (dialog, cancellationToken) =>
-                {
-                    if (dialog.Content is TunnelConfig { } tConfig && tConfig.GetConfig() is { } wt)
-                    {
-                        if (wt.Name is null || wt.Name.Length is 0)
-                        {
-                            wt.Name = $"ofPr_{Guid.NewGuid()}".Substring(0, 12);
 
-                            tConfig.UpdateTunnelName();
-                        }
-                        
-                        var resp = await Service.Net.OpenFrp.EditUserTunnel(wt);
-
-                        if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null)
-                        {
-                            await this.event_RefreshUserTunnelCommand.ExecuteAsync(null);
-
-                            return true;
-                        }
-                        // message :::
-                        if (dialog.Description is TextBlock tb)
-                        {
-                            tb.Text = resp.Message;
-                        }
-                    }
-                    return false;
-                },
             };
-            dialog.Description = CreateObject<TextBlock>((x) =>
-            {
-                x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
-            });
+            dialog.SetValue(Controls.TunnelEditor.TunnelProperty, tunnel.CloneUserTunnel());
+            dialog.SetValue(Controls.TunnelEditor.IsCreateModeProperty, false);
 
-            var result = await dialog.ShowDialog();
+            if (await dialog.WaitForFinishAsync())
+            {
+                _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
+            }
         }
 
         [RelayCommand]
         private void @event_DeleteTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
         {
-            if (App.Current?.MainWindow is { } wind)
+            if (App.Current is { Dispatcher: var dispatcher } && dispatcher is not null &&
+                itemsControl != null)
             {
-                var flyoutContent = new Controls.DeleteFlyoutContent
+                itemsControl.IsEnabled = false;
+                dispatcher.Invoke(async () =>
                 {
-                    UserTunnel = tunnel,
-                    Description = CreateObject<TextBlock>((x) =>
+                    var response = await AppNetwork.OpenFrp.RemoveUserTunnel(tunnel.Id);
+                    if (response.StatusCode is System.Net.HttpStatusCode.OK && "操作成功".Equals(response.Message))
                     {
-                        x.FontSize = 16;
-                        x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
-                    }),
-                };
-                var flyout = new Awe.UI.Controls.Flyout
-                {
-                    Padding = new Thickness(16, 16, 16, 16),
-                    Content = flyoutContent
-                };
-
-                Keyboard.ClearFocus();
-
-                flyoutContent.InvokeAction = async () =>
-                {
-                    var resp = await Service.Net.OpenFrp.RemoveUserTunnel(tunnel.Id);
-
-                    if ("未找到指定的隧道".Contains(resp.Message) || (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null))
-                    {
-                        UserTunnels.Remove(tunnel);
-                        Awe.UI.Helper.FlyoutHelper.RemoveAllMask();
+                        Tunnels?.Remove(tunnel);
                     }
-
-                    // message :::
-                    if (flyoutContent.Description is TextBlock tb)
-                    {
-                        tb.Text = resp.Message;
-                    }
-                };
-                Awe.UI.Helper.FlyoutHelper.CreateMask(
-                    flyout,
-                    () =>
-                    {
-                        return new Point(
-                            (wind.ActualWidth / 2) - (flyout.ActualWidth / 2),
-                            (wind.ActualHeight - flyout.ActualHeight) - 16
-                        );
-                    },
-                    (container) =>
-                    {
-                        container.BeginAnimation(ContentControl.MarginProperty, new ThicknessAnimation
-                        {
-                            Duration = TimeSpan.FromMilliseconds(300),
-                            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-                            To = new Thickness(0),
-                            From = new Thickness(0,16,0,0)
-                        });
-                    }
-                );
+                    itemsControl.IsEnabled = true;
+                });
             }
-            //var dialog = new Dialog.MessageDialog
-            //{
-            //    Title = new TextBlock()
-            //    {
-            //        Inlines =
-            //        {
-            //            "删除隧道",
-            //            CreateObject<Run>((run) =>
-            //            {
-            //                run.SetResourceReference(Run.FontFamilyProperty, "Montserrat");
-            //                run.FontWeight = FontWeight.FromOpenTypeWeight(500);
-            //            }, $" #{tunnel.Id} {tunnel.Name} ")
-            //        },
-            //        TextTrimming = TextTrimming.CharacterEllipsis,
-            //        FontSize = 24
-            //    },
-            //    PrimaryButtonText = "确定删除",
-            //    PrimaryButtonIcon = CreateObject<Path>(x =>
-            //    {
-            //        x.SetResourceReference(Path.DataProperty, "Awe.UI.Icons.Delete");
-            //        x.SetBinding(Path.FillProperty, new Binding
-            //        {
-            //            Mode = BindingMode.OneWay,
-            //            RelativeSource = RelativeSource.Self,
-            //            Path = new PropertyPath(TextElement.ForegroundProperty)
-            //        });
-            //        //x.Fill = new SolidColorBrush { Color = Colors.Red };
-            //        x.Stretch = Stretch.Uniform;
-            //        x.Margin = new Thickness(0, 0, 4, 0);
-            //        x.Width = x.Height = 16;
-            //    }),
-            //    Content = new TextBlock()
-            //    {
-            //        FontSize = 16,
-            //        TextWrapping = TextWrapping.Wrap,
-            //        Text = "确定要删除该隧道吗？会失去真的很久很久(是永久)哦。"
-            //    },
-            //    CloseButtonText = "取消",
-            //    InvokeAction = async (dialog,cancellationToken) =>
-            //    {
-            //        var resp = await Service.Net.OpenFrp.RemoveUserTunnel(tunnel.Id, cancellationToken);
-
-            //        if ("提交的数据有误".Contains(resp.Message) || (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Exception is null))
-            //        {
-            //            return true;
-            //        }
-
-            //        // message :::
-            //        if (dialog.Description is TextBlock tb)
-            //        {
-            //            tb.Text = resp.Message;
-            //        }
-            //        return false;
-            //    },
-            // };
-
-            //dialog.Description = CreateObject<TextBlock>((x) =>
-            //{
-            //    x.SetResourceReference(TextBlock.ForegroundProperty, "WarningOrErrorBrush");
-            //});
-
-            //var result = await dialog.ShowDialog();
-            //if (result is Dialog.MessageDialogResult.Primary)
-            //{
-            //    UserTunnels.Remove(tunnel);
-            //}
         }
 
-
-
+        [RelayCommand]
+        private void @event_ItemsContainerLoaed(RoutedEventArgs arg)
+        {
+            if (arg.Source is ItemsControl a)
+            {
+                itemsControl = a;
+            }
+        }
 
         [RelayCommand]
-        private async Task @event_RefreshUserTunnel()
+        private void @event_ToggleSwitchLoaded(RoutedEventArgs arg)
         {
-            TunnelResponse = null;
-            RequireDisplayData = false;
-
-            var resp = await Service.Net.OpenFrp.GetUserTunnels();
-
-            if (resp.Exception is null && resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { List: var list})
+            if (arg.Source is ToggleSwitch switcher && switcher.DataContext is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
             {
-                UserTunnels.Clear();
-
-                if (App.Current?.MainWindow is { Dispatcher: var dis })
+                switcher.Toggled += async delegate
                 {
-                    _ = dis.Invoke(async () =>
+                    if (!switcher.IsEnabled)
                     {
-                        UserTunnels.Clear();
-                        RequireDisplayData = true;
-                        foreach (var item in resp.Data!.List!)
+                        if ("ccv".Equals(switcher.Tag)) switcher.IsEnabled = true;
+                        switcher.ClearValue(FrameworkElement.TagProperty);
+                        return;
+                    }
+
+                    switcher.IsEnabled = false;
+                    if (switcher.IsOn)
+                    {
+                        var resp = await RpcManager.LaunchTunnel(tunnel); 
+                        if (!resp.IsSuccess)
                         {
-                            UserTunnels.Add(item);
-
-                            //OnPropertyChanged(nameof(UserTunnels));
-
-                            await Task.Delay(20);
+                            switcher.IsOn = false;
+                            MessageBox.Show(resp.Message);
                         }
-                        OnPropertyChanged(nameof(UserTunnels));
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
-                }
+                        else
+                        {
+                            OnlineTunnels.Add(tunnel.Id);
+                        }
+                        switcher.IsEnabled = true;
+                    }
+                    else
+                    {
+                        var resp = await RpcManager.CloseTunnel(tunnel);
+                        if (!resp.IsSuccess)
+                        {
+                            switcher.IsOn = false;
+                            MessageBox.Show(resp.Message);
+                        }
+                        else
+                        {
+                            if (Environment.OSVersion.Version.Major is 10)
+                            {
+                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
+                            }
 
-                
-            }
-            else
-            {
-                await Task.Delay(100);
-                TunnelResponse = resp;
-                //global::System.Diagnostics.Debugger.Break();
+                            OnlineTunnels.Remove(tunnel.Id);
+                        }
+                        switcher.IsEnabled = true;
+                    }
+                };
             }
         }
 
-        [RelayCommand]
-        private void @event_ChangeVisibilityForException() => DisplayError = !DisplayError;
+        private ItemsControl? itemsControl;
 
-        [RelayCommand]
-        private void @event_ToCreateTunnelPage() => WeakReferenceMessenger.Default.Send(typeof(Views.CreateTunnel));
+        [ObservableProperty]
+        private Awe.Model.ApiResponse<Awe.Model.OpenFrp.Response.Data.UserTunnelData>? response;
 
-        [RelayCommand]
-        private void @event_ItemsControlLoaded(RoutedEventArgs e)
-        {
-            if (e.Source is ItemsControl ic) { itemsControl = ic; }
-        }
-
-        private T CreateObject<T>(Action<T>? func = default, params object[] args)
-        {
-            var vc = Activator.CreateInstance(typeof(T),args);
-
-            if (vc is null) throw new NullReferenceException();
-            else if (vc is T tt)
-            {
-                if(func is not null) { func(tt); }
-                return tt;
-            }
-            throw new TypeLoadException();
-        }
+        [ObservableProperty]
+        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>? tunnels;
     }
 }

@@ -25,25 +25,13 @@ namespace OpenFrp.Launcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool UseLightMode {
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public global::ModernWpf.ElementTheme ApplicationTheme {
             get {
-                return ((bool)(this["UseLightMode"]));
+                return ((global::ModernWpf.ElementTheme)(this["ApplicationTheme"]));
             }
             set {
-                this["UseLightMode"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool FollowSystemTheme {
-            get {
-                return ((bool)(this["FollowSystemTheme"]));
-            }
-            set {
-                this["FollowSystemTheme"] = value;
+                this["ApplicationTheme"] = value;
             }
         }
         
@@ -56,6 +44,77 @@ namespace OpenFrp.Launcher.Properties {
             }
             set {
                 this["UserPwn"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ZoomErrorMessage {
+            get {
+                return ((bool)(this["ZoomErrorMessage"]));
+            }
+            set {
+                this["ZoomErrorMessage"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("None")]
+        public global::ModernWpf.Controls.Primitives.BackdropType ApplicationBackdrop {
+            get {
+                return ((global::ModernWpf.Controls.Primitives.BackdropType)(this["ApplicationBackdrop"]));
+            }
+            set {
+                this["ApplicationBackdrop"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("14")]
+        public double FontSize {
+            get {
+                return ((double)(this["FontSize"]));
+            }
+            set {
+                this["FontSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Windows.Media.FontFamily FontFamily {
+            get {
+                return ((global::System.Windows.Media.FontFamily)(this["FontFamily"]));
+            }
+            set {
+                this["FontFamily"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Animated")]
+        public global::System.Windows.Media.TextHintingMode EnableTextAnimatedHitting {
+            get {
+                return ((global::System.Windows.Media.TextHintingMode)(this["EnableTextAnimatedHitting"]));
+            }
+            set {
+                this["EnableTextAnimatedHitting"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string UserAvator {
+            get {
+                return ((string)(this["UserAvator"]));
+            }
+            set {
+                this["UserAvator"] = value;
             }
         }
     }

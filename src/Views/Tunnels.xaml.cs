@@ -18,7 +18,7 @@ namespace OpenFrp.Launcher.Views
     /// <summary>
     /// Tunnels.xaml 的交互逻辑
     /// </summary>
-    public partial class Tunnels : UserControl
+    public partial class Tunnels : ModernWpf.Controls.Page
     {
         public Tunnels()
         {

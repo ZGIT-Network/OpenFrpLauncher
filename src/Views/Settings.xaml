@@ -1,14 +1,18 @@
-﻿<UserControl
+﻿<ui:Page
     x:Class="OpenFrp.Launcher.Views.Settings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:app="clr-namespace:OpenFrp.Launcher.Properties"
     xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:of="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -28,148 +32,241 @@
         </Grid.RowDefinitions>
 
         <TextBlock
-            Margin="28,48,28,8"
+            Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+            MaxWidth="1136"
+            Margin="36,40,36,8"
             FontSize="24"
             Text="设置" />
         <Grid Grid.Row="1">
-            <ScrollViewer
-                helper:ScrollViewerBehavior.UseSmoothScroll="True"
-                helper:WindowsHelper.UseLightMode="{Binding (helper:WindowsHelper.UseLightMode), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+            <ui:ScrollViewerEx
                 Focusable="False"
                 PanningMode="VerticalFirst"
                 VerticalScrollBarVisibility="Auto">
-                <StackPanel Margin="28,0,28,32">
-                    <TextBlock
-                        helper:TextOptionHelper.TextAutoHiting="True"
-                        FontSize="16"
-                        Text="OpenFRP &amp; Natayark OpenID" />
-                    <awe:VisibilityTranstion HorizontalAlignment="Left" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
-                        <StackPanel Margin="-2,10,-4,-4">
-                            <Button
-                                Margin="2,2,3,2"
-                                Padding="16,10"
+                <Border
+                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+                    MaxWidth="1200"
+                    Padding="36,0,36,32"
+                    HorizontalAlignment="Center">
+                    <ui:SimpleStackPanel Spacing="8">
+                        <TextBlock
+                            FontSize="16"
+                            Text="OpenFRP &amp; Natayark OpenID"
+                            TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+
+                        <awe:VisibilityTranstion IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
+                            <!--  登录 Card  -->
+                            <of:SettingItem
+                                Title="登录账户"
+                                HorizontalAlignment="Stretch"
                                 Command="{Binding event_ShowLoginDialogCommand}"
-                                Content="登录账户"
-                                IsEnabled="{Binding MainViewModel.StateOfService, Mode=OneWay}"
-                                Style="{StaticResource AccentButtonStyle}">
-                                <helper:ControlHelper.Icon>
-                                    <Path
-                                        Width="16"
-                                        Height="16"
-                                        Margin="0,0,6,0"
-                                        Data="{StaticResource Awe.UI.Icons.Account}"
-                                        Fill="Black"
-                                        Stretch="Uniform" />
-                                </helper:ControlHelper.Icon>
-                            </Button>
-                        </StackPanel>
-                    </awe:VisibilityTranstion>
-                    <Grid>
-                        <awe:VisibilityTranstion
-                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
-                            MaxWidth="700"
-                            HorizontalAlignment="Left"
-                            IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
-                            <Border
-                                MinHeight="250"
-                                Margin="0,12,0,0"
-                                BorderBrush="{DynamicResource Awe.UI.DefaultBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="6">
-                                <Border.Background>
-                                    <ImageBrush
-                                        AlignmentY="Top"
-                                        ImageSource="..\Resources\Images\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg"
-                                        Opacity="1"
-                                        Stretch="UniformToFill" />
-                                </Border.Background>
-                                <Border Background="#6f000000" CornerRadius="5.5">
-                                    <Grid Margin="24">
-                                        <StackPanel>
-                                            <TextBlock TextWrapping="Wrap">
-                                                <Run
-                                                    FontFamily="{StaticResource Montserrat}"
-                                                    FontSize="22"
-                                                    FontWeight="Medium"
-                                                    Foreground="White"
-                                                    Text="{Binding UserInfo.UserName, Mode=OneWay}" />
-                                                <LineBreak />
-                                                <Run
-                                                    FontFamily="{StaticResource Montserrat}"
-                                                    FontSize="16"
-                                                    FontWeight="Medium"
-                                                    Foreground="#7FFFFFFF"
-                                                    Text="{Binding UserInfo.Email, Mode=OneWay}" />
-                                            </TextBlock>
-                                            <ItemsControl
-                                                MaxWidth="350"
-                                                Margin="0,8,0,0"
-                                                HorizontalAlignment="Left"
-                                                Focusable="False"
-                                                ItemsSource="{Binding UserInfoViewContainer}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <WrapPanel />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <StackPanel
-                                                            Margin="0,0,12,4"
-                                                            helper:TextOptionHelper.TextAutoHiting="True"
-                                                            TextElement.Foreground="#6fffffff">
-                                                            <TextBlock FontSize="13" Text="{Binding Title, Mode=OneWay}" />
-                                                            <TextBlock helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" FontSize="13" />
-                                                        </StackPanel>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                        <awe:NavigationButton
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Bottom"
-                                            helper:TextOptionHelper.TextAutoHiting="True"
-                                            Command="{Binding event_LogoutCommand}"
-                                            Content="退出登录"
-                                            Cursor="Hand"
-                                            Foreground="White"
-                                            Opacity=".6" />
-                                    </Grid>
-                                </Border>
-                            </Border>
+                                Description="一段测试性文本。"
+                                IsClickable="True">
+                                <of:SettingItem.Icon>
+                                    <ui:SymbolIcon FontSize="24" Symbol="Account" />
+                                </of:SettingItem.Icon>
+                            </of:SettingItem>
                         </awe:VisibilityTranstion>
-                    </Grid>
-                    <TextBlock
-                        Margin="0,16,0,12"
-                        helper:TextOptionHelper.TextAutoHiting="True"
-                        FontSize="18"
-                        Text="应用外观" />
-                    <awe:RwComboBox
-                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=StackPanel}, Mode=OneWay}"
-                        MaxWidth="200"
-                        HorizontalAlignment="Left"
-                        helper:ControlHelper.Header="主题色"
-                        helper:WindowsHelper.LightModeRebind="True"
-                        SelectedIndex="{Binding ApplicationTheme, Mode=TwoWay}">
-                        <ComboBoxItem Content="浅色模式" />
-                        <ComboBoxItem Content="深色模式" />
-                    </awe:RwComboBox>
+                        <awe:VisibilityTranstion Margin="0,0,0,10" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
+                            <!--  用户信息 Card  -->
+                            <awe:Resizer>
+                                <Border
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+                                    <ui:SimpleStackPanel Margin="18" Spacing="8">
+                                        <TextBlock FontFamily="{StaticResource Montserrat}" FontWeight="Medium">
+                                            <Run FontSize="20" Text="{Binding UserInfo.UserName, Mode=OneWay}" />
+                                            <Run
+                                                FontSize="16"
+                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                Text="{Binding UserInfo.UserID, StringFormat='#{0}', Mode=OneWay}" />
+                                            <LineBreak />   <Run
+                                                FontSize="16"
+                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                Text="{Binding UserInfo.Email, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <ItemsControl
+                                            Focusable="False"
+                                            ItemsSource="{Binding UserInfoViewContainer}"
+                                            TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Padding="0,0,10,4">
+                                                        <Run Text="{Binding Title, Mode=OneWay}" />
+                                                        <LineBreak />
+                                                        <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <ui:CommandBar HorizontalAlignment="Right">
 
-                    <awe:ToggleSwitch
-                        Margin="0,16,0,12"
-                        helper:ControlHelper.Header="使用系统主题"
-                        IsChecked="{Binding FollowBySystem}"
-                        IsEnabled="{Binding Version.Major, Source={x:Static sys:Environment.OSVersion}, Converter={StaticResource EqualConverter}, ConverterParameter='10', Mode=OneWay}" />
+                                            <ui:AppBarButton
+                                                Command="{Binding event_OpenOpenFrpWebsiteCommand}"
+                                                Icon="Globe"
+                                                Label="打开网页版" />
+                                            <ui:AppBarButton Command="{Binding event_LogoutCommand}" Label="退出登录">
+                                                <ui:AppBarButton.Icon>
+                                                    <ui:FontIcon Glyph="&#xF3B1;" />
+                                                </ui:AppBarButton.Icon>
+                                            </ui:AppBarButton>
 
-                    <!--<TextBlock
-                        Margin="0,16,0,500"
-                        helper:TextOptionHelper.TextAutoHiting="True"
-                        FontSize="18"
-                        Foreground="{DynamicResource DefaultForegroundColor}"
-                        Text="{Binding Version.Major, Source={x:Static sys:Environment.OSVersion}, Converter={StaticResource EqualConverter}, ConverterParameter='10', Mode=OneWay}" />-->
-             
-                </StackPanel>
-            </ScrollViewer>
+                                        </ui:CommandBar>
+                                    </ui:SimpleStackPanel>
+                                </Border>
+                            </awe:Resizer>
+                        </awe:VisibilityTranstion>
+
+                        <TextBlock
+                            FontSize="16"
+                            Text="外观"
+                            TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+
+                        <of:SettingItem Title="主题色" Description="应用显示的主题色">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xE771;" />
+                            </of:SettingItem.Icon>
+                            <ComboBox MinWidth="150" SelectedIndex="{Binding ApplicationTheme, Mode=TwoWay}">
+                                <ComboBoxItem Content="默认" />
+                                <ComboBoxItem Content="浅色模式" />
+                                <ComboBoxItem Content="深色模式" />
+                            </ComboBox>
+                        </of:SettingItem>
+                        <of:SettingItem
+                            Title="背景效果"
+                            Description="该效果仅支持在 Windows 11 上使用"
+                            IsEnabled="True">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xE81E;" />
+                            </of:SettingItem.Icon>
+                            <ComboBox MinWidth="150" SelectedIndex="{Binding ApplicationBackdrop}">
+                                <ComboBoxItem Content="无" />
+                                <ComboBoxItem Content="Mica" />
+                                <ComboBoxItem Content="Acrylic" />
+                                <ComboBoxItem Content="Mica Alt" />
+                            </ComboBox>
+                        </of:SettingItem>
+                        <awe:Resizer>
+                            <Expander HorizontalAlignment="Stretch">
+                                <Expander.Header>
+                                    <Grid Height="68">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="12" />
+                                            <!--  内容  -->
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <!--  控件  -->
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon
+                                            Grid.Column="0"
+                                            Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Focusable="False"
+                                            Symbol="Character" />
+                                        <TextBlock Grid.Column="2" Padding="1,18">
+                                            <Run Text="操控台字体" />
+                                            <LineBreak />
+                                            <Run
+                                                FontSize="13"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Text="提供操控台字体的个性化。" />
+                                        </TextBlock>
+                                    </Grid>
+                                </Expander.Header>
+                                <Grid>
+                                    <ui:SimpleStackPanel Margin="8" Spacing="12">
+                                        <TextBlock
+                                            FontSize="{Binding Value, ElementName=fontSizeBox, Mode=OneWay}"
+                                            LineHeight="32"
+                                            TextWrapping="Wrap">
+                                            <Run FontSize="18" Text="预览" />
+                                            <LineBreak />
+                                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="2024/1/1 12:00:00" />
+                                            <Run
+                                                FontFamily="{StaticResource Montserrat}"
+                                                FontWeight="Medium"
+                                                Foreground="{DynamicResource AweAppGoldenColor}"
+                                                Text="Launcher" />
+                                            <Run FontFamily="{Binding SelectedValue, ElementName=fontFamilyBox, Mode=OneWay}" Text="这是一段测试内容哦 &amp; 1234567890 [nUMbEr]" />
+                                        </TextBlock>
+                                        <ComboBox
+                                            x:Name="fontFamilyBox"
+                                            MinWidth="200"
+                                            ui:ControlHelper.Header="字体类型(只针对内容)"
+                                            ItemsSource="{Binding Fonts, Mode=OneWay}"
+                                            SelectedValue="{Binding FontFamily, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                            SelectedValuePath="FontFamily">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock FontFamily="{Binding FontFamily, Mode=OneWay}" Text="{Binding FontName, Mode=OneWay}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <ui:NumberBox
+                                            x:Name="fontSizeBox"
+                                            MinWidth="200"
+                                            HorizontalAlignment="Left"
+                                            ui:ControlHelper.Header="字体大小"
+                                            Maximum="256"
+                                            Minimum="1"
+                                            SpinButtonPlacementMode="Inline"
+                                            Value="{Binding FontSize, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+                                            <behavior:Interaction.Triggers>
+                                                <behavior:EventTrigger EventName="Loaded">
+                                                    <behavior:InvokeCommandAction Command="{Binding event_NumberBoxLoadedCommand}" PassEventArgsToCommand="True" />
+                                                </behavior:EventTrigger>
+                                            </behavior:Interaction.Triggers>
+                                        </ui:NumberBox>
+                                        <CheckBox Content="错误内容放大显示" IsChecked="{Binding ZoomErrorMessage, Mode=TwoWay}" />
+                                    </ui:SimpleStackPanel>
+                                </Grid>
+                            </Expander>
+                        </awe:Resizer>
+                        <of:SettingItem
+                            Title="字体渲染"
+                            Description="在高分屏上可以优化锯齿显示。"
+                            IsEnabled="True">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xE81E;" />
+                            </of:SettingItem.Icon>
+                            <ComboBox MinWidth="150" SelectedIndex="{Binding FontHittingMode}">
+                                <ComboBoxItem Content="自动" />
+                                <ComboBoxItem Content="固定" />
+                                <ComboBoxItem Content="优化" />
+                            </ComboBox>
+                        </of:SettingItem>
+                        <TextBlock
+                            FontSize="16"
+                            Text="高级设置"
+                            TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+                        <of:SettingItem
+                            Title="开机自启动"
+                            Description="可以在您登录后自动开启启动器。"
+                            IsEnabled="True">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xE81E;" />
+                            </of:SettingItem.Icon>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="75" />
+                                </Grid.ColumnDefinitions>
+                                <ui:ToggleSwitch
+                                    FocusVisualMargin="-3,-4,8,-5"
+                                    IsOn="{Binding AutoStartup, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                            </Grid>
+                        </of:SettingItem>
+                    </ui:SimpleStackPanel>
+                </Border>
+            </ui:ScrollViewerEx>
         </Grid>
     </Grid>
-</UserControl>
+</ui:Page>

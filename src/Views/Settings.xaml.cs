@@ -18,7 +18,7 @@ namespace OpenFrp.Launcher.Views
     /// <summary>
     /// Settings.xaml 的交互逻辑
     /// </summary>
-    public partial class Settings : UserControl
+    public partial class Settings : ModernWpf.Controls.Page
     {
         public Settings()
         {
