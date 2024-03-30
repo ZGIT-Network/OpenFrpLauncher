@@ -5,7 +5,7 @@
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Controls"
-    xmlns:model="clr-namespace:LanLink.Proxy;assembly=LanLink.Proxy"
+    xmlns:model="clr-namespace:LanLink.Proxy;assembly=OpenFrpService"
     xmlns:ui="http://schemas.modernwpf.com/2019">
 
     <Style x:Key="TextBoxSuffixButtonStyle" TargetType="Button">

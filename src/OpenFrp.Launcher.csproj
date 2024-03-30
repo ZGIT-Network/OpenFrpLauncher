@@ -16,6 +16,8 @@
 		<AssemblyTitle>OpenFrp 启动器</AssemblyTitle>
 		<ApplicationIcon>Resources\desktop.ico</ApplicationIcon>
 		<PlatformTarget>AnyCPU</PlatformTarget>
+		<FileVersion>4.0.0.0</FileVersion>
+		<AssemblyVersion>4.0.0.0</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,6 +29,13 @@
 	  <None Remove="Resources\Montserrat-VariableFont_wght.ttf" />
 	  <None Remove="Resources\Montserrat.ttf" />
 	  <None Remove="Resources\SignWebView\index.html" />
+	  <None Remove="Resources\SignWebView\tianai\enc.js" />
+	  <None Remove="Resources\SignWebView\tianai\images\axis.png" />
+	  <None Remove="Resources\SignWebView\tianai\images\dun.jpeg" />
+	  <None Remove="Resources\SignWebView\tianai\images\icon.png" />
+	  <None Remove="Resources\SignWebView\tianai\styles\tac-custom.css" />
+	  <None Remove="Resources\SignWebView\tianai\styles\tac.css" />
+	  <None Remove="Resources\SignWebView\tianai\tac.min.js" />
 	  <None Remove="Resources\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg" />
 	</ItemGroup>
 
@@ -71,6 +80,13 @@
 	  <Resource Include="Resources\Montserrat.ttf" />
 	  <Resource Include="Resources\Images\wallhaven_9bd9b167ly1fwsfjk5xlxj21hc0u0qu9.jpg" />
 	  <Resource Include="Resources\SignWebView\index.html" />
+	  <Resource Include="Resources\SignWebView\tianai\enc.js" />
+	  <Resource Include="Resources\SignWebView\tianai\images\axis.png" />
+	  <Resource Include="Resources\SignWebView\tianai\images\dun.jpeg" />
+	  <Resource Include="Resources\SignWebView\tianai\images\icon.png" />
+	  <Resource Include="Resources\SignWebView\tianai\styles\tac-custom.css" />
+	  <Resource Include="Resources\SignWebView\tianai\styles\tac.css" />
+	  <Resource Include="Resources\SignWebView\tianai\tac.min.js" />
 	</ItemGroup>
 
 	<ItemGroup>

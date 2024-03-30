@@ -132,7 +132,7 @@ namespace OpenFrp.Launcher.ViewModels
             else
             {
                 Exception = resp.Exception;
-                Reason = resp.Message ?? resp.StatusCode.ToString();
+                Reason = resp.Message?.Replace("bad request,",string.Empty) ?? resp.StatusCode.ToString();
             }
             return false;
         }

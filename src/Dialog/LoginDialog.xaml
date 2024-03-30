@@ -43,7 +43,10 @@
             Mode="OneWay"
             Path="event_LoginCommand.IsRunning" />
     </ui:ContentDialog.IsPrimaryButtonEnabled>
-    <ui:ScrollViewerEx Width="500" PanningMode="VerticalFirst">
+    <ui:ScrollViewerEx
+        Width="500"
+        MinHeight="250"
+        PanningMode="VerticalFirst">
         <Grid ui:ClipHelper.CornerRadius="4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -52,7 +55,7 @@
 
             <Grid
                 Grid.Row="0"
-                Height="150"
+                Height="150" VerticalAlignment="Top"
                 Margin="0,0,0,36">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
@@ -79,7 +82,7 @@
                     Grid.Column="1"
                     Margin="8,0,0,0"
                     Spacing="8">
-                    <TextBlock Text="针对于 Windows 的解决方案" />
+                    <TextBlock Text="" />
                 </ui:SimpleStackPanel>
             </Grid>
 

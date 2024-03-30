@@ -226,9 +226,13 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                         else
                         {
-                            if (Environment.OSVersion.Version.Major is 10)
+                            if (Environment.OSVersion.Version.Major is 10 && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
                             {
                                 Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
+                            }
+                            else if (Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
+                            {
+                                App.TaskBarIcon.ClearNotifications();
                             }
 
                             OnlineTunnels.Remove(tunnel.Id);

@@ -20,10 +20,11 @@
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     x:Name="windHost"
     Title="OpenFRP 启动器"
+    MinWidth="550"
+    MinHeight="500"
     d:Background="White"
     d:DesignHeight="560"
-    d:DesignWidth="1135" MinWidth="550"
-    MinHeight="500"
+    d:DesignWidth="1135"
     modernwpf:ThemeManager.RequestedTheme="Default"
     modernwpf:TitleBar.ExtendViewIntoTitleBar="True"
     modernwpf:WindowHelper.UseModernWindowStyle="True"
@@ -61,6 +62,7 @@
                 <modernwpf:NavigationViewItem
                     Content="首页"
                     Icon="Home"
+                    IsSelected="True"
                     Tag="{x:Type view:Home}"
                     TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
                 <modernwpf:NavigationViewItem
@@ -195,9 +197,12 @@
                 </Grid.Style>
                 <TextBlock
                     VerticalAlignment="Center"
-                    FontFamily="{StaticResource Montserrat}"
-                    FontWeight="Medium"
-                    Text="OpenFrp Launcher" />
+                    FontWeight="Normal" IsHitTestVisible="False"
+                    >
+                    <Run Text="OpenFrp" FontFamily="{StaticResource Montserrat}" FontWeight="Medium"/>
+                    <Run Text="启动器"/>
+                    <Run Text="Preview" FontFamily="{StaticResource Montserrat}" FontWeight="Medium" Foreground="{DynamicResource AweAppGoldenColor}"/>
+                </TextBlock>
             </Grid>
         </Grid>
     </Grid>

@@ -235,7 +235,7 @@
                             Description="在高分屏上可以优化锯齿显示。"
                             IsEnabled="True">
                             <of:SettingItem.Icon>
-                                <ui:FontIcon FontSize="24" Glyph="&#xE81E;" />
+                                <ui:FontIcon FontSize="24" Glyph="&#xE8D2;" />
                             </of:SettingItem.Icon>
                             <ComboBox MinWidth="150" SelectedIndex="{Binding FontHittingMode}">
                                 <ComboBoxItem Content="自动" />
@@ -252,7 +252,7 @@
                             Description="可以在您登录后自动开启启动器。"
                             IsEnabled="True">
                             <of:SettingItem.Icon>
-                                <ui:FontIcon FontSize="24" Glyph="&#xE81E;" />
+                                <ui:FontIcon FontSize="24" Glyph="&#xEE49;" />
                             </of:SettingItem.Icon>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -263,6 +263,19 @@
                                     IsOn="{Binding AutoStartup, UpdateSourceTrigger=PropertyChanged}"
                                     Style="{StaticResource LeftLabelToggleSwitchStyle}" />
                             </Grid>
+                        </of:SettingItem>
+                        <of:SettingItem
+                            Title="通知模式"
+                            Description="通知的模式"
+                            IsEnabled="True">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xE8F3;" />
+                            </of:SettingItem.Icon>
+                            <ComboBox MinWidth="150" SelectedIndex="{Binding NotifyMode}">
+                                <ComboBoxItem Content="不通知" />
+                                <ComboBoxItem Content="任务栏信息" />
+                                <ComboBoxItem Content="Toast (Win10+)" />
+                            </ComboBox>
                         </of:SettingItem>
                     </ui:SimpleStackPanel>
                 </Border>

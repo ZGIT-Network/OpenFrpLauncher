@@ -16,6 +16,7 @@
     <ui:Page.Resources>
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
         <converter:EqualConverter x:Key="EqualConverter" />
+        <converter:RollbackConverter x:Key="RollbackConverter" />
     </ui:Page.Resources>
     <ui:Page.DataContext>
         <vm:HomeViewModel />
@@ -88,7 +89,7 @@
                                             <ui:AppBarButton
                                                 Command="{Binding event_CallUpSignCommand}"
                                                 Icon="Calendar"
-                                                IsEnabled="False"
+                                                IsEnabled="{Binding IsSigned, Converter={StaticResource RollbackConverter}, Mode=OneWay}"
                                                 Label="签到(WebView)" />
                                             <ui:AppBarButton
                                                 Command="{Binding event_OpenOpenFrpWebsiteCommand}"

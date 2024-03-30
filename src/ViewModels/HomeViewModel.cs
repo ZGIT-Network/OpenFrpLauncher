@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,7 +10,9 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Web.WebView2.Wpf;
+using OpenFrp.Launcher.Model;
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -20,6 +23,22 @@ namespace OpenFrp.Launcher.ViewModels
             if (App.Current?.MainWindow is { DataContext: MainViewModel dx })
             {
                 UserInfo = dx.UserInfo;
+
+                dx.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName is nameof(UserInfo))
+                    {
+                        UserInfo = dx.UserInfo;
+                        OnPropertyChanged(nameof(UserInfo));
+
+                        event_RefreshSignStateCommand.Execute(null);
+                    }
+                };
+                
+                if (dx.UserInfo.UserID != 0)
+                {
+                    event_AppRefreshCommand.Execute(null);
+                }
             }
         }
 
@@ -103,13 +122,45 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private void @event_CallUpSign()
+        private async Task @event_CallUpSign()
         {
-            var wind = new SignWebView();
+            var dialog = new Dialog.SignWebDialog();
 
-            var result = wind.ShowDialog();
-
-            
+            if (await dialog.ShowAsync() is ModernWpf.Controls.ContentDialogResult.None)
+            {
+                event_AppRefreshCommand.Execute(null);
+            }
         }
+
+        [RelayCommand]
+        private async Task @event_AppRefresh()
+        {
+            await event_RefreshSignStateCommand.ExecuteAsync(null);
+            var openfrpUserinfo = await OpenFrp.Service.Net.OpenFrp.GetUserInfo();
+
+            if (openfrpUserinfo.Data is not null)
+            {
+                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(openfrpUserinfo.Data));
+            }
+        }
+
+        [RelayCommand]
+        private async Task @event_RefreshSignState()
+        {
+            var resp = await OpenFrp.Service.Net.OpenFrp.GetUserSignInfo();
+
+            if (resp.StatusCode is System.Net.HttpStatusCode.OK &&
+                resp.Data is { SignDate: long date})
+            {
+                var va = DateTimeOffset.FromUnixTimeMilliseconds(date).LocalDateTime;
+                if ((va - DateTimeOffset.Now.Date).TotalDays > 0)
+                {
+                    IsSigned = false;
+                }
+            }
+        }
+
+        [ObservableProperty]
+        private bool isSigned = true;
     }
 }

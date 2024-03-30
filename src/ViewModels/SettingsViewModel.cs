@@ -162,6 +162,21 @@ namespace OpenFrp.Launcher.ViewModels
                 Properties.Settings.Default.EnableTextAnimatedHitting = (TextHintingMode)value;
             }
         }
+        public int NotifyMode
+        {
+            get
+            {
+                if (Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIconDefault)
+                {
+                    return 1;
+                }
+                return (int)Properties.Settings.Default.NotifyMode;
+            }
+            set
+            {
+                Properties.Settings.Default.NotifyMode = (Model.NotifyMode)value;
+            }
+        }
         public int ApplicationBackdrop
         {
             get

@@ -5,43 +5,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SignWebView</title>
-    
+
 </head>
 
 <body>
-    <p>开始验证</p>
-    <script defer src="https://static.geetest.com/v4/gt4.js"></script>
+    <div>
+        <div id="captcha-box"></div>
+    </div>
     <script>
-        const config =         
-        {
-            // 省略必须的配置参数
-            captchaId: '204dc0035245fe51d660b293aca45c95', 
-            product: 'bind',
-            language: 'zho',
-        };
-        const handler = function (captchaObj) {
-            captchaObj.onReady(function () {
-                captchaObj.showCaptcha();
-            }).onSuccess(function () {
-                //your code,结合您的业务逻辑重置验证码
-                alert("主播好了，你的凑得: " + captchaObj["$_BAGQ"]);
-                console.log(captchaObj["$_BAGQ"]);
-                captchaObj.reset();
-            }).onError(function () {
-                //your code
-            })
-        };
-        const vid = setInterval(() => {
+        async function TrySetTheme(){
             try {
-                initGeetest4(config,handler);
-
-                clearInterval(vid);
-                return;
+                const bl = await chrome.webview.hostObjects.dialog.IsDarkTheme();
+                document.body.classList.add(bl === true ? "awe_appDarkMode" : "awe_appLightMode");
             } catch (error) {
-                console.log(error)
+                alert(error);
             }
-        }, 1000);
+        }
+        const app = {
+            requestCaptchaDataUrl: 'https://tac.8i.ink/gen',
+            validCaptchaUrl: 'https://tac.8i.ink/check',
+            bindEl: '#captcha-box',
+            chainString: 'cl>json>rsaaes>base64',
+            customParentClass: 'tianai-custom-parent',
+            
+            validSuccess: (result, c, t) => {
+                // 销毁
+                chrome.webview.hostObjects.dialog.CodeFallback(result.data.token)
+            },
+        };
+        var vid = setInterval(function(){
+            if(window["TAC"] !== undefined){
+                clearInterval(vid);
+                var va = new window.TAC(app);
+                va.init();
+                TrySetTheme();
+            }
+        },250);
+        //window.TAC(config).init();
     </script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/core.min.js"></script> -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="./tianai/tac.min.js"></script>
+    <script src="./tianai/enc.js"></script>
+    <link rel="stylesheet" href="./tianai/styles/tac-custom.css">
+    <link rel="stylesheet" href="./tianai/styles/tac.css">
 </body>
 
 </html>

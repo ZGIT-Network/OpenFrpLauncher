@@ -117,5 +117,29 @@ namespace OpenFrp.Launcher.Properties {
                 this["UserAvator"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("[]")]
+        public string AutoStartupTunnelId {
+            get {
+                return ((string)(this["AutoStartupTunnelId"]));
+            }
+            set {
+                this["AutoStartupTunnelId"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("NotifyIconDefault")]
+        public global::OpenFrp.Launcher.Model.NotifyMode NotifyMode {
+            get {
+                return ((global::OpenFrp.Launcher.Model.NotifyMode)(this["NotifyMode"]));
+            }
+            set {
+                this["NotifyMode"] = value;
+            }
+        }
     }
 }

@@ -47,6 +47,7 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                     }
                 });
+                
             }
             if (!WeakReferenceMessenger.Default.IsRegistered<Model.RouteMessage<MainViewModel, Awe.Model.OpenFrp.Response.Data.UserTunnel>>(nameof(MainViewModel)))
             {
@@ -141,10 +142,11 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private bool stateOfService;
 
+
         [ObservableProperty]
         private string avatorFilePath = @"pack://application:,,,/Resources/Images/share_5bb469267f65d0c7171470739108cdae.png";
 
-        private async void @event_OnUserInfoChanged()
+        private void @event_OnUserInfoChanged()
         {
             if (UserInfo.UserName.Equals("not-allow-display"))
             {
@@ -163,32 +165,73 @@ namespace OpenFrp.Launcher.ViewModels
                 //{
                 //    global::System.Diagnostics.Debugger.Break();
                 //}
-                
-                var avator = await Service.Net.HttpRequest.Get($"https://api.zyghit.cn/avatar/?email={UserInfo.Email}&s=100");
 
-                if (avator.StatusCode is System.Net.HttpStatusCode.OK && avator.Data.Count() > 0)
+                ThreadPool.QueueUserWorkItem(async delegate
                 {
-                    Properties.Settings.Default.UserAvator = System.IO.Path.GetTempFileName();
-
                     try
                     {
-                        using var fs = System.IO.File.OpenWrite(Properties.Settings.Default.UserAvator);
+                        if (System.Text.Json.JsonSerializer.Deserialize<HashSet<int>>(Launcher.Properties.Settings.Default.AutoStartupTunnelId) is { Count: > 0 } tb)
+                        {
+                            var userTunnels = await Service.Net.OpenFrp.GetUserTunnels();
+                            if (userTunnels.StatusCode is System.Net.HttpStatusCode.OK &&
+                                userTunnels.Data is { Total: > 0 })
+                            {
+                                StringBuilder ob = new StringBuilder("[");
 
-                        await fs.WriteAsync(avator.Data.ToArray(), 0, avator.Data.Count());
+                                foreach (var item in userTunnels.Data!.List!)
+                                {
+                                    if (tb.Contains(item.Id))
+                                    {
+                                        // start up;
+                                        ob.Append($"\"{System.Text.Json.JsonSerializer.Serialize(item).Replace("\"","\\\"")}\",");
+                                    }
+                                }
+                                ob.Remove(ob.Length - 1, 1);
+                                ob.Append("]");
 
-                        
-
-                        await fs.FlushAsync();
+                                var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest
+                                {
+                                    SecureCode = RpcManager.UserSecureCode,
+                                    TunnelIdJson = ob.ToString()
+                                });
+                                if (resp.IsSuccess)
+                                {
+                                    WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(tb.ToArray()));
+                                }
+                            }
+                        }
+                    
                     }
-                    catch
+                    catch { }
+                });
+                ThreadPool.QueueUserWorkItem(async delegate
+                {
+                    var avator = await Service.Net.HttpRequest.Get($"https://api.zyghit.cn/avatar/?email={UserInfo.Email}&s=100");
+
+                    if (avator.StatusCode is System.Net.HttpStatusCode.OK && avator.Data.Count() > 0)
                     {
-                        Properties.Settings.Default.UserAvator = "";
+                        Properties.Settings.Default.UserAvator = System.IO.Path.GetTempFileName();
 
-                        return;
+                        try
+                        {
+                            using var fs = System.IO.File.OpenWrite(Properties.Settings.Default.UserAvator);
+
+                            await fs.WriteAsync(avator.Data.ToArray(), 0, avator.Data.Count());
+
+
+
+                            await fs.FlushAsync();
+                        }
+                        catch
+                        {
+                            Properties.Settings.Default.UserAvator = "";
+
+                            return;
+                        }
+
+                        AvatorFilePath = Properties.Settings.Default.UserAvator;
                     }
-
-                    AvatorFilePath = Properties.Settings.Default.UserAvator;
-                }
+                });
             }
         }
 
@@ -238,7 +281,11 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_FrameLoaded(RoutedEventArgs e)
         {
-            if (_frame is null && e.Source is ModernWpf.Controls.Frame cc) _frame = cc;
+            if (_frame is null && e.Source is ModernWpf.Controls.Frame cc)
+            {
+                _frame = cc;
+                cc.Navigate(typeof(Views.Home));
+            }
         }
 
         [RelayCommand]

@@ -20,7 +20,7 @@
         <converter:EqualConverter x:Key="EqualConverter" />
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
         <converter:BothConverter x:Key="BothConverter" />
-        <converter:RollbackConverter x:Key="RollbackConverter"/>
+        <converter:RollbackConverter x:Key="RollbackConverter" />
     </ui:Page.Resources>
     <ui:Page.DataContext>
         <vm:UpdateCommentViewModel />
@@ -45,11 +45,18 @@
                     Padding="36,4,36,32"
                     HorizontalAlignment="Center">
                     <ui:SimpleStackPanel Spacing="8">
+                        <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Platfrom, StringFormat='用户平台: Windows {0}', Mode=OneWay}" />
                         <ofControl:SettingItem
                             Title="刷新"
                             Command="{Binding event_CheckUpdateCommand}"
                             Description="若更新内容与实际不符，请点击这里刷新内容"
                             Icon="Refresh"
+                            IsClickable="True" />
+                        <ofControl:SettingItem
+                            Title="打开 FRPC 文件夹"
+                            Command="{Binding event_OpenFrpcFolderCommand}"
+                            Description="当你无法通过更新来获取 FRPC 时，你可以手动下载后放入 FRPC 文件夹。"
+                            Icon="&#xE8F4;"
                             IsClickable="True" />
                         <awe:Resizer>
                             <Border
@@ -77,15 +84,22 @@
                             </Border>
                         </awe:Resizer>
                         <Grid>
-                            <awe:VisibilityTranstion IsDisplay="{Binding event_CheckUpdateCommand.IsRunning,Mode=OneWay}">
-                                <ui:ProgressRing Margin="0,24,0,0" Height="75" Width="75" IsActive="{Binding event_CheckUpdateCommand.IsRunning,Mode=OneWay}"/>
+                            <awe:VisibilityTranstion IsDisplay="{Binding event_CheckUpdateCommand.IsRunning, Mode=OneWay}">
+                                <ui:ProgressRing
+                                    Width="75"
+                                    Height="75"
+                                    Margin="0,24,0,0"
+                                    IsActive="{Binding event_CheckUpdateCommand.IsRunning, Mode=OneWay}" />
                             </awe:VisibilityTranstion>
-                            <awe:VisibilityTranstion >
+                            <awe:VisibilityTranstion>
                                 <awe:VisibilityTranstion.IsDisplay>
                                     <MultiBinding Converter="{StaticResource BothConverter}" Mode="OneWay">
-                                        <Binding Path="UpdateInfo.Type" Converter="{StaticResource NotEqualConverter}" ConverterParameter="{x:Static model:UpdateInfoType.None}"/>
-                                        <Binding Path="event_CheckUpdateCommand.IsRunning" Converter="{StaticResource RollbackConverter}"/>
-                                        <!--{Binding UpdateInfo.Type, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.None}, Mode=OneWay}-->
+                                        <Binding
+                                            Converter="{StaticResource NotEqualConverter}"
+                                            ConverterParameter="{x:Static model:UpdateInfoType.None}"
+                                            Path="UpdateInfo.Type" />
+                                        <Binding Converter="{StaticResource RollbackConverter}" Path="event_CheckUpdateCommand.IsRunning" />
+                                        <!--  {Binding UpdateInfo.Type, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.None}, Mode=OneWay}  -->
                                     </MultiBinding>
                                 </awe:VisibilityTranstion.IsDisplay>
                                 <awe:Resizer>
@@ -110,10 +124,11 @@
                                                     <Button
                                                         Grid.Column="1"
                                                         Margin="0,16,0,0"
-                                                        Padding="0" IsEnabled="{Binding UpdateInfo.Type,Converter={StaticResource NotEqualConverter},ConverterParameter={x:Static model:UpdateInfoType.Launcher},Mode=OneWay}"
+                                                        Padding="0"
                                                         VerticalAlignment="Top"
                                                         AutomationProperties.Name="安装更新"
                                                         Command="{Binding event_EnterUpdateCommand}"
+                                                        IsEnabled="{Binding UpdateInfo.Type, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.Launcher}, Mode=OneWay}"
                                                         Style="{StaticResource AccentButtonStyle}"
                                                         Visibility="Visible">
                                                         <ui:SimpleStackPanel
@@ -149,9 +164,12 @@
                             <awe:VisibilityTranstion>
                                 <awe:VisibilityTranstion.IsDisplay>
                                     <MultiBinding Converter="{StaticResource BothConverter}" Mode="OneWay">
-                                        <Binding Path="UpdateInfo.Type" Converter="{StaticResource EqualConverter}" ConverterParameter="{x:Static model:UpdateInfoType.None}"/>
-                                        <Binding Path="event_CheckUpdateCommand.IsRunning" Converter="{StaticResource RollbackConverter}"/>
-                                        <!--{Binding UpdateInfo.Type, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.None}, Mode=OneWay}-->
+                                        <Binding
+                                            Converter="{StaticResource EqualConverter}"
+                                            ConverterParameter="{x:Static model:UpdateInfoType.None}"
+                                            Path="UpdateInfo.Type" />
+                                        <Binding Converter="{StaticResource RollbackConverter}" Path="event_CheckUpdateCommand.IsRunning" />
+                                        <!--  {Binding UpdateInfo.Type, Converter={StaticResource EqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.None}, Mode=OneWay}  -->
                                     </MultiBinding>
                                 </awe:VisibilityTranstion.IsDisplay>
                                 <awe:Resizer>
@@ -196,7 +214,10 @@
                                     CornerRadius="4">
                                     <ui:SimpleStackPanel Margin="18" Spacing="4">
                                         <TextBlock FontSize="18" Text="错误信息" />
-                                        <awe:SelectableTextBlock FontSize="16" Text="{Binding ErrorMessage, Mode=OneWay}" />
+                                        <awe:SelectableTextBlock
+                                            FontSize="16"
+                                            Text="{Binding ErrorMessage, Mode=OneWay}"
+                                            TextWrapping="Wrap" />
                                     </ui:SimpleStackPanel>
                                 </Border>
                             </awe:Resizer>

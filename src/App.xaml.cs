@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Contexts;
+using System.Security;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ namespace OpenFrp.Launcher
         {
             
         }
-        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v15";
+        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v45";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -64,24 +65,45 @@ namespace OpenFrp.Launcher
         {
             if (e.Args.Contains("--uap"))
             {
-                var fe = OpenFrp.Service.Commands.FileDictionary.GetAutoStartupFile();
                 try
                 {
-                    System.IO.File.Delete(fe);
+                    var fe = OpenFrp.Service.Commands.FileDictionary.GetAutoStartupFile();
+                    try
+                    {
+                        System.IO.File.Delete(fe);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.ToString());
+                    }
+                    if (Environment.OSVersion.Version.Major is 10)
+                    {
+                        Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                        Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.Uninstall();
+                    }
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     MessageBox.Show(ex.ToString());
                 }
 
+                App.Current.Shutdown(0);
                 Environment.Exit(0);
                 return;
             }
+            
 
-            if (Environment.OSVersion.Version.Major is 10 && Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.WasCurrentProcessToastActivated())
+            if (Environment.OSVersion.Version.Major is 10)
             {
-                Environment.Exit(0);
-                return;
+                if (Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.WasCurrentProcessToastActivated())
+                {
+                    Environment.Exit(0);
+                    return;
+                }
+                if (Launcher.Properties.Settings.Default.NotifyMode is NotifyMode.NotifyIconDefault)
+                {
+                    Launcher.Properties.Settings.Default.NotifyMode = NotifyMode.Toast;
+                }
             }
             FrpcVersionString = await GetFrpcVersionAsync();
             if (e.Args.Contains("--update"))
@@ -154,9 +176,6 @@ namespace OpenFrp.Launcher
                     $"\n您也可以不反馈该问题，因为问题已上传到云端。\n会话 ID: {id}\n", "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             };
-
-            
-   
         }
 
         private static void ClearToast()
@@ -248,7 +267,7 @@ namespace OpenFrp.Launcher
             };
         }
 
-        public static async Task ConfigureVersionCheck(string frpVersion)
+        public static async Task<ApiResponse?> ConfigureVersionCheck(string frpVersion)
         {
             var versionData = await OpenFrp.Service.Net.OpenFrp.GetSoftwareVersionInfo();
 
@@ -266,17 +285,25 @@ namespace OpenFrp.Launcher
                 }
                 if (!frpVersion.Equals(versionData.Data?.Latest))
                 {
+                    if (Environment.OSVersion.Version.Major is not 10 && frpVersion.Equals("OpenFRP_0.54.0_835276e2_20240205"))
+                    {
+                        return default;
+                    }
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Model.UpdateInfo
                     {
                         Type = Model.UpdateInfoType.FrpClient,
                         SoftWareVersionData = versionData.Data,
                         Title = "FRPC 更新",
-                        Log = versionData.Data?.FrpcUpdateLog +
-                            $"\nUpdate: {frpVersion} => {versionData.Data?.Latest}" +
+                        Log = 
+                            (Environment.OSVersion.Version.Major is 10 ? "" : "Windows 7 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
+                            versionData.Data?.FrpcUpdateLog +
+                            (Environment.OSVersion.Version.Major is 10 ? $"\nUpdate: {App.FrpcVersionString} => {versionData.Data?.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
                             $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！"
                     }));
                 }
+                return default;
             }
+            return versionData;
         }
         
         private static void ConfigureToast()
@@ -327,6 +354,8 @@ namespace OpenFrp.Launcher
                                 {
                                     case Service.Proto.Response.NotiflyStreamState.LaunchSuccess:
                                         {
+                                            if (Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Disable) break;
+
                                             var sb = new StringBuilder();
 
                                             if ("HTTP".Contains(tunnel.Type))
@@ -336,7 +365,7 @@ namespace OpenFrp.Launcher
                                                     sb.Append(item + ",");
                                                 }
                                             }
-                                            if (Environment.OSVersion.Version.Major is 10)
+                                            if (Environment.OSVersion.Version.Major is 10 && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
                                             {
                                                 new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
                                                 .AddText($"隧道 {tunnel.Name} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
@@ -354,7 +383,8 @@ namespace OpenFrp.Launcher
                                                     toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
                                                 });
                                             }
-                                            else if (TaskBarIcon is not null)
+                                            else if (TaskBarIcon is not null &&
+                                                Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
                                             {
                                                 TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
                                                     icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
@@ -378,7 +408,8 @@ namespace OpenFrp.Launcher
                                         }
                                     case Service.Proto.Response.NotiflyStreamState.LaunchFailed:
                                         {
-                                            if (Environment.OSVersion.Version.Major is 10)
+                                            if (Environment.OSVersion.Version.Major is 10 &&
+                                                Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
                                             {
                                                 new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
                                                  .AddText($"隧道 {tunnel.Name} 启动失败", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
@@ -393,7 +424,7 @@ namespace OpenFrp.Launcher
                                                      toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
                                                  });
                                             }
-                                            else if (TaskBarIcon is not null)
+                                            else if (TaskBarIcon is not null && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
                                             {
                                                 TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
                                                     icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
@@ -490,8 +521,17 @@ namespace OpenFrp.Launcher
                             x.Items.Add(CreateObject<MenuItem>((xa)=>
                             {
                                 xa.Header = "退出";
-                                xa.Command = new RelayCommand(() =>
+                                xa.Command = new RelayCommand(async () =>
                                 {
+                                    var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
+                                    if (resp.IsSuccess && resp.Data is { UserLogon: true })
+                                    {
+                                        OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                                    }
+                                    if (Environment.OSVersion.Version.Major is 10)
+                                    {
+                                        Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                                    }
                                     OpenFrp.Launcher.Properties.Settings.Default.Save();
                                     App.Current.Shutdown();
                                     //Environment.Exit(0);
@@ -501,9 +541,22 @@ namespace OpenFrp.Launcher
                             {
                                 xa.Header = "彻底退出";
                             
-                                xa.Command = new RelayCommand(() =>
+                                xa.Command = new RelayCommand(async () =>
                                 {
                                     App.Current!.MainWindow.Visibility = Visibility.Hidden;
+                                    var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
+                                    if (resp.IsSuccess && resp.Data is { UserLogon : true})
+                                    {
+                                        OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                                    }
+
+                                    OpenFrp.Launcher.Properties.Settings.Default.Save();
+
+
+                                    if (Environment.OSVersion.Version.Major is 10)
+                                    {
+                                        Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                                    }
                                     try
                                     {
                                         if (!ServiceProcess.HasExited)
@@ -516,9 +569,6 @@ namespace OpenFrp.Launcher
                                     {
 
                                     }
-
-
-                                    OpenFrp.Launcher.Properties.Settings.Default.Save();
 
                                     string platform = RuntimeInformation.ProcessArchitecture switch
                                     {
