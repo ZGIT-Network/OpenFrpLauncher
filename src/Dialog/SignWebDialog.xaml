@@ -4,27 +4,73 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:app="clr-namespace:OpenFrp.Launcher.Properties"
     xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:converters="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Dialog"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.modernwpf.com/2019"
+    xmlns:viewmodel="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:webview="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     Title="签到"
     d:DesignHeight="450"
     d:DesignWidth="800"
     CloseButtonText="取消"
     DefaultButton="Primary"
-    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
     mc:Ignorable="d">
+    <FrameworkElement.Resources>
+        <converters:EqualConverter x:Key="EqualConverter" />
+    </FrameworkElement.Resources>
+    <FrameworkElement.DataContext>
+        <viewmodel:SignInWebViewModel />
+    </FrameworkElement.DataContext>
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:InvokeCommandAction Command="{Binding event_DialogLoadedCommand}" PassEventArgsToCommand="True" />
+        </behavior:EventTrigger>
+        <behavior:EventTrigger EventName="PrimaryButtonClick">
+            <behavior:InvokeCommandAction Command="{Binding event_DialogRefreshRequestCommand}" PassEventArgsToCommand="True" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
     <Grid Width="500">
-        <Grid>
+        <awe:VisibilityTranstion Height="280" IsDisplay="{Binding TabIndex, Converter={StaticResource EqualConverter}, ConverterParameter='0', Mode=OneWay}">
+            <ui:ProgressRing
+                Width="100"
+                Height="100"
+                IsActive="{Binding TabIndex, Converter={StaticResource EqualConverter}, ConverterParameter='0', Mode=OneWay}" />
+        </awe:VisibilityTranstion>
+        <awe:VisibilityTranstion
+            Height="280"
+            IsDisplay="{Binding TabIndex, Converter={StaticResource EqualConverter}, ConverterParameter='1', Mode=OneWay}"
+            UseCollapsed="False">
+            <webview:WebView2
+                x:Name="webViewCore"
+                Margin="0,0,0,-24"
+                DefaultBackgroundColor="Transparent">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:InvokeCommandAction Command="{Binding event_WebViewHostCalledCommand}" PassEventArgsToCommand="True" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+            </webview:WebView2>
+        </awe:VisibilityTranstion>
+        <awe:VisibilityTranstion Height="280" IsDisplay="{Binding TabIndex, Converter={StaticResource EqualConverter}, ConverterParameter='2', Mode=OneWay}">
+            <TextBlock
+                FontSize="16"
+                Text="{Binding Message, Mode=OneWay}"
+                TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}"
+                TextWrapping="Wrap" />
+        </awe:VisibilityTranstion>
+        <!--<Grid>
             <awe:VisibilityTranstion x:Name="v1" IsDisplay="True">
                 <webview:WebView2
                     x:Name="webView"
                     Height="280"
                     Margin="0,0,0,-24"
+                    CoreWebView2InitializationCompleted="webView_CoreWebView2InitializationCompleted"
                     DefaultBackgroundColor="Transparent"
-                    Loaded="WebView2_Loaded" />
+                    Loaded="WebView2_Loaded"
+                    Source="about:blank;" />
             </awe:VisibilityTranstion>
             <awe:VisibilityTranstion
                 x:Name="v2"
@@ -47,6 +93,6 @@
                     TextWrapping="Wrap" />
 
             </awe:VisibilityTranstion>
-        </Grid>
+        </Grid>-->
     </Grid>
 </ui:ContentDialog>

@@ -49,7 +49,10 @@ namespace OpenFrp.Launcher
         {
             
         }
-        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v45";
+
+        public static string? WebViewTemplatePath { get; set; }
+
+        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v60";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -105,6 +108,20 @@ namespace OpenFrp.Launcher
                     Launcher.Properties.Settings.Default.NotifyMode = NotifyMode.Toast;
                 }
             }
+            try
+            {
+                if (Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1} lt)
+                {
+                    foreach (var item in lt)
+                    {
+                        Awe.UI.Win32.User32.SetForegroundWindow(item.MainWindowHandle);
+                        break;
+                    }
+                    Environment.Exit(0);
+                    App.Current.Shutdown();
+                }
+            }
+            catch { }
             FrpcVersionString = await GetFrpcVersionAsync();
             if (e.Args.Contains("--update"))
             {
@@ -533,6 +550,10 @@ namespace OpenFrp.Launcher
                                         Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
                                     }
                                     OpenFrp.Launcher.Properties.Settings.Default.Save();
+                                    if (!string.IsNullOrEmpty(App.WebViewTemplatePath) && Directory.Exists(App.WebViewTemplatePath))
+                                    {
+                                        try { Directory.Delete(App.WebViewTemplatePath, true); } catch { }
+                                    }
                                     App.Current.Shutdown();
                                     //Environment.Exit(0);
                                 });

@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SignWebView</title>
-
+    <title>签到</title>
+    <!-- Copyright 2024 ZGIT Network-->
 </head>
 
 <body>
@@ -13,14 +13,21 @@
         <div id="captcha-box"></div>
     </div>
     <script>
-        async function TrySetTheme(){
-            try {
-                const bl = await chrome.webview.hostObjects.dialog.IsDarkTheme();
-                document.body.classList.add(bl === true ? "awe_appDarkMode" : "awe_appLightMode");
-            } catch (error) {
-                alert(error);
+        chrome.webview.addEventListener('message', event => {
+            const data = String(event.data);
+            
+            switch (data) {
+                case "darkValueSet":
+                       document.body.classList.add("awe_appDarkMode");
+                    break;
+                case "lightValueSet":
+                       document.body.classList.add("awe_appLightMode");
+                    break;
+                default:
+                    break;
             }
-        }
+        });
+        window.print = (function () {})
         const app = {
             requestCaptchaDataUrl: 'https://tac.8i.ink/gen',
             validCaptchaUrl: 'https://tac.8i.ink/check',
@@ -30,7 +37,8 @@
             
             validSuccess: (result, c, t) => {
                 // 销毁
-                chrome.webview.hostObjects.dialog.CodeFallback(result.data.token)
+                //chrome.webview.hostObjects.dialog.CodeFallback(result.data.token)
+                chrome.webview.postMessage(result.data.token);
             },
         };
         var vid = setInterval(function(){
@@ -38,7 +46,7 @@
                 clearInterval(vid);
                 var va = new window.TAC(app);
                 va.init();
-                TrySetTheme();
+                chrome.webview.postMessage("themeRequest");
             }
         },250);
         //window.TAC(config).init();

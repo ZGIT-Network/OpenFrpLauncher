@@ -74,11 +74,32 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_OpenFrpcFolder()
         {
-            Process.Start(new ProcessStartInfo
+            try
             {
-                FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc"),
-                UseShellExecute = true,
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc"),
+                    UseShellExecute = true,
+                });
+                return;
+            }
+            catch
+            {
+
+            }
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer",
+                    Arguments = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc"),
+                });
+                return;
+            }
+            catch
+            {
+
+            }
         }
 
         [RelayCommand]

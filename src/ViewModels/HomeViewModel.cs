@@ -40,6 +40,7 @@ namespace OpenFrp.Launcher.ViewModels
                     event_AppRefreshCommand.Execute(null);
                 }
             }
+
         }
 
         [ObservableProperty]
@@ -126,7 +127,7 @@ namespace OpenFrp.Launcher.ViewModels
         {
             var dialog = new Dialog.SignWebDialog();
 
-            if (await dialog.ShowAsync() is ModernWpf.Controls.ContentDialogResult.None)
+            if (await dialog.ShowAsync() is ModernWpf.Controls.ContentDialogResult.Secondary)
             {
                 event_AppRefreshCommand.Execute(null);
             }
@@ -153,7 +154,7 @@ namespace OpenFrp.Launcher.ViewModels
                 resp.Data is { SignDate: long date})
             {
                 var va = DateTimeOffset.FromUnixTimeMilliseconds(date).LocalDateTime;
-                if ((va - DateTimeOffset.Now.Date).TotalDays > 0)
+                if ((va - DateTimeOffset.Now.Date).TotalDays < 0)
                 {
                     IsSigned = false;
                 }
