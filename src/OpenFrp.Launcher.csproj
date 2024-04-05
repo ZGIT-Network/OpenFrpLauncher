@@ -22,6 +22,7 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\desktop.ico" />
+	  <None Remove="Resources\Images\hsccode.jpg" />
 	  <None Remove="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <None Remove="Resources\Images\UI_EmotionIcon69.png" />
 	  <None Remove="Resources\Lexend.ttf" />
@@ -73,6 +74,7 @@
 
 	<ItemGroup>
 	  <Resource Include="Resources\desktop.ico" />
+	  <Resource Include="Resources\Images\hsccode.jpg" />
 	  <Resource Include="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <Resource Include="Resources\Images\UI_EmotionIcon69.png" />
 	  <Resource Include="Resources\Lexend.ttf" />

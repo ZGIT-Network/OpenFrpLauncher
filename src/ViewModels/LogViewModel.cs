@@ -101,7 +101,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                 foreach (LogData logData in Logs)
                 {
-                    if (SelectedProcess?.Id is 0 || logData.Id != SelectedProcess?.Id) continue;
+                    if (SelectedProcess?.Id is not 0 &&  logData.Id != SelectedProcess?.Id) continue;
 
                     byte[] bytes = new byte[] { 10 };
                     if (logData.Content.Length > 0)

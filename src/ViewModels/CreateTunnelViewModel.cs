@@ -82,6 +82,7 @@ namespace OpenFrp.Launcher.ViewModels
             };
             dialog.SetValue(Controls.TunnelEditor.NodeInfoProperty, ni);
             dialog.SetValue(Controls.TunnelEditor.IsCreateModeProperty, true);
+            dialog.ResetData();
 
             if (await dialog.WaitForFinishAsync() is true)
             {

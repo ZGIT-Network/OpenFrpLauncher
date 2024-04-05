@@ -52,7 +52,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v60";
+        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v70";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 

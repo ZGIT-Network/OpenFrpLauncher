@@ -92,7 +92,7 @@
                     Command="{Binding event_ClearLogCommand}">
                     <ui:SimpleStackPanel Orientation="Horizontal" Spacing="6">
                         <ui:SymbolIcon FontSize="16" Symbol="Clear" />
-                        <TextBlock Text="清除" />
+                        <TextBlock Text="清除所有" />
                     </ui:SimpleStackPanel>
                 </Button>
 

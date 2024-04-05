@@ -169,123 +169,127 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (App.Current is { MainWindow: Window wnd })
             {
-                if (IsAdministrator())
+                if (!IsAdministrator())
                 {
-                    if (UpdateInfo.SoftWareVersionData?.DownloadSources is { })
+                    bool vl = true;
+                    if (App.Current is { MainWindow: UpdateWindow })
                     {
-                        ErrorMessage = default;
-                        ProgressValue = 0;
-                        IProgress<AppNetwork.HttpDownloadProgress> progress = new Progress<AppNetwork.HttpDownloadProgress>((x) =>
+                        if (MessageBox.Show("您是否已关闭 UAC 选项？\n若没有，本应用会再次请求 UAC。\n如果您调到最低级别，请点击继续来安装更新","OpenFrp Launcher",MessageBoxButton.OKCancel,MessageBoxImage.Warning) is MessageBoxResult.Cancel)
                         {
-                            if (x.ReadLength is 0)
+                            return;
+                        }
+                        vl = false;
+                    }
+                    if (vl)
+                    {
+                        wnd.IsEnabled = false;
+                        try
+                        {
+                            if (Process.Start(new ProcessStartInfo
                             {
+                                FileName = Assembly.GetExecutingAssembly().Location,
+                                Arguments = "--update",
+                                Verb = "runas",
+                                UseShellExecute = true
+                            }) is Process)
+                            {
+                                App.Current?.Shutdown();
+                                Environment.Exit(0);
                                 return;
                             }
-                            ProgressValue = 101 - (x.TotalLength / x.ReadLength);
-                        });
-
-                        if (UpdateInfo.Type is Model.UpdateInfoType.FrpClient)
+                        }
+                        catch
                         {
-                            foreach (var item in UpdateInfo.SoftWareVersionData.DownloadSources)
+                        }
+                        wnd.IsEnabled = true;
+                        return;
+                    }
+                }
+                if (UpdateInfo.SoftWareVersionData?.DownloadSources is { })
+                {
+                    ErrorMessage = default;
+                    ProgressValue = 0;
+                    IProgress<AppNetwork.HttpDownloadProgress> progress = new Progress<AppNetwork.HttpDownloadProgress>((x) =>
+                    {
+                        if (x.ReadLength is 0)
+                        {
+                            return;
+                        }
+                        ProgressValue = 101 - (x.TotalLength / x.ReadLength);
+                    });
+
+                    if (UpdateInfo.Type is Model.UpdateInfoType.FrpClient)
+                    {
+                        foreach (var item in UpdateInfo.SoftWareVersionData.DownloadSources)
+                        {
+                            // win 7 version fall back
+                            Awe.Model.ApiResponse<IEnumerable<byte>> resp;
+                            if (Environment.OSVersion.Version.Major is not 10)
                             {
-                                // win 7 version fall back
-                                Awe.Model.ApiResponse<IEnumerable<byte>> resp;
-                                if (Environment.OSVersion.Version.Major is not 10)
+                                // 纯属擦屁股
+                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/OpenFRP_0.54.0_835276e2_20240205/frpc_windows_{Service.Commands.FileDictionary.GetFrpPlatform()}.zip", progress);
+                            }
+                            else
+                            {
+                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/{UpdateInfo.SoftWareVersionData.Latest}/frpc_windows_{Service.Commands.FileDictionary.GetFrpPlatform()}.zip", progress);
+                            }
+                            if (resp.StatusCode is System.Net.HttpStatusCode.OK)
+                            {
+                                try
                                 {
-                                    // 纯属擦屁股
-                                    resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/OpenFRP_0.54.0_835276e2_20240205/frpc_windows_{Service.Commands.FileDictionary.GetFrpPlatform()}.zip", progress);
+                                    if (File.Exists(Service.Commands.FileDictionary.GetFrpFile()))
+                                    {
+                                        File.Delete(Service.Commands.FileDictionary.GetFrpFile());
+                                    }
+
+                                    using (MemoryStream ms = new MemoryStream(resp.Data.ToArray()))
+                                    using (ZipArchive ac = new ZipArchive(ms, ZipArchiveMode.Read, false))
+                                    {
+                                        ac.ExtractToDirectory(Service.Commands.FileDictionary.CreateFrpFolder());
+                                    }
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/{UpdateInfo.SoftWareVersionData.Latest}/frpc_windows_{Service.Commands.FileDictionary.GetFrpPlatform()}.zip", progress);
+                                    ErrorMessage += "\n" + ex.ToString();
+                                    return;
                                 }
-                                if (resp.StatusCode is System.Net.HttpStatusCode.OK)
+
+                                    
+
+                                string v2 = Service.Commands.FileDictionary.GetFrpPlatform();
+                                if (v2 is "i386") v2 = "x86";
+                                var respa = await Task.Run(() =>
                                 {
                                     try
                                     {
-                                        if (File.Exists(Service.Commands.FileDictionary.GetFrpFile()))
+                                        return Process.Start(new ProcessStartInfo
                                         {
-                                            File.Delete(Service.Commands.FileDictionary.GetFrpFile());
-                                        }
-
-                                        using (MemoryStream ms = new MemoryStream(resp.Data.ToArray()))
-                                        using (ZipArchive ac = new ZipArchive(ms, ZipArchiveMode.Read, false))
-                                        {
-                                            ac.ExtractToDirectory(Service.Commands.FileDictionary.CreateFrpFolder());
-                                        }
+                                            FileName = "RunAs",
+                                            Arguments = "/machine:" + v2 + " /trustlevel:0x20000 \"" + Assembly.GetExecutingAssembly().Location + " --finish\"",
+                                            CreateNoWindow = true,
+                                            UseShellExecute = false
+                                        }) is Process;
                                     }
                                     catch (Exception ex)
                                     {
                                         ErrorMessage += "\n" + ex.ToString();
-                                        return;
+                                        return false;
                                     }
-
-                                    
-
-                                    string v2 = Service.Commands.FileDictionary.GetFrpPlatform();
-                                    if (v2 is "i386") v2 = "x86";
-                                    var respa = await Task.Run(() =>
-                                    {
-                                        try
-                                        {
-                                            return Process.Start(new ProcessStartInfo
-                                            {
-                                                FileName = "RunAs",
-                                                Arguments = "/machine:" + v2 + " /trustlevel:0x20000 \"" + Assembly.GetExecutingAssembly().Location + " --finish\"",
-                                                CreateNoWindow = true,
-                                                UseShellExecute = false
-                                            }) is Process;
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            ErrorMessage += "\n" + ex.ToString();
-                                            return false;
-                                        }
-                                    });
-                                    if (respa)
-                                    {
-                                        Environment.Exit(0);
-                                    }
-                                    return;
-                                }
-                                else
+                                });
+                                if (respa)
                                 {
-                                    ErrorMessage += "\n" + resp.Exception?.ToString() ?? resp.Message;
+                                    Environment.Exit(0);
                                 }
+                                return;
                             }
-
-
+                            else
+                            {
+                                ErrorMessage += "\n" + resp.Exception?.ToString() ?? resp.Message;
+                            }
                         }
                     }
-                    return;
                 }
-                wnd.IsEnabled = false;
-                var resp2 = await Task.Run(() =>
-                {
-                    try
-                    {
-                        return Process.Start(new ProcessStartInfo
-                        {
-                            FileName = Assembly.GetExecutingAssembly().Location,
-                            Arguments = "--update",
-                            Verb = "runas",
-                            UseShellExecute = true
-                        }) is Process;
-                    }
-                    catch
-                    {
-                        return false;
-                    }
-                });
-                if (resp2)
-                {
-                    App.Current?.Shutdown();
-                    Environment.Exit(0);
-                    return;
-                }
-                wnd.IsEnabled = true;
             }
-            
         }
     }
 }

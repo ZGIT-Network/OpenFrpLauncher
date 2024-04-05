@@ -36,6 +36,16 @@ namespace OpenFrp.Launcher.Dialog
 
         public bool IsFinished { get; private set; }
 
+        public void ResetData()
+        {
+            Editor.Tunnel.Name = default;
+            if (Editor.Template.FindName("TunnelNameInput", Editor) is FrameworkElement fe)
+            {
+                fe.GetBindingExpression(TextBox.TextProperty)?.UpdateTarget();
+            }
+            
+        }
+
         [RelayCommand]
         private async Task @event_UploadData()
         {

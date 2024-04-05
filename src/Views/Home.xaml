@@ -128,13 +128,17 @@
 
                     <TextBlock
                         FontSize="24"
-                        Text="现阶段启动器处于测试档,还有许多不稳定的地方。"
+                        Text="Preview 18 (赞助码在下面！谢谢各位！求求你啦！)"
                         TextWrapping="Wrap" />
                     <TextBlock
                         FontSize="24"
                         Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
                         Text="有问题请火速反馈，谢谢！！！！！！！使用完记得彻底退出，谢谢"
                         TextWrapping="Wrap" />
+                    <Image
+                        MaxWidth="240"
+                        HorizontalAlignment="Left"
+                        Source="../Resources/Images/hsccode.jpg" />
                 </ui:SimpleStackPanel>
             </Border>
         </ui:ScrollViewerEx>

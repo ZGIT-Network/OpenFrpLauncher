@@ -208,7 +208,7 @@ namespace OpenFrp.Launcher.ViewModels
                         if (!resp.IsSuccess)
                         {
                             switcher.IsOn = false;
-                            MessageBox.Show(resp.Message);
+                            MessageBox.Show(resp.Message, "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                         else
                         {
@@ -222,7 +222,7 @@ namespace OpenFrp.Launcher.ViewModels
                         if (!resp.IsSuccess)
                         {
                             switcher.IsOn = false;
-                            MessageBox.Show(resp.Message);
+                            MessageBox.Show(resp.Message, "OpenFrp Launcher",MessageBoxButton.OK,MessageBoxImage.Warning);
                         }
                         else
                         {
