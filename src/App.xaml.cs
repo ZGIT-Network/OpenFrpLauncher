@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Contexts;
 using System.Security;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -52,7 +53,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v70";
+        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v80";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -89,13 +90,46 @@ namespace OpenFrp.Launcher
                 {
                     MessageBox.Show(ex.ToString());
                 }
-
+                OpenFrp.Launcher.Properties.Settings.Default.Reset();
+                try
+                {
+                    File.Delete(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
+                }
+                catch { }
                 App.Current.Shutdown(0);
                 Environment.Exit(0);
                 return;
             }
-            
+            if (e.Args.Contains("--update"))
+            {
+                FrpcVersionString = await GetFrpcVersionAsync();
 
+                if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
+                {
+                    foreach (var item in ck)
+                    {
+                        item.Kill();
+                    }
+                }
+                _ = ConfigureVersionCheck(FrpcVersionString);
+                ConfigureUpdateWindow();
+
+                App.Current.Shutdown();
+                return;
+            }
+            try
+            {
+                Launcher.Properties.Settings.Default.Reload();
+            }
+            catch
+            {
+                OpenFrp.Launcher.Properties.Settings.Default.Reset();
+                try
+                {
+                    File.Delete(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
+                }
+                catch { }
+            }
             if (Environment.OSVersion.Version.Major is 10)
             {
                 if (Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.WasCurrentProcessToastActivated())
@@ -110,34 +144,19 @@ namespace OpenFrp.Launcher
             }
             try
             {
-                if (Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1} lt)
+                if (!e.Args.Contains("--update") && Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1 } lt)
                 {
                     foreach (var item in lt)
                     {
                         Awe.UI.Win32.User32.SetForegroundWindow(item.MainWindowHandle);
                         break;
                     }
-                    Environment.Exit(0);
                     App.Current.Shutdown();
+                    return;
                 }
             }
-            catch { }
+            catch {  }
             FrpcVersionString = await GetFrpcVersionAsync();
-            if (e.Args.Contains("--update"))
-            {
-                if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
-                {
-                    foreach (var item in ck)
-                    {
-                        item.Kill();
-                    }
-                }
-                ConfigureUpdateWindow();
-                _ = ConfigureVersionCheck(FrpcVersionString);
-                Environment.Exit(0);
-                return;
-            }
-
             if ("non-frp".Equals(FrpcVersionString))
             {
                 if (e.Args.Contains("--finish"))
@@ -150,14 +169,23 @@ namespace OpenFrp.Launcher
                         return;
                     }
                 }
-                Process.Start(new ProcessStartInfo
+                if (IsAdministrator())
                 {
-                    FileName = Assembly.GetExecutingAssembly().Location,
-                    Verb = "runas",
-                    Arguments = "--update",
-                    ErrorDialog = false
-                });
-                Environment.Exit(0);
+                    _ = ConfigureVersionCheck(FrpcVersionString);
+                    ConfigureUpdateWindow();
+                }
+                else
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = Assembly.GetExecutingAssembly().Location,
+                        Verb = "runas",
+                        Arguments = "--update",
+                        ErrorDialog = false
+                    });
+                }
+
+                App.Current.Shutdown();
                 return;
             }
             ConfigureProcess();
@@ -167,6 +195,13 @@ namespace OpenFrp.Launcher
             ConfigureToast();
             _ = ConfigureVersionCheck(FrpcVersionString);
             ConfigureWindow(e.Args);
+        }
+
+        private static bool IsAdministrator()
+        {
+            System.Security.Principal.WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            System.Security.Principal.WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
         protected override void OnExit(ExitEventArgs e) => ClearToast();
@@ -396,7 +431,11 @@ namespace OpenFrp.Launcher
                                                 .Show(toast =>
                                                 {
                                                     toast.Tag = tunnel.Name;
-                                                    toast.ExpiresOnReboot = true;
+                                                    try { toast.ExpiresOnReboot = true; }
+                                                    catch
+                                                    {
+
+                                                    }
                                                     toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
                                                 });
                                             }
@@ -437,7 +476,7 @@ namespace OpenFrp.Launcher
                                                  .Show(toast =>
                                                  {
                                                      toast.Tag = tunnel.Name;
-                                                     toast.ExpiresOnReboot = true;
+                                                     try { toast.ExpiresOnReboot = true; } catch { }
                                                      toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
                                                  });
                                             }
@@ -642,7 +681,66 @@ namespace OpenFrp.Launcher
                 Awe.UI.Win32.UserUxtheme.ShouldSystemUseDarkMode();
             }
 
-            
+            Microsoft.Win32.SystemEvents.SessionEnding += async (_, e) =>
+            {
+                e.Cancel = true;
+
+                App.Current!.MainWindow.Visibility = Visibility.Hidden;
+                var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
+                if (resp.IsSuccess && resp.Data is { UserLogon: true })
+                {
+                    OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                }
+
+                OpenFrp.Launcher.Properties.Settings.Default.Save();
+
+
+                if (Environment.OSVersion.Version.Major is 10)
+                {
+                    Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                }
+                try
+                {
+                    if (!ServiceProcess.HasExited)
+                    {
+                        ServiceProcess.EnableRaisingEvents = false;
+                        ServiceProcess.Kill();
+                    }
+                }
+                catch
+                {
+
+                }
+
+                string platform = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.X64 => "amd64",
+                    Architecture.X86 => "386",
+                    Architecture.Arm64 => "arm64",
+                    _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
+                };
+                if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0 } ck)
+                {
+                    foreach (var pro in ck)
+                    {
+                        try
+                        {
+                            if (pro.MainModule.FileName.Equals(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc", $"frpc_windows_{platform}.exe")) && !pro.HasExited)
+                            {
+                                pro.Kill();
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+                Environment.Exit(0);
+
+
+                App.Current?.Shutdown();
+            };
 
             if (wind is null) { App.Current?.Shutdown(); return; }
 

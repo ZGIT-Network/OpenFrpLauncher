@@ -255,6 +255,7 @@
                                                                     FontWeight="Medium"
                                                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                                                                     Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
+
                                                             </TextBlock>
                                                             <awe:VisibilityTranstion IsDisplay="{Binding Comments.Length, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}">
                                                                 <TextBlock TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}">
@@ -396,6 +397,7 @@
                                                             FontWeight="Medium"
                                                             Foreground="{DynamicResource AweAppGoldenColor}"
                                                             Text="{Binding FriendlyGroup, Mode=OneWay}">
+
                                                             <!--<awe:VisibilityTranstion>
                                                         <awe:VisibilityTranstion.IsDisplay>
                                                             <MultiBinding Converter="{StaticResource BothConverter}">
@@ -431,6 +433,28 @@
                                                         <Run Text="SVIP" />
                                                     </awe:VisibilityTranstion>-->
                                                         </TextBlock>
+                                                        <TextBlock FontSize="12" Text="{Binding PressureLevel,StringFormat='{}{0}%', Mode=OneWay}" Margin="0,0,-6,-10" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                                        <ui:ProgressBar
+                                                            Margin="-20,0,-20,-20"
+                                                            HorizontalAlignment="Stretch"
+                                                            VerticalAlignment="Bottom"
+                                                            Maximum="100"
+                                                            Value="{Binding PressureLevel, Mode=OneWay}">
+                                                            <behavior:Interaction.Triggers>
+                                                                <behavior:DataTrigger
+                                                                    Binding="{Binding PressureLevel, Mode=OneWay}"
+                                                                    Comparison="GreaterThanOrEqual"
+                                                                    Value="80">
+                                                                    <behavior:ChangePropertyAction PropertyName="ShowError" Value="True" />
+                                                                </behavior:DataTrigger>
+                                                                <behavior:DataTrigger
+                                                                    Binding="{Binding PressureLevel, Mode=OneWay}"
+                                                                    Comparison="GreaterThanOrEqual"
+                                                                    Value="60">
+                                                                    <behavior:ChangePropertyAction PropertyName="ShowPaused" Value="True" />
+                                                                </behavior:DataTrigger>
+                                                            </behavior:Interaction.Triggers>
+                                                        </ui:ProgressBar>
                                                     </Grid>
                                                 </RadioButton>
                                             </awe:VisibilityTranstion>

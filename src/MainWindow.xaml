@@ -197,11 +197,18 @@
                 </Grid.Style>
                 <TextBlock
                     VerticalAlignment="Center"
-                    FontWeight="Normal" IsHitTestVisible="False"
-                    >
-                    <Run Text="OpenFrp" FontFamily="{StaticResource Montserrat}" FontWeight="Medium"/>
-                    <Run Text="启动器"/>
-                    <Run Text="Preview" FontFamily="{StaticResource Montserrat}" FontWeight="Medium" Foreground="{DynamicResource AweAppGoldenColor}"/>
+                    FontWeight="Normal"
+                    IsHitTestVisible="False">
+                    <Run
+                        FontFamily="{StaticResource Montserrat}"
+                        FontWeight="Medium"
+                        Text="OpenFrp" />
+                    <Run Text="启动器" />
+                    <Run
+                        FontFamily="{StaticResource Montserrat}"
+                        FontWeight="Medium"
+                        Foreground="{DynamicResource AweAppGoldenColor}"
+                        Text="Preview" />
                 </TextBlock>
             </Grid>
         </Grid>

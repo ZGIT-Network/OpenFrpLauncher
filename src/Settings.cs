@@ -14,9 +14,10 @@
             // this.SettingChanging += this.SettingChangingEventHandler;
             //
             // this.SettingsSaving += this.SettingsSavingEventHandler;
-            //
+            //System.Configuration.ConfigurationErrorsException
+            
         }
-        
+       
         private void SettingChangingEventHandler(object sender, System.Configuration.SettingChangingEventArgs e) {
             // 在此处添加用于处理 SettingChangingEvent 事件的代码。
         }
