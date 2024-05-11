@@ -52,6 +52,7 @@
                         <Grid.Resources>
                             <converter:RollbackConverter x:Key="RollbackConverter" />
                             <converter:EqualConverter x:Key="EqualConverter" />
+                            <converter:EitherConverter x:Key="EitherConverter" />
                             <converter:NotEqualConverter x:Key="NotEqualConverter" />
                         </Grid.Resources>
                         <awe:VisibilityTranstion IsDisplay="{TemplateBinding IsPortImportOpen, Converter={StaticResource RollbackConverter}}">
@@ -62,6 +63,8 @@
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
@@ -236,6 +239,48 @@
                                             </Button>
                                         </ui:NumberBox.Suffix>
                                     </ui:NumberBox>
+                                    <awe:VisibilityTranstion Grid.Row="4" Grid.Column="0">
+                                        <awe:VisibilityTranstion.IsDisplay>
+                                            <MultiBinding Converter="{StaticResource EitherConverter}" Mode="OneWay">
+                                                <Binding
+                                                    Converter="{StaticResource EqualConverter}"
+                                                    ConverterParameter="2"
+                                                    ElementName="TunnelTypeSelector"
+                                                    Mode="OneWay"
+                                                    Path="SelectedIndex" />
+                                                <Binding
+                                                    Converter="{StaticResource EqualConverter}"
+                                                    ConverterParameter="3"
+                                                    ElementName="TunnelTypeSelector"
+                                                    Mode="OneWay"
+                                                    Path="SelectedIndex" />
+                                            </MultiBinding>
+                                        </awe:VisibilityTranstion.IsDisplay>
+                                        <TextBox
+                                            x:Name="BindCname"
+                                            Margin="0,0,4,8"
+                                            ui:ControlHelper.Header="绑定域名"
+                                            ui:TextBoxHelper.IsDeleteButtonVisible="True"
+                                            AutomationProperties.Name="绑定域名"
+                                            ScrollViewer.PanningMode="None"
+                                            ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                            Text="{Binding CNameConect, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
+                                            <ui:TextBoxHelper.Suffix>
+                                                <ui:SimpleStackPanel
+                                                    Margin="0,0,4,0"
+                                                    Orientation="Horizontal"
+                                                    Spacing="2"
+                                                    ToolTip="样例: example.com,example1.com">
+                                                    <ui:FontIcon
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                        Glyph="&#xE897;" />
+
+                                                </ui:SimpleStackPanel>
+                                            </ui:TextBoxHelper.Suffix>
+                                        </TextBox>
+                                    </awe:VisibilityTranstion>
+
                                 </Grid>
                                 <TextBlock Margin="0,24,0,10" LineHeight="24">
                                     <Run FontSize="20" Text="高级选项" />

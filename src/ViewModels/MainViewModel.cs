@@ -64,7 +64,7 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         foreach (var item in _navigationView.MenuItems)
                         {
-                            if (item is NavigationViewItem vv && vv.Tag.Equals(typeof(Views.Tunnels)))
+                            if (item is NavigationViewItem vv && vv.Tag.Equals(data.Data))
                             {
                                 _navigationView.SelectedItem = item;
                                 break;
@@ -126,6 +126,11 @@ namespace OpenFrp.Launcher.ViewModels
 
         private ModernWpf.Controls.Frame? _frame;
         private ModernWpf.Controls.NavigationView? _navigationView;
+
+        public NavigationView NavigationView
+        {
+            get => _navigationView ?? throw new NullReferenceException(nameof(_navigationView));
+        }
 
         [ObservableProperty]
         private Awe.Model.OpenFrp.Response.Data.UserInfo userInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo

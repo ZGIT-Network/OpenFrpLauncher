@@ -34,6 +34,9 @@ namespace OpenFrp.Launcher.ViewModels
             if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
                 Response.Data is { List: var list } && list is not null)
             {
+                var nodesStatusResp = await OpenFrp.Service.Net.OpenFrp.GetNodeStatus().WithTimeout(
+                    delay: 5000);
+
                 Nodes = new ObservableCollection<NodeInfo>();
 
                 if (App.Current is { Dispatcher: var dispatcher })
@@ -64,37 +67,33 @@ namespace OpenFrp.Launcher.ViewModels
                             Status = System.Net.HttpStatusCode.OK
                         });
 
-                        foreach (var tunnel in list)
+                        if (nodesStatusResp is not null && nodesStatusResp.StatusCode is System.Net.HttpStatusCode.OK && nodesStatusResp.Data is { Count: > 0 } hs)
                         {
-                            Nodes.Add(new NodeInfo(tunnel));
-
-                            await Task.Delay(50);
-                        }
-                        _ = dispatcher.Invoke(async () =>
-                        {
-                            var resp = await OpenFrp.Service.Net.OpenFrp.GetNodeStatus();
-
-                            if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { Count: > 0 } hs)
+                            foreach (var tunnel in list)
                             {
-                                for (int i = 0; i < Nodes.Count; i++)
-                                {
-                                    if (Nodes[i].Id is 0) continue;
-                                    var va = resp.Data.Where(x =>
-                                    {
-                                        //System.Diagnostics.Debug.WriteLine($"{Nodes[i].Id} to {x.NodeId}");
-                                        return x.NodeId == Nodes[i].Id;
-                                    }).FirstOrDefault();
-                                    if (va is null) continue;
-                                    //System.Diagnostics.Debug.WriteLine($"{Nodes[i].Name},{va.ClientCount} , {va.Max} == {va.ClientCount / va.Max}");
-                                    Nodes[i].PressureLevel = (int)(Math.Round(va.ClientCount / va.Max, 2) * 100);
-                                }
-                                
-                                OnPropertyChanged(nameof(Nodes));
-                            }
-                        });
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                                if (tunnel.Id is 0) continue;
 
-                    
+                                var va = nodesStatusResp.Data.Where(x => { return x.NodeId == tunnel.Id; }).FirstOrDefault();
+
+                                if (va is null) continue;
+
+                                Nodes.Add(new NodeInfo(tunnel)
+                                {
+                                    PressureLevel = (int)(Math.Round(va.ClientCount / va.Max, 2) * 100)
+                                });
+                                await Task.Delay(50);
+                            }
+                        }
+                        else
+                        {
+                            foreach (var tunnel in list)
+                            {
+                                Nodes.Add(new NodeInfo(tunnel));
+
+                                await Task.Delay(50);
+                            }
+                        }
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
                 }
             }
         }
@@ -102,19 +101,24 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_ShowEditConfigDialog(Awe.Model.OpenFrp.Response.Data.NodeInfo ni)
         {
-            var dialog = new Dialog.EditTunnelDialog
-            {
+           
+            try
+            { 
+                var dialog = new Dialog.EditTunnelDialog
+                {
                 
-            };
-            dialog.SetValue(Controls.TunnelEditor.NodeInfoProperty, ni);
-            dialog.SetValue(Controls.TunnelEditor.IsCreateModeProperty, true);
-            dialog.ResetData();
+                };
+                dialog.SetValue(Controls.TunnelEditor.NodeInfoProperty, ni);
+                dialog.SetValue(Controls.TunnelEditor.IsCreateModeProperty, true);
+                dialog.ResetData();
 
-            if (await dialog.WaitForFinishAsync() is true)
-            {
-                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.Tunnels)));
-                //_ = event_RefreshNodeCollectionCommand.ExecuteAsync(null);
+                if (await dialog.WaitForFinishAsync() is true)
+                {
+                    WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.Tunnels)));
+                    //_ = event_RefreshNodeCollectionCommand.ExecuteAsync(null);
+                }
             }
+            catch { }
             
         }
 

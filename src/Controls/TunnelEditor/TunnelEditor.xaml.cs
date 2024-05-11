@@ -107,6 +107,18 @@ namespace OpenFrp.Launcher.Controls
             }
         }
         #endregion
+        #region CNameContent
+        public string CNameConect
+        {
+            get { return (string)GetValue(CNameConectProperty); }
+            set { SetValue(CNameConectProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for CNameConect.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CNameConectProperty =
+            DependencyProperty.Register("CNameConect", typeof(string), typeof(TunnelEditor), new PropertyMetadata(""));
+
+        #endregion CNameContent
 
 
         private void RefreshHost()
@@ -250,6 +262,7 @@ namespace OpenFrp.Launcher.Controls
                 if (GetTemplateChild("TunnelTypeSelector") is ComboBox cb)
                 {
                     cb.SelectedIndex = 0;
+                    
                     Tunnel.Type = "tcp";
                 }
                 if (NodeInfo is { ProtocolSupport: var support } && support is not null)
@@ -273,6 +286,19 @@ namespace OpenFrp.Launcher.Controls
                         _ => throw new NotSupportedException("不支持的隧道类型")
                     };
                 }
+                if (Tunnel.Type?.ToLower() is "http" or "https")
+                {
+                    StringBuilder builder = new StringBuilder();
+                    foreach (var item in Tunnel.Domains)
+                    {
+                        builder.Append(item);
+                        builder.Append(",");
+                    }
+                    builder.Remove(builder.Length - 1, 1);
+                    CNameConect = builder.ToString();
+                }
+                
+                
             }
             base.OnApplyTemplate();
         }
@@ -296,7 +322,7 @@ namespace OpenFrp.Launcher.Controls
             {
                 sb.Append(Sytanx[rdm.Next(0,Sytanx.Length - 1)]);
             }
-            return "laC" + sb.ToString();
+            return sb.ToString();
         }
 
         public Awe.Model.OpenFrp.Response.Data.UserTunnel GetCreateConfig()
@@ -307,6 +333,10 @@ namespace OpenFrp.Launcher.Controls
             {
                 ob.Name = Tunnel.Name = GetRandomName();
                 RefreshTunnelName();
+            }
+            if (!string.IsNullOrEmpty(CNameConect))
+            {
+                ob.Domains = new HashSet<string>(CNameConect.Split(','));
             }
 
             ob.NodeId = NodeInfo.Id;

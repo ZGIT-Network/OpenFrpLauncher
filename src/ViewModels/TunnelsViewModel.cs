@@ -146,16 +146,23 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_EditTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
         {
-            var dialog = new Dialog.EditTunnelDialog
+            try
+            {
+                var dialog = new Dialog.EditTunnelDialog
+                {
+
+                };
+                dialog.SetValue(Controls.TunnelEditor.TunnelProperty, tunnel.CloneUserTunnel());
+                dialog.SetValue(Controls.TunnelEditor.IsCreateModeProperty, false);
+
+                if (await dialog.WaitForFinishAsync())
+                {
+                    _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
+                }
+            }
+            catch
             {
 
-            };
-            dialog.SetValue(Controls.TunnelEditor.TunnelProperty, tunnel.CloneUserTunnel());
-            dialog.SetValue(Controls.TunnelEditor.IsCreateModeProperty, false);
-
-            if (await dialog.WaitForFinishAsync())
-            {
-                _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
             }
         }
 
@@ -174,6 +181,11 @@ namespace OpenFrp.Launcher.ViewModels
                         Tunnels?.Remove(tunnel);
                     }
                     itemsControl.IsEnabled = true;
+                    if (Tunnels?.Count is 0 && Response?.Data is not null)
+                    {
+                        Response.Data.Total = 0;
+                        OnPropertyChanged(nameof(Response));
+                    }
                 });
             }
         }
@@ -241,6 +253,16 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                 };
             }
+        }
+
+        [RelayCommand]
+        private void @event_GoToCreatePage()
+        {
+            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.CreateTunnel)));
+            //if (App.Current is { MainWindow.DataContext: ViewModels.MainViewModel mv })
+            //{
+            //    mv.NavigationView.SelectedItem = mv.NavigationView.MenuItems[2];
+            //}
         }
 
         private ItemsControl? itemsControl;

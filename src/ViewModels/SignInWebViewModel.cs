@@ -74,9 +74,13 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         try { Clipboard.SetText(task.Exception.ToString()); } catch { }
                         MessageBox.Show("请检查您是否已安装 Microsoft Edge WebView2 Runtime，若您已安装，请将错误信息打包后向我们反馈。\n\n错误内容:(已复制到剪切板) " + task.Exception.Message, "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
-                        wv.Dispose();
+                        
 
-                        _dialog.RunOnUIThread(() => _dialog?.Hide());
+                        _dialog.RunOnUIThread(() => 
+                        {
+                            wv.Dispose();
+                            _dialog?.Hide();
+                        });
 
                         return default;
                     }

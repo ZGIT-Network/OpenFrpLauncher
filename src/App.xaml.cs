@@ -53,7 +53,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v80";
+        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v85";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -419,25 +419,36 @@ namespace OpenFrp.Launcher
                                             }
                                             if (Environment.OSVersion.Version.Major is 10 && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
                                             {
-                                                new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
-                                                .AddText($"隧道 {tunnel.Name} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
-                                                .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
-                                                .AddText($"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}")
-                                                .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
-                                                .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {("HTTP".Contains(tunnel.Type) ? tunnel.Domains.First() : tunnel.ConnectAddress)}")
-                                                .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
-                                                .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
-                                                .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
-                                                .Show(toast =>
+                                                try
                                                 {
-                                                    toast.Tag = tunnel.Name;
-                                                    try { toast.ExpiresOnReboot = true; }
-                                                    catch
+                                                    new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                    .AddText($"隧道 {tunnel.Name} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                    .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
+                                                    .AddText($"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}")
+                                                    .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
+                                                    .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {("HTTP".Contains(tunnel.Type) ? tunnel.Domains.First() : tunnel.ConnectAddress)}")
+                                                    .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
+                                                    .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                    .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                    .Show(toast =>
                                                     {
+                                                        toast.Tag = tunnel.Name;
+                                                        try { toast.ExpiresOnReboot = true; }
+                                                        catch
+                                                        {
 
+                                                        }
+                                                        toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                    });
+                                                }
+                                                catch
+                                                {
+                                                    if (TaskBarIcon is not null)
+                                                    {
+                                                        TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
+                                                            icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
                                                     }
-                                                    toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
-                                                });
+                                                }
                                             }
                                             else if (TaskBarIcon is not null &&
                                                 Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
@@ -467,18 +478,29 @@ namespace OpenFrp.Launcher
                                             if (Environment.OSVersion.Version.Major is 10 &&
                                                 Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
                                             {
-                                                new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
-                                                 .AddText($"隧道 {tunnel.Name} 启动失败", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
-                                                 .AddText(response.Message)
-                                                 .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
-                                                 .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
-                                                 .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
-                                                 .Show(toast =>
-                                                 {
-                                                     toast.Tag = tunnel.Name;
-                                                     try { toast.ExpiresOnReboot = true; } catch { }
-                                                     toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
-                                                 });
+                                                try
+                                                {
+                                                    new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                     .AddText($"隧道 {tunnel.Name} 启动失败", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                     .AddText(response.Message)
+                                                     .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
+                                                     .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                     .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                     .Show(toast =>
+                                                     {
+                                                         toast.Tag = tunnel.Name;
+                                                         try { toast.ExpiresOnReboot = true; } catch { }
+                                                         toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                     });
+                                                }
+                                                catch
+                                                {
+                                                    if (TaskBarIcon is not null)
+                                                    {
+                                                        TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
+                                                            icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                                    }
+                                                }
                                             }
                                             else if (TaskBarIcon is not null && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
                                             {
@@ -863,13 +885,22 @@ namespace OpenFrp.Launcher
 
         public static async Task<T?> WithTimeout<T>(this Task<T> task,TimeSpan timeout)
         {
-            var tk = Task.WhenAny(task, Task.Delay(timeout));
+            Task tk = await Task.WhenAny(Task.Delay(timeout),task);
             if (tk.Equals(task)) { return await task; }
 
             return default;
         }
 
-       
+        public static async Task<T?> WithTimeout<T>(this Task<T> task, int delay)
+        {
+            Task tk = await Task.WhenAny(Task.Delay(delay), task);
+
+            if (tk.Equals(task)) { return await task; }
+
+            return default;
+        }
+
+
         public static async Task<Exception?> RunWithTryCatch(Func<Task> task)
         {
             try

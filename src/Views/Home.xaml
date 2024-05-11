@@ -48,44 +48,70 @@
                         <awe:VisibilityTranstion Margin="0,0,0,0" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
                             <!--  用户信息 Card  -->
                             <awe:Resizer>
+                                <!--  {DynamicResource CardBackgroundFillColorDefaultBrush}  -->
                                 <Border
-                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    Height="300"
+                                    Background="Black"
                                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
                                     CornerRadius="4">
-                                    <ui:SimpleStackPanel Margin="18" Spacing="8">
-                                        <TextBlock FontFamily="{StaticResource Montserrat}" FontWeight="Medium">
-                                            <Run FontSize="20" Text="{Binding UserInfo.UserName, Mode=OneWay}" />
-                                            <Run
-                                                FontSize="16"
-                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                Text="{Binding UserInfo.UserID, StringFormat='#{0}', Mode=OneWay}" />
-                                            <LineBreak />   <Run
-                                                FontSize="16"
-                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                Text="{Binding UserInfo.Email, Mode=OneWay}" />
-                                        </TextBlock>
-                                        <ItemsControl
-                                            Focusable="False"
-                                            ItemsSource="{Binding UserInfoViewContainer}"
-                                            TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Padding="0,0,10,4">
-                                                        <Run Text="{Binding Title, Mode=OneWay}" />
-                                                        <LineBreak />
-                                                        <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" />
-                                                    </TextBlock>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <ui:CommandBar HorizontalAlignment="Right">
+                                    <Grid ui:ThemeManager.RequestedTheme="Dark">
+                                        <Border CornerRadius="4" Opacity=".6">
+                                            <Border.Background>
+                                                <ImageBrush
+                                                    AlignmentY="Top"
+                                                    ImageSource="../Resources/Images/wallhaven-28ldd9_1920x1080.png"
+                                                    Stretch="UniformToFill" />
+                                            </Border.Background>
+                                        </Border>
 
+                                        <ui:SimpleStackPanel Margin="24" Spacing="8">
+                                            <TextBlock FontFamily="{StaticResource Montserrat}" FontWeight="Medium">
+                                                <Run
+                                                    FontSize="20"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
+                                                    Text="{Binding UserInfo.UserName, Mode=OneWay}" />
+                                                <Run
+                                                    FontSize="16"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    Text="{Binding UserInfo.UserID, StringFormat='#{0}', Mode=OneWay}" />
+                                                <LineBreak />   <Run
+                                                    FontSize="16"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    Text="{Binding UserInfo.Email, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <ItemsControl
+                                                Focusable="False"
+                                                ItemsSource="{Binding UserInfoViewContainer}"
+                                                TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Padding="0,0,10,4">
+                                                            <Run Text="{Binding Title, Mode=OneWay}" />
+                                                            <LineBreak />
+                                                            <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" />
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+
+                                        </ui:SimpleStackPanel>
+                                        <TextBlock
+                                            Margin="24,0,0,28"
+                                            VerticalAlignment="Bottom"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                            Text="更多公告，请在网页版查看" />
+                                        <ui:CommandBar
+                                            Margin="0,0,24,24"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom">
                                             <ui:AppBarButton
                                                 Command="{Binding event_CallUpSignCommand}"
                                                 Icon="Calendar"
@@ -97,7 +123,7 @@
                                                 Label="打开网页版" />
 
                                         </ui:CommandBar>
-                                    </ui:SimpleStackPanel>
+                                    </Grid>
                                 </Border>
                             </awe:Resizer>
                         </awe:VisibilityTranstion>
@@ -128,7 +154,7 @@
 
                     <TextBlock
                         FontSize="24"
-                        Text="Preview 21 (赞助码在下面！谢谢各位！求求你啦！)"
+                        Text="Preview 22 (赞助码在下面！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: 2024SR0589290"
                         TextWrapping="Wrap" />
                     <TextBlock
                         FontSize="24"

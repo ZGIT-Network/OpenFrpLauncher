@@ -60,6 +60,130 @@
                             </MultiBinding>
                         </awe:VisibilityTranstion.IsDisplay>
                         <ui:SimpleStackPanel Margin="36,0,36,40" Spacing="12">
+                            <awe:VisibilityTranstion>
+                                <awe:VisibilityTranstion.IsDisplay>
+                                    <MultiBinding Converter="{StaticResource BothConverter}" Mode="OneWay">
+                                        <Binding
+                                            Converter="{StaticResource NotEqualConverter}"
+                                            ConverterParameter="{x:Null}"
+                                            Mode="OneWay"
+                                            Path="Tunnels" />
+                                        <Binding
+                                            Converter="{StaticResource EqualConverter}"
+                                            ConverterParameter="0"
+                                            Mode="OneWay"
+                                            Path="Response.Data.Total" />
+                                    </MultiBinding>
+                                </awe:VisibilityTranstion.IsDisplay>
+                                <Border
+                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ui:SimpleStackPanel}, Mode=OneWay}"
+                                    Height="300"
+                                    MaxWidth="1272"
+                                    Padding="36,0,36,20">
+                                    <Grid>
+                                        <behavior:Interaction.Triggers>
+                                            <behavior:DataTrigger
+                                                Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                Comparison="LessThan"
+                                                Value="420">
+                                                <behavior:ChangePropertyAction PropertyName="Tag" Value="small" />
+                                            </behavior:DataTrigger>
+                                            <behavior:DataTrigger
+                                                Binding="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                Comparison="GreaterThanOrEqual"
+                                                Value="420">
+                                                <behavior:ChangePropertyAction PropertyName="Tag" Value="{x:Null}" />
+                                            </behavior:DataTrigger>
+                                        </behavior:Interaction.Triggers>
+                                        <Grid
+                                            MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+
+                                            <Grid>
+                                                <Grid.Style>
+                                                    <Style TargetType="Grid">
+                                                        <Setter Property="Grid.Column" Value="0" />
+                                                        <Setter Property="Grid.Row" Value="0" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=2}, Mode=OneWay}" Value="small">
+                                                                <Setter Property="Grid.ColumnSpan" Value="2" />
+                                                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                                                <Setter Property="Height" Value="130" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Image Source="..\Resources\Images\UI_EmotionIcon69.png" />
+                                            </Grid>
+                                            <ui:SimpleStackPanel
+                                                Margin="12,0,12,0"
+                                                VerticalAlignment="Center"
+                                                Spacing="10">
+                                                <ui:SimpleStackPanel.Style>
+                                                    <Style TargetType="ui:SimpleStackPanel">
+                                                        <Setter Property="Grid.Column" Value="1" />
+                                                        <Setter Property="Grid.Row" Value="0" />
+                                                        <Setter Property="HorizontalAlignment" Value="Left" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=Grid, AncestorLevel=2}, Mode=OneWay}" Value="small">
+                                                                <Setter Property="Grid.ColumnSpan" Value="2" />
+                                                                <Setter Property="Grid.Column" Value="0" />
+                                                                <Setter Property="Grid.Row" Value="1" />
+                                                                <Setter Property="HorizontalAlignment" Value="Center" />
+                                                                <Setter Property="Height" Value="130" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ui:SimpleStackPanel.Style>
+                                                <TextBlock
+                                                    HorizontalAlignment="{Binding HorizontalAlignment, RelativeSource={RelativeSource AncestorType=ui:SimpleStackPanel}, Mode=OneWay}"
+                                                    FontSize="24"
+                                                    FontWeight="Medium"
+                                                    Text="这里一个隧道都没有哦"
+                                                    TextWrapping="Wrap" />
+                                                <WrapPanel HorizontalAlignment="{Binding HorizontalAlignment, RelativeSource={RelativeSource AncestorType=ui:SimpleStackPanel}, Mode=OneWay}">
+                                                    <Button
+                                                        Margin="0,0,6,4"
+                                                        Padding="0"
+                                                        Command="{Binding event_GoToCreatePageCommand}"
+                                                        Style="{StaticResource AccentButtonStyle}">
+                                                        <ui:SimpleStackPanel
+                                                            Margin="10,8"
+                                                            Orientation="Horizontal"
+                                                            Spacing="6">
+                                                            <ui:SymbolIcon FontSize="16" Symbol="Add" />
+                                                            <TextBlock Text="创建隧道" />
+                                                        </ui:SimpleStackPanel>
+                                                    </Button>
+                                                    <Button
+                                                        Margin="0,0,6,4"
+                                                        Padding="0"
+                                                        Command="{Binding event_RefreshTunnelsCollectionCommand}">
+                                                        <ui:SimpleStackPanel
+                                                            Margin="10,8"
+                                                            Orientation="Horizontal"
+                                                            Spacing="6">
+                                                            <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
+                                                            <TextBlock Text="重新加载" />
+                                                        </ui:SimpleStackPanel>
+                                                    </Button>
+                                                </WrapPanel>
+                                            </ui:SimpleStackPanel>
+
+
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </awe:VisibilityTranstion>
                             <ItemsControl
                                 Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
                                 MaxWidth="1200"
