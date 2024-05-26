@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:awe="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:converter="clr-namespace:Awe.UI.Converter;assembly=Awe.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:helper="clr-namespace:Awe.UI.Helper;assembly=Awe.UI"
@@ -10,9 +11,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
-    d:DesignHeight="720"
-    d:DesignWidth="1055"
+    d:DesignHeight="1170"
+    d:DesignWidth="855"
     mc:Ignorable="d">
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Unloaded">
+            <behavior:InvokeCommandAction Command="{Binding event_PageUnloadedCommand}" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
     <ui:Page.Resources>
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
         <converter:EqualConverter x:Key="EqualConverter" />
@@ -22,33 +28,152 @@
         <vm:HomeViewModel />
     </ui:Page.DataContext>
     <Grid>
-        <Grid.RowDefinitions>
+        <!--<Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+        </Grid.RowDefinitions>-->
 
-        <TextBlock
+        <!--<TextBlock
             Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
             MaxWidth="1200"
             Padding="36,40,36,8"
             FontSize="24"
-            Text="首页" />
+            Text="首页" />-->
         <ui:ScrollViewerEx
             Grid.Row="1"
             PanningMode="VerticalFirst"
             RewriteWheelChange="True"
             VerticalScrollBarVisibility="Auto">
-            <Border
-                Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
-                MaxWidth="1200"
-                Padding="36,4,36,40"
-                HorizontalAlignment="Center">
-                <ui:SimpleStackPanel Spacing="8">
-                    <Grid>
+
+            <ui:SimpleStackPanel Margin="0,0,0,0" Spacing="8">
+                <Grid
+                    Margin="0,0,0,-56"
+                    VerticalAlignment="Top"
+                    Background="Transparent">
+                    <Grid x:Name="RewWidth" />
+                    <ui:FlipView
+                        x:Name="vier"
+                        Height="450"
+                        Background="Transparent"
+                        BannerOpacity="0"
+                        CircularNavigation="True"
+                        Focusable="False"
+                        IsHitTestVisible="False"
+                        IsNavigationEnabled="False"
+                        ItemsSource="{Binding AdSences}"
+                        SelectedIndex="{Binding PhIndex, Mode=OneWay}">
+                        <ui:FlipView.ItemTemplate>
+                            <DataTemplate>
+                                <Border
+                                    Width="{Binding ActualWidth, ElementName=RewWidth, Mode=OneWay}"
+                                    Height="425"
+                                    VerticalAlignment="Top"
+                                    Opacity="1"
+                                    RenderTransformOrigin=".5,.5">
+                                    <Border.RenderTransform>
+                                        <TranslateTransform X="0" />
+                                    </Border.RenderTransform>
+                                    <Border.Background>
+                                        <ImageBrush
+                                            AlignmentY="Top"
+                                            ImageSource="{Binding UU, Mode=OneWay}"
+                                            Stretch="UniformToFill" />
+                                    </Border.Background>
+                                    <Border.OpacityMask>
+                                        <LinearGradientBrush StartPoint="0,0.5" EndPoint="0,1">
+                                            <GradientStop Offset=".75" Color="#00000000" />
+                                            <GradientStop Offset=".55" Color="#10000000" />
+                                            <GradientStop Offset=".45" Color="#20000000" />
+                                            <GradientStop Color="Black" />
+                                        </LinearGradientBrush>
+                                    </Border.OpacityMask>
+                                </Border>
+                            </DataTemplate>
+                        </ui:FlipView.ItemTemplate>
+                    </ui:FlipView>
+                    <Border
+                        Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+                        MaxWidth="1200"
+                        Padding="24,128,36,92"
+                        VerticalAlignment="Bottom">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:HyperlinkButton
+                                Grid.Column="0"
+                                Padding="0"
+                                AutomationProperties.Name="打开链接"
+                                NavigateUri="{Binding SelectedValue.Url, ElementName=vier}">
+                                <ui:SimpleStackPanel Margin="12,8" Spacing="2">
+                                    <TextBlock
+                                        FontSize="30"
+                                        FontWeight="Light"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                        Text="{Binding SelectedValue.Title, ElementName=vier}" />
+                                    <TextBlock
+                                        MaxWidth="650"
+                                        HorizontalAlignment="Left"
+                                        FontSize="24"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                        TextWrapping="Wrap">
+                                        <Run Text="{Binding SelectedValue.Description, ElementName=vier}" />
+
+
+                                    </TextBlock>
+                                </ui:SimpleStackPanel>
+                            </ui:HyperlinkButton>
+
+                            <awe:VisibilityTranstion
+                                Grid.Column="1"
+                                Margin="0,0,0,16"
+                                VerticalAlignment="Bottom"
+                                IsDisplay="{Binding AdSences.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='1', Mode=OneWay}">
+
+
+                                <ui:SimpleStackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button
+                                        Padding="0"
+                                        AutomationProperties.Name="上一张"
+                                        Command="{Binding event_ActiveAbovePageCommand}">
+                                        <ui:FontIcon
+                                            Margin="6"
+                                            FontSize="18"
+                                            Glyph="&#xE973;" />
+                                    </Button>
+                                    <Button
+                                        Padding="0"
+                                        AutomationProperties.Name="下一张"
+                                        Command="{Binding event_ActiveNextPageCommand}">
+                                        <ui:FontIcon
+                                            Margin="6"
+                                            FontSize="18"
+                                            Glyph="&#xE974;" />
+                                    </Button>
+                                </ui:SimpleStackPanel>
+                            </awe:VisibilityTranstion>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Border
+                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+                    MaxWidth="1200"
+                    Margin="0,-24,0,0"
+                    Padding="36,4,36,40"
+                    HorizontalAlignment="Center">
+
+
+                    <!--<Grid>
                         <awe:VisibilityTranstion Margin="0,0,0,0" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
-                            <!--  用户信息 Card  -->
+                    -->
+                    <!--  用户信息 Card  -->
+                    <!--
                             <awe:Resizer>
-                                <!--  {DynamicResource CardBackgroundFillColorDefaultBrush}  -->
+                    -->
+                    <!--  {DynamicResource CardBackgroundFillColorDefaultBrush}  -->
+                    <!--
                                 <Border
                                     Height="300"
                                     Background="Black"
@@ -128,7 +253,9 @@
                             </awe:Resizer>
                         </awe:VisibilityTranstion>
                         <awe:VisibilityTranstion Margin="0,0,0,0" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
-                            <!--  用户信息 Card  -->
+                    -->
+                    <!--  用户信息 Card  -->
+                    <!--
                             <awe:Resizer>
                                 <Border
                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
@@ -144,29 +271,66 @@
                                 </Border>
                             </awe:Resizer>
                         </awe:VisibilityTranstion>
-                    </Grid>
-                    <ui:InfoBar
-                        Title="我又换回老UI啦！"
-                        IsOpen="True"
-                        Message="迫不得换回老 UI，虽然还是有很多问题，但总比之前的好多了，对吧？" />
+                    </Grid>-->
+                    <ui:SimpleStackPanel Spacing="8">
 
+                        <awe:VisibilityTranstion Margin="0,0,0,0" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
+                            <ui:SimpleStackPanel>
+                                <ui:CommandBar
+                                    Margin="0,0,0,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom">
+                                    <ui:AppBarButton
+                                        Command="{Binding event_CallUpSignCommand}"
+                                        Icon="Calendar"
+                                        IsEnabled="{Binding IsSigned, Converter={StaticResource RollbackConverter}, Mode=OneWay}"
+                                        Label="签到(WebView)" />
+                                    <ui:AppBarButton
+                                        Command="{Binding event_OpenOpenFrpWebsiteCommand}"
+                                        Icon="Globe"
+                                        Label="打开网页版" />
 
+                                </ui:CommandBar>
+                                <ItemsControl
+                                    Focusable="False"
+                                    ItemsSource="{Binding UserInfoViewContainer}"
+                                    TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Padding="0,0,10,4">
+                                                <Run FontSize="18" Text="{Binding Title, Mode=OneWay}" />
+                                                <LineBreak />
+                                                <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" FontSize="16" />
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ui:SimpleStackPanel>
+                        </awe:VisibilityTranstion>
+                        <TextBlock
+                            FontSize="24"
+                            Text="Preview 30 (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: 2024SR0589290"
+                            TextWrapping="Wrap" />
+                        <Image
+                            MaxWidth="240"
+                            HorizontalAlignment="Left"
+                            Source="../Resources/Images/hsccode.jpg" />
 
-                    <TextBlock
-                        FontSize="24"
-                        Text="Preview 22 (赞助码在下面！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: 2024SR0589290"
-                        TextWrapping="Wrap" />
-                    <TextBlock
-                        FontSize="24"
-                        Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
-                        Text="有问题请火速反馈，谢谢！！！！！！！使用完记得彻底退出，谢谢"
-                        TextWrapping="Wrap" />
-                    <Image
-                        MaxWidth="240"
-                        HorizontalAlignment="Left"
-                        Source="../Resources/Images/hsccode.jpg" />
-                </ui:SimpleStackPanel>
-            </Border>
+                        <TextBlock
+                            FontSize="24"
+                            Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                            Text="有问题请火速反馈，谢谢！！！！！！！使用完记得彻底退出，谢谢"
+                            TextWrapping="Wrap" />
+
+                    </ui:SimpleStackPanel>
+                </Border>
+            </ui:SimpleStackPanel>
+
         </ui:ScrollViewerEx>
     </Grid>
 </ui:Page>

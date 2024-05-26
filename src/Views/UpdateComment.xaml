@@ -68,17 +68,24 @@
                                     Margin="18"
                                     FontSize="16"
                                     TextWrapping="Wrap">
-                                    <Run Text="FRPC 版本:" />
                                     <Run
                                         FontFamily="{StaticResource Montserrat}"
                                         FontWeight="Medium"
+                                        Text="FRPC" /> <Run Text="版本" />
+                                    <LineBreak />
+                                    <Run
+                                        FontFamily="{StaticResource Montserrat}"
+                                        FontWeight="Medium"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                         Text="{x:Static app:App.FrpcVersionString}" />
                                     <LineBreak />
                                     <LineBreak />
                                     <Run Text="启动器版本" />
+                                    <LineBreak />
                                     <Run
                                         FontFamily="{StaticResource Montserrat}"
                                         FontWeight="Medium"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                         Text="{x:Static app:App.VersionString}" />
                                 </TextBlock>
                             </Border>
@@ -128,7 +135,6 @@
                                                         VerticalAlignment="Top"
                                                         AutomationProperties.Name="安装更新"
                                                         Command="{Binding event_EnterUpdateCommand}"
-                                                        IsEnabled="{Binding UpdateInfo.Type, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.Launcher}, Mode=OneWay}"
                                                         Style="{StaticResource AccentButtonStyle}"
                                                         Visibility="Visible">
                                                         <ui:SimpleStackPanel

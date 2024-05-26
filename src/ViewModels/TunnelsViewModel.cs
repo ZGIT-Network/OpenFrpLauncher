@@ -60,6 +60,7 @@ namespace OpenFrp.Launcher.ViewModels
                     {
 
                     }
+                    _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
                 }
             });
         }

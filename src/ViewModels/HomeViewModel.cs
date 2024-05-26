@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Security;
@@ -8,11 +9,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Web.WebView2.Wpf;
 using OpenFrp.Launcher.Model;
+
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -40,8 +44,24 @@ namespace OpenFrp.Launcher.ViewModels
                     event_AppRefreshCommand.Execute(null);
                 }
             }
+            event_LoadAdSenceCommand.Execute(null);
 
+            cancellationToken = new CancellationTokenSource();
+
+            _ = Task.Run(async () =>
+            {
+                while (!cancellationToken.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(2500);
+
+                    if (!flag) event_ActiveNextPage();
+
+                    flag = false;
+                }
+            }, cancellationToken.Token);
         }
+
+        private readonly CancellationTokenSource cancellationToken;
 
         [ObservableProperty]
         private Awe.Model.OpenFrp.Response.Data.UserInfo userInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
@@ -115,6 +135,7 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             };
         }
+
         [RelayCommand]
         private void @event_OpenOpenFrpWebsite()
         {
@@ -161,7 +182,116 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        [RelayCommand]
+        private async Task @event_LoadAdSence()
+        {
+            var sence = await OpenFrp.Service.Net.HttpRequest.Get<Awe.Model.OpenFrp.Response.V2Response<OpenFrp.Launcher.Model.AdSence[]>>("https://api.zyghit.cn/zg-adsense/openfrp-lanucher");
+
+            if (sence.Data is { } bv && bv.Data?.Length > 0)
+            {
+                foreach (var item in bv.Data)
+                {
+                    //item.Url = @"E:\Desktop\Photo\wallhaven-76w8x3_1920x1080.png";
+
+                    //ThreadPool.QueueUserWorkItem(async delegate
+                    //{
+                    //    if (string.IsNullOrEmpty(item.Image)) return;
+                    //    if (item.Image is null) return;
+
+                    //    var vaa = OpenFrp.Service.HashCalculator.CompushHash($"{item.Url}.vacc.jpg");
+
+                    //    var va = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{vaa}.jpg");
+
+                    //    if (System.IO.File.Exists(va)) 
+                    //    {
+                    //        item.Image = va;
+                    //        return; 
+                    //    }
+
+                    //    var avator = await Service.Net.HttpRequest.Get(item.Image);
+
+                    //    if (avator.StatusCode is System.Net.HttpStatusCode.OK && avator.Data.Count() > 0)
+                    //    {
+                            
+
+                            
+
+                    //        try
+                    //        {
+
+                    //            var vca = Encoding.UTF8.GetString(avator.Data.ToArray());
+
+                    //            using var fs = System.IO.File.OpenWrite(va);
+
+                    //            await fs.WriteAsync(avator.Data.ToArray(), 0, avator.Data.Count());
+
+
+
+                    //            await fs.FlushAsync();
+
+                    //            item.Image = va;
+                    //        }
+                    //        catch
+                    //        {
+                                
+
+                    //            return;
+                    //        }
+
+                            
+                    //    }
+                    //});
+
+                    AdSences.Add(item);
+                }
+            }
+        }
+
         [ObservableProperty]
         private bool isSigned = true;
+
+        [ObservableProperty]
+        private int phIndex;
+
+        [ObservableProperty]
+        private ObservableCollection<AdSence> adSences = new ObservableCollection<AdSence>()
+        {
+            new()
+            {
+                Title = "OpenFRP Preview 启动器上新啦",
+                Description = "参与使用，一起来填充这个大坑，一起走我们的路。你的赞助是前进的第一动力，往下面看，赞助启动器作者。",
+                Image = @"../Resources/Images/wallhaven-28ldd9_1920x1080.png",
+            },
+        };
+
+        [RelayCommand]
+        private void @event_PageUnloaded() => cancellationToken.Cancel();
+
+        [RelayCommand]
+        private void @event_ActiveNextPage()
+        {
+            if (AdSences.Count <= PhIndex + 1)
+            {
+                PhIndex = 0;
+            }
+            else PhIndex += 1;
+
+            flag = true;
+        }
+
+        private bool flag;
+
+        [RelayCommand]
+        private void @event_ActiveAbovePage()
+        {
+            
+            if (PhIndex is 0)
+            {
+                PhIndex = AdSences.Count;
+            }
+            PhIndex -= 1;
+
+            flag = true;
+        }
     }
 }

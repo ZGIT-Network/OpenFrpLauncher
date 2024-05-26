@@ -5,6 +5,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -53,7 +54,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "Yue.OpenFRPLauncher.v85";
+        public static string VersionString { get; } = "OpenFrpLauncher.v100.CaceardirhearDreyawrazou";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -111,6 +112,9 @@ namespace OpenFrp.Launcher
                         item.Kill();
                     }
                 }
+
+                SetSecureApp();
+
                 _ = ConfigureVersionCheck(FrpcVersionString);
                 ConfigureUpdateWindow();
 
@@ -148,7 +152,22 @@ namespace OpenFrp.Launcher
                 {
                     foreach (var item in lt)
                     {
-                        Awe.UI.Win32.User32.SetForegroundWindow(item.MainWindowHandle);
+                        if (item.MainModule.FileName == Assembly.GetEntryAssembly().Location)
+                        {
+                            if (item.MainWindowHandle == IntPtr.Zero)
+                            {
+                                MessageBox.Show(
+                                    "OpenFrp 启动器已启动。若您想运行多个启动器实例，更推荐您使用 FRPC 进行进程管理。\n请单击\"托盘图标\"来显示主窗口。","OpenFrp Launcher",MessageBoxButton.OK,MessageBoxImage.Warning);
+
+                                break;
+                            }
+                            item.Refresh();
+
+                            Awe.UI.Win32.User32.ShowWindow(item.MainWindowHandle,9);
+                            Awe.UI.Win32.User32.SetForegroundWindow(item.MainWindowHandle);
+
+                        }
+                        
                         break;
                     }
                     App.Current.Shutdown();
@@ -171,6 +190,8 @@ namespace OpenFrp.Launcher
                 }
                 if (IsAdministrator())
                 {
+                    SetSecureApp();
+
                     _ = ConfigureVersionCheck(FrpcVersionString);
                     ConfigureUpdateWindow();
                 }
@@ -188,6 +209,8 @@ namespace OpenFrp.Launcher
                 App.Current.Shutdown();
                 return;
             }
+
+            SetSecureApp();
             ConfigureProcess();
             ConfigureAppCenter();
             TryAutoLogin();
@@ -202,6 +225,24 @@ namespace OpenFrp.Launcher
             System.Security.Principal.WindowsIdentity identity = WindowsIdentity.GetCurrent();
             System.Security.Principal.WindowsPrincipal principal = new WindowsPrincipal(identity);
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        private static void SetSecureApp()
+        {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
+            {
+                if (errors is not System.Net.Security.SslPolicyErrors.None)
+                {
+                    return MessageBox.Show($"来自服务器的证书无效:::" +
+                    $"\n Name:{certificate.Issuer}" +
+                    $"\n Reason:{Enum.GetName(typeof(System.Net.Security.SslPolicyErrors), errors)} " +
+                    $"\n是否允许访问?", "OpenFrp Launcher", MessageBoxButton.OKCancel, MessageBoxImage.Exclamation) is MessageBoxResult.OK ? true
+                 : false;
+                }
+                return true;
+            };
+
         }
 
         protected override void OnExit(ExitEventArgs e) => ClearToast();
@@ -299,13 +340,14 @@ namespace OpenFrp.Launcher
 
                 return;
             }
+            
             ServiceProcess = new Process()
             {
                 StartInfo =
                 {
                     FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrpService.exe"),
                     CreateNoWindow = true,
-                    Arguments = $"deamon --pn openfrp.oap.{AppDomain.CurrentDomain.BaseDirectory.Length}",
+                    Arguments = $"deamon --pn openfrpLauncher.{@ev_AssemblyAc()}",
                     UseShellExecute = false
                 },
                 EnableRaisingEvents = true
@@ -317,6 +359,13 @@ namespace OpenFrp.Launcher
 
                 ConfigureProcess();
             };
+        }
+
+        private static string @ev_AssemblyAc()
+        {
+            var va = Assembly.GetExecutingAssembly();
+
+            return Service.HashCalculator.CompushHash(va.Location);
         }
 
         public static async Task<ApiResponse?> ConfigureVersionCheck(string frpVersion)
@@ -386,7 +435,7 @@ namespace OpenFrp.Launcher
 
         private static async void ConfigureRPC()
         {
-            RpcManager.Configre($"openfrp.oap.{AppDomain.CurrentDomain.BaseDirectory.Length}");
+            RpcManager.Configre($"openfrpLauncher.{@ev_AssemblyAc()}");
 
             while (true)
             {
@@ -518,12 +567,31 @@ namespace OpenFrp.Launcher
                                 }
                             }
                         });
-                        if (exception is not null) throw exception;
+                        if (exception is not null)
+                        {
+                            Service.Net.OpenFrp.Logout();
+                            
+                            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Awe.Model.OpenFrp.Response.Data.UserInfo
+                            {
+                                UserName = "not-allow-display"
+                            }));
+
+                            
+
+                            throw exception;
+                        }
                     }
                     catch { }
                 }
                 WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create("offService"));
-                await Task.Delay(1000);
+                await Task.Delay(1000).ContinueWith(delegate
+                {
+                    if (ServiceProcess.HasExited)
+                    {
+                        ConfigureProcess();
+                    }
+                    TryAutoLogin();
+                });
             }
         }
 
@@ -578,8 +646,10 @@ namespace OpenFrp.Launcher
                                 Mode = BindingMode.OneWay
                             });
                             x.Width = 175;
+                            x.HasDropShadow = false;
                             x.Items.Add(CreateObject<MenuItem>((xa) =>
                             {
+                                xa.Icon = new ModernWpf.Controls.FontIcon() { Glyph = "\uE8A7" };
                                 xa.Header = "显示窗口";
                                 xa.Command = new RelayCommand(() =>
                                 {
@@ -595,88 +665,105 @@ namespace OpenFrp.Launcher
                                     wind.Activate();
                                 });
                             }));
-                            x.Items.Add(new Separator() { Style = (Style)App.Current!.TryFindResource("RewriteSeparator") });
+                            x.Items.Add(new Separator());
                             x.Items.Add(CreateObject<MenuItem>((xa)=>
                             {
                                 xa.Header = "退出";
-                                xa.Command = new RelayCommand(async () =>
+                                xa.Icon = new ModernWpf.Controls.FontIcon() { Glyph = "\ue89f" };
+                                xa.Command = new AsyncRelayCommand(async () =>
                                 {
-                                    var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
-                                    if (resp.IsSuccess && resp.Data is { UserLogon: true })
+                                    x.IsOpen = false;
+
+                                    await Task.Delay(300);
+
+                                    _ = wind.Dispatcher.Invoke(async delegate
                                     {
-                                        OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
-                                    }
-                                    if (Environment.OSVersion.Version.Major is 10)
-                                    {
-                                        Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
-                                    }
-                                    OpenFrp.Launcher.Properties.Settings.Default.Save();
-                                    if (!string.IsNullOrEmpty(App.WebViewTemplatePath) && Directory.Exists(App.WebViewTemplatePath))
-                                    {
-                                        try { Directory.Delete(App.WebViewTemplatePath, true); } catch { }
-                                    }
-                                    App.Current.Shutdown();
+                                        var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
+                                        if (resp.IsSuccess && resp.Data is { UserLogon: true })
+                                        {
+                                            OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                                        }
+                                        if (Environment.OSVersion.Version.Major is 10)
+                                        {
+                                            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                                        }
+                                        OpenFrp.Launcher.Properties.Settings.Default.Save();
+                                        if (!string.IsNullOrEmpty(App.WebViewTemplatePath) && Directory.Exists(App.WebViewTemplatePath))
+                                        {
+                                            try { Directory.Delete(App.WebViewTemplatePath, true); } catch { }
+                                        }
+                                        App.Current.Shutdown();
+                                    });
                                     //Environment.Exit(0);
                                 });
                             }));
                             x.Items.Add(CreateObject<MenuItem>((xa) =>
                             {
                                 xa.Header = "彻底退出";
-                            
-                                xa.Command = new RelayCommand(async () =>
+                                xa.Icon = new ModernWpf.Controls.FontIcon() { Glyph = "\ue8bb" };
+                                xa.Command = new AsyncRelayCommand(async () =>
                                 {
-                                    App.Current!.MainWindow.Visibility = Visibility.Hidden;
-                                    var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
-                                    if (resp.IsSuccess && resp.Data is { UserLogon : true})
-                                    {
-                                        OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
-                                    }
+                                    x.IsOpen = false;
 
-                                    OpenFrp.Launcher.Properties.Settings.Default.Save();
+                                    await Task.Delay(300);
 
-
-                                    if (Environment.OSVersion.Version.Major is 10)
+                                    _ = wind.Dispatcher.Invoke(async delegate
                                     {
-                                        Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
-                                    }
-                                    try
-                                    {
-                                        if (!ServiceProcess.HasExited)
+                                        App.Current!.MainWindow.Visibility = Visibility.Hidden;
+                                        var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
+                                        if (resp.IsSuccess && resp.Data is { UserLogon: true })
                                         {
-                                            ServiceProcess.EnableRaisingEvents = false;
-                                            ServiceProcess.Kill();
+                                            OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
                                         }
-                                    }
-                                    catch
-                                    {
 
-                                    }
+                                        OpenFrp.Launcher.Properties.Settings.Default.Save();
 
-                                    string platform = RuntimeInformation.ProcessArchitecture switch
-                                    {
-                                        Architecture.X64 => "amd64",
-                                        Architecture.X86 => "386",
-                                        Architecture.Arm64 => "arm64",
-                                        _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
-                                    };
-                                    if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0 } ck)
-                                    {
-                                        foreach (var pro in ck)
+
+                                        if (Environment.OSVersion.Version.Major is 10)
                                         {
-                                            try
+                                            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                                        }
+                                        try
+                                        {
+                                            if (!ServiceProcess.HasExited)
                                             {
-                                                if (pro.MainModule.FileName.Equals(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc", $"frpc_windows_{platform}.exe")) && !pro.HasExited)
+                                                ServiceProcess.EnableRaisingEvents = false;
+                                                ServiceProcess.Kill();
+                                            }
+                                        }
+                                        catch
+                                        {
+
+                                        }
+
+                                        string platform = RuntimeInformation.ProcessArchitecture switch
+                                        {
+                                            Architecture.X64 => "amd64",
+                                            Architecture.X86 => "386",
+                                            Architecture.Arm64 => "arm64",
+                                            _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
+                                        };
+                                        if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0 } ck)
+                                        {
+                                            foreach (var pro in ck)
+                                            {
+                                                try
                                                 {
-                                                    pro.Kill();
+                                                    if (pro.MainModule.FileName.Equals(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc", $"frpc_windows_{platform}.exe")) && !pro.HasExited)
+                                                    {
+                                                        pro.Kill();
+                                                    }
+                                                }
+                                                catch
+                                                {
+
                                                 }
                                             }
-                                            catch
-                                            {
-
-                                            }
                                         }
-                                    }
-                                    Environment.Exit(0);
+                                        Environment.Exit(0);
+                                    });
+
+                                    
                                 });
                             }));
                             //foreach (var va in x.Items)

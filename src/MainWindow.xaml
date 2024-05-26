@@ -28,6 +28,7 @@
     modernwpf:ThemeManager.RequestedTheme="Default"
     modernwpf:TitleBar.ExtendViewIntoTitleBar="True"
     modernwpf:WindowHelper.UseModernWindowStyle="True"
+    WindowState="Normal"
     mc:Ignorable="d">
     <FrameworkElement.Resources>
         <converter:NotEqualConverter x:Key="NotEqualConverter" />

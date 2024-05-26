@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using H.NotifyIcon;
+using ModernWpf;
 using ModernWpf.Controls;
 using OpenFrp.Launcher.Model;
 using static Google.Protobuf.WellKnownTypes.Field.Types;
@@ -109,15 +110,18 @@ namespace OpenFrp.Launcher.ViewModels
             }
             this.PropertyChanged += (_, e) =>
             {
-                if (e.PropertyName is nameof(UserInfo))
+                _frame?.RunOnUIThread(() =>
                 {
-                    event_OnUserInfoChanged();
-                    if (_frame is { Content: var c } && 
-                        c is Views.Home or Views.Settings)
+                    if (e.PropertyName is nameof(UserInfo))
                     {
-                        //event_RouterItemInvoked(c.GetType());
+                        event_OnUserInfoChanged();
+                        if (_frame is { Content: var c } &&
+                            c is Views.Home or Views.Settings)
+                        {
+                            //event_RouterItemInvoked(c.GetType());
+                        }
                     }
-                }
+                });
             };
            // AvatorFilePath = Properties.Settings.Default.UserAvator;
         }

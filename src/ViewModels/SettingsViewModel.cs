@@ -278,6 +278,8 @@ namespace OpenFrp.Launcher.ViewModels
             if (result is not null)
             {
                 WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(UserInfo = result));
+
+                OpenFrp.Launcher.Properties.Settings.Default.Save();
             }
 
             

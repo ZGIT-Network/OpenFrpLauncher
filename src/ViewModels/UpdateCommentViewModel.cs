@@ -74,6 +74,8 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_OpenFrpcFolder()
         {
+            _ = Service.Commands.FileDictionary.CreateFrpFolder();
+
             try
             {
                 Process.Start(new ProcessStartInfo
@@ -169,57 +171,61 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (App.Current is { MainWindow: Window wnd })
             {
-                if (!IsAdministrator())
-                {
-                    bool vl = true;
-                    if (App.Current is { MainWindow: UpdateWindow })
-                    {
-                        if (MessageBox.Show("您是否已关闭 UAC 选项？\n若没有，本应用会再次请求 UAC。\n如果您调到最低级别，请点击继续来安装更新","OpenFrp Launcher",MessageBoxButton.OKCancel,MessageBoxImage.Warning) is MessageBoxResult.Cancel)
-                        {
-                            return;
-                        }
-                        vl = false;
-                    }
-                    if (vl)
-                    {
-                        wnd.IsEnabled = false;
-                        try
-                        {
-                            if (Process.Start(new ProcessStartInfo
-                            {
-                                FileName = Assembly.GetExecutingAssembly().Location,
-                                Arguments = "--update",
-                                Verb = "runas",
-                                UseShellExecute = true
-                            }) is Process)
-                            {
-                                App.Current?.Shutdown();
-                                Environment.Exit(0);
-                                return;
-                            }
-                        }
-                        catch
-                        {
-                        }
-                        wnd.IsEnabled = true;
-                        return;
-                    }
-                }
                 if (UpdateInfo.SoftWareVersionData?.DownloadSources is { })
                 {
-                    ErrorMessage = default;
-                    ProgressValue = 0;
-                    IProgress<AppNetwork.HttpDownloadProgress> progress = new Progress<AppNetwork.HttpDownloadProgress>((x) =>
-                    {
-                        if (x.ReadLength is 0)
-                        {
-                            return;
-                        }
-                        ProgressValue = 101 - (x.TotalLength / x.ReadLength);
-                    });
+                    string v2 = Service.Commands.FileDictionary.GetFrpPlatform();
+                    if (v2 is "i386") v2 = "x86";
 
                     if (UpdateInfo.Type is Model.UpdateInfoType.FrpClient)
                     {
+                        if (!IsAdministrator())
+                        {
+                            bool vl = true;
+                            if (App.Current is { MainWindow: UpdateWindow })
+                            {
+                                if (MessageBox.Show("您是否已关闭 UAC 选项？\n若没有，本应用会再次请求 UAC。\n如果您调到最低级别，请点击继续来安装更新", "OpenFrp Launcher", MessageBoxButton.OKCancel, MessageBoxImage.Warning) is MessageBoxResult.Cancel)
+                                {
+                                    return;
+                                }
+                                vl = false;
+                            }
+                            if (vl)
+                            {
+                                wnd.IsEnabled = false;
+                                try
+                                {
+                                    if (Process.Start(new ProcessStartInfo
+                                    {
+                                        FileName = Assembly.GetExecutingAssembly().Location,
+                                        Arguments = "--update",
+                                        Verb = "runas",
+                                        UseShellExecute = true
+                                    }) is Process)
+                                    {
+                                        App.ServiceProcess.Kill();
+                                        App.Current?.Shutdown();
+                                        Environment.Exit(0);
+                                        return;
+                                    }
+                                }
+                                catch
+                                {
+                                }
+                                wnd.IsEnabled = true;
+                                return;
+                            }
+                        }
+                        ErrorMessage = default;
+                        ProgressValue = 0;
+                        IProgress<AppNetwork.HttpDownloadProgress> progress = new Progress<AppNetwork.HttpDownloadProgress>((x) =>
+                        {
+                            if (x.ReadLength is 0)
+                            {
+                                return;
+                            }
+                            ProgressValue = 101 - (x.TotalLength / x.ReadLength);
+                        });
+
                         foreach (var item in UpdateInfo.SoftWareVersionData.DownloadSources)
                         {
                             // win 7 version fall back
@@ -254,10 +260,10 @@ namespace OpenFrp.Launcher.ViewModels
                                     return;
                                 }
 
-                                    
 
-                                string v2 = Service.Commands.FileDictionary.GetFrpPlatform();
-                                if (v2 is "i386") v2 = "x86";
+
+                                
+
                                 var respa = await Task.Run(() =>
                                 {
                                     try
@@ -278,6 +284,13 @@ namespace OpenFrp.Launcher.ViewModels
                                 });
                                 if (respa)
                                 {
+                                    OpenFrp.Launcher.Properties.Settings.Default.Save();
+
+                                    wnd.Close();
+
+                                    App.ServiceProcess.Kill();
+
+                                    App.Current.Shutdown();
                                     Environment.Exit(0);
                                 }
                                 return;
@@ -288,8 +301,74 @@ namespace OpenFrp.Launcher.ViewModels
                             }
                         }
                     }
+                    else if (UpdateInfo.Type is UpdateInfoType.Launcher && !string.IsNullOrEmpty(UpdateInfo.SoftWareVersionData.Launcher.Download))
+                    {
+                        if (UpdateInfo.SoftWareVersionData.Launcher.Download is null) return;
+
+                        ErrorMessage = default;
+                        ProgressValue = 0;
+                        IProgress<AppNetwork.HttpDownloadProgress> progress = new Progress<AppNetwork.HttpDownloadProgress>((x) =>
+                        {
+                            if (x.ReadLength is 0)
+                            {
+                                return;
+                            }
+                            ProgressValue = 101 - (x.TotalLength / x.ReadLength);
+                        });
+
+                        if (string.IsNullOrEmpty(launcherDf))
+                        {
+                            var resp = await AppNetwork.HttpRequest.Get(UpdateInfo.SoftWareVersionData.Launcher.Download, progress);
+
+                            if (resp.StatusCode is System.Net.HttpStatusCode.OK)
+                            {
+                                using FileStream fs = new FileStream(launcherDf = $"{Path.GetTempFileName()}.exe", FileMode.OpenOrCreate);
+                                await fs.WriteAsync(resp.Data.ToArray(), 0, resp.Data.Count());
+
+                                await fs.FlushAsync();
+
+                                fs.Close();
+
+                                await @event_EnterUpdate();
+
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            var respa = await Task.Run(() =>
+                            {
+                                try
+                                {
+                                    return Process.Start(new ProcessStartInfo
+                                    {
+                                        FileName = launcherDf,
+                                        Verb = "runas",
+                                        UseShellExecute = true
+                                    }) is Process;
+                                }
+                                catch (Exception ex)
+                                {
+                                    ErrorMessage += "\n" + ex.ToString();
+                                    return false;
+                                }
+                            });
+                            if (respa)
+                            {
+                                OpenFrp.Launcher.Properties.Settings.Default.Save();
+
+                                wnd.Close();
+
+                                App.ServiceProcess.Kill();
+                                App.Current.Shutdown();
+                                Environment.Exit(0);
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        private string? launcherDf { get; set; }
     }
 }
