@@ -14,8 +14,8 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="950"
+    d:DesignWidth="650"
     d:Foreground="White"
     mc:Ignorable="d">
     <FrameworkElement.DataContext>
@@ -261,6 +261,40 @@
                                 <ui:ToggleSwitch
                                     FocusVisualMargin="-3,-4,8,-5"
                                     IsOn="{Binding AutoStartup, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                            </Grid>
+                        </of:SettingItem>
+                        <of:SettingItem
+                            Title="调试模式"
+                            Description=""
+                            IsEnabled="True">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xEC7A;" />
+                            </of:SettingItem.Icon>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="75" />
+                                </Grid.ColumnDefinitions>
+                                <ui:ToggleSwitch
+                                    FocusVisualMargin="-3,-4,8,-5"
+                                    IsOn="{Binding UseDebugMode, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                            </Grid>
+                        </of:SettingItem>
+                        <of:SettingItem
+                            Title="强制 TLS 加密"
+                            Description="缓解在一些网络环境下无法映射的问题；但是占用CPU。"
+                            IsEnabled="True">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xED2F;" />
+                            </of:SettingItem.Icon>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="75" />
+                                </Grid.ColumnDefinitions>
+                                <ui:ToggleSwitch
+                                    FocusVisualMargin="-3,-4,8,-5"
+                                    IsOn="{Binding UseTlsEncrypt, UpdateSourceTrigger=PropertyChanged}"
                                     Style="{StaticResource LeftLabelToggleSwitchStyle}" />
                             </Grid>
                         </of:SettingItem>

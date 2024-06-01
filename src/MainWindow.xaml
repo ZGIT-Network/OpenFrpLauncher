@@ -144,24 +144,26 @@
                     Tag="{x:Type view:About}"
                     TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
                 <modernwpf:NavigationViewItem
-                    Content="有新更新了!"
                     Icon="&#xECC5;"
                     Tag="{x:Type view:UpdateComment}"
                     TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}">
 
                     <behavior:Interaction.Triggers>
                         <behavior:DataTrigger Binding="{Binding Value, Source={StaticResource HasUpdateBinding}, Mode=OneWay}" Value="False">
-                            <behavior:ChangePropertyAction PropertyName="MaxHeight" Value="0" />
-                            <behavior:ChangePropertyAction PropertyName="IsEnabled" Value="False" />
+                            <behavior:ChangePropertyAction PropertyName="Content" Value="更新" />
+                            <behavior:ChangePropertyAction PropertyName="InfoBadge" Value="{x:Null}" />
                         </behavior:DataTrigger>
                         <behavior:DataTrigger Binding="{Binding Value, Source={StaticResource HasUpdateBinding}, Mode=OneWay}" Value="True">
-                            <behavior:ChangePropertyAction PropertyName="MaxHeight" Value="{x:Static sys2:Int32.MaxValue}" />
-                            <behavior:ChangePropertyAction PropertyName="IsEnabled" Value="True" />
+                            <behavior:ChangePropertyAction PropertyName="Content" Value="有新更新了!" />
+                            <behavior:ChangePropertyAction PropertyName="InfoBadge">
+                                <behavior:ChangePropertyAction.Value>
+                                    <modernwpf:InfoBadge Width="6" Height="6" />
+                                </behavior:ChangePropertyAction.Value>
+                            </behavior:ChangePropertyAction>
+
                         </behavior:DataTrigger>
                     </behavior:Interaction.Triggers>
-                    <modernwpf:NavigationViewItem.InfoBadge>
-                        <modernwpf:InfoBadge Width="6" Height="6" />
-                    </modernwpf:NavigationViewItem.InfoBadge>
+
                 </modernwpf:NavigationViewItem>
             </modernwpf:NavigationView.FooterMenuItems>
             <!--  Content  -->

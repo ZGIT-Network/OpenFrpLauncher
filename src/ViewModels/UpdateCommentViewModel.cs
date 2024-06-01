@@ -69,8 +69,15 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        public string Platfrom => Service.Commands.FileDictionary.GetFrpPlatform().ToUpper();
+        
 
+        public string Platfrom => $"{Service.Commands.FileDictionary.GetFrpPlatform().ToUpper()}    .NET Framework {GetDotNetVersion()}";
+
+        private static string GetDotNetVersion()
+        {
+            return System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
+        }
+        
         [RelayCommand]
         private void @event_OpenFrpcFolder()
         {
@@ -114,17 +121,17 @@ namespace OpenFrp.Launcher.ViewModels
             if (versionData.StatusCode is System.Net.HttpStatusCode.OK &&
                 versionData.Data is { } data)
             {
-                if (!App.VersionString.Equals(versionData.Data?.Launcher.Latest))
+                if (!App.VersionString.Equals(data.Launcher.Latest))
                 {
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Model.UpdateInfo
                     {
                         Type = Model.UpdateInfoType.Launcher,
-                        Log = versionData.Data?.Launcher.Message,
-                        Title = versionData.Data?.Launcher.Title,
-                        SoftWareVersionData = versionData.Data,
+                        Log = data.Launcher.Message,
+                        Title = data.Launcher.Title,
+                        SoftWareVersionData = data,
                     }));
                 }
-                if (!App.FrpcVersionString.Equals(versionData.Data?.Latest))
+                else if (!App.FrpcVersionString.Equals(data.Latest))
                 {
                     if (Environment.OSVersion.Version.Major is not 10 && App.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
                     {
@@ -137,9 +144,16 @@ namespace OpenFrp.Launcher.ViewModels
                         Title = "FRPC 更新",
                         Log =
                             (Environment.OSVersion.Version.Major is 10 ? "" : "Windows 7 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
-                            versionData.Data?.FrpcUpdateLog +
-                            (Environment.OSVersion.Version.Major is 10 ? $"\nUpdate: {App.FrpcVersionString} => {versionData.Data?.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
+                            data.FrpcUpdateLog +
+                            (Environment.OSVersion.Version.Major is 10 ? $"\nUpdate: {App.FrpcVersionString} => {data.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
                             $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！"
+                    }));
+                }
+                else
+                {
+                    WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Model.UpdateInfo
+                    {
+                        Type = UpdateInfoType.None
                     }));
                 }
             }
@@ -301,9 +315,11 @@ namespace OpenFrp.Launcher.ViewModels
                             }
                         }
                     }
-                    else if (UpdateInfo.Type is UpdateInfoType.Launcher && !string.IsNullOrEmpty(UpdateInfo.SoftWareVersionData.Launcher.Download))
+                    else if (UpdateInfo.Type is UpdateInfoType.Launcher && !string.IsNullOrEmpty(UpdateInfo.SoftWareVersionData.Launcher.Argument))
                     {
-                        if (UpdateInfo.SoftWareVersionData.Launcher.Download is null) return;
+                        if (UpdateInfo.SoftWareVersionData.Launcher.Argument is null) return;
+
+
 
                         ErrorMessage = default;
                         ProgressValue = 0;
@@ -318,7 +334,16 @@ namespace OpenFrp.Launcher.ViewModels
 
                         if (string.IsNullOrEmpty(launcherDf))
                         {
-                            var resp = await AppNetwork.HttpRequest.Get(UpdateInfo.SoftWareVersionData.Launcher.Download, progress);
+                            string vf;
+#if NET481
+                            vf = "dotNET481";
+#elif NET462
+                            vf = "dotNET462";
+#endif
+
+                            string ur = string.Format(UpdateInfo.SoftWareVersionData.Launcher.Argument, vf);
+
+                            var resp = await AppNetwork.HttpRequest.Get(ur, progress);
 
                             if (resp.StatusCode is System.Net.HttpStatusCode.OK)
                             {
@@ -342,7 +367,7 @@ namespace OpenFrp.Launcher.ViewModels
                                 {
                                     return Process.Start(new ProcessStartInfo
                                     {
-                                        FileName = launcherDf,
+                                        FileName = launcherDf,Arguments = "/silent",
                                         Verb = "runas",
                                         UseShellExecute = true
                                     }) is Process;
@@ -360,6 +385,25 @@ namespace OpenFrp.Launcher.ViewModels
                                 wnd.Close();
 
                                 App.ServiceProcess.Kill();
+
+                                var va = OpenFrp.Service.Commands.FileDictionary.GetFrpPlatform();
+                                var fe = OpenFrp.Service.Commands.FileDictionary.GetFrpFile();
+
+                                if (Process.GetProcessesByName($"frpc_windows_{va}.exe") is { Length: > 0 } cka)
+                                {
+                                    foreach (var item in cka)
+                                    {
+                                        try
+                                        {
+                                            if (item.MainModule.FileName.Equals(fe))
+                                            {
+                                                item.Kill();
+                                            }
+                                        }
+                                        catch { }
+                                    }
+                                }
+
                                 App.Current.Shutdown();
                                 Environment.Exit(0);
                             }

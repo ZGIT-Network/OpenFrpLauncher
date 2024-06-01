@@ -35,6 +35,8 @@
     <FrameworkElement.Resources>
         <converter:EqualConverter x:Key="EqualConverter" />
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
+        <converter:EitherConverter x:Key="EitherConverter" />
+        <converter:BothConverter x:Key="BothConverter" />
     </FrameworkElement.Resources>
     <ui:ContentDialog.IsPrimaryButtonEnabled>
         <Binding
@@ -55,26 +57,53 @@
 
             <Grid
                 Grid.Row="0"
-                Height="150" VerticalAlignment="Top"
-                Margin="0,0,0,36">
+                Height="200"
+                Margin="0,0,0,36"
+                VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Grid Grid.Column="0" Margin="0,0,8,0">
-                    <awe:VisibilityTranstion IsDisplay="{Binding event_LoginCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter='False'}">
+                    <awe:VisibilityTranstion>
+                        <awe:VisibilityTranstion.IsDisplay>
+                            <MultiBinding Converter="{StaticResource BothConverter}">
+                                <Binding
+                                    Converter="{StaticResource EqualConverter}"
+                                    ConverterParameter="False"
+                                    Mode="OneWay"
+                                    Path="event_LoginCommand.IsRunning" />
+                                <Binding
+                                    Converter="{StaticResource EqualConverter}"
+                                    ConverterParameter="False"
+                                    Mode="OneWay"
+                                    Path="event_UseWebModeCommand.IsRunning" />
+                            </MultiBinding>
+                        </awe:VisibilityTranstion.IsDisplay>
                         <ui:SimpleStackPanel Spacing="12">
                             <TextBox ui:ControlHelper.Header="账户" Text="{Binding Username}" />
                             <PasswordBox hv:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" ui:ControlHelper.Header="密码" />
                         </ui:SimpleStackPanel>
                     </awe:VisibilityTranstion>
-                    <awe:VisibilityTranstion IsDisplay="{Binding event_LoginCommand.IsRunning}">
+                    <awe:VisibilityTranstion>
+                        <awe:VisibilityTranstion.IsDisplay>
+                            <MultiBinding Converter="{StaticResource EitherConverter}">
+                                <Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />
+                                <Binding Mode="OneWay" Path="event_UseWebModeCommand.IsRunning" />
+                            </MultiBinding>
+                        </awe:VisibilityTranstion.IsDisplay>
                         <ui:ProgressRing
                             Width="75"
                             Height="75"
                             HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            IsActive="{Binding event_LoginCommand.IsRunning}" />
+                            VerticalAlignment="Center">
+                            <ui:ProgressRing.IsActive>
+                                <MultiBinding Converter="{StaticResource EitherConverter}">
+                                    <Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />
+                                    <Binding Mode="OneWay" Path="event_UseWebModeCommand.IsRunning" />
+                                </MultiBinding>
+                            </ui:ProgressRing.IsActive>
+                        </ui:ProgressRing>
                     </awe:VisibilityTranstion>
                 </Grid>
                 <ui:SimpleStackPanel
@@ -82,7 +111,10 @@
                     Grid.Column="1"
                     Margin="8,0,0,0"
                     Spacing="8">
-                    <TextBlock Text="" />
+                    <Button
+                        Command="{Binding event_UseWebModeCommand}"
+                        Content="尝试使用网页快速登录"
+                        Style="{StaticResource AccentButtonStyle}" />
                 </ui:SimpleStackPanel>
             </Grid>
 

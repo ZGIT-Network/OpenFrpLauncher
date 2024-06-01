@@ -125,6 +125,13 @@
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="TextElement.FontSize" Value="{Binding Path=FontSize, Converter={StaticResource AddInCalcuator}, ConverterParameter='2', Source={x:Static app:Settings.Default}, Mode=OneWay}" />
                                     </MultiDataTrigger>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding Level, Mode=OneWay}" Value="4" />
+                                            <Condition Binding="{Binding Path=UseDebugMode, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="False" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </MultiDataTrigger>
                                     <DataTrigger Binding="{Binding Level, Mode=OneWay}" Value="1">
                                         <Setter Property="TextElement.Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
                                     </DataTrigger>

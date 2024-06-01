@@ -141,5 +141,41 @@ namespace OpenFrp.Launcher.Properties {
                 this["NotifyMode"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseDebugMode {
+            get {
+                return ((bool)(this["UseDebugMode"]));
+            }
+            set {
+                this["UseDebugMode"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseTlsEncrypt {
+            get {
+                return ((bool)(this["UseTlsEncrypt"]));
+            }
+            set {
+                this["UseTlsEncrypt"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string UserAuthorization {
+            get {
+                return ((string)(this["UserAuthorization"]));
+            }
+            set {
+                this["UserAuthorization"] = value;
+            }
+        }
     }
 }

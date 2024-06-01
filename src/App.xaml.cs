@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
+//using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -37,8 +38,7 @@ using Microsoft.Web.WebView2.Core;
 using OpenFrp.Launcher.Model;
 using OpenFrp.Launcher.ViewModels;
 using OpenFrp.Service.Net;
-using Windows.UI.ViewManagement;
-using static Google.Protobuf.WellKnownTypes.Field.Types;
+
 
 namespace OpenFrp.Launcher
 {
@@ -54,7 +54,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "OpenFrpLauncher.v100.CaceardirhearDreyawrazou";
+        public static string VersionString { get; } = "OpenFrpLauncher.v100.XairsiNairqa";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -107,9 +107,37 @@ namespace OpenFrp.Launcher
 
                 if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
                 {
+                    var asm = Assembly.GetAssembly(typeof(OpenFrp.Service.RpcResponse));
+
                     foreach (var item in ck)
                     {
-                        item.Kill();
+                        try
+                        {
+                            if (item.MainModule.FileName.Equals(asm.Location))
+                            {
+                                item.Kill();
+                            }
+                        }
+                        catch { }
+                    }
+                }
+
+
+                var va = OpenFrp.Service.Commands.FileDictionary.GetFrpPlatform();
+                var fe = OpenFrp.Service.Commands.FileDictionary.GetFrpFile();
+
+                if (Process.GetProcessesByName($"frpc_windows_{va}.exe") is { Length: > 0 } cka)
+                {
+                    foreach (var item in cka)
+                    {
+                        try
+                        {
+                            if (item.MainModule.FileName.Equals(fe))
+                            {
+                                item.Kill();
+                            }
+                        }
+                        catch { }
                     }
                 }
 
@@ -150,8 +178,12 @@ namespace OpenFrp.Launcher
             {
                 if (!e.Args.Contains("--update") && Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1 } lt)
                 {
+                    var self = Process.GetCurrentProcess();
+
                     foreach (var item in lt)
                     {
+                        if (item.Handle.Equals(self.Handle)) break;
+                        
                         if (item.MainModule.FileName == Assembly.GetEntryAssembly().Location)
                         {
                             if (item.MainWindowHandle == IntPtr.Zero)
@@ -166,12 +198,13 @@ namespace OpenFrp.Launcher
                             Awe.UI.Win32.User32.ShowWindow(item.MainWindowHandle,9);
                             Awe.UI.Win32.User32.SetForegroundWindow(item.MainWindowHandle);
 
+                            App.Current.Shutdown();
+                            return;
                         }
                         
                         break;
                     }
-                    App.Current.Shutdown();
-                    return;
+                    
                 }
             }
             catch {  }
@@ -197,13 +230,20 @@ namespace OpenFrp.Launcher
                 }
                 else
                 {
-                    Process.Start(new ProcessStartInfo
+                    try
                     {
-                        FileName = Assembly.GetExecutingAssembly().Location,
-                        Verb = "runas",
-                        Arguments = "--update",
-                        ErrorDialog = false
-                    });
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = Assembly.GetExecutingAssembly().Location,
+                            Verb = "runas",
+                            Arguments = "--update",
+                            ErrorDialog = false
+                        });
+                    }
+                    catch
+                    {
+
+                    }
                 }
 
                 App.Current.Shutdown();
@@ -216,8 +256,22 @@ namespace OpenFrp.Launcher
             TryAutoLogin();
             ConfigureRPC();
             ConfigureToast();
-            _ = ConfigureVersionCheck(FrpcVersionString);
+            _ = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    var va = await ConfigureVersionCheck(FrpcVersionString);
+
+                    if (va is { Exception: null,StatusCode: HttpStatusCode.OK })
+                    {
+                        await Task.Delay(TimeSpan.FromHours(2));
+                    }
+                    else await Task.Delay(TimeSpan.FromMinutes(10));
+                }
+            });
             ConfigureWindow(e.Args);
+
+
         }
 
         private static bool IsAdministrator()
@@ -245,7 +299,12 @@ namespace OpenFrp.Launcher
 
         }
 
-        protected override void OnExit(ExitEventArgs e) => ClearToast();
+        protected override void OnExit(ExitEventArgs e)
+        {
+            ClearToast();
+
+            OpenFrp.Launcher.Properties.Settings.Default.UserAuthorization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz");
+        }
 
         private static async void ConfigureAppCenter()
         {
@@ -336,9 +395,21 @@ namespace OpenFrp.Launcher
         {
             if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
             {
-                ServiceProcess = ck.First();
+                var asm = Assembly.GetAssembly(typeof(OpenFrp.Service.RpcResponse));
 
-                return;
+                foreach (var item in ck)
+                {
+                    try
+                    {
+                        if (item.MainModule.FileName.Equals(asm.Location))
+                        {
+                            ServiceProcess = item;
+
+                            return;
+                        }
+                    }
+                    catch { }
+                }
             }
             
             ServiceProcess = new Process()
@@ -372,18 +443,19 @@ namespace OpenFrp.Launcher
         {
             var versionData = await OpenFrp.Service.Net.OpenFrp.GetSoftwareVersionInfo();
 
-            if (versionData.Exception is null && versionData.StatusCode is System.Net.HttpStatusCode.OK)
+            if (versionData.Exception is null && versionData.StatusCode is System.Net.HttpStatusCode.OK &&
+                versionData.Data is { } data)
             {
                 if (!VersionString.Equals(versionData.Data?.Launcher.Latest))
                 {
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Model.UpdateInfo
                     {
                         Type = Model.UpdateInfoType.Launcher,
-                        Log = versionData.Data?.Launcher.Message,
-                        Title = versionData.Data?.Launcher.Title,
-                        SoftWareVersionData = versionData.Data,
+                        Log = data.Launcher.Message,
+                        Title = data.Launcher.Title,
+                        SoftWareVersionData = data,
                     }));
-                }
+                }   
                 if (!frpVersion.Equals(versionData.Data?.Latest))
                 {
                     if (Environment.OSVersion.Version.Major is not 10 && frpVersion.Equals("OpenFRP_0.54.0_835276e2_20240205"))
@@ -397,8 +469,8 @@ namespace OpenFrp.Launcher
                         Title = "FRPC 更新",
                         Log = 
                             (Environment.OSVersion.Version.Major is 10 ? "" : "Windows 7 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
-                            versionData.Data?.FrpcUpdateLog +
-                            (Environment.OSVersion.Version.Major is 10 ? $"\nUpdate: {App.FrpcVersionString} => {versionData.Data?.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
+                            data.FrpcUpdateLog +
+                            (Environment.OSVersion.Version.Major is 10 ? $"\nUpdate: {App.FrpcVersionString} => {data.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
                             $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！"
                     }));
                 }
@@ -918,6 +990,13 @@ namespace OpenFrp.Launcher
         {
             try
             {
+                //string da_sisseTaqeeveLesi = Encoding.UTF8.GetString(Launcher.PndCodec.Descrypt(OpenFrp.Launcher.Properties.Settings.Default.UserPwnRedirectUrl));
+
+                if (string.IsNullOrEmpty(OpenFrp.Launcher.Properties.Settings.Default.UserPwn))
+                {
+                    throw default!;
+                }
+                //await @event_NowterTrojeMoumeanu_AutoLoginCode(OpenFrp.Launcher.Properties.Settings.Default.UserPwn, da_sisseTaqeeveLesi);
                 var ot = JsonSerializer.Deserialize<Awe.Model.OAuth.Request.LoginRequest>(OpenFrp.Launcher.Properties.Settings.Default.UserPwn);
                 if (ot is { } c && !string.IsNullOrEmpty(c.Password))
                 {
@@ -931,7 +1010,7 @@ namespace OpenFrp.Launcher
                         Password = pwn,
                         taskCompletionSource = fallbackTask
                     };
-                    
+
 
 
                     await mwn.event_LoginCommand.ExecuteAsync(null);
@@ -948,7 +1027,32 @@ namespace OpenFrp.Launcher
             }
             catch
             {
+                if (!string.IsNullOrEmpty(OpenFrp.Launcher.Properties.Settings.Default.UserAuthorization))
+                {
+                    HttpRequest.CreateAuthorization("of-dev-api.bfsea.xyz", OpenFrp.Launcher.Properties.Settings.Default.UserAuthorization);
 
+                    var openfrpUserinfo = await OpenFrp.Service.Net.OpenFrp.GetUserInfo();
+
+                    if (openfrpUserinfo is { Exception: null,StatusCode: HttpStatusCode.OK,Data: UserInfo userInfo } &&
+                        userInfo != null)
+                    {
+                        // finish
+                        var rrpc = await RpcManager.LoginAsync(new Service.Proto.Request.LoginRequest
+                        {
+                            UserToken = userInfo.UserToken,
+                            UserTag = $"@!{userInfo.UserID}+{userInfo.UserName}"
+                        }, TimeSpan.FromSeconds(10));
+
+                        if (rrpc.IsSuccess)
+                        {
+                            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(userInfo));
+                            RpcManager.UserSecureCode = rrpc.Data;
+
+                            return;
+                        }
+                        Service.Net.OpenFrp.Logout();
+                    }
+                }
             }
         }
 

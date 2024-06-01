@@ -201,7 +201,9 @@ namespace OpenFrp.Launcher.ViewModels
                                 var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest
                                 {
                                     SecureCode = RpcManager.UserSecureCode,
-                                    TunnelIdJson = ob.ToString()
+                                    TunnelIdJson = ob.ToString(),
+                                    UseDebug = Properties.Settings.Default.UseDebugMode,
+                                    UseTlsEncrypt = Properties.Settings.Default.UseTlsEncrypt,
                                 });
                                 if (resp.IsSuccess)
                                 {

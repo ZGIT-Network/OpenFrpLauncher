@@ -98,7 +98,8 @@ namespace OpenFrp.Launcher
             catch (Exception ex) { return ex; }
         }
 
-        public static async Task<Service.RpcResponse> LaunchTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel, TimeSpan timeOut = default, CancellationToken cancellationToken = default)
+        public static async Task<Service.RpcResponse> LaunchTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel,
+            TimeSpan timeOut = default, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -107,6 +108,8 @@ namespace OpenFrp.Launcher
                 return await Task.Run(async () => await Client.LaunchAsync(new Proto.Request.TunnelRequest
                 {
                     SecureCode = UserSecureCode,
+                    UseDebug = Properties.Settings.Default.UseDebugMode,
+                    UseTlsEncrypt = Properties.Settings.Default.UseTlsEncrypt,
                     UserTunnelJson = JsonSerializer.Serialize(tunnel)
                 }, deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken));
             }

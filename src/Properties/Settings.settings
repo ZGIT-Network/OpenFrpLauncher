@@ -32,5 +32,14 @@
     <Setting Name="NotifyMode" Type="OpenFrp.Launcher.Model.NotifyMode" Scope="User">
       <Value Profile="(Default)">NotifyIconDefault</Value>
     </Setting>
+    <Setting Name="UseDebugMode" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseTlsEncrypt" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UserAuthorization" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -472,7 +472,7 @@
                                                                 ToolTip="删除隧道">
                                                                 <ui:FlyoutService.Flyout>
                                                                     <ui:Flyout x:Name="delete__flyout" AreOpenCloseAnimationsEnabled="True">
-                                                                        <Grid Width="260" TextOptions.TextHintingMode="Animated">
+                                                                        <Grid Width="260" TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}">
                                                                             <Grid.RowDefinitions>
                                                                                 <RowDefinition Height="*" />
                                                                                 <RowDefinition Height="Auto" />

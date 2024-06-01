@@ -1,7 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -234,6 +237,28 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        public bool UseDebugMode
+        {
+            get
+            {
+                return Properties.Settings.Default.UseDebugMode;
+            }
+            set
+            {
+                Properties.Settings.Default.UseDebugMode = value;
+            }
+        }
+        public bool UseTlsEncrypt
+        {
+            get
+            {
+                return Properties.Settings.Default.UseTlsEncrypt;
+            }
+            set
+            {
+                Properties.Settings.Default.UseTlsEncrypt = value;
+            }
+        }
 
         public bool AutoStartup
         {
@@ -271,6 +296,7 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_ShowLoginDialog()
         {
+            
             var loginDialog = new Dialog.LoginDialog();
 
             var result = await loginDialog.ShowAsync();
@@ -282,8 +308,10 @@ namespace OpenFrp.Launcher.ViewModels
                 OpenFrp.Launcher.Properties.Settings.Default.Save();
             }
 
-            
+
         }
+
+        
 
         [RelayCommand]
         private async Task @event_Logout()
@@ -301,6 +329,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     Service.Net.OpenFrp.Logout();
                     Properties.Settings.Default.UserPwn = string.Empty;
+                    Properties.Settings.Default.UserAuthorization = string.Empty;
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(UserInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
                     {
                         UserName = "not-allow-display"

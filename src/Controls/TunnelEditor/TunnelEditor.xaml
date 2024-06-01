@@ -45,16 +45,18 @@
         </Setter>
     </Style>
     <Style TargetType="local:TunnelEditor">
+        <Style.Resources>
+            <converter:RollbackConverter x:Key="RollbackConverter" />
+            <converter:EqualConverter x:Key="EqualConverter" />
+            <converter:EitherConverter x:Key="EitherConverter" />
+            <converter:NotEqualConverter x:Key="NotEqualConverter" />
+        </Style.Resources>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TunnelEditor">
+
                     <Grid>
-                        <Grid.Resources>
-                            <converter:RollbackConverter x:Key="RollbackConverter" />
-                            <converter:EqualConverter x:Key="EqualConverter" />
-                            <converter:EitherConverter x:Key="EitherConverter" />
-                            <converter:NotEqualConverter x:Key="NotEqualConverter" />
-                        </Grid.Resources>
+
                         <awe:VisibilityTranstion IsDisplay="{TemplateBinding IsPortImportOpen, Converter={StaticResource RollbackConverter}}">
                             <ui:SimpleStackPanel>
                                 <Grid>
@@ -157,7 +159,7 @@
                                         ItemsSource="{Binding ProtocolMethod, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=OneWay}"
                                         SelectedValuePath="Title">
                                         <ComboBox.ItemContainerStyle>
-                                            <Style BasedOn="{StaticResource DefaultComboBoxItemStyle}" TargetType="ComboBoxItem">
+                                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource ResourceKey=DefaultComboBoxItemStyle}">
                                                 <Setter Property="IsEnabled" Value="{Binding IsEnabled, Mode=OneWay}" />
                                             </Style>
                                         </ComboBox.ItemContainerStyle>
@@ -347,7 +349,7 @@
                                             Margin="0,0,4,0"
                                             VerticalAlignment="Stretch"
                                             AutomationProperties.Name="刷新"
-                                            Style="{StaticResource AccentButtonStyle}">
+                                            Style="{DynamicResource AccentButtonStyle}">
                                             <ui:SimpleStackPanel Orientation="Horizontal" Spacing="6">
                                                 <ui:SymbolIcon FontSize="14" Symbol="Refresh" />
                                                 <TextBlock Text="刷新" />
@@ -431,5 +433,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+
     </Style>
 </ResourceDictionary>

@@ -109,7 +109,7 @@
                                 <ui:SimpleStackPanel Margin="12,8" Spacing="2">
                                     <TextBlock
                                         FontSize="30"
-                                        FontWeight="Light"
+                                        FontWeight="Normal"
                                         Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
                                         Text="{Binding SelectedValue.Title, ElementName=vier}" />
                                     <TextBlock
@@ -312,14 +312,31 @@
                                 </ItemsControl>
                             </ui:SimpleStackPanel>
                         </awe:VisibilityTranstion>
-                        <TextBlock
-                            FontSize="24"
-                            Text="Preview 30 (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: 2024SR0589290"
-                            TextWrapping="Wrap" />
-                        <Image
-                            MaxWidth="240"
-                            HorizontalAlignment="Left"
-                            Source="../Resources/Images/hsccode.jpg" />
+                        <WrapPanel>
+                            <Image
+                                MaxWidth="342"
+                                Margin="0,0,48,16"
+                                ui:ClipHelper.CornerRadius="6"
+                                Source="../Resources/Images/hsccode.jpg" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="24"
+                                TextWrapping="Wrap">
+                                <Run
+                                    FontFamily="{StaticResource Montserrat}"
+                                    FontWeight="Medium"
+                                    Foreground="{DynamicResource AweAppGoldenColor}"
+                                    Text="Preview 32" />
+                                <Run Text=" (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: " />
+                                <Run
+                                    FontFamily="{StaticResource Montserrat}"
+                                    FontWeight="Medium"
+                                    Foreground="{DynamicResource AweAppGoldenColor}"
+                                    Text="2024SR0589290" />
+                            </TextBlock>
+                        </WrapPanel>
+
+
 
                         <TextBlock
                             FontSize="24"
