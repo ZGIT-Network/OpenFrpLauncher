@@ -54,7 +54,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "OpenFrpLauncher.v100.XairsiNairqa";
+        public static string VersionString { get; } = "OpenFrpLauncher.v100.PorhorMesuker";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -176,13 +176,13 @@ namespace OpenFrp.Launcher
             }
             try
             {
-                if (!e.Args.Contains("--update") && Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1 } lt)
+                if (!e.Args.Contains("--update") && e.Args.Contains("--finish") && Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1 } lt)
                 {
                     var self = Process.GetCurrentProcess();
 
                     foreach (var item in lt)
                     {
-                        if (item.Handle.Equals(self.Handle)) break;
+                        if (item.Handle.Equals(self.Handle) || item.MainWindowTitle.Equals("OpenFrp 更新窗口")) break;
                         
                         if (item.MainModule.FileName == Assembly.GetEntryAssembly().Location)
                         {
@@ -423,7 +423,17 @@ namespace OpenFrp.Launcher
                 },
                 EnableRaisingEvents = true
             };
-            ServiceProcess.Start();
+            try
+            {
+                ServiceProcess.Start();
+            }
+            catch (Exception ex)
+            {
+                Crashes.TrackError(ex);
+                Clipboard.SetText(ex.ToString());
+
+                MessageBox.Show($"\n!!!!!!!辅助进程启动失败!!!!!!\n{ex.Message}\n错误内容已复制，按下Ctrl+V | 粘贴 来显示内容。", "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             ServiceProcess.Exited += async delegate
             {
                 await Task.Delay(500);
@@ -432,11 +442,23 @@ namespace OpenFrp.Launcher
             };
         }
 
-        private static string @ev_AssemblyAc()
+        private static string @ev_AssemblyAc(int v = 0)
         {
-            var va = Assembly.GetExecutingAssembly();
+            try
+            {
+                var va = Assembly.GetExecutingAssembly();
 
-            return Service.HashCalculator.CompushHash(va.Location);
+                return Service.HashCalculator.CompushHash(va.Location);
+            }
+            catch
+            {
+                if (v is 5)
+                {
+                    throw;
+                }
+                v++;
+                return ev_AssemblyAc(v);
+            }
         }
 
         public static async Task<ApiResponse?> ConfigureVersionCheck(string frpVersion)
@@ -566,16 +588,24 @@ namespace OpenFrp.Launcher
                                                 {
                                                     if (TaskBarIcon is not null)
                                                     {
-                                                        TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
-                                                            icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
+                                                        try
+                                                        {
+                                                            TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
+                                                                icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
+                                                        }
+                                                        catch { }
                                                     }
                                                 }
                                             }
                                             else if (TaskBarIcon is not null &&
                                                 Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
                                             {
-                                                TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
-                                                    icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
+                                                try
+                                                {
+                                                    TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
+                                                        icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
+                                                }
+                                                catch { }
                                             }
                                             break;
                                         };
@@ -618,15 +648,23 @@ namespace OpenFrp.Launcher
                                                 {
                                                     if (TaskBarIcon is not null)
                                                     {
-                                                        TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
-                                                            icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                                        try
+                                                        {
+                                                            TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
+                                                                icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                                        }
+                                                        catch { }
                                                     }
                                                 }
                                             }
                                             else if (TaskBarIcon is not null && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
                                             {
-                                                TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
-                                                    icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                                try
+                                                {
+                                                    TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
+                                                        icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                                }
+                                                catch { }
                                             }
                                             break;
                                         }
@@ -658,7 +696,14 @@ namespace OpenFrp.Launcher
                 WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create("offService"));
                 await Task.Delay(1000).ContinueWith(delegate
                 {
-                    if (ServiceProcess.HasExited)
+                    try
+                    {
+                        if (ServiceProcess.HasExited)
+                        {
+                            ConfigureProcess();
+                        }
+                    }
+                    catch
                     {
                         ConfigureProcess();
                     }

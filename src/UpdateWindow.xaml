@@ -8,7 +8,7 @@
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:view="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:viewmodel="clr-namespace:OpenFrp.Launcher.ViewModels"
-    Title="UpdateWindow"
+    Title="OpenFrp 更新窗口"
     Width="800"
     Height="475"
     ui:TitleBar.ExtendViewIntoTitleBar="True"

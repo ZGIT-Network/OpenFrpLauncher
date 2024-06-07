@@ -308,7 +308,11 @@ namespace OpenFrp.Launcher.ViewModels
 
                 Properties.Settings.Default.ApplicationTheme = (ModernWpf.ElementTheme)App.Current.MainWindow.GetValue(ModernWpf.ThemeManager.RequestedThemeProperty);
                 Properties.Settings.Default.ApplicationBackdrop = (ModernWpf.Controls.Primitives.BackdropType)App.Current.MainWindow.GetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty);
-                Properties.Settings.Default.Save();
+                try
+                {
+                    Properties.Settings.Default.Save();
+                }
+                catch { }
 
                 if (Debugger.IsAttached) return;
 

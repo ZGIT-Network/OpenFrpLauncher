@@ -239,14 +239,18 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                         else
                         {
-                            if (Environment.OSVersion.Version.Major is 10 && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
+                            try
                             {
-                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
+                                if (Environment.OSVersion.Version.Major is 10 && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
+                                {
+                                    Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
+                                }
+                                else if (Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
+                                {
+                                    App.TaskBarIcon.ClearNotifications();
+                                }
                             }
-                            else if (Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
-                            {
-                                App.TaskBarIcon.ClearNotifications();
-                            }
+                            catch { }
 
                             OnlineTunnels.Remove(tunnel.Id);
                         }

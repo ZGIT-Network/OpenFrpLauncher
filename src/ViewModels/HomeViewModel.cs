@@ -46,22 +46,22 @@ namespace OpenFrp.Launcher.ViewModels
             }
             event_LoadAdSenceCommand.Execute(null);
 
-            cancellationToken = new CancellationTokenSource();
+            //cancellationToken = new CancellationTokenSource();
 
-            _ = Task.Run(async () =>
-            {
-                while (!cancellationToken.Token.IsCancellationRequested)
-                {
-                    await Task.Delay(2500);
+            //_ = Task.Run(async () =>
+            //{
+            //    while (!cancellationToken.Token.IsCancellationRequested)
+            //    {
+            //        await Task.Delay(2500);
 
-                    if (!flag) event_ActiveNextPage();
+            //        if (!flag) event_ActiveNextPage();
 
-                    flag = false;
-                }
-            }, cancellationToken.Token);
+            //        flag = false;
+            //    }
+            //}, cancellationToken.Token);
         }
 
-        private readonly CancellationTokenSource cancellationToken;
+        //private readonly CancellationTokenSource cancellationToken;
 
         [ObservableProperty]
         private Awe.Model.OpenFrp.Response.Data.UserInfo userInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
@@ -264,34 +264,53 @@ namespace OpenFrp.Launcher.ViewModels
             },
         };
 
-        [RelayCommand]
-        private void @event_PageUnloaded() => cancellationToken.Cancel();
+        //[RelayCommand]
+        //private void @event_PageUnloaded() => cancellationToken.Cancel();
 
-        [RelayCommand]
-        private void @event_ActiveNextPage()
-        {
-            if (AdSences.Count <= PhIndex + 1)
-            {
-                PhIndex = 0;
-            }
-            else PhIndex += 1;
+        //[RelayCommand]
+        //private void @event_ActiveNextPage()
+        //{
+        //    if (AdSences.Count <= PhIndex + 1)
+        //    {
+        //        PhIndex = 0;
+        //    }
+        //    else PhIndex += 1;
 
-            flag = true;
-        }
+        //    flag = true;
+        //}
 
-        private bool flag;
+        //private bool flag;
 
-        [RelayCommand]
-        private void @event_ActiveAbovePage()
-        {
+        //[RelayCommand]
+        //private void @event_ActiveAbovePage()
+        //{
             
-            if (PhIndex is 0)
-            {
-                PhIndex = AdSences.Count;
-            }
-            PhIndex -= 1;
+        //    if (PhIndex is 0)
+        //    {
+        //        PhIndex = AdSences.Count;
+        //    }
+        //    PhIndex -= 1;
 
-            flag = true;
-        }
+        //    flag = true;
+        //}
+
+        [ObservableProperty]
+        private string[] papad = new string[]
+        {
+            "正@微信",
+            "活着不玩不如死@微信",
+            "lck@微信",
+            "SP@微信",
+            "此用户不想起昵称@微信",
+            "十一[秋叶]@微信",
+            "洪平[西瓜]@微信",
+            "慢热@微信",
+            "胡俊杰@微信",
+            "[鲨鱼]@微信",
+            "Anoxia.@微信",
+            "三更居@微信",
+            "佳[鼠]@微信",
+            "星光@微信"
+        };
     }
 }

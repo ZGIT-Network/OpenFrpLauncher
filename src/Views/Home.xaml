@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
-    d:DesignHeight="1170"
+    d:DesignHeight="1515"
     d:DesignWidth="855"
     mc:Ignorable="d">
     <behavior:Interaction.Triggers>
@@ -50,7 +50,31 @@
                     Margin="0,0,0,-56"
                     VerticalAlignment="Top"
                     Background="Transparent">
-                    <Grid x:Name="RewWidth" />
+                    <Border
+                        Width="{Binding ActualWidth, ElementName=RewWidth, Mode=OneWay}"
+                        Height="425"
+                        VerticalAlignment="Top"
+                        Opacity="1"
+                        RenderTransformOrigin=".5,.5">
+                        <Border.RenderTransform>
+                            <TranslateTransform X="0" />
+                        </Border.RenderTransform>
+                        <Border.Background>
+                            <ImageBrush
+                                AlignmentY="Top"
+                                ImageSource="../Resources/Images/wallhaven-28ldd9_1920x1080.png"
+                                Stretch="UniformToFill" />
+                        </Border.Background>
+                        <Border.OpacityMask>
+                            <LinearGradientBrush StartPoint="0,0.5" EndPoint="0,1">
+                                <GradientStop Offset=".75" Color="#00000000" />
+                                <GradientStop Offset=".45" Color="#15000000" />
+                                <GradientStop Offset=".45" Color="#20000000" />
+                                <GradientStop Color="Black" />
+                            </LinearGradientBrush>
+                        </Border.OpacityMask>
+                    </Border>
+                    <!--<Grid x:Name="RewWidth" />
                     <ui:FlipView
                         x:Name="vier"
                         Height="450"
@@ -90,8 +114,8 @@
                                 </Border>
                             </DataTemplate>
                         </ui:FlipView.ItemTemplate>
-                    </ui:FlipView>
-                    <Border
+                    </ui:FlipView>-->
+                    <!--<Border
                         Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
                         MaxWidth="1200"
                         Padding="24,128,36,92"
@@ -154,13 +178,13 @@
                                 </ui:SimpleStackPanel>
                             </awe:VisibilityTranstion>
                         </Grid>
-                    </Border>
+                    </Border>-->
                 </Grid>
 
                 <Border
                     Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
                     MaxWidth="1200"
-                    Margin="0,-24,0,0"
+                    Margin="0,-256,0,0"
                     Padding="36,4,36,40"
                     HorizontalAlignment="Center">
 
@@ -326,18 +350,42 @@
                                     FontFamily="{StaticResource Montserrat}"
                                     FontWeight="Medium"
                                     Foreground="{DynamicResource AweAppGoldenColor}"
-                                    Text="Preview 32" />
+                                    Text="Preview 35" />
                                 <Run Text=" (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: " />
                                 <Run
                                     FontFamily="{StaticResource Montserrat}"
                                     FontWeight="Medium"
                                     Foreground="{DynamicResource AweAppGoldenColor}"
                                     Text="2024SR0589290" />
+                                <LineBreak />
+                                <Run
+                                    FontWeight="Medium"
+                                    Foreground="{DynamicResource AweAppGoldenColor}"
+                                    Text="我们在尝试着一些新特性，若您有意见，欢迎投稿！" />
+                                <LineBreak />
+                                <Run
+                                    FontWeight="Medium"
+                                    Foreground="{DynamicResource AweAppGoldenColor}"
+                                    Text="也同时欢迎您赞助在爱发电上的我们。" />
                             </TextBlock>
                         </WrapPanel>
 
-
-
+                        <TextBlock
+                            Margin="0,0,0,-4"
+                            FontSize="24"
+                            TextWrapping="Wrap">
+                            <Run Text="感谢以下各位赞助作者(越越)的人: " />
+                        </TextBlock>
+                        <ItemsControl Focusable="False" ItemsSource="{Binding Papad, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <awe:SelectableTextBlock
+                                        FontSize="20"
+                                        Foreground="{DynamicResource AweAppGoldenColor}"
+                                        Text="{Binding Mode=OneWay}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                         <TextBlock
                             FontSize="24"
                             Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
