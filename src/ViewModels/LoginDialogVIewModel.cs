@@ -61,7 +61,7 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_CloseDialog()
         {
-            if (taskCompletionSource is { Task.IsCompleted: false})
+            if (taskCompletionSource is { Task.IsCompleted: false })
             {
                 CancellationTokenSource.Cancel();
                 Service.Net.OpenFrp.Logout();
@@ -151,6 +151,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_UseWebMode()
         {
+            Reason = string.Empty;
+            Exception = default;
+
             ws = new LoginWebService();
 
             var code = await ws.WaitForCode.Task;

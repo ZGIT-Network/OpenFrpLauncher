@@ -16,7 +16,6 @@
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     d:DesignHeight="950"
     d:DesignWidth="650"
-    d:Foreground="White"
     mc:Ignorable="d">
     <FrameworkElement.DataContext>
         <vm:SettingsViewModel />
@@ -49,9 +48,10 @@
                     HorizontalAlignment="Center">
                     <ui:SimpleStackPanel Spacing="8">
                         <TextBlock
-                            FontSize="16"
-                            Text="OpenFRP &amp; Natayark OpenID"
-                            TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+                            FontFamily="{StaticResource Montserrat}"
+                            FontSize="18"
+                            FontWeight="Medium"
+                            Text="OpenFRP &amp; Natayark OpenID" />
 
                         <awe:VisibilityTranstion IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
                             <!--  登录 Card  -->
@@ -123,10 +123,7 @@
                             </awe:Resizer>
                         </awe:VisibilityTranstion>
 
-                        <TextBlock
-                            FontSize="16"
-                            Text="外观"
-                            TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+                        <TextBlock FontSize="18" Text="外观" />
 
                         <of:SettingItem Title="主题色" Description="应用显示的主题色">
                             <of:SettingItem.Icon>
@@ -186,9 +183,9 @@
                                         <TextBlock
                                             FontSize="{Binding Value, ElementName=fontSizeBox, Mode=OneWay}"
                                             LineHeight="32"
+                                            TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}"
                                             TextWrapping="Wrap">
-                                            <Run FontSize="18" Text="预览" />
-                                            <LineBreak />
+
                                             <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="2024/1/1 12:00:00" />
                                             <Run
                                                 FontFamily="{StaticResource Montserrat}"
@@ -243,10 +240,7 @@
                                 <ComboBoxItem Content="优化" />
                             </ComboBox>
                         </of:SettingItem>
-                        <TextBlock
-                            FontSize="16"
-                            Text="高级设置"
-                            TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+                        <TextBlock FontSize="18" Text="高级设置" />
                         <of:SettingItem
                             Title="开机自启动"
                             Description="可以在您登录后自动开启启动器。"

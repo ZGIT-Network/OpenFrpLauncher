@@ -159,7 +159,7 @@
                                         ItemsSource="{Binding ProtocolMethod, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=OneWay}"
                                         SelectedValuePath="Title">
                                         <ComboBox.ItemContainerStyle>
-                                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource ResourceKey=DefaultComboBoxItemStyle}">
+                                            <Style BasedOn="{StaticResource ResourceKey=DefaultComboBoxItemStyle}" TargetType="ComboBoxItem">
                                                 <Setter Property="IsEnabled" Value="{Binding IsEnabled, Mode=OneWay}" />
                                             </Style>
                                         </ComboBox.ItemContainerStyle>
@@ -202,8 +202,8 @@
                                     <ui:NumberBox
                                         x:Name="LocalPortInput"
                                         Grid.Row="3"
-                                        Grid.Column="0"
-                                        Margin="0,8,4,8"
+                                        Grid.Column="1"
+                                        Margin="4,8,4,8"
                                         ui:ControlHelper.Header="本地端口"
                                         AutomationProperties.Name="本地端口"
                                         Maximum="65535"
@@ -215,8 +215,8 @@
                                     <ui:NumberBox
                                         x:Name="RemotePortInput"
                                         Grid.Row="3"
-                                        Grid.Column="1"
-                                        Margin="4,8,0,8"
+                                        Grid.Column="0"
+                                        Margin="0,8,0,8"
                                         ui:ControlHelper.Header="远程端口"
                                         AutomationProperties.Name="远程端口"
                                         IsEnabled="{TemplateBinding IsCreateMode}"
@@ -225,7 +225,10 @@
                                         PlaceholderText="25565"
                                         ScrollViewer.PanningMode="None"
                                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                        Value="{Binding Tunnel.RemotePort, UpdateSourceTrigger=LostFocus, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
+                                        Value="{Binding Tunnel.RemotePort, NotifyOnValidationError=True, ValidatesOnExceptions=True, UpdateSourceTrigger=LostFocus, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
+                                        <Validation.ErrorTemplate>
+                                            <ControlTemplate />
+                                        </Validation.ErrorTemplate>
                                         <ui:NumberBox.Suffix>
                                             <Button
                                                 x:Name="RandomRemotePort"

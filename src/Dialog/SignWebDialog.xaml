@@ -31,6 +31,9 @@
         <behavior:EventTrigger EventName="PrimaryButtonClick">
             <behavior:InvokeCommandAction Command="{Binding event_DialogRefreshRequestCommand}" PassEventArgsToCommand="True" />
         </behavior:EventTrigger>
+        <behavior:EventTrigger EventName="CloseButtonClick">
+            <behavior:InvokeCommandAction Command="{Binding event_DialogCancelCommand}" PassEventArgsToCommand="True" />
+        </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <Grid Width="500">
         <awe:VisibilityTranstion Height="280" IsDisplay="{Binding TabIndex, Converter={StaticResource EqualConverter}, ConverterParameter='0', Mode=OneWay}">

@@ -54,9 +54,24 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "OpenFrpLauncher.v100.PorhorMesuker";
+        public static string VersionString { get; } = "OpenFrpLauncher.v100.RowcurGemmagu";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
+
+        private static Properties.Settings Settings 
+        { 
+            get
+            {
+                try
+                {
+                    return OpenFrp.Launcher.Properties.Settings.Default;
+                }
+                catch
+                {
+                    throw;
+                }
+            } 
+        }
 
 #pragma warning disable CS8618
         public static H.NotifyIcon.TaskbarIcon TaskBarIcon { get; set; }
@@ -91,7 +106,7 @@ namespace OpenFrp.Launcher
                 {
                     MessageBox.Show(ex.ToString());
                 }
-                OpenFrp.Launcher.Properties.Settings.Default.Reset();
+                Settings.Reset();
                 try
                 {
                     File.Delete(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
@@ -151,11 +166,11 @@ namespace OpenFrp.Launcher
             }
             try
             {
-                Launcher.Properties.Settings.Default.Reload();
+                Settings.Reload();
             }
             catch
             {
-                OpenFrp.Launcher.Properties.Settings.Default.Reset();
+                Settings.Reset();
                 try
                 {
                     File.Delete(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath);
@@ -169,9 +184,9 @@ namespace OpenFrp.Launcher
                     Environment.Exit(0);
                     return;
                 }
-                if (Launcher.Properties.Settings.Default.NotifyMode is NotifyMode.NotifyIconDefault)
+                if (Settings.NotifyMode is NotifyMode.NotifyIconDefault)
                 {
-                    Launcher.Properties.Settings.Default.NotifyMode = NotifyMode.Toast;
+                    Settings.NotifyMode = NotifyMode.Toast;
                 }
             }
             try
@@ -276,8 +291,8 @@ namespace OpenFrp.Launcher
 
         private static bool IsAdministrator()
         {
-            System.Security.Principal.WindowsIdentity identity = WindowsIdentity.GetCurrent();
-            System.Security.Principal.WindowsPrincipal principal = new WindowsPrincipal(identity);
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
@@ -303,7 +318,7 @@ namespace OpenFrp.Launcher
         {
             ClearToast();
 
-            OpenFrp.Launcher.Properties.Settings.Default.UserAuthorization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz");
+            Settings.UserAuthorization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz");
         }
 
         private static async void ConfigureAppCenter()
@@ -549,7 +564,7 @@ namespace OpenFrp.Launcher
                                 {
                                     case Service.Proto.Response.NotiflyStreamState.LaunchSuccess:
                                         {
-                                            if (Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Disable) break;
+                                            if (Settings.NotifyMode is Model.NotifyMode.Disable) break;
 
                                             var sb = new StringBuilder();
 
@@ -560,7 +575,7 @@ namespace OpenFrp.Launcher
                                                     sb.Append(item + ",");
                                                 }
                                             }
-                                            if (Environment.OSVersion.Version.Major is 10 && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
+                                            if (Environment.OSVersion.Version.Major is 10 && Settings.NotifyMode is Model.NotifyMode.Toast)
                                             {
                                                 try
                                                 {
@@ -598,7 +613,7 @@ namespace OpenFrp.Launcher
                                                 }
                                             }
                                             else if (TaskBarIcon is not null &&
-                                                Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
+                                                Settings.NotifyMode is Model.NotifyMode.NotifyIcon)
                                             {
                                                 try
                                                 {
@@ -627,7 +642,7 @@ namespace OpenFrp.Launcher
                                     case Service.Proto.Response.NotiflyStreamState.LaunchFailed:
                                         {
                                             if (Environment.OSVersion.Version.Major is 10 &&
-                                                Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
+                                                Settings.NotifyMode is Model.NotifyMode.Toast)
                                             {
                                                 try
                                                 {
@@ -657,7 +672,7 @@ namespace OpenFrp.Launcher
                                                     }
                                                 }
                                             }
-                                            else if (TaskBarIcon is not null && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
+                                            else if (TaskBarIcon is not null && Settings.NotifyMode is Model.NotifyMode.NotifyIcon)
                                             {
                                                 try
                                                 {
@@ -798,13 +813,13 @@ namespace OpenFrp.Launcher
                                         var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
                                         if (resp.IsSuccess && resp.Data is { UserLogon: true })
                                         {
-                                            OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                                            Settings.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
                                         }
                                         if (Environment.OSVersion.Version.Major is 10)
                                         {
                                             Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
                                         }
-                                        OpenFrp.Launcher.Properties.Settings.Default.Save();
+                                        Settings.Save();
                                         if (!string.IsNullOrEmpty(App.WebViewTemplatePath) && Directory.Exists(App.WebViewTemplatePath))
                                         {
                                             try { Directory.Delete(App.WebViewTemplatePath, true); } catch { }
@@ -830,10 +845,10 @@ namespace OpenFrp.Launcher
                                         var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
                                         if (resp.IsSuccess && resp.Data is { UserLogon: true })
                                         {
-                                            OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                                            Settings.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
                                         }
 
-                                        OpenFrp.Launcher.Properties.Settings.Default.Save();
+                                        Settings.Save();
 
 
                                         if (Environment.OSVersion.Version.Major is 10)
@@ -912,13 +927,14 @@ namespace OpenFrp.Launcher
                 e.Cancel = true;
 
                 App.Current!.MainWindow.Visibility = Visibility.Hidden;
+
                 var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
                 if (resp.IsSuccess && resp.Data is { UserLogon: true })
                 {
-                    OpenFrp.Launcher.Properties.Settings.Default.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                    Settings.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
                 }
 
-                OpenFrp.Launcher.Properties.Settings.Default.Save();
+                Settings.Save();
 
 
                 if (Environment.OSVersion.Version.Major is 10)
@@ -970,15 +986,15 @@ namespace OpenFrp.Launcher
 
             if (wind is null) { App.Current?.Shutdown(); return; }
 
-            //var useLightMode = OpenFrp.Launcher.Properties.Settings.Default.ApplicationTheme;
+            //var useLightMode = Settings.ApplicationTheme;
 
-            if (Launcher.Properties.Settings.Default.FontFamily is null)
+            if (Settings.FontFamily is null)
             {
-                Launcher.Properties.Settings.Default.FontFamily = new FontFamily("Microsoft YaHei UI");
+                Settings.FontFamily = new FontFamily("Microsoft YaHei UI");
             }
 
-            wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, OpenFrp.Launcher.Properties.Settings.Default.ApplicationTheme);
-            if (OpenFrp.Launcher.Properties.Settings.Default.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
+            wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, Settings.ApplicationTheme);
+            if (Settings.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
             {
                 wind.SetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty, backdrop);
             }
@@ -990,7 +1006,7 @@ namespace OpenFrp.Launcher
 
             //if (Environment.OSVersion.Version.Major is 10)
             //{
-            //    if (OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme)
+            //    if (Settings.FollowSystemTheme)
             //    {
             //        try
             //        {
@@ -1008,7 +1024,7 @@ namespace OpenFrp.Launcher
             //        }
             //    }
             //}
-            //else OpenFrp.Launcher.Properties.Settings.Default.FollowSystemTheme = false;
+            //else Settings.FollowSystemTheme = false;
             //RefreshApplicationTheme(wind, useLightMode);
 
         }
@@ -1035,50 +1051,47 @@ namespace OpenFrp.Launcher
         {
             try
             {
-                //string da_sisseTaqeeveLesi = Encoding.UTF8.GetString(Launcher.PndCodec.Descrypt(OpenFrp.Launcher.Properties.Settings.Default.UserPwnRedirectUrl));
+                //string da_sisseTaqeeveLesi = Encoding.UTF8.GetString(Launcher.PndCodec.Descrypt(Settings.UserPwnRedirectUrl));
 
-                if (string.IsNullOrEmpty(OpenFrp.Launcher.Properties.Settings.Default.UserPwn))
+                if (!string.IsNullOrEmpty(Settings.UserPwn))
                 {
-                    throw default!;
-                }
-                //await @event_NowterTrojeMoumeanu_AutoLoginCode(OpenFrp.Launcher.Properties.Settings.Default.UserPwn, da_sisseTaqeeveLesi);
-                var ot = JsonSerializer.Deserialize<Awe.Model.OAuth.Request.LoginRequest>(OpenFrp.Launcher.Properties.Settings.Default.UserPwn);
-                if (ot is { } c && !string.IsNullOrEmpty(c.Password))
-                {
-                    var pwn = Encoding.UTF8.GetString(Launcher.PndCodec.Descrypt(c.Password!));
-
-                    var fallbackTask = new TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>();
-
-                    var mwn = new ViewModels.LoginDialogVIewModel()
+                    //await @event_NowterTrojeMoumeanu_AutoLoginCode(Settings.UserPwn, da_sisseTaqeeveLesi);
+                    var ot = JsonSerializer.Deserialize<Awe.Model.OAuth.Request.LoginRequest>(Settings.UserPwn);
+                    if (ot is { } c && !string.IsNullOrEmpty(c.Password))
                     {
-                        Username = c.Username,
-                        Password = pwn,
-                        taskCompletionSource = fallbackTask
-                    };
+                        var pwn = Encoding.UTF8.GetString(Launcher.PndCodec.Descrypt(c.Password!));
 
+                        var fallbackTask = new TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>();
 
-
-                    await mwn.event_LoginCommand.ExecuteAsync(null);
-
-                    if (string.IsNullOrEmpty(mwn.Reason))
-                    {
-                        if (await fallbackTask.Task is { } info)
+                        var mwn = new ViewModels.LoginDialogVIewModel()
                         {
-                            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(info));
+                            Username = c.Username,
+                            Password = pwn,
+                            taskCompletionSource = fallbackTask
+                        };
+
+                        await mwn.event_LoginCommand.ExecuteAsync(null);
+
+                        if (string.IsNullOrEmpty(mwn.Reason))
+                        {
+                            if (await fallbackTask.Task is { } info)
+                            {
+                                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(info));
+                            }
                         }
-                        // success
                     }
                 }
             }
-            catch
+            catch { }
+            try
             {
-                if (!string.IsNullOrEmpty(OpenFrp.Launcher.Properties.Settings.Default.UserAuthorization))
+                if (!string.IsNullOrEmpty(Settings.UserAuthorization))
                 {
-                    HttpRequest.CreateAuthorization("of-dev-api.bfsea.xyz", OpenFrp.Launcher.Properties.Settings.Default.UserAuthorization);
+                    HttpRequest.CreateAuthorization("of-dev-api.bfsea.xyz", Settings.UserAuthorization);
 
                     var openfrpUserinfo = await OpenFrp.Service.Net.OpenFrp.GetUserInfo();
 
-                    if (openfrpUserinfo is { Exception: null,StatusCode: HttpStatusCode.OK,Data: UserInfo userInfo } &&
+                    if (openfrpUserinfo is { Exception: null, StatusCode: HttpStatusCode.OK, Data: UserInfo userInfo } &&
                         userInfo != null)
                     {
                         // finish
@@ -1099,6 +1112,7 @@ namespace OpenFrp.Launcher
                     }
                 }
             }
+            catch { }
         }
 
         private static T CreateObject<T>(Action<T>? func = default, params object[] args)

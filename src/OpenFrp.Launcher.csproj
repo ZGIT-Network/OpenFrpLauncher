@@ -23,9 +23,9 @@
 	<ItemGroup>
 	  <None Remove="Resources\desktop.ico" />
 	  <None Remove="Resources\Images\hsccode.jpg" />
+	  <None Remove="Resources\Images\pexels-joyston-judah-331625-933054.jpg" />
 	  <None Remove="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <None Remove="Resources\Images\UI_EmotionIcon69.png" />
-	  <None Remove="Resources\Images\wallhaven-28ldd9_1920x1080.png" />
 	  <None Remove="Resources\Lexend.ttf" />
 	  <None Remove="Resources\loginBackground.png" />
 	  <None Remove="Resources\Montserrat-VariableFont_wght.ttf" />
@@ -76,9 +76,9 @@
 	<ItemGroup>
 	  <Resource Include="Resources\desktop.ico" />
 	  <Resource Include="Resources\Images\hsccode.jpg" />
+	  <Resource Include="Resources\Images\pexels-joyston-judah-331625-933054.jpg" />
 	  <Resource Include="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <Resource Include="Resources\Images\UI_EmotionIcon69.png" />
-	  <Resource Include="Resources\Images\wallhaven-28ldd9_1920x1080.png" />
 	  <Resource Include="Resources\Lexend.ttf" />
 	  <Resource Include="Resources\Montserrat.ttf" />
 	  <Resource Include="Resources\SignWebView\index.html" />

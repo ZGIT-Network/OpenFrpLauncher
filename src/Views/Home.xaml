@@ -14,11 +14,11 @@
     d:DesignHeight="1515"
     d:DesignWidth="855"
     mc:Ignorable="d">
-    <behavior:Interaction.Triggers>
+    <!--<behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Unloaded">
             <behavior:InvokeCommandAction Command="{Binding event_PageUnloadedCommand}" />
         </behavior:EventTrigger>
-    </behavior:Interaction.Triggers>
+    </behavior:Interaction.Triggers>-->
     <ui:Page.Resources>
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
         <converter:EqualConverter x:Key="EqualConverter" />
@@ -47,12 +47,12 @@
 
             <ui:SimpleStackPanel Margin="0,0,0,0" Spacing="8">
                 <Grid
+                    x:Name="bg"
                     Margin="0,0,0,-56"
                     VerticalAlignment="Top"
                     Background="Transparent">
                     <Border
-                        Width="{Binding ActualWidth, ElementName=RewWidth, Mode=OneWay}"
-                        Height="425"
+                        Height="725"
                         VerticalAlignment="Top"
                         Opacity="1"
                         RenderTransformOrigin=".5,.5">
@@ -61,130 +61,26 @@
                         </Border.RenderTransform>
                         <Border.Background>
                             <ImageBrush
-                                AlignmentY="Top"
-                                ImageSource="../Resources/Images/wallhaven-28ldd9_1920x1080.png"
+                                AlignmentY="Bottom"
+                                ImageSource="../Resources/Images/pexels-joyston-judah-331625-933054.jpg"
                                 Stretch="UniformToFill" />
                         </Border.Background>
                         <Border.OpacityMask>
                             <LinearGradientBrush StartPoint="0,0.5" EndPoint="0,1">
                                 <GradientStop Offset=".75" Color="#00000000" />
-                                <GradientStop Offset=".45" Color="#15000000" />
-                                <GradientStop Offset=".45" Color="#20000000" />
+                                <GradientStop Offset=".60" Color="#10000000" />
+                                <GradientStop Offset=".55" Color="#20000000" />
                                 <GradientStop Color="Black" />
                             </LinearGradientBrush>
                         </Border.OpacityMask>
                     </Border>
-                    <!--<Grid x:Name="RewWidth" />
-                    <ui:FlipView
-                        x:Name="vier"
-                        Height="450"
-                        Background="Transparent"
-                        BannerOpacity="0"
-                        CircularNavigation="True"
-                        Focusable="False"
-                        IsHitTestVisible="False"
-                        IsNavigationEnabled="False"
-                        ItemsSource="{Binding AdSences}"
-                        SelectedIndex="{Binding PhIndex, Mode=OneWay}">
-                        <ui:FlipView.ItemTemplate>
-                            <DataTemplate>
-                                <Border
-                                    Width="{Binding ActualWidth, ElementName=RewWidth, Mode=OneWay}"
-                                    Height="425"
-                                    VerticalAlignment="Top"
-                                    Opacity="1"
-                                    RenderTransformOrigin=".5,.5">
-                                    <Border.RenderTransform>
-                                        <TranslateTransform X="0" />
-                                    </Border.RenderTransform>
-                                    <Border.Background>
-                                        <ImageBrush
-                                            AlignmentY="Top"
-                                            ImageSource="{Binding UU, Mode=OneWay}"
-                                            Stretch="UniformToFill" />
-                                    </Border.Background>
-                                    <Border.OpacityMask>
-                                        <LinearGradientBrush StartPoint="0,0.5" EndPoint="0,1">
-                                            <GradientStop Offset=".75" Color="#00000000" />
-                                            <GradientStop Offset=".55" Color="#10000000" />
-                                            <GradientStop Offset=".45" Color="#20000000" />
-                                            <GradientStop Color="Black" />
-                                        </LinearGradientBrush>
-                                    </Border.OpacityMask>
-                                </Border>
-                            </DataTemplate>
-                        </ui:FlipView.ItemTemplate>
-                    </ui:FlipView>-->
-                    <!--<Border
-                        Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
-                        MaxWidth="1200"
-                        Padding="24,128,36,92"
-                        VerticalAlignment="Bottom">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <ui:HyperlinkButton
-                                Grid.Column="0"
-                                Padding="0"
-                                AutomationProperties.Name="打开链接"
-                                NavigateUri="{Binding SelectedValue.Url, ElementName=vier}">
-                                <ui:SimpleStackPanel Margin="12,8" Spacing="2">
-                                    <TextBlock
-                                        FontSize="30"
-                                        FontWeight="Normal"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
-                                        Text="{Binding SelectedValue.Title, ElementName=vier}" />
-                                    <TextBlock
-                                        MaxWidth="650"
-                                        HorizontalAlignment="Left"
-                                        FontSize="24"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                                        TextWrapping="Wrap">
-                                        <Run Text="{Binding SelectedValue.Description, ElementName=vier}" />
 
-
-                                    </TextBlock>
-                                </ui:SimpleStackPanel>
-                            </ui:HyperlinkButton>
-
-                            <awe:VisibilityTranstion
-                                Grid.Column="1"
-                                Margin="0,0,0,16"
-                                VerticalAlignment="Bottom"
-                                IsDisplay="{Binding AdSences.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='1', Mode=OneWay}">
-
-
-                                <ui:SimpleStackPanel Orientation="Horizontal" Spacing="6">
-                                    <Button
-                                        Padding="0"
-                                        AutomationProperties.Name="上一张"
-                                        Command="{Binding event_ActiveAbovePageCommand}">
-                                        <ui:FontIcon
-                                            Margin="6"
-                                            FontSize="18"
-                                            Glyph="&#xE973;" />
-                                    </Button>
-                                    <Button
-                                        Padding="0"
-                                        AutomationProperties.Name="下一张"
-                                        Command="{Binding event_ActiveNextPageCommand}">
-                                        <ui:FontIcon
-                                            Margin="6"
-                                            FontSize="18"
-                                            Glyph="&#xE974;" />
-                                    </Button>
-                                </ui:SimpleStackPanel>
-                            </awe:VisibilityTranstion>
-                        </Grid>
-                    </Border>-->
                 </Grid>
 
                 <Border
                     Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
                     MaxWidth="1200"
-                    Margin="0,-256,0,0"
+                    Margin="0,-348,0,0"
                     Padding="36,4,36,40"
                     HorizontalAlignment="Center">
 
@@ -297,44 +193,77 @@
                         </awe:VisibilityTranstion>
                     </Grid>-->
                     <ui:SimpleStackPanel Spacing="8">
+                        <!--<ui:AcrylicPanel TintOpacity="0.4" Amount="40" Height="100" Target="{Binding RelativeSource={RelativeSource AncestorType=ui:ScrollViewerEx},Mode=OneWay}"/>-->
+                        <awe:VisibilityTranstion IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
+                            <awe:Resizer>
+                                <awe:Resizer.EasingFunction>
+                                    <QuarticEase EasingMode="EaseOut" />
+                                </awe:Resizer.EasingFunction>
+                                <Border
+                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
 
-                        <awe:VisibilityTranstion Margin="0,0,0,0" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
-                            <ui:SimpleStackPanel>
-                                <ui:CommandBar
-                                    Margin="0,0,0,0"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Bottom">
-                                    <ui:AppBarButton
-                                        Command="{Binding event_CallUpSignCommand}"
-                                        Icon="Calendar"
-                                        IsEnabled="{Binding IsSigned, Converter={StaticResource RollbackConverter}, Mode=OneWay}"
-                                        Label="签到(WebView)" />
-                                    <ui:AppBarButton
-                                        Command="{Binding event_OpenOpenFrpWebsiteCommand}"
-                                        Icon="Globe"
-                                        Label="打开网页版" />
 
-                                </ui:CommandBar>
-                                <ItemsControl
-                                    Focusable="False"
-                                    ItemsSource="{Binding UserInfoViewContainer}"
-                                    TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Padding="0,0,10,4">
-                                                <Run FontSize="18" Text="{Binding Title, Mode=OneWay}" />
-                                                <LineBreak />
-                                                <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" FontSize="16" />
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ui:SimpleStackPanel>
+                                    <Grid>
+                                        <ui:AcrylicPanel
+                                            ui:ClipHelper.CornerRadius="6"
+                                            Amount="40"
+                                            NoiseOpacity=".03"
+                                            Target="{Binding ElementName=bg}"
+                                            TintOpacity=".45" />
+
+                                        <ui:SimpleStackPanel Margin="16">
+                                            <Grid>
+                                                <TextBlock
+                                                    Margin="8,0,0,4"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource Montserrat}"
+                                                    FontSize="22"
+                                                    FontWeight="Medium"
+                                                    Text="{Binding UserInfo.UserName}" />
+                                                <ui:CommandBar
+                                                    Margin="0,0,0,0"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Bottom">
+                                                    <ui:AppBarButton
+                                                        Command="{Binding event_CallUpSignCommand}"
+                                                        Icon="Calendar"
+                                                        Label="签到(WebView)" />
+                                                    <ui:AppBarButton
+                                                        Command="{Binding event_OpenOpenFrpWebsiteCommand}"
+                                                        Icon="Globe"
+                                                        Label="打开网页版" />
+
+                                                </ui:CommandBar>
+
+                                            </Grid>
+                                            <ItemsControl
+                                                Margin="4,8,4,4"
+                                                Focusable="False"
+                                                ItemsSource="{Binding UserInfoViewContainer}"
+                                                TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Padding="0,0,10,4">
+                                                            <Run FontSize="18" Text="{Binding Title, Mode=OneWay}" />
+                                                            <LineBreak />
+                                                            <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" FontSize="16" />
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ui:SimpleStackPanel>
+
+                                    </Grid>
+                                </Border>
+                            </awe:Resizer>
                         </awe:VisibilityTranstion>
                         <WrapPanel>
                             <Image
@@ -350,7 +279,7 @@
                                     FontFamily="{StaticResource Montserrat}"
                                     FontWeight="Medium"
                                     Foreground="{DynamicResource AweAppGoldenColor}"
-                                    Text="Preview 35" />
+                                    Text="Preview 40" />
                                 <Run Text=" (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: " />
                                 <Run
                                     FontFamily="{StaticResource Montserrat}"
@@ -380,6 +309,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <awe:SelectableTextBlock
+                                        HorizontalAlignment="Left"
                                         FontSize="20"
                                         Foreground="{DynamicResource AweAppGoldenColor}"
                                         Text="{Binding Mode=OneWay}" />

@@ -20,6 +20,7 @@
     d:DesignHeight="768"
     d:DesignWidth="1366"
     d:Foreground="White"
+    CloseButtonCommand="{Binding event_CloseDialogCommand}"
     CloseButtonText="关闭"
     DefaultButton="Primary"
     PrimaryButtonText="登录"
@@ -57,8 +58,8 @@
 
             <Grid
                 Grid.Row="0"
-                Height="200"
-                Margin="0,0,0,36"
+                Height="250"
+                Margin="0,0,0,8"
                 VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
@@ -80,10 +81,31 @@
                                     Path="event_UseWebModeCommand.IsRunning" />
                             </MultiBinding>
                         </awe:VisibilityTranstion.IsDisplay>
-                        <ui:SimpleStackPanel Spacing="12">
-                            <TextBox ui:ControlHelper.Header="账户" Text="{Binding Username}" />
-                            <PasswordBox hv:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" ui:ControlHelper.Header="密码" />
-                        </ui:SimpleStackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ui:SimpleStackPanel Spacing="12">
+                                <TextBox ui:ControlHelper.PlaceholderText="账户名/邮箱" ui:ControlHelper.Header="账户" Text="{Binding Username}" />
+                                <PasswordBox ui:ControlHelper.PlaceholderText="(注意大小写)" hv:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" ui:ControlHelper.Header="密码" />
+
+                            </ui:SimpleStackPanel>
+                            <ui:HyperlinkButton
+                                Grid.Row="1"
+                                Margin="0,0,0,0"
+                                AutomationProperties.Name="尝试使用网页快速登录"
+                                Command="{Binding event_UseWebModeCommand}">
+                                <ui:SimpleStackPanel
+                                    Margin="4"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <ui:FontIcon Glyph="&#xF103;" />
+                                    <TextBlock Padding="0,1,0,0" Text="尝试使用网页快速登录" />
+                                </ui:SimpleStackPanel>
+                            </ui:HyperlinkButton>
+                        </Grid>
+
                     </awe:VisibilityTranstion>
                     <awe:VisibilityTranstion>
                         <awe:VisibilityTranstion.IsDisplay>
@@ -110,12 +132,7 @@
                     Grid.Row="0"
                     Grid.Column="1"
                     Margin="8,0,0,0"
-                    Spacing="8">
-                    <Button
-                        Command="{Binding event_UseWebModeCommand}"
-                        Content="尝试使用网页快速登录"
-                        Style="{StaticResource AccentButtonStyle}" />
-                </ui:SimpleStackPanel>
+                    Spacing="8" />
             </Grid>
 
             <awe:VisibilityTranstion Grid.Row="1" IsDisplay="{Binding Reason, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}">

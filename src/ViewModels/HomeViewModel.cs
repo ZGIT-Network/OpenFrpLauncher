@@ -143,7 +143,10 @@ namespace OpenFrp.Launcher.ViewModels
             try { Process.Start("start", "http://console.openfrp.net/"); } catch { }
         }
 
-        [RelayCommand]
+        
+        private bool CanExcuteCallUpSign() => !IsSigned;
+
+        [RelayCommand(CanExecute = nameof(CanExcuteCallUpSign))]
         private async Task @event_CallUpSign()
         {
             var dialog = new Dialog.SignWebDialog();
@@ -178,6 +181,8 @@ namespace OpenFrp.Launcher.ViewModels
                 if ((va - DateTimeOffset.Now.Date).TotalDays < 0)
                 {
                     IsSigned = false;
+
+                    OnPropertyChanged(nameof(IsSigned));
                 }
             }
         }
@@ -185,6 +190,8 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_LoadAdSence()
         {
+            return;
+
             var sence = await OpenFrp.Service.Net.HttpRequest.Get<Awe.Model.OpenFrp.Response.V2Response<OpenFrp.Launcher.Model.AdSence[]>>("https://api.zyghit.cn/zg-adsense/openfrp-lanucher");
 
             if (sence.Data is { } bv && bv.Data?.Length > 0)
@@ -248,6 +255,7 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(event_CallUpSignCommand))]
         private bool isSigned = true;
 
         [ObservableProperty]

@@ -36,13 +36,13 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 _dialog = sw;
 
-                _dialog.Closed += delegate
-                {
-                    if (_dialog.FindName("webViewCore") is WebView2 wv)
-                    {
-                        wv.Dispose();
-                    }
-                };
+                //_dialog.Closed += delegate
+                //{
+                //    if (_dialog.FindName("webViewCore") is WebView2 wv)
+                //    {
+                //        wv.Dispose();
+                //    }
+                //};
             }
             
             
@@ -60,6 +60,19 @@ namespace OpenFrp.Launcher.ViewModels
                 TabIndex = 0;
                 try { wvw.Reload(); } catch { }
             }
+        }
+
+        [RelayCommand]
+        private void @event_DialogCancel(ContentDialogButtonClickEventArgs arg)
+        {
+            arg.Cancel = true;
+
+            if (_dialog?.FindName("webViewCore") is WebView2 wv)
+            {
+                wv.Dispose();
+            }
+
+            _dialog?.Hide();
         }
 
         [RelayCommand]

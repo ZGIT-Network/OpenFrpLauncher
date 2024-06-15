@@ -68,7 +68,6 @@ namespace OpenFrp.Launcher.Controls
                 {
                     Type = "tcp",
                     Host = "127.0.0.1",
-                    Port = 25565
                 },
                 DefaultUpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
             });
@@ -227,6 +226,17 @@ namespace OpenFrp.Launcher.Controls
                         }
                     }
                 };
+            }
+            if (GetTemplateChild("RemotePortInput") is NumberBox cnb)
+            {
+                Validation.AddErrorHandler(cnb, delegate
+                {
+
+                    Tunnel.RemotePort = NodeInfo.AllowPortRange.GetRandomRemotePort();
+                    RefreshRemotePort();
+
+                    Validation.ClearInvalid(cnb.GetBindingExpression(NumberBox.ValueProperty));
+                });
             }
             if (GetTemplateChild("RandomTunnelName") is Button button)
             {

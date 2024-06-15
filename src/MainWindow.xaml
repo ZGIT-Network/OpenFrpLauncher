@@ -21,13 +21,15 @@
     x:Name="windHost"
     Title="OpenFRP 启动器"
     MinWidth="550"
-    MinHeight="500"
+    MinHeight="500" Width="1200"
+    Height="700"
     d:Background="White"
-    d:DesignHeight="560"
-    d:DesignWidth="1135"
+    d:DesignHeight="595"
+    d:DesignWidth="1190"
     modernwpf:ThemeManager.RequestedTheme="Default"
     modernwpf:TitleBar.ExtendViewIntoTitleBar="True"
     modernwpf:WindowHelper.UseModernWindowStyle="True"
+    WindowStartupLocation="CenterScreen"
     WindowState="Normal"
     mc:Ignorable="d">
     <FrameworkElement.Resources>
