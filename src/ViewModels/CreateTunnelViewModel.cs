@@ -20,23 +20,63 @@ namespace OpenFrp.Launcher.ViewModels
 {
     internal partial class CreateTunnelViewModel : ObservableObject
     {
+        public CreateTunnelViewModel()
+        {
+            WeakReferenceMessenger.Default.UnregisterAll(nameof(CreateTunnelViewModel));
+
+            WeakReferenceMessenger.Default.Register<RouteMessage<CreateTunnelViewModel, string>>(nameof(CreateTunnelViewModel), (_, data) =>
+            {
+                switch (data.Data)
+                {
+                    case "refresh":
+                        {
+                            if (!event_RefreshNodeCollectionCommand.IsRunning && refreshFinish)
+                            {
+                                _ = event_RefreshNodeCollectionCommand.ExecuteAsync(null);
+                            }
+                                
+                            break; 
+                        }
+                }
+            });
+        }
+
         [ObservableProperty]
         private ObservableCollection<NodeInfo>? nodes;
+
+        private bool refreshFinish;
 
         [ObservableProperty]
         private Awe.Model.ApiResponse<Awe.Model.OpenFrp.Response.Data.NodeInfoData>? response;
 
+        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+
+        [RelayCommand]
+        private void @event_LoadedPage(RoutedEventArgs ar)
+        {
+            if (ar.Source is ModernWpf.Controls.Page pg)
+            {
+             
+
+                pg.Unloaded += delegate 
+                { 
+                    _tokenSource.Cancel(); 
+                };
+            }
+        }
+
         [RelayCommand]
         private async Task @event_RefreshNodeCollection()
         {
-            Response = await AppNetwork.OpenFrp.GetNodes();
+            Response = await AppNetwork.OpenFrp.GetNodes(_tokenSource.Token);
 
             if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
                 Response.Data is { List: var list } && list is not null)
             {
-                var nodesStatusResp = await OpenFrp.Service.Net.OpenFrp.GetNodeStatus().WithTimeout(
+                var nodesStatusResp = await OpenFrp.Service.Net.OpenFrp.GetNodeStatus(_tokenSource.Token).WithTimeout(
                     delay: 5000);
 
+                refreshFinish = false;
                 Nodes = new ObservableCollection<NodeInfo>();
 
                 if (App.Current is { Dispatcher: var dispatcher })
@@ -71,6 +111,8 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             foreach (var tunnel in list)
                             {
+                                if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+
                                 if (tunnel.Id is 0) continue;
 
                                 var va = nodesStatusResp.Data.Where(x => { return x.NodeId == tunnel.Id; }).FirstOrDefault();
@@ -88,13 +130,21 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             foreach (var tunnel in list)
                             {
+                                if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+
                                 Nodes.Add(new NodeInfo(tunnel));
 
                                 await Task.Delay(50);
                             }
                         }
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                        refreshFinish = true;
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
                 }
+            }
+            else if (string.IsNullOrEmpty(Response.Message))
+            {
+                Response.Message = Response.Exception?.Message;
+                OnPropertyChanged(nameof(Response));
             }
         }
 

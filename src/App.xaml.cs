@@ -54,7 +54,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "OpenFrpLauncher.v100.RowcurGemmagu";
+        public static string VersionString { get; } = "OpenFrpLauncher.v100.WousiVairyenorPetere";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -265,6 +265,7 @@ namespace OpenFrp.Launcher
                 return;
             }
 
+            
             SetSecureApp();
             ConfigureProcess();
             ConfigureAppCenter();
@@ -298,6 +299,11 @@ namespace OpenFrp.Launcher
 
         private static void SetSecureApp()
         {
+            if (Settings.UseProxy)
+            {
+                OpenFrp.Service.Net.HttpRequest.ProxyEditor(true);
+            }
+
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, errors) =>
             {
@@ -519,27 +525,30 @@ namespace OpenFrp.Launcher
         private static void ConfigureToast()
         {
             if (Environment.OSVersion.Version.Major is not 10) return;
-
-            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.OnActivated += (e) =>
+            try
             {
-                var thread = new Thread(() =>
+                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.OnActivated += (e) =>
                 {
-                    try
+                    var thread = new Thread(() =>
                     {
-                        if (e.Argument.Contains("copy"))
+                        try
                         {
-                            Clipboard.SetText(e.Argument.Split(' ').Last());
+                            if (e.Argument.Contains("copy"))
+                            {
+                                Clipboard.SetText(e.Argument.Split(' ').Last());
+                            }
                         }
-                    }
-                    catch
-                    {
+                        catch
+                        {
 
-                    }
-                });
+                        }
+                    });
 
-                thread.TrySetApartmentState(ApartmentState.STA);
-                thread.Start();
-            };
+                    thread.TrySetApartmentState(ApartmentState.STA);
+                    thread.Start();
+                };
+            }
+            catch { }
         }
 
         private static async void ConfigureRPC()
@@ -641,6 +650,10 @@ namespace OpenFrp.Launcher
                                         }
                                     case Service.Proto.Response.NotiflyStreamState.LaunchFailed:
                                         {
+                                            if (response.TunnelJson.Equals("app.unhandleException"))
+                                            {
+                                                break;
+                                            }
                                             if (Environment.OSVersion.Version.Major is 10 &&
                                                 Settings.NotifyMode is Model.NotifyMode.Toast)
                                             {
@@ -853,7 +866,11 @@ namespace OpenFrp.Launcher
 
                                         if (Environment.OSVersion.Version.Major is 10)
                                         {
-                                            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                                            try
+                                            {
+                                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                                            }
+                                            catch { }
                                         }
                                         try
                                         {
@@ -993,6 +1010,8 @@ namespace OpenFrp.Launcher
                 Settings.FontFamily = new FontFamily("Microsoft YaHei UI");
             }
 
+          
+
             wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, Settings.ApplicationTheme);
             if (Settings.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
             {
@@ -1001,32 +1020,6 @@ namespace OpenFrp.Launcher
 
             var handle = new WindowInteropHelper(wind).EnsureHandle();
             Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
-
-           
-
-            //if (Environment.OSVersion.Version.Major is 10)
-            //{
-            //    if (Settings.FollowSystemTheme)
-            //    {
-            //        try
-            //        {
-            //            var uiSettings = new Windows.UI.ViewManagement.UISettings();
-
-            //            if (IsDarkBackground(uiSettings.GetColorValue(UIColorType.Background)))
-            //            {
-            //                RefreshApplicationTheme(wind, false);
-            //                return;
-            //            }
-            //        }
-            //        catch
-            //        {
-            //            // not support query
-            //        }
-            //    }
-            //}
-            //else Settings.FollowSystemTheme = false;
-            //RefreshApplicationTheme(wind, useLightMode);
-
         }
 
         private static void ConfigureUpdateWindow()
@@ -1051,11 +1044,8 @@ namespace OpenFrp.Launcher
         {
             try
             {
-                //string da_sisseTaqeeveLesi = Encoding.UTF8.GetString(Launcher.PndCodec.Descrypt(Settings.UserPwnRedirectUrl));
-
                 if (!string.IsNullOrEmpty(Settings.UserPwn))
                 {
-                    //await @event_NowterTrojeMoumeanu_AutoLoginCode(Settings.UserPwn, da_sisseTaqeeveLesi);
                     var ot = JsonSerializer.Deserialize<Awe.Model.OAuth.Request.LoginRequest>(Settings.UserPwn);
                     if (ot is { } c && !string.IsNullOrEmpty(c.Password))
                     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,18 +25,30 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public HomeViewModel()
         {
-            if (App.Current?.MainWindow is { DataContext: MainViewModel dx })
-            {
+            if (App.Current?.MainWindow is { DataContext: MainViewModel dx } v)
+            { 
+                if (System.ComponentModel.DesignerProperties.GetIsInDesignMode(v))
+                {
+                    return;
+                } 
                 UserInfo = dx.UserInfo;
+                AvatorFilePath = dx.AvatorFilePath;
 
                 dx.PropertyChanged += (_, e) =>
                 {
-                    if (e.PropertyName is nameof(UserInfo))
+                    switch (e.PropertyName)
                     {
-                        UserInfo = dx.UserInfo;
-                        OnPropertyChanged(nameof(UserInfo));
+                        case nameof(UserInfo):
+                            {
+                                UserInfo = dx.UserInfo;
+                                OnPropertyChanged(nameof(UserInfo));
 
-                        event_RefreshSignStateCommand.Execute(null);
+                                event_RefreshSignStateCommand.Execute(null);
+                            };break;
+                        case nameof(AvatorFilePath):
+                            {
+                                AvatorFilePath = dx.AvatorFilePath;
+                            };break;
                     }
                 };
                 
@@ -44,30 +57,48 @@ namespace OpenFrp.Launcher.ViewModels
                     event_AppRefreshCommand.Execute(null);
                 }
             }
-            event_LoadAdSenceCommand.Execute(null);
+            event_RefreshBoardcastCommand.Execute(null);
+            //event_LoadAdSenceCommand.Execute(null);
+            int h = DateTimeOffset.Now.Hour;
 
-            //cancellationToken = new CancellationTokenSource();
+            if (h >= 0 && h < 5) { HiString = "夜深了,早点睡觉哦,"; }
+            if (h > 5 && h <= 8) { hiString = "早啊,"; }
+            if (h > 9 && h < 12) { hiString = "上午好,"; }
+            if (h >= 12 && h < 18) { hiString = "下午好,"; }
+            if (h > 18 && h < 21) { hiString = "晚上好,"; }
+            if (h > 21 && h <= 24) { hiString = "晚上好,"; }
 
-            //_ = Task.Run(async () =>
-            //{
-            //    while (!cancellationToken.Token.IsCancellationRequested)
-            //    {
-            //        await Task.Delay(2500);
+            WeakReferenceMessenger.Default.UnregisterAll(nameof(HomeViewModel));
 
-            //        if (!flag) event_ActiveNextPage();
-
-            //        flag = false;
-            //    }
-            //}, cancellationToken.Token);
+            WeakReferenceMessenger.Default.Register<RouteMessage<HomeViewModel, string>>(nameof(HomeViewModel), (_, data) =>
+            {
+                switch (data.Data)
+                {
+                    case "refresh":
+                        {
+                            if (!event_AppRefreshCommand.IsRunning && refreshFinish && UserInfo.UserID != 0)
+                            {
+                                _ = event_AppRefreshCommand.ExecuteAsync(null);
+                            }
+                            break;
+                        }
+                }
+            });
         }
 
-        //private readonly CancellationTokenSource cancellationToken;
+        [ObservableProperty]
+        private string hiString = "";
+
+        private bool refreshFinish;
 
         [ObservableProperty]
         private Awe.Model.OpenFrp.Response.Data.UserInfo userInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
         {
             UserName = "not-allow-display"
         };
+
+        [ObservableProperty]
+        private string avatorFilePath = "pack://application:,,,/Resources/Images/share_5bb469267f65d0c7171470739108cdae.png";
 
         public Model.UserInfoItem[] UserInfoViewContainer { get; } = new Model.UserInfoItem[]
         {
@@ -144,7 +175,7 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         
-        private bool CanExcuteCallUpSign() => !IsSigned;
+        private bool CanExcuteCallUpSign() => !App.Current.Dispatcher.Invoke(() => IsSigned);
 
         [RelayCommand(CanExecute = nameof(CanExcuteCallUpSign))]
         private async Task @event_CallUpSign()
@@ -160,12 +191,17 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_AppRefresh()
         {
-            await event_RefreshSignStateCommand.ExecuteAsync(null);
+            ResponseForBoardcast = default;
+
+            _ = Task.WhenAll(event_RefreshSignStateCommand.ExecuteAsync(null), event_RefreshBoardcastCommand.ExecuteAsync(null));
+
             var openfrpUserinfo = await OpenFrp.Service.Net.OpenFrp.GetUserInfo();
 
             if (openfrpUserinfo.Data is not null)
             {
-                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(openfrpUserinfo.Data));
+                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create<Awe.Model.OpenFrp.Response.Data.UserInfo>(openfrpUserinfo.Data));
+
+                refreshFinish = true;
             }
         }
 
@@ -188,70 +224,90 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private async Task @event_LoadAdSence()
+        private async Task @event_RefreshBoardcast()
         {
-            return;
+            var resp = await OpenFrp.Service.Net.OpenFrp.GetSoftwareBoardcast();
 
-            var sence = await OpenFrp.Service.Net.HttpRequest.Get<Awe.Model.OpenFrp.Response.V2Response<OpenFrp.Launcher.Model.AdSence[]>>("https://api.zyghit.cn/zg-adsense/openfrp-lanucher");
+            
 
-            if (sence.Data is { } bv && bv.Data?.Length > 0)
+            if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { })
             {
-                foreach (var item in bv.Data)
-                {
-                    //item.Url = @"E:\Desktop\Photo\wallhaven-76w8x3_1920x1080.png";
-
-                    //ThreadPool.QueueUserWorkItem(async delegate
-                    //{
-                    //    if (string.IsNullOrEmpty(item.Image)) return;
-                    //    if (item.Image is null) return;
-
-                    //    var vaa = OpenFrp.Service.HashCalculator.CompushHash($"{item.Url}.vacc.jpg");
-
-                    //    var va = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{vaa}.jpg");
-
-                    //    if (System.IO.File.Exists(va)) 
-                    //    {
-                    //        item.Image = va;
-                    //        return; 
-                    //    }
-
-                    //    var avator = await Service.Net.HttpRequest.Get(item.Image);
-
-                    //    if (avator.StatusCode is System.Net.HttpStatusCode.OK && avator.Data.Count() > 0)
-                    //    {
-                            
-
-                            
-
-                    //        try
-                    //        {
-
-                    //            var vca = Encoding.UTF8.GetString(avator.Data.ToArray());
-
-                    //            using var fs = System.IO.File.OpenWrite(va);
-
-                    //            await fs.WriteAsync(avator.Data.ToArray(), 0, avator.Data.Count());
+                Papad = resp.Data.Papad;
 
 
 
-                    //            await fs.FlushAsync();
+                //FrameworkElementFactory factory = new FrameworkElementFactory(typeof(ModernWpf.Controls.SimpleStackPanel));
+                //factory.SetValue(ModernWpf.Controls.SimpleStackPanel.SpacingProperty, 8);
+                //var stackpanel = new ModernWpf.Controls.SimpleStackPanel()
+                //{
+                //    Spacing = 8
+                //};
 
-                    //            item.Image = va;
-                    //        }
-                    //        catch
-                    //        {
+                //foreach (var para in resp.Data.Paras)
+                //{
+                //    switch (para.Type)
+                //    {
+                //        case "System.String":
+                //            {
+                //                TextBlock textWrapper = new TextBlock()
+                //                {
+                //                    Text = para.Data.TryGetValue("value", out var v) ? v.ToString() : string.Empty,
+                //                    HorizontalAlignment = HorizontalAlignment.Left,
+                //                    TextWrapping = TextWrapping.Wrap
+                //                };
+
+                //                stackpanel.Children.Add(textWrapper);
+                //                //factory.AppendChild(textWrapper);
+                //            };break;
+                //        default:
+                //            {
+                //                var a = typeof(System.Windows.Controls.Button).ToString();
+                //                //System.Windows.Controls.Button
+                //                //System.Windows.Controls.Button
+
                                 
+                //                var type = Type.GetType(para.Type,false);
 
-                    //            return;
-                    //        }
+                //                if (type is null) break;
 
-                            
-                    //    }
-                    //});
+                //                if (type.BaseType == typeof(FrameworkElement))
+                //                {
+                //                    var va = Activator.CreateInstance(type);
 
-                    AdSences.Add(item);
-                }
+                //                    stackpanel.Children.Add((FrameworkElement)va);
+
+                    
+                //                }
+                //            };break;
+                //    }
+                //}
+                //Boards = stackpanel;
+                
             }
+            else if (string.IsNullOrEmpty(resp.Message))
+            {
+                resp.Message = resp.Exception?.ToString();
+            }
+
+            ResponseForBoardcast = resp;
+        }
+
+        [ObservableProperty]
+        private FrameworkElement boards = new FrameworkElement();
+
+        [ObservableProperty]
+        private Awe.Model.ApiResponse? responseForBoardcast;
+
+        [RelayCommand]
+        private void @event_LoadAdSence()
+        {
+          
+        }
+
+        [RelayCommand]
+        private void @event_ToSettingsPage()
+        {
+            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.Settings)));
         }
 
         [ObservableProperty]
@@ -272,53 +328,7 @@ namespace OpenFrp.Launcher.ViewModels
             },
         };
 
-        //[RelayCommand]
-        //private void @event_PageUnloaded() => cancellationToken.Cancel();
-
-        //[RelayCommand]
-        //private void @event_ActiveNextPage()
-        //{
-        //    if (AdSences.Count <= PhIndex + 1)
-        //    {
-        //        PhIndex = 0;
-        //    }
-        //    else PhIndex += 1;
-
-        //    flag = true;
-        //}
-
-        //private bool flag;
-
-        //[RelayCommand]
-        //private void @event_ActiveAbovePage()
-        //{
-            
-        //    if (PhIndex is 0)
-        //    {
-        //        PhIndex = AdSences.Count;
-        //    }
-        //    PhIndex -= 1;
-
-        //    flag = true;
-        //}
-
         [ObservableProperty]
-        private string[] papad = new string[]
-        {
-            "正@微信",
-            "活着不玩不如死@微信",
-            "lck@微信",
-            "SP@微信",
-            "此用户不想起昵称@微信",
-            "十一[秋叶]@微信",
-            "洪平[西瓜]@微信",
-            "慢热@微信",
-            "胡俊杰@微信",
-            "[鲨鱼]@微信",
-            "Anoxia.@微信",
-            "三更居@微信",
-            "佳[鼠]@微信",
-            "星光@微信"
-        };
+        private string[] papad = Array.Empty<string>();
     }
 }

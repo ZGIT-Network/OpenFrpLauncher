@@ -14,6 +14,7 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
+    Title="Settings"
     d:DesignHeight="950"
     d:DesignWidth="650"
     mc:Ignorable="d">
@@ -30,12 +31,23 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock
-            Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
-            MaxWidth="1136"
+        <ui:SimpleStackPanel
+           
+            MaxWidth="1200"
             Margin="36,40,36,8"
-            FontSize="24"
-            Text="设置" />
+            Orientation="Horizontal"
+            Spacing="8">
+            <ui:SymbolIcon
+                Margin="0,1,0,0"
+                VerticalAlignment="Center"
+                FontSize="22"
+                Symbol="Setting" />
+            <TextBlock
+                Padding="0,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="24"
+                Text="设置" />
+        </ui:SimpleStackPanel>
         <Grid Grid.Row="1">
             <ui:ScrollViewerEx
                 Focusable="False"
@@ -43,7 +55,7 @@
                 VerticalScrollBarVisibility="Auto">
                 <Border
                     Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
-                    MaxWidth="1200"
+                    MaxWidth="1272"
                     Padding="36,0,36,32"
                     HorizontalAlignment="Center">
                     <ui:SimpleStackPanel Spacing="8">
@@ -52,76 +64,77 @@
                             FontSize="18"
                             FontWeight="Medium"
                             Text="OpenFRP &amp; Natayark OpenID" />
+                        <Grid>
+                            <awe:VisibilityTranstion IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
+                                <!--  登录 Card  -->
+                                <of:SettingItem
+                                    Title="登录账户"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding event_ShowLoginDialogCommand}"
+                                    Description="可使用网页单点登录。"
+                                    IsClickable="True">
+                                    <of:SettingItem.Icon>
+                                        <ui:SymbolIcon FontSize="24" Symbol="Account" />
+                                    </of:SettingItem.Icon>
+                                </of:SettingItem>
+                            </awe:VisibilityTranstion>
+                            <awe:VisibilityTranstion Margin="0,0,0,10" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
+                                <!--  用户信息 Card  -->
+                                <awe:Resizer>
+                                    <Border
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="4">
+                                        <ui:SimpleStackPanel Margin="18" Spacing="8">
+                                            <TextBlock FontFamily="{StaticResource Montserrat}" FontWeight="Medium">
+                                                <Run FontSize="20" Text="{Binding UserInfo.UserName, Mode=OneWay}" />
+                                                <Run
+                                                    FontSize="16"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    Text="{Binding UserInfo.UserID, StringFormat='#{0}', Mode=OneWay}" />
+                                                <LineBreak />   <Run
+                                                    FontSize="16"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    Text="{Binding UserInfo.Email, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <ItemsControl
+                                                Focusable="False"
+                                                ItemsSource="{Binding UserInfoViewContainer}"
+                                                TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Padding="0,0,10,4">
+                                                            <Run Text="{Binding Title, Mode=OneWay}" />
+                                                            <LineBreak />
+                                                            <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" />
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <ui:CommandBar HorizontalAlignment="Right">
 
-                        <awe:VisibilityTranstion IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
-                            <!--  登录 Card  -->
-                            <of:SettingItem
-                                Title="登录账户"
-                                HorizontalAlignment="Stretch"
-                                Command="{Binding event_ShowLoginDialogCommand}"
-                                Description="一段测试性文本。"
-                                IsClickable="True">
-                                <of:SettingItem.Icon>
-                                    <ui:SymbolIcon FontSize="24" Symbol="Account" />
-                                </of:SettingItem.Icon>
-                            </of:SettingItem>
-                        </awe:VisibilityTranstion>
-                        <awe:VisibilityTranstion Margin="0,0,0,10" IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
-                            <!--  用户信息 Card  -->
-                            <awe:Resizer>
-                                <Border
-                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="4">
-                                    <ui:SimpleStackPanel Margin="18" Spacing="8">
-                                        <TextBlock FontFamily="{StaticResource Montserrat}" FontWeight="Medium">
-                                            <Run FontSize="20" Text="{Binding UserInfo.UserName, Mode=OneWay}" />
-                                            <Run
-                                                FontSize="16"
-                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                Text="{Binding UserInfo.UserID, StringFormat='#{0}', Mode=OneWay}" />
-                                            <LineBreak />   <Run
-                                                FontSize="16"
-                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                Text="{Binding UserInfo.Email, Mode=OneWay}" />
-                                        </TextBlock>
-                                        <ItemsControl
-                                            Focusable="False"
-                                            ItemsSource="{Binding UserInfoViewContainer}"
-                                            TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Padding="0,0,10,4">
-                                                        <Run Text="{Binding Title, Mode=OneWay}" />
-                                                        <LineBreak />
-                                                        <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" />
-                                                    </TextBlock>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <ui:CommandBar HorizontalAlignment="Right">
+                                                <ui:AppBarButton
+                                                    Command="{Binding event_OpenOpenFrpWebsiteCommand}"
+                                                    Icon="Globe"
+                                                    Label="打开网页版" />
+                                                <ui:AppBarButton Command="{Binding event_LogoutCommand}" Label="退出登录">
+                                                    <ui:AppBarButton.Icon>
+                                                        <ui:FontIcon Glyph="&#xF3B1;" />
+                                                    </ui:AppBarButton.Icon>
+                                                </ui:AppBarButton>
 
-                                            <ui:AppBarButton
-                                                Command="{Binding event_OpenOpenFrpWebsiteCommand}"
-                                                Icon="Globe"
-                                                Label="打开网页版" />
-                                            <ui:AppBarButton Command="{Binding event_LogoutCommand}" Label="退出登录">
-                                                <ui:AppBarButton.Icon>
-                                                    <ui:FontIcon Glyph="&#xF3B1;" />
-                                                </ui:AppBarButton.Icon>
-                                            </ui:AppBarButton>
-
-                                        </ui:CommandBar>
-                                    </ui:SimpleStackPanel>
-                                </Border>
-                            </awe:Resizer>
-                        </awe:VisibilityTranstion>
+                                            </ui:CommandBar>
+                                        </ui:SimpleStackPanel>
+                                    </Border>
+                                </awe:Resizer>
+                            </awe:VisibilityTranstion>
+                        </Grid>
 
                         <TextBlock FontSize="18" Text="外观" />
 
@@ -272,6 +285,23 @@
                                 <ui:ToggleSwitch
                                     FocusVisualMargin="-3,-4,8,-5"
                                     IsOn="{Binding UseDebugMode, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                            </Grid>
+                        </of:SettingItem>
+                        <of:SettingItem
+                            Title="使用系统代理"
+                            Description="适用于一些网络环境下无法使用启动器"
+                            IsEnabled="True">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xE965;" />
+                            </of:SettingItem.Icon>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="75" />
+                                </Grid.ColumnDefinitions>
+                                <ui:ToggleSwitch
+                                    FocusVisualMargin="-3,-4,8,-5"
+                                    IsOn="{Binding UseProxy, UpdateSourceTrigger=PropertyChanged}"
                                     Style="{StaticResource LeftLabelToggleSwitchStyle}" />
                             </Grid>
                         </of:SettingItem>

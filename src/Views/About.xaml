@@ -18,18 +18,25 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock
-            Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+        <ui:SimpleStackPanel
             MaxWidth="1200"
-            Padding="36,40,36,8"
-            FontSize="24"
-            Text="关于" />
+            Margin="36,40,36,8"
+            Orientation="Horizontal"
+            Spacing="8">
+            <ui:FontIcon
+                Margin="0,1,0,0"
+                VerticalAlignment="Center"
+                FontSize="22"
+                Glyph="&#xE946;" />
+            <TextBlock
+                Padding="0,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="24"
+                Text="关于" />
+        </ui:SimpleStackPanel>
         <Grid Grid.Row="1">
             <ui:ScrollViewerEx PanningMode="VerticalFirst" RewriteWheelChange="True">
-                <Border
-                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
-                    MaxWidth="1200"
-                    Padding="36,4,36,0">
+                <Border MaxWidth="1272" Padding="36,4,36,0">
                     <ui:SimpleStackPanel Spacing="8">
                         <TextBlock
                             FontSize="18"

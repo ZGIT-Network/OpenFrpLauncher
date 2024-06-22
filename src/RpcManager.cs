@@ -76,7 +76,7 @@ namespace OpenFrp.Launcher
 
                 return new Service.RpcResponse<Proto.Response.SyncResponse>
                 {
-                    Data = await Task.Run(async () => await Client.SyncAsync(new Proto.Request.SyncRequest { SecureCode = UserSecureCode}, deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken)),
+                    Data = await Task.Run(async () => await Client.SyncAsync(new Proto.Request.SyncRequest { SecureCode = UserSecureCode ?? string.Empty }, deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken)),
                     IsSuccess = true
                 };
             }
@@ -107,7 +107,7 @@ namespace OpenFrp.Launcher
 
                 return await Task.Run(async () => await Client.LaunchAsync(new Proto.Request.TunnelRequest
                 {
-                    SecureCode = UserSecureCode,
+                    SecureCode = UserSecureCode ?? string.Empty,
                     UseDebug = Properties.Settings.Default.UseDebugMode,
                     UseTlsEncrypt = Properties.Settings.Default.UseTlsEncrypt,
                     UserTunnelJson = JsonSerializer.Serialize(tunnel)
@@ -124,7 +124,7 @@ namespace OpenFrp.Launcher
 
                 return await Task.Run(async () => await Client.CloseAsync(new Proto.Request.TunnelRequest
                 {
-                    SecureCode = UserSecureCode,
+                    SecureCode = UserSecureCode ?? string.Empty,
                     UserTunnelJson = JsonSerializer.Serialize(tunnel)
                 }, deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken));
             }
@@ -140,7 +140,7 @@ namespace OpenFrp.Launcher
 
                 var resp = await Task.Run(async () => await Client.GetActiveProcessAsync(new Proto.Request.SyncRequest
                 {
-                    SecureCode = UserSecureCode
+                    SecureCode = UserSecureCode ?? string.Empty
                 }, deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken));
 
                 return new Service.RpcResponse<Proto.Response.ActiveProcessResponse>
@@ -161,7 +161,7 @@ namespace OpenFrp.Launcher
 
                 var resp = await Task.Run(async () => await Client.ClearLogStreamAsync(new Proto.Request.SyncRequest
                 {
-                    SecureCode = UserSecureCode
+                    SecureCode = UserSecureCode ?? string.Empty
                 }, deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken));
 
                 return resp;
@@ -197,7 +197,7 @@ namespace OpenFrp.Launcher
             {
                 if (Client is null) throw new NullReferenceException(nameof(Client));
 
-                var resp = Client.LogStream(new Proto.Request.SyncRequest { SecureCode = UserSecureCode},deadline: CreateDeadline(timeOut), cancellationToken:cancellationToken);
+                var resp = Client.LogStream(new Proto.Request.SyncRequest { SecureCode = UserSecureCode ?? string.Empty },deadline: CreateDeadline(timeOut), cancellationToken:cancellationToken);
 
                 while (await resp.ResponseStream.MoveNext(cancellationToken))
                 {

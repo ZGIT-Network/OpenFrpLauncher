@@ -30,35 +30,50 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock
-            Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+        <ui:SimpleStackPanel
             MaxWidth="1200"
-            Padding="36,40,36,8"
-            FontSize="24"
-            Text="更新" />
+            Margin="36,40,36,8"
+            Orientation="Horizontal"
+            Spacing="8">
+            <ui:FontIcon
+                Margin="0,1,0,0"
+                VerticalAlignment="Center"
+                FontSize="22"
+                Glyph="&#xECC5;" />
+            <TextBlock
+                Padding="0,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="24"
+                Text="更新" />
+        </ui:SimpleStackPanel>
         <Grid Grid.Row="1">
             <ui:ScrollViewerEx PanningMode="VerticalFirst" RewriteWheelChange="True">
 
                 <Border
                     Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
-                    MaxWidth="1200"
+                    MaxWidth="1272"
                     Padding="36,4,36,32"
                     HorizontalAlignment="Center">
-                    <ui:SimpleStackPanel Spacing="8">
-                        <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Platfrom, StringFormat='用户平台: Windows {0}', Mode=OneWay}" />
+                    <ui:SimpleStackPanel Spacing="0">
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                            Text="{Binding Platfrom, StringFormat='用户平台: Windows {0}', Mode=OneWay}" />
                         <ofControl:SettingItem
                             Title="刷新"
+                            Margin="0,0,0,8"
                             Command="{Binding event_CheckUpdateCommand}"
                             Description="若更新内容与实际不符，请点击这里刷新内容"
                             Icon="Refresh"
                             IsClickable="True" />
                         <ofControl:SettingItem
                             Title="打开 FRPC 文件夹"
+                            Margin="0,0,0,8"
                             Command="{Binding event_OpenFrpcFolderCommand}"
                             Description="当你无法通过更新来获取 FRPC 时，你可以手动下载后放入 FRPC 文件夹。"
                             Icon="&#xE8F4;"
                             IsClickable="True" />
-                        <awe:Resizer>
+                        <awe:Resizer Margin="0,0,0,8">
                             <Border
                                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
@@ -90,7 +105,34 @@
                                 </TextBlock>
                             </Border>
                         </awe:Resizer>
-                        <Grid>
+                        <awe:VisibilityTranstion>
+                            <awe:VisibilityTranstion.IsDisplay>
+                                <Binding
+                                    Converter="{StaticResource EqualConverter}"
+                                    ConverterParameter="{x:Type app:UpdateWindow}"
+                                    Path="MainWindow.DependencyObjectType.SystemType"
+                                    Source="{x:Static app:App.Current}" />
+                            </awe:VisibilityTranstion.IsDisplay>
+                            <ofControl:SettingItem
+                                Title="使用系统代理"
+                                Margin="0,0,0,8"
+                                Description="适用于一些网络环境下无法使用启动器"
+                                IsEnabled="True">
+                                <ofControl:SettingItem.Icon>
+                                    <ui:FontIcon FontSize="24" Glyph="&#xE965;" />
+                                </ofControl:SettingItem.Icon>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="75" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:ToggleSwitch
+                                        FocusVisualMargin="-3,-4,8,-5"
+                                        IsOn="{Binding UseProxy, UpdateSourceTrigger=PropertyChanged}"
+                                        Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                                </Grid>
+                            </ofControl:SettingItem>
+                        </awe:VisibilityTranstion>
+                        <Grid Margin="0,0,0,8">
                             <awe:VisibilityTranstion IsDisplay="{Binding event_CheckUpdateCommand.IsRunning, Mode=OneWay}">
                                 <ui:ProgressRing
                                     Width="75"
@@ -212,7 +254,7 @@
                                         Path="ErrorMessage" />
                                 </MultiBinding>
                             </awe:VisibilityTranstion.IsDisplay>
-                            <awe:Resizer>
+                            <awe:Resizer Margin="0,0,0,8">
                                 <Border
                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"

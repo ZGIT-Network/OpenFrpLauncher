@@ -22,6 +22,7 @@
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding event_RefreshTunnelsCollectionCommand}" />
+            <behavior:InvokeCommandAction Command="{Binding event_LoadedPageCommand}" PassEventArgsToCommand="True" />
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <ui:Page.Resources>
@@ -36,12 +37,23 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock
-            Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+        <ui:SimpleStackPanel
             MaxWidth="1200"
             Margin="36,40,36,8"
-            FontSize="24"
-            Text="隧道" />
+            Orientation="Horizontal"
+            Spacing="8">
+            <ui:FontIcon
+                Margin="0,1,0,0"
+                VerticalAlignment="Center"
+                FontSize="22"
+                Glyph="&#xE88A;" />
+            <TextBlock
+                Padding="0,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="24"
+                Text="隧道" />
+        </ui:SimpleStackPanel>
+
         <Grid Grid.Row="1">
             <ui:ScrollViewerEx PanningMode="VerticalFirst" RewriteWheelChange="True">
                 <Grid>

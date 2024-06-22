@@ -31,16 +31,33 @@ namespace OpenFrp.Launcher.ViewModels
             if (App.Current?.MainWindow is { DataContext: MainViewModel dx })
             {
                 MainViewModel = dx;
-                UserInfo = dx.UserInfo;
 
+                UserInfo = dx.UserInfo;
+                StateOfService = dx.StateOfService;
 
                 dx.PropertyChanged += (_, e) =>
                 {
-                    if (e.PropertyName is nameof(UserInfo))
+                    switch (e.PropertyName)
                     {
-                        UserInfo = dx.UserInfo;
-                        OnPropertyChanged(nameof(UserInfo));
+                        case nameof(UserInfo):
+                            {
+                                UserInfo = dx.UserInfo;
+
+                                goto case "updateVa";
+                            }
+                        case nameof(StateOfService):
+                            {
+                                StateOfService = dx.StateOfService;
+
+                                goto case "updateVa";
+                            }
+                        case "updateVa":
+                            {
+                                OnPropertyChanged(e.PropertyName);
+                                break;
+                            };
                     }
+                    
                 };
                 
             }
@@ -52,6 +69,10 @@ namespace OpenFrp.Launcher.ViewModels
             FontFamily = x,
             FontName = x.FamilyNames.ContainsKey(userLang) ? x.FamilyNames[userLang] : x.FamilyNames.First().Value,
         }));
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(event_ShowLoginDialogCommand))]
+        private bool stateOfService;
 
 
         #region UserInfo + Model # 附加后台绑定
@@ -134,8 +155,7 @@ namespace OpenFrp.Launcher.ViewModels
 
         #endregion
 
-
-        
+        #region Settings Properties
         public int ApplicationTheme
         {
             get
@@ -211,7 +231,6 @@ namespace OpenFrp.Launcher.ViewModels
                 Properties.Settings.Default.ZoomErrorMessage = value;
             }
         }
-
         public double FontSize
         {
             get
@@ -223,8 +242,6 @@ namespace OpenFrp.Launcher.ViewModels
                 Properties.Settings.Default.FontSize = value;
             }
         }
-
-
         public System.Windows.Media.FontFamily FontFamily
         {
             get
@@ -236,7 +253,6 @@ namespace OpenFrp.Launcher.ViewModels
                 Properties.Settings.Default.FontFamily = value;
             }
         }
-
         public bool UseDebugMode
         {
             get
@@ -259,7 +275,18 @@ namespace OpenFrp.Launcher.ViewModels
                 Properties.Settings.Default.UseTlsEncrypt = value;
             }
         }
-
+        public bool UseProxy
+        {
+            get
+            {
+                return Properties.Settings.Default.UseProxy;
+            }
+            set
+            {
+                OpenFrp.Service.Net.HttpRequest.ProxyEditor(value);
+                Properties.Settings.Default.UseProxy = value;
+            }
+        }
         public bool AutoStartup
         {
             get
@@ -290,10 +317,15 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             }
         }
+
+        #endregion
+
+        private bool CanExecuteLogin() => StateOfService;
+
         /// <summary>
         /// 显示登录窗口
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanExecuteLogin))]
         private async Task @event_ShowLoginDialog()
         {
             
@@ -327,6 +359,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                 if (reso.IsSuccess)
                 {
+                    RpcManager.UserSecureCode = null;
                     Service.Net.OpenFrp.Logout();
                     Properties.Settings.Default.UserPwn = string.Empty;
                     Properties.Settings.Default.UserAuthorization = string.Empty;

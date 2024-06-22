@@ -17,10 +17,11 @@
                         ./Resources/#Montserrat
                     </FontFamily>
                 </ResourceDictionary>
+
                 <ResourceDictionary Source="/ModernWpf.Controls;component/ToggleSwitch/ToggleSwitch.xaml" />
-                <!--<ResourceDictionary Source="/ModernWpf;component/DesignTime/SystemColors.xaml" />
+                <ResourceDictionary Source="/ModernWpf;component/DesignTime/SystemColors.xaml" />
                 <ResourceDictionary Source="/ModernWpf;component/ThemeResources/Light.xaml" />
-                <ResourceDictionary Source="/ModernWpf;component/ControlsResources.xaml" />-->
+                <ResourceDictionary Source="/ModernWpf;component/ControlsResources.xaml" />
 
 
 
@@ -28,7 +29,7 @@
                 <ui:ThemeResources>
                     <ui:ThemeResources.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light" ui:ThemeDictionary.Key="Light">
-                            <SolidColorBrush x:Key="AweAppGoldenColor" Color="#F0A020" />
+                            <SolidColorBrush x:Key="AweAppGoldenColor" Color="#D89222" />
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="Dark" ui:ThemeDictionary.Key="Dark">
                             <SolidColorBrush x:Key="AweAppGoldenColor" Color="#F2C97D" />

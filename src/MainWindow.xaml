@@ -20,15 +20,17 @@
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     x:Name="windHost"
     Title="OpenFRP 启动器"
-    MinWidth="550"
-    MinHeight="500" Width="1200"
+    Width="1200"
     Height="700"
+    MinWidth="550"
+    MinHeight="500"
     d:Background="White"
     d:DesignHeight="595"
     d:DesignWidth="1190"
     modernwpf:ThemeManager.RequestedTheme="Default"
     modernwpf:TitleBar.ExtendViewIntoTitleBar="True"
     modernwpf:WindowHelper.UseModernWindowStyle="True"
+    FontFamily="{DynamicResource Awe.UI.DisplayFont}"
     WindowStartupLocation="CenterScreen"
     WindowState="Normal"
     mc:Ignorable="d">
@@ -49,7 +51,10 @@
     <Grid Background="#00ffffff">
         <!--  Sidebar  -->
 
-        <modernwpf:NavigationView x:Name="viewer" IsTitleBarAutoPaddingEnabled="False">
+        <modernwpf:NavigationView
+            x:Name="viewer"
+            IsBackEnabled="{Binding CanGoBack, ElementName=frame, Mode=OneWay}"
+            IsTitleBarAutoPaddingEnabled="False">
             <modernwpf:NavigationView.Resources>
                 <modernwpf:BindingProxy x:Key="HasUpdateBinding" Value="{Binding UpdateInfo.Type, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Static model:UpdateInfoType.None}, Mode=OneWay}" />
             </modernwpf:NavigationView.Resources>
@@ -70,7 +75,7 @@
                     TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
                 <modernwpf:NavigationViewItem
                     Content="隧道"
-                    Icon="&#xE968;"
+                    Icon="&#xE88A;"
                     Tag="{x:Type view:Tunnels}"
                     TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}">
 
@@ -105,27 +110,104 @@
                 </modernwpf:NavigationViewItem>
                 <modernwpf:NavigationViewItem
                     Content="日志"
-                    Icon="&#xE8F3;"
+                    Icon="&#xE9D9;"
                     Tag="{x:Type view:Log}"
                     TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
             </modernwpf:NavigationView.MenuItems>
             <modernwpf:NavigationView.FooterMenuItems>
-                <modernwpf:NavigationViewItem SelectsOnInvoked="False" TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}">
+                <modernwpf:NavigationViewItem
+                    FontWeight="Medium"
+                    IsEnabled="{Binding StateOfService, Mode=OneWay}"
+                    SelectsOnInvoked="False"
+                    TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}">
+                    <FrameworkElement.Style>
+                        <Style TargetType="modernwpf:NavigationViewItem">
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding UserInfo.UserName, Converter={StaticResource NotEqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}" Value="True" />
+                                        <Condition Binding="{Binding StateOfService, Mode=OneWay}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="FontFamily" Value="{StaticResource Montserrat}" />
+                                    <Setter Property="Content" Value="{Binding UserInfo.UserName}" />
+                                    <Setter Property="ToolTip">
+                                        <Setter.Value>
+                                            <ToolTip>
+                                                <TextBlock FontFamily="{StaticResource Montserrat}" FontWeight="Medium">
+                                                    <Run FontSize="14" Text="{Binding UserInfo.UserName}" />
+                                                    <Run FontSize="14" Text="{Binding UserInfo.UserID, StringFormat='#{0}'}" />
+                                                    <LineBreak />
+                                                    <Run
+                                                        FontSize="14"
+                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="{Binding UserInfo.Email}" />
+                                                </TextBlock>
+                                            </ToolTip>
+                                        </Setter.Value>
+                                    </Setter>
+                                </MultiDataTrigger>
+                                <DataTrigger Binding="{Binding StateOfService, Mode=OneWay}" Value="False">
+                                    <Setter Property="Content" Value="服务进程离线" />
+                                </DataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}" Value="True" />
+                                        <Condition Binding="{Binding StateOfService, Mode=OneWay}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Content" Value="点击登录" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </FrameworkElement.Style>
                     <behavior:Interaction.Triggers>
                         <behavior:EventTrigger EventName="PreviewMouseLeftButtonUp">
                             <behavior:InvokeCommandAction Command="{Binding event_NavigateToSettingsCommand}" />
                         </behavior:EventTrigger>
                         <behavior:DataTrigger
-                            Binding="{Binding UserInfo.UserName}"
+                            Binding="{Binding StateOfService}"
                             Comparison="Equal"
-                            Value="not-allow-display">
-                            <behavior:ChangePropertyAction PropertyName="Content" Value="点击登录" />
+                            Value="False">
+                            <behavior:ChangePropertyAction PropertyName="ToolTip" Value="{x:Null}" />
                         </behavior:DataTrigger>
-                        <behavior:DataTrigger
-                            Binding="{Binding UserInfo.UserName}"
-                            Comparison="NotEqual"
-                            Value="not-allow-display">
-                            <behavior:ChangePropertyAction PropertyName="Content" Value="{Binding UserInfo.UserName}" />
+                        <behavior:DataTrigger Comparison="Equal" Value="True">
+                            <behavior:DataTrigger.Binding>
+                                <MultiBinding Converter="{StaticResource BothConverter}">
+                                    <Binding
+                                        Converter="{StaticResource EqualConverter}"
+                                        ConverterParameter="not-allow-display"
+                                        Mode="OneWay"
+                                        Path="UserInfo.UserName" />
+                                    <Binding Mode="OneWay" Path="StateOfService" />
+                                </MultiBinding>
+                            </behavior:DataTrigger.Binding>
+                            <behavior:ChangePropertyAction PropertyName="ToolTip" Value="{x:Null}" />
+                        </behavior:DataTrigger>
+                        <behavior:DataTrigger Comparison="Equal" Value="True">
+                            <behavior:DataTrigger.Binding>
+                                <MultiBinding Converter="{StaticResource BothConverter}">
+                                    <Binding
+                                        Converter="{StaticResource NotEqualConverter}"
+                                        ConverterParameter="not-allow-display"
+                                        Mode="OneWay"
+                                        Path="UserInfo.UserName" />
+                                    <Binding Mode="OneWay" Path="StateOfService" />
+                                </MultiBinding>
+                            </behavior:DataTrigger.Binding>
+                            <behavior:ChangePropertyAction PropertyName="ToolTip">
+                                <behavior:ChangePropertyAction.Value>
+                                    <ToolTip>
+                                        <TextBlock FontFamily="{StaticResource Montserrat}" FontWeight="Medium">
+                                            <Run FontSize="14" Text="{Binding UserInfo.UserName}" />
+                                            <Run FontSize="14" Text="{Binding UserInfo.UserID, StringFormat='#{0}'}" />
+                                            <LineBreak />
+                                            <Run
+                                                FontSize="14"
+                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                Text="{Binding UserInfo.Email}" />
+                                        </TextBlock>
+                                    </ToolTip>
+                                </behavior:ChangePropertyAction.Value>
+                            </behavior:ChangePropertyAction>
                         </behavior:DataTrigger>
                     </behavior:Interaction.Triggers>
                     <modernwpf:NavigationViewItem.Icon>
@@ -134,7 +216,7 @@
                             RenderTransformOrigin=".5,.5"
                             Source="{Binding AvatorFilePath, FallbackValue='pack://application:,,,/Resources/Images/share_5bb469267f65d0c7171470739108cdae.png', Mode=OneWay}">
                             <FrameworkElement.RenderTransform>
-                                <ScaleTransform ScaleX="1.25" ScaleY="1.25" />
+                                <ScaleTransform ScaleX="1.3" ScaleY="1.3" />
                             </FrameworkElement.RenderTransform>
                         </modernwpf:ImageIcon>
                     </modernwpf:NavigationViewItem.Icon>
@@ -169,7 +251,7 @@
                 </modernwpf:NavigationViewItem>
             </modernwpf:NavigationView.FooterMenuItems>
             <!--  Content  -->
-            <modernwpf:Frame Focusable="False">
+            <modernwpf:Frame x:Name="frame" Focusable="False">
                 <behavior:Interaction.Triggers>
                     <behavior:EventTrigger EventName="Loaded">
                         <behavior:InvokeCommandAction Command="{Binding event_FrameLoadedCommand}" PassEventArgsToCommand="True" />

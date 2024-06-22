@@ -413,6 +413,19 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        public bool UseProxy
+        {
+            get
+            {
+                return Properties.Settings.Default.UseProxy;
+            }
+            set
+            {
+                OpenFrp.Service.Net.HttpRequest.ProxyEditor(value);
+                Properties.Settings.Default.UseProxy = value;
+            }
+        }
+
         private string? launcherDf { get; set; }
     }
 }

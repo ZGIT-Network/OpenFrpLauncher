@@ -20,6 +20,7 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using H.NotifyIcon;
 using ModernWpf;
 using ModernWpf.Controls;
+using ModernWpf.Navigation;
 using OpenFrp.Launcher.Model;
 using static Google.Protobuf.WellKnownTypes.Field.Types;
 
@@ -63,14 +64,14 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     if (_navigationView != null) 
                     {
-                        foreach (var item in _navigationView.MenuItems)
-                        {
-                            if (item is NavigationViewItem vv && vv.Tag.Equals(data.Data))
-                            {
-                                _navigationView.SelectedItem = item;
-                                break;
-                            }
-                        }
+                        //foreach (var item in _navigationView.MenuItems)
+                        //{
+                        //    if (item is NavigationViewItem vv && vv.Tag.Equals(data.Data))
+                        //    {
+                        //        _navigationView.SelectedItem = item;
+                        //        break;
+                        //    }
+                        //}
                         _frame?.Navigate(data.Data);
                     }
                 });
@@ -159,7 +160,7 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (UserInfo.UserName.Equals("not-allow-display"))
             {
-                AvatorFilePath = "";
+                AvatorFilePath = "pack://application:,,,/Resources/Images/share_5bb469267f65d0c7171470739108cdae.png";
 
                 UserTunnels.Clear();
             }
@@ -252,6 +253,17 @@ namespace OpenFrp.Launcher.ViewModels
             if (arg.Source is NavigationView nv)
             {
                 _navigationView = nv;
+
+                nv.BackRequested += delegate
+                {
+                    if (_frame is not null)
+                    {
+                        if (_frame.CanGoBack)
+                        {
+                            _frame.GoBack();
+                        }
+                    }
+                };
             }
         }
 
@@ -260,16 +272,46 @@ namespace OpenFrp.Launcher.ViewModels
         { 
             if (_frame is not null)
             {
+                Type? tp = default;
                 if (value is { InvokedItemContainer.Tag: Type v })
                 {
-                    _frame.Navigate(v);
+                    tp = v;
                 }
                 else if (value is { IsSettingsInvoked: true })
                 {
-                    _frame.Navigate(typeof(Views.Settings));
+                    tp = typeof(Views.Settings);
+                }
+                if (tp != null)
+                {
+                    if (_frame.SourcePageType == tp)
+                    {
+                        switch (_frame.SourcePageType.FullName)
+                        {
+                            case "OpenFrp.Launcher.Views.Tunnels":
+                                {
+                                    WeakReferenceMessenger.Default.Send(RouteMessage<TunnelsViewModel>.Create("refresh"));
+                                };break;
+                            case "OpenFrp.Launcher.Views.CreateTunnel":
+                                {
+                                    WeakReferenceMessenger.Default.Send(RouteMessage<CreateTunnelViewModel>.Create("refresh"));
+                                }; break;
+                            case "OpenFrp.Launcher.Views.Home":
+                                {
+                                    WeakReferenceMessenger.Default.Send(RouteMessage<HomeViewModel>.Create("refresh"));
+                                }; break;
+                        }
+                        //object message;
+                        
+                        //WeakReferenceMessenger.Default.Send(message);
+                        
+
+                        return;
+                    }
+                    _frame.Navigate(tp);
                 }
             }
         }
+
 
         [RelayCommand]
         private void @event_NavigateToSettings()
@@ -294,8 +336,53 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (_frame is null && e.Source is ModernWpf.Controls.Frame cc)
             {
+                cc.Navigate(typeof(Views.Home),"");
+
                 _frame = cc;
-                cc.Navigate(typeof(Views.Home));
+
+                _frame.Navigated += (_, e) =>
+                {
+                    if (e.ExtraData is string) return;
+
+                    var tgt = e.SourcePageType();
+                    if (tgt == typeof(Views.Settings))
+                    {
+                        NavigationView.SelectedItem = NavigationView.SettingsItem;
+
+                        return;
+                    }
+
+                    if (NavigationView is { MenuItems: var v1,FooterMenuItems: var v2 })
+                    {
+                        
+
+                        foreach (NavigationViewItemBase nvi1 in v1)
+                        {
+                            if (tgt.Equals(nvi1.Tag))
+                            {
+                                if (NavigationView.SelectedItem != nvi1)
+                                {
+                                    NavigationView.SelectedItem = nvi1;
+                                }
+
+                                return;
+                            }
+                        }
+                        foreach (NavigationViewItemBase nvi2 in v2)
+                        {
+                            if (tgt.Equals(nvi2.Tag))
+                            {
+                                if (NavigationView.SelectedItem != nvi2)
+                                {
+                                    NavigationView.SelectedItem = nvi2;
+                                }
+
+                                return;
+                            }
+                        }
+                    }
+                };
+                
             }
         }
 

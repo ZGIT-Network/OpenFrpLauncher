@@ -18,7 +18,7 @@ namespace OpenFrp.Launcher.ViewModels
 {
     internal partial class TunnelsViewModel : ObservableObject
     {
-        public TunnelsViewModel ()
+        public TunnelsViewModel()
         {
             WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
 
@@ -63,6 +63,20 @@ namespace OpenFrp.Launcher.ViewModels
                     _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
                 }
             });
+            WeakReferenceMessenger.Default.Register<RouteMessage<TunnelsViewModel, string>>(nameof(TunnelsViewModel), (_, data) =>
+            {
+                switch (data.Data)
+                {
+                    case "refresh": 
+                        {
+                            if (!event_RefreshTunnelsCollectionCommand.IsRunning && refreshFinish)
+                            {
+                                _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
+                            }
+                            break; 
+                        }
+                }
+            });
         }
 
         public HashSet<int> OnlineTunnels
@@ -77,6 +91,24 @@ namespace OpenFrp.Launcher.ViewModels
                 throw new KeyNotFoundException();
             }
         }
+
+        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
+
+        [RelayCommand]
+        private void @event_LoadedPage(RoutedEventArgs ar)
+        {
+            if (ar.Source is ModernWpf.Controls.Page pg)
+            {
+
+
+                pg.Unloaded += delegate
+                {
+                    _tokenSource.Cancel();
+                };
+            }
+        }
+
+        private bool refreshFinish;
 
         [RelayCommand]
         private void @event_CopyConnectUrl(ModernWpf.Controls.HyperlinkButton hlb)
@@ -104,7 +136,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_RefreshTunnelsCollection()
         {
-            Response = await AppNetwork.OpenFrp.GetUserTunnels();
+            refreshFinish = false;
+
+            Response = await AppNetwork.OpenFrp.GetUserTunnels(_tokenSource.Token);
 
             if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
                 Response.Data is { List: var list } && list is not null)
@@ -119,15 +153,18 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         foreach (var tunnel in list)
                         {
+                            if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+
                             Tunnels.Add(tunnel);
 
                             await Task.Delay(50);
                         }
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                        refreshFinish = true;
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
 
                     _ = dispatcher.Invoke(async () =>
                     {
-                        var resp = await RpcManager.SyncAsync();
+                        var resp = await RpcManager.SyncAsync(cancellationToken: _tokenSource.Token);
 
                         if (resp.IsSuccess)
                         {
@@ -135,13 +172,21 @@ namespace OpenFrp.Launcher.ViewModels
                             OnPropertyChanged(nameof(OnlineTunnels));
                             foreach (var item in resp.Data?.TunnelId ?? new Google.Protobuf.Collections.RepeatedField<int>())
                             {
+                                if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+
                                 OnlineTunnels.Add(item);
                             }
                             OnPropertyChanged(nameof(OnlineTunnels));
                         }
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                    }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
                 }
             }
+            else if (string.IsNullOrEmpty(Response.Message))
+            {
+                Response.Message = Response.Exception?.Message;
+                OnPropertyChanged(nameof(Response));
+            }
+            
         }
 
         [RelayCommand]
