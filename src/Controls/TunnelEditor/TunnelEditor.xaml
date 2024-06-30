@@ -38,7 +38,7 @@
                             <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource TextControlButtonForegroundPressed}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
-                            <Setter TargetName="ButtonLayoutGrid" Property="Opacity" Value="0" />
+                            <Setter TargetName="Content" Property="TextElement.Foreground" Value="{DynamicResource ButtonDisabledForegroundThemeBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -212,12 +212,41 @@
                                         PlaceholderText="25565"
                                         ScrollViewer.PanningMode="None"
                                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                        Value="{Binding Tunnel.Port, UpdateSourceTrigger=LostFocus, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                        Value="{Binding Tunnel.Port, UpdateSourceTrigger=LostFocus, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
+                                        <ui:NumberBox.Suffix>
+                                            <ui:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                                                <ui:ProgressRing
+                                                    Width="16"
+                                                    Height="16"
+                                                    IsActive="{Binding IsEnabled, ElementName=GetByLocalMCInstance, Converter={StaticResource RollbackConverter}, Mode=OneWay}" />
+                                                <Button
+                                                    x:Name="GetByLocalMCInstance"
+                                                    Width="30"
+                                                    Padding="{DynamicResource HelperButtonThemePadding}"
+                                                    VerticalAlignment="Stretch"
+                                                    ui:ControlHelper.CornerRadius="4"
+                                                    Focusable="False"
+                                                    FontSize="{TemplateBinding FontSize}"
+                                                    ToolTip="从已有 Minecraft 服务中侦听">
+                                                    <Button.Style>
+                                                        <Style BasedOn="{StaticResource TextBoxSuffixButtonStyle}" TargetType="Button">
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                    <Setter Property="TextElement.Foreground" Value="Red" />
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <ui:FontIcon FontSize="{DynamicResource TextBoxIconFontSize}" Glyph="&#xEF3D;" />
+                                                </Button>
+                                            </ui:SimpleStackPanel>
+                                        </ui:NumberBox.Suffix>
+                                    </ui:NumberBox>
                                     <ui:NumberBox
                                         x:Name="RemotePortInput"
                                         Grid.Row="3"
                                         Grid.Column="0"
-                                        Margin="0,8,0,8"
+                                        Margin="0,8,4,8"
                                         ui:ControlHelper.Header="远程端口"
                                         AutomationProperties.Name="远程端口"
                                         IsEnabled="{TemplateBinding IsCreateMode}"
@@ -288,41 +317,95 @@
                                     </awe:VisibilityTranstion>
 
                                 </Grid>
-                                <TextBlock Margin="0,24,0,10" LineHeight="24">
-                                    <Run FontSize="20" Text="高级选项" />
-                                    <LineBreak />
-                                    <Run
-                                        FontSize="16"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Text="这些选项仅给有需要的人使用，若无需求，请勿改动。" />
-                                </TextBlock>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <ui:ToggleSwitch
-                                        Grid.Row="0"
-                                        Grid.Column="0"
-                                        Header="数据加密"
-                                        IsOn="{Binding Tunnel.UseEncryption, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=TwoWay}" />
-                                    <ui:ToggleSwitch
-                                        Grid.Row="0"
-                                        Grid.Column="1"
-                                        Header="数据压缩"
-                                        IsOn="{Binding Tunnel.UseCompression, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=TwoWay}" />
 
-                                    <ui:ToggleSwitch
-                                        Grid.Row="1"
-                                        Grid.Column="0"
-                                        Margin="0,12,0,0"
-                                        Header="Proxy Protocol V2"
-                                        IsOn="{Binding Tunnel.ProxyProtocolVersionV2, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=TwoWay}" />
-                                </Grid>
+                                <awe:Resizer Margin="0,8,0,0">
+                                    <Expander
+                                        HorizontalAlignment="Stretch"
+                                        AutomationProperties.HelpText="这些选项仅给有需要的人使用，如果您没有这个需求，请勿改动"
+                                        AutomationProperties.Name="高级选项">
+                                        <Expander.Header>
+                                            <Grid Height="68">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <!--  内容  -->
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <!--  控件  -->
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <ui:FontIcon
+                                                    Grid.Column="0"
+                                                    Margin="6,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Focusable="False"
+                                                    FontSize="24"
+                                                    Glyph="&#xE7BE;" />
+                                                <TextBlock Grid.Column="2" Padding="1,18">
+                                                    <Run Text="高级选项" />
+                                                    <LineBreak />
+                                                    <Run
+                                                        FontSize="13"
+                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                        Text="这些选项仅给有需要的人使用，若无需求，请勿改动。" />
+                                                </TextBlock>
+                                            </Grid>
+                                        </Expander.Header>
+                                        <Grid>
+                                            <ui:SimpleStackPanel Spacing="8">
+                                                <ui:ToggleSwitch
+                                                    Grid.Row="0"
+                                                    Grid.Column="0"
+                                                    Header="数据加密"
+                                                    IsOn="{Binding Tunnel.UseEncryption, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=TwoWay}" />
+                                                <TextBlock
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    Text="保障你的数据安全，但是会导致 CPU 占用较高。"
+                                                    TextWrapping="Wrap" />
+                                                <Separator Margin="0,8,0,4" />
+                                                <ui:ToggleSwitch
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    Header="数据压缩"
+                                                    IsOn="{Binding Tunnel.UseCompression, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=TwoWay}" />
+                                                <TextBlock
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    Text="减少数据大小，但是会导致 CPU 占用较高。"
+                                                    TextWrapping="Wrap" />
+                                                <Separator Margin="0,8,0,4" />
+                                                <ui:ToggleSwitch
+                                                    Grid.Row="1"
+                                                    Grid.Column="0"
+                                                    Header="Proxy Protocol V2"
+                                                    IsOn="{Binding Tunnel.ProxyProtocolVersionV2, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=TwoWay}" />
+                                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" TextWrapping="Wrap">
+                                                    <ContentControl Focusable="False">
+                                                        <Run Text="可以用于反映用户平台真实 IP 地址。配置可查看" />
+                                                    </ContentControl>
+                                                    <ui:HyperlinkButton
+                                                        Margin="-2,0,-2,-1.5"
+                                                        Padding="0"
+                                                        NavigateUri="https://openfrp.wiki/use/proxy-protocol.html#proxy-protocol"
+                                                        ToolTip="https://openfrp.wiki/use/proxy-protocol.html#proxy-protocol">
+                                                        文档
+                                                    </ui:HyperlinkButton>
+                                                </TextBlock>
+                                                <Separator Margin="0,8,0,4" />
+                                                <ui:ToggleSwitch
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    Header="Minecraft 局域网侦测"
+                                                    IsOn="{Binding IsMinecraftService, RelativeSource={RelativeSource AncestorType=local:TunnelEditor}, Mode=TwoWay}" />
+                                                <TextBlock
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    Text="您无需在开启前更改端口号，(隧道开启前)在检测到实例后将自动更改端口。"
+                                                    TextWrapping="Wrap" />
+
+                                            </ui:SimpleStackPanel>
+
+                                        </Grid>
+                                    </Expander>
+                                </awe:Resizer>
                                 <TextBlock Margin="0,12,0,0" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
                                     <ContentControl Focusable="False">
                                         <Run Text="更多功能请在" />
@@ -330,7 +413,8 @@
                                     <ui:HyperlinkButton
                                         Margin="-2,0,-2,-1.5"
                                         Padding="0"
-                                        NavigateUri="https://console.openfrp.net/manage-proxies">
+                                        NavigateUri="https://console.openfrp.net/manage-proxies"
+                                        ToolTip="https://console.openfrp.net/manage-proxies">
                                         网页版
                                     </ui:HyperlinkButton>
                                     <ContentControl Focusable="False">

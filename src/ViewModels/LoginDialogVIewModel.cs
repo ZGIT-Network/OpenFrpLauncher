@@ -13,7 +13,7 @@ using OpenFrp.Launcher.Model;
 
 namespace OpenFrp.Launcher.ViewModels
 {
-    internal partial class LoginDialogVIewModel : ObservableObject
+    internal partial class LoginDialogViewModel : ObservableObject
     {
         public CancellationTokenSource CancellationTokenSource { get; set; } = new CancellationTokenSource();
 

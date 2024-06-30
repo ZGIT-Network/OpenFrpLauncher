@@ -26,9 +26,6 @@
     <Setting Name="UserAvator" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="AutoStartupTunnelId" Type="System.String" Scope="User">
-      <Value Profile="(Default)">[]</Value>
-    </Setting>
     <Setting Name="NotifyMode" Type="OpenFrp.Launcher.Model.NotifyMode" Scope="User">
       <Value Profile="(Default)">NotifyIconDefault</Value>
     </Setting>
@@ -43,6 +40,10 @@
     </Setting>
     <Setting Name="UseProxy" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AutoStartupTunnelId" Type="System.Int32[]" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfInt xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" /&gt;</Value>
     </Setting>
   </Settings>
 </SettingsFile>

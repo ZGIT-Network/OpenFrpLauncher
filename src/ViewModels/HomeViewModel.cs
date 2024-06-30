@@ -216,7 +216,7 @@ namespace OpenFrp.Launcher.ViewModels
                 var va = DateTimeOffset.FromUnixTimeMilliseconds(date).LocalDateTime;
                 if ((va - DateTimeOffset.Now.Date).TotalDays < 0)
                 {
-                    IsSigned = false;
+                    App.Current.Dispatcher.Invoke(() => IsSigned = false);
 
                     OnPropertyChanged(nameof(IsSigned));
                 }

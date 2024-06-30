@@ -5,6 +5,7 @@
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     xmlns:locala="clr-namespace:Awe.UI.Controls;assembly=Awe.UI"
     xmlns:pf="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:pro="clr-namespace:OpenFrp.Launcher.Properties"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:ui="http://schemas.modernwpf.com/2019"
     ShutdownMode="OnMainWindowClose">
@@ -56,7 +57,27 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-
+            <ContextMenu
+                x:Key="OpenFrp.Launcher.App.ContextMenu"
+                Width="170"
+                HasDropShadow="False">
+                <MenuItem Command="{Binding Source={x:Static local:App.ShowWindowCommand}, Mode=OneWay}" Header="显示窗口">
+                    <MenuItem.Icon>
+                        <ui:FontIcon Glyph="&#xE8A7;" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem Command="{Binding Source={x:Static local:App.DestoryLauncherCommand}, Mode=OneWay}" Header="退出启动器">
+                    <MenuItem.Icon>
+                        <ui:FontIcon Glyph="&#xE89f;" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding Source={x:Static local:App.DestoryAppCommand}, Mode=OneWay}" Header="彻底退出">
+                    <MenuItem.Icon>
+                        <ui:FontIcon Glyph="&#xE8bb;" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </ContextMenu>
 
         </ResourceDictionary>
     </Application.Resources>

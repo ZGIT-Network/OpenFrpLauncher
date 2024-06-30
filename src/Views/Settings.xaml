@@ -32,7 +32,6 @@
         </Grid.RowDefinitions>
 
         <ui:SimpleStackPanel
-           
             MaxWidth="1200"
             Margin="36,40,36,8"
             Orientation="Horizontal"
@@ -64,12 +63,13 @@
                             FontSize="18"
                             FontWeight="Medium"
                             Text="OpenFRP &amp; Natayark OpenID" />
-                        <Grid>
+                        <Grid Height="Auto">
                             <awe:VisibilityTranstion IsDisplay="{Binding UserInfo.UserName, Converter={StaticResource EqualConverter}, ConverterParameter='not-allow-display', Mode=OneWay}">
                                 <!--  登录 Card  -->
                                 <of:SettingItem
                                     Title="登录账户"
                                     HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Top"
                                     Command="{Binding event_ShowLoginDialogCommand}"
                                     Description="可使用网页单点登录。"
                                     IsClickable="True">
@@ -163,7 +163,10 @@
                             </ComboBox>
                         </of:SettingItem>
                         <awe:Resizer>
-                            <Expander HorizontalAlignment="Stretch">
+                            <Expander
+                                HorizontalAlignment="Stretch"
+                                AutomationProperties.HelpText="提供操控台字体的个性化"
+                                AutomationProperties.Name="字体">
                                 <Expander.Header>
                                     <Grid Height="68">
                                         <Grid.ColumnDefinitions>

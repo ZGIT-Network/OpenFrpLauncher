@@ -1,18 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.CommandLine.Parsing;
 using System.ComponentModel;
+using System.Deployment.Application;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using H.NotifyIcon;
 using ModernWpf.Controls;
+using OpenFrp.Launcher.ViewModels;
 
 namespace OpenFrp.Launcher.Controls
 {
@@ -106,6 +114,16 @@ namespace OpenFrp.Launcher.Controls
             }
         }
         #endregion
+        #region Property IsMinecraftService
+        public bool IsMinecraftService
+        {
+            get { return (bool)GetValue(IsMinecraftServiceProperty); }
+            set { SetValue(IsMinecraftServiceProperty, value); }
+        }
+
+        public static readonly DependencyProperty IsMinecraftServiceProperty =
+            DependencyProperty.Register("IsMinecraftService", typeof(bool), typeof(TunnelEditor), new PropertyMetadata(false));
+        #endregion
         #region CNameContent
         public string CNameConect
         {
@@ -192,6 +210,15 @@ namespace OpenFrp.Launcher.Controls
             }
         }
 
+        private CancellationTokenSource tokenSource { get; set; } = new CancellationTokenSource();
+
+        public void CancelEdit()
+        {
+            tokenSource.Cancel(false);
+
+            tokenSource = new CancellationTokenSource();
+        }
+
         public override void OnApplyTemplate()
         {
             if (GetTemplateChild("OpenPortImport") is Button btn)
@@ -245,6 +272,14 @@ namespace OpenFrp.Launcher.Controls
                     Tunnel.Name = GetRandomName();
                     RefreshTunnelName();
                 };
+            }
+            if (GetTemplateChild("GetByLocalMCInstance") is Button button3)
+            {
+                button3.Command = new CommunityToolkit.Mvvm.Input.AsyncRelayCommand(async () =>
+                {
+                    Tunnel.Port = await PortCallback(tokenSource.Token);
+                    RefreshPort();
+                });
             }
             if (GetTemplateChild("LocalPortInput") is NumberBox nb)
             {
@@ -310,8 +345,55 @@ namespace OpenFrp.Launcher.Controls
                 
                 
             }
+            // got from config
+            var conf = Tunnel.TunnelCustomConfig;
+            if (!string.IsNullOrEmpty(conf))
+            {
+                if (Regex.IsMatch(conf, "launcher.isMinecraftService( )?=( )?(T)?(t)?(rue)?(RUE)?"))
+                {
+                    IsMinecraftService = true;
+                }
+            }
             base.OnApplyTemplate();
         }
+
+        public static async Task<int> PortCallback(CancellationToken token = default)
+        {
+            if (token.IsCancellationRequested) return -1;
+
+            var taskCompletionForUdpListener = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var resp = await RpcManager.UdpProcedureCall();
+
+            if (resp is { })
+            {
+                taskCompletionForUdpListener.TrySetException(resp);
+            }
+
+            WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelEditor));
+
+            WeakReferenceMessenger.Default.Register<Model.RouteMessage<TunnelEditor, int>>(nameof(TunnelEditor), (_, data) =>
+            {
+                taskCompletionForUdpListener.TrySetResult(data.Data);
+                
+                WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelEditor));
+            });
+
+            token.Register(() =>
+            {
+                taskCompletionForUdpListener.TrySetCanceled(token);
+            });
+
+            try
+            {
+                return await taskCompletionForUdpListener.Task;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        
 
         private const string Sytanx = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz";
 
@@ -348,6 +430,21 @@ namespace OpenFrp.Launcher.Controls
             {
                 ob.Domains = new HashSet<string>(CNameConect.Split(','));
             }
+            if (IsMinecraftService)
+            {
+                if (string.IsNullOrEmpty(ob.TunnelCustomConfig))
+                {
+                    ob.TunnelCustomConfig = "launcher.isMinecraftService = true";
+                }
+                else
+                {
+                    ob.TunnelCustomConfig += "\nlauncher.isMinecraftService = true";
+                }
+            }
+            else if (!string.IsNullOrEmpty(ob.TunnelCustomConfig))
+            {
+                ob.TunnelCustomConfig = Regex.Replace(ob.TunnelCustomConfig, "launcher.isMinecraftService( )?=( )?(T)?(t)?(rue)?(RUE)?(\\n)?", string.Empty);
+            }
 
             ob.NodeId = NodeInfo.Id;
 
@@ -362,6 +459,21 @@ namespace OpenFrp.Launcher.Controls
             {
                 ob.Name = Tunnel.Name = GetRandomName();
                 RefreshTunnelName();
+            }
+            if (IsMinecraftService)
+            {
+                if (string.IsNullOrEmpty(ob.TunnelCustomConfig))
+                {
+                    ob.TunnelCustomConfig = "launcher.isMinecraftService = true";
+                }
+                else
+                {
+                    ob.TunnelCustomConfig += "\nlauncher.isMinecraftService = true";
+                }
+            }
+            else if (!string.IsNullOrEmpty(ob.TunnelCustomConfig))
+            {
+                ob.TunnelCustomConfig = Regex.Replace(ob.TunnelCustomConfig, "launcher.isMinecraftService( )?=( )?(T)?(t)?(rue)?(RUE)?(\\n)?", string.Empty);
             }
 
             ob.IsEnabled = true;

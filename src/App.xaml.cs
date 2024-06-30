@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -15,6 +16,7 @@ using System.Security;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -37,7 +39,9 @@ using Microsoft.AppCenter.Crashes;
 using Microsoft.Web.WebView2.Core;
 using OpenFrp.Launcher.Model;
 using OpenFrp.Launcher.ViewModels;
+using OpenFrp.Service.Call;
 using OpenFrp.Service.Net;
+using static Google.Protobuf.WellKnownTypes.Field.Types;
 
 
 namespace OpenFrp.Launcher
@@ -54,11 +58,11 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "OpenFrpLauncher.v100.WousiVairyenorPetere";
+        public static string VersionString { get; } = "OpenFrpLauncher.v100.YalpigaPermayhi";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
-        private static Properties.Settings Settings 
+        internal static Properties.Settings Settings 
         { 
             get
             {
@@ -77,9 +81,8 @@ namespace OpenFrp.Launcher
         public static H.NotifyIcon.TaskbarIcon TaskBarIcon { get; set; }
 
         public static Process ServiceProcess { get; set; }
-#pragma warning restore CS8618
 
-    
+#pragma warning restore CS8618
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -87,7 +90,7 @@ namespace OpenFrp.Launcher
             {
                 try
                 {
-                    var fe = OpenFrp.Service.Commands.FileDictionary.GetAutoStartupFile();
+                    var fe = FileDictionary.GetAutoStartupFile();
                     try
                     {
                         System.IO.File.Delete(fe);
@@ -120,41 +123,7 @@ namespace OpenFrp.Launcher
             {
                 FrpcVersionString = await GetFrpcVersionAsync();
 
-                if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
-                {
-                    var asm = Assembly.GetAssembly(typeof(OpenFrp.Service.RpcResponse));
-
-                    foreach (var item in ck)
-                    {
-                        try
-                        {
-                            if (item.MainModule.FileName.Equals(asm.Location))
-                            {
-                                item.Kill();
-                            }
-                        }
-                        catch { }
-                    }
-                }
-
-
-                var va = OpenFrp.Service.Commands.FileDictionary.GetFrpPlatform();
-                var fe = OpenFrp.Service.Commands.FileDictionary.GetFrpFile();
-
-                if (Process.GetProcessesByName($"frpc_windows_{va}.exe") is { Length: > 0 } cka)
-                {
-                    foreach (var item in cka)
-                    {
-                        try
-                        {
-                            if (item.MainModule.FileName.Equals(fe))
-                            {
-                                item.Kill();
-                            }
-                        }
-                        catch { }
-                    }
-                }
+                KillServiceProcess();
 
                 SetSecureApp();
 
@@ -223,6 +192,7 @@ namespace OpenFrp.Launcher
                 }
             }
             catch {  }
+
             FrpcVersionString = await GetFrpcVersionAsync();
             if ("non-frp".Equals(FrpcVersionString))
             {
@@ -272,24 +242,22 @@ namespace OpenFrp.Launcher
             TryAutoLogin();
             ConfigureRPC();
             ConfigureToast();
-            _ = Task.Run(async () =>
-            {
-                while (true)
-                {
-                    var va = await ConfigureVersionCheck(FrpcVersionString);
+            ConfigureTimer();
 
-                    if (va is { Exception: null,StatusCode: HttpStatusCode.OK })
-                    {
-                        await Task.Delay(TimeSpan.FromHours(2));
-                    }
-                    else await Task.Delay(TimeSpan.FromMinutes(10));
-                }
-            });
             ConfigureWindow(e.Args);
-
-
         }
 
+        protected override void OnExit(ExitEventArgs e)
+        {
+            ClearNotifications();
+
+            Settings.UserAuthorization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz");
+        }
+
+
+        /// <summary>
+        /// 是否为管理员
+        /// </summary>
         private static bool IsAdministrator()
         {
             WindowsIdentity identity = WindowsIdentity.GetCurrent();
@@ -297,6 +265,9 @@ namespace OpenFrp.Launcher
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
+        /// <summary>
+        /// HTTP Network 配置
+        /// </summary>
         private static void SetSecureApp()
         {
             if (Settings.UseProxy)
@@ -320,21 +291,139 @@ namespace OpenFrp.Launcher
 
         }
 
-        protected override void OnExit(ExitEventArgs e)
+        /// <summary>
+        /// 清除通知
+        /// </summary>
+        internal static void ClearNotifications(string? tag = "")
         {
-            ClearToast();
+            if (Environment.OSVersion.Version.Major is not 10)
+            {
+                try
+                {
+                    App.TaskBarIcon.ClearNotifications();
+                }
+                catch
+                {
+                    
+                }
+            }
+            else
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(tag))
+                    {
+                        Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tag);
 
-            Settings.UserAuthorization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz");
+                        return;
+                    }
+                    Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
+                }
+                catch
+                {
+                    try
+                    {
+                        App.TaskBarIcon.ClearNotifications();
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
         }
+
+        /// <summary>
+        /// 清除 WebView2 缓存
+        /// </summary>
+        internal static void ClearWebviewRuntimeCache()
+        {
+            if (!string.IsNullOrEmpty(App.WebViewTemplatePath) && Directory.Exists(App.WebViewTemplatePath))
+            {
+                try { Directory.Delete(App.WebViewTemplatePath, true); } catch { }
+            }
+        }
+
+        internal static void KillServiceProcess()
+        {
+            try
+            {
+                if (!ServiceProcess.HasExited)
+                {
+                    ServiceProcess.EnableRaisingEvents = false;
+                    ServiceProcess.Kill();
+                }
+            }
+            catch
+            {
+
+            }
+
+            try
+            {
+                string platform = RuntimeInformation.ProcessArchitecture switch
+                {
+                    Architecture.X64 => "amd64",
+                    Architecture.X86 => "386",
+                    Architecture.Arm64 => "arm64",
+                    _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
+                };
+                if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0 } ck)
+                {
+                    foreach (var pro in ck)
+                    {
+                        try
+                        {
+                            if (pro.MainModule.FileName.Equals(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc", $"frpc_windows_{platform}.exe")) && !pro.HasExited)
+                            {
+                                pro.Kill();
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+            try
+            {
+                if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
+                {
+                    var asm = Assembly.GetAssembly(typeof(OpenFrp.Service.Net.OpenFrp));
+
+                    foreach (var item in ck)
+                    {
+                        try
+                        {
+                            if (item.MainModule.FileName.Equals(asm.Location))
+                            {
+                                item.Kill();
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        #region Configure
 
         private static async void ConfigureAppCenter()
         {
             var id = (await AppCenter.GetInstallIdAsync()).ToString();
             AppCenter.SetUserId(id.ToString());
             Analytics.EnableManualSessionTracker();
-            //AppCenter.SetCountryCode(System.Globalization.CultureInfo.CurrentUICulture.EnglishName);
 
-            AppCenter.Start("07ba1344-c34b-42ec-83f5-511448b065a1",typeof(Analytics), typeof(Crashes));
+            AppCenter.Start("07ba1344-c34b-42ec-83f5-511448b065a1", typeof(Analytics), typeof(Crashes));
 
             await AppCenter.SetEnabledAsync(true);
 
@@ -343,74 +432,15 @@ namespace OpenFrp.Launcher
                 if (e.ExceptionObject is Exception ex)
                 {
                     Crashes.TrackError(ex);
-                    Clipboard.SetText(ex.ToString());
+                    try { Clipboard.SetText(ex.ToString()); } catch { }
 
                     MessageBox.Show($"错误内容已复制，按下Ctrl+V | 粘贴 来显示内容。" +
                     $"\n您也可以不反馈该问题，因为问题已上传到云端。\n会话 ID: {id}\n", "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    Environment.Exit(ex.HResult);
                 }
             };
         }
-
-        private static void ClearToast()
-        {
-            if (Environment.OSVersion.Version.Major is not 10) return;
-
-            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
-        }
-
-        internal static async Task<string> GetFrpcVersionAsync()
-        {
-            string platform = RuntimeInformation.ProcessArchitecture switch
-            {
-                Architecture.X64 => "amd64",
-                Architecture.X86 => "386",
-                Architecture.Arm64 => "arm64",
-                _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
-            };
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc");
-            var pathForFile = Path.Combine(path, $"frpc_windows_{platform}.exe");
-
-            if (!File.Exists(pathForFile))
-            {
-                return "non-frp";
-            }
-            try
-            {
-                var vk = Process.Start(new ProcessStartInfo
-                {
-                    WorkingDirectory = path,
-                    RedirectStandardOutput = true,
-                    FileName = pathForFile,
-                    Arguments = "-v",
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                });
-
-                await Task.Run(vk.WaitForExit);
-
-                while (!vk.StandardOutput.EndOfStream)
-                {
-                    string str = await vk.StandardOutput.ReadLineAsync();
-                    if (str.Contains("OpenFRP_"))
-                    {
-                        return str;
-                    }
-                }
-
-
-                Analytics.TrackEvent("User's FRPC detect failed!", new Dictionary<string, string>(){
-                    { "File",$"{pathForFile}" }
-                 });
-            }
-            catch (System.ComponentModel.Win32Exception)
-            {
-
-            }
-
-            return string.Empty;
-        }
-
-        #region Configure
 
         private static void ConfigureProcess()
         {
@@ -551,13 +581,65 @@ namespace OpenFrp.Launcher
             catch { }
         }
 
+        private static async Task<RenLink.Assets.Minecraft.MinecraftStatus?> @ef_sikeeriSiskeTuwuwee(int port)
+        {
+            TcpClient client = new TcpClient();
+
+            return await await client.ConnectAsync("127.0.0.1", port).ContinueWith<Task<RenLink.Assets.Minecraft.MinecraftStatus?>>(async delegate (Task task)
+            {
+                if (!task.IsFaulted && task.IsCompleted && client.Connected)
+                {
+                    try
+                    {
+                        using (RenLink.Network.Minecraft.MinecraftStream stream = new RenLink.Network.Minecraft.MinecraftStream(client))
+                        {
+                            var handshake = new RenLink.Assets.Minecraft.Packet.Handshake.Handshake
+                            {
+                                GameVersion = 47,
+                                NextState = RenLink.Assets.Minecraft.ClientState.Status,
+                                ServerAddress = "127.0.0.1\0FML",
+                                ServerPort = 0
+                            };
+
+                            await handshake.SerializeAsync(stream);
+
+                            await stream.WriteVarIntAsync(1);
+                            await stream.WriteVarIntAsync(0);
+
+                            var len = await stream.ReadVarIntAsync();
+                            if (len > 0)
+                            {
+                                _ = await stream.ReadVarIntAsync();
+
+                                var json = await stream.ReadStringAsync();
+
+                                return System.Text.Json.JsonSerializer.Deserialize<RenLink.Assets.Minecraft.MinecraftStatus>(json);
+                            }
+                            client.Close();
+                            return default(RenLink.Assets.Minecraft.MinecraftStatus);
+                            //var status = RenLink.Assets.Minecraft.Packet.JsonResponseBody
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                return default(RenLink.Assets.Minecraft.MinecraftStatus);
+            });
+        }
+
         private static async void ConfigureRPC()
         {
             RpcManager.Configre($"openfrpLauncher.{@ev_AssemblyAc()}");
+            Regex regexForMotdPort = new Regex(@"\[MOTD\](\D{1,999})?\[/MOTD\]\[AD\]([0-9]{1,999})\[\/AD\]");
 
             while (true)
             {
-                var resp = await RpcManager.SyncAsync(new OpenFrp.Service.Proto.Request.SyncRequest { }); 
+                var resp = await RpcManager.SyncAsync(new OpenFrp.Service.Proto.Request.SyncRequest
+                {
+                    AppType = Service.Proto.Request.SyncAppType.Launcher
+                }); 
                 if (resp.IsSuccess && resp.Data != null)
                 {
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(resp.Data.TunnelId.ToArray()));
@@ -566,143 +648,217 @@ namespace OpenFrp.Launcher
                         WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create("onService"));
                         var exception = await RpcManager.NotifiyStream(async (response) =>
                         {
-                            var tunnel = JsonSerializer.Deserialize<Awe.Model.OpenFrp.Response.Data.UserTunnel>(response.TunnelJson);
-                            if (tunnel != null)
+                            try
                             {
                                 switch (response.State)
                                 {
-                                    case Service.Proto.Response.NotiflyStreamState.LaunchSuccess:
+                                    case Service.Proto.Response.NotiflyStreamState.NoticeUdpClientFallback:
                                         {
-                                            if (Settings.NotifyMode is Model.NotifyMode.Disable) break;
-
-                                            var sb = new StringBuilder();
-
-                                            if ("HTTP".Contains(tunnel.Type))
+                                            if (response.Data.Is(OpenFrp.Service.Proto.Response.UdpBroadcastReceived.Descriptor) && response.Data.TryUnpack<OpenFrp.Service.Proto.Response.UdpBroadcastReceived>(out var packet))
                                             {
-                                                foreach (var item in tunnel.Domains)
+                                                if (WeakReferenceMessenger.Default.IsRegistered<RouteMessage<Controls.TunnelEditor, int>>(nameof(Controls.TunnelEditor)))
                                                 {
-                                                    sb.Append(item + ",");
-                                                }
-                                            }
-                                            if (Environment.OSVersion.Version.Major is 10 && Settings.NotifyMode is Model.NotifyMode.Toast)
-                                            {
-                                                try
-                                                {
-                                                    new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
-                                                    .AddText($"隧道 {tunnel.Name} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
-                                                    .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
-                                                    .AddText($"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}")
-                                                    .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
-                                                    .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {("HTTP".Contains(tunnel.Type) ? tunnel.Domains.First() : tunnel.ConnectAddress)}")
-                                                    .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
-                                                    .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
-                                                    .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
-                                                    .Show(toast =>
+                                                    string str = packet.Data.ToStringUtf8();
+                                                    if (regexForMotdPort.Match(str) is { Success: true, Groups.Count: 3 } match)
                                                     {
-                                                        toast.Tag = tunnel.Name;
-                                                        try { toast.ExpiresOnReboot = true; }
-                                                        catch
+                                                        if (int.TryParse(match.Groups[2].ToString(),out var port))
                                                         {
-
+                                                            WeakReferenceMessenger.Default.Send(RouteMessage<Controls.TunnelEditor>.Create(port));
                                                         }
-                                                        toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
-                                                    });
-                                                }
-                                                catch
-                                                {
-                                                    if (TaskBarIcon is not null)
-                                                    {
-                                                        try
-                                                        {
-                                                            TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
-                                                                icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
-                                                        }
-                                                        catch { }
                                                     }
                                                 }
                                             }
-                                            else if (TaskBarIcon is not null &&
-                                                Settings.NotifyMode is Model.NotifyMode.NotifyIcon)
-                                            {
-                                                try
-                                                {
-                                                    TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
-                                                        icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
-                                                }
-                                                catch { }
-                                            }
                                             break;
-                                        };
-                                    case Service.Proto.Response.NotiflyStreamState.NoticeForLauncher when response.Message.Contains("被 Console 要求下线"):
-                                        {
-                                            var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest { });
-
-                                            if (resp.IsSuccess && resp.Data != null)
-                                            {
-                                                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(resp.Data.TunnelId.ToArray()));
-
-                                                await Task.Delay(500);
-
-                                                WeakReferenceMessenger.Default.Send(new Tuple<string, object?>("refresh", default));
-                                            }
-
-                                            ; break;
                                         }
-                                    case Service.Proto.Response.NotiflyStreamState.LaunchFailed:
+                                    default:
                                         {
-                                            if (response.TunnelJson.Equals("app.unhandleException"))
+                                            var tunnel = JsonSerializer.Deserialize<Awe.Model.OpenFrp.Response.Data.UserTunnel>(response.TunnelJson);
+                                            if (tunnel != null)
                                             {
-                                                break;
-                                            }
-                                            if (Environment.OSVersion.Version.Major is 10 &&
-                                                Settings.NotifyMode is Model.NotifyMode.Toast)
-                                            {
-                                                try
+                                                switch (response.State)
                                                 {
-                                                    new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
-                                                     .AddText($"隧道 {tunnel.Name} 启动失败", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
-                                                     .AddText(response.Message)
-                                                     .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
-                                                     .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
-                                                     .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
-                                                     .Show(toast =>
-                                                     {
-                                                         toast.Tag = tunnel.Name;
-                                                         try { toast.ExpiresOnReboot = true; } catch { }
-                                                         toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
-                                                     });
-                                                }
-                                                catch
-                                                {
-                                                    if (TaskBarIcon is not null)
-                                                    {
-                                                        try
+                                                    case Service.Proto.Response.NotiflyStreamState.LaunchSuccess:
                                                         {
-                                                            TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
-                                                                icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
-                                                        }
-                                                        catch { }
-                                                    }
-                                                }
-                                            }
-                                            else if (TaskBarIcon is not null && Settings.NotifyMode is Model.NotifyMode.NotifyIcon)
-                                            {
-                                                try
-                                                {
-                                                    TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
-                                                        icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
-                                                }
-                                                catch { }
-                                            }
-                                            break;
-                                        }
-                                    case Service.Proto.Response.NotiflyStreamState.NoticeForTunnelClosed:
-                                        {
-                                            WeakReferenceMessenger.Default.Send(RouteMessage<TunnelsViewModel>.Create(response));
+                                                            if (Settings.NotifyMode is Model.NotifyMode.Disable) break;
 
+                                                            var sb = new StringBuilder();
+
+                                                            if ("HTTP".Contains(tunnel.Type))
+                                                            {
+                                                                foreach (var item in tunnel.Domains)
+                                                                {
+                                                                    sb.Append(item + ",");
+                                                                }
+                                                            }
+                                                            if (Environment.OSVersion.Version.Major is 10 && Settings.NotifyMode is Model.NotifyMode.Toast)
+                                                            {
+                                                                
+                                                                try
+                                                                {
+                                                                    if (!string.IsNullOrEmpty(tunnel.TunnelCustomConfig) && Regex.IsMatch(tunnel.TunnelCustomConfig, "launcher.isMinecraftService( )?=( )?(T)?(t)?(rue)?(RUE)?"))
+                                                                    {
+                                                                        var img = Path.GetTempFileName();
+                                                                        using (FileStream fs = File.Open(img, FileMode.OpenOrCreate))
+                                                                        {
+                                                                            var source = App.GetResourceStream(new Uri($"pack://application:,,,/Resources/Images/home-bar.png"));
+
+                                                                            if (source.Stream is { Length: > 0 } f)
+                                                                            {
+                                                                                await f.CopyToAsync(fs);
+                                                                                await fs.FlushAsync();
+                                                                            }
+                                                                        }
+
+                                                                        var status = await ef_sikeeriSiskeTuwuwee(tunnel.Port).WithTimeout(5000);
+
+                                                                        new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                                            .AddHeroImage(new Uri(img,UriKind.RelativeOrAbsolute))
+                                                                            .AddText($"Minecraft 服务映射成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                                            .AddText($"游戏版本: {status?.Version.AppName ?? "未知"} ({status?.Version.ProtocolVersion ?? -1})", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Subtitle)
+                                                                            .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。\n可用地址: {tunnel.ConnectAddress}")
+                                                                            .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}\nMotd: {status?.Description.ToString()}")
+                                                                            
+                                                                            .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {("HTTP".Contains(tunnel.Type) ? tunnel.Domains.First() : tunnel.ConnectAddress)}")
+                                                                            .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
+                                                                            .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                                            .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                                            .Show(toast =>
+                                                                            {
+                                                                                toast.Tag = tunnel.Name;
+                                                                                try { toast.ExpiresOnReboot = true; }
+                                                                                catch
+                                                                                {
+
+                                                                                }
+                                                                                toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                                            });
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                                        .AddText($"隧道 {tunnel.Name} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                                        .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
+                                                                        .AddText($"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}")
+                                                                        .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
+                                                                        .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {("HTTP".Contains(tunnel.Type) ? tunnel.Domains.First() : tunnel.ConnectAddress)}")
+                                                                        .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
+                                                                        .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                                        .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                                        .Show(toast =>
+                                                                        {
+                                                                            toast.Tag = tunnel.Name;
+                                                                            try { toast.ExpiresOnReboot = true; }
+                                                                            catch
+                                                                            {
+
+                                                                            }
+                                                                            toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                                        });
+                                                                    }
+                                                                }
+                                                                catch
+                                                                {
+                                                                    if (TaskBarIcon is not null)
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
+                                                                                icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
+                                                                        }
+                                                                        catch { }
+                                                                    }
+                                                                }
+                                                            }
+                                                            else if (TaskBarIcon is not null && Settings.NotifyMode is Model.NotifyMode.NotifyIcon)
+                                                            {
+                                                                try
+                                                                {
+                                                                    TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动成功!", $"可用地址: {("HTTP".Contains(tunnel.Type) ? sb.ToString().Remove(sb.Length - 1) : tunnel.ConnectAddress)}",
+                                                                        icon: H.NotifyIcon.Core.NotificationIcon.Info, timeout: TimeSpan.FromSeconds(10));
+                                                                }
+                                                                catch { }
+                                                            }
+                                                            break;
+                                                        };
+                                                    case Service.Proto.Response.NotiflyStreamState.NoticeForLauncher when response.Message.Contains("被 Console 要求下线"):
+                                                        {
+                                                            var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest { });
+
+                                                            if (resp.IsSuccess && resp.Data != null)
+                                                            {
+                                                                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(resp.Data.TunnelId.ToArray()));
+
+                                                                await Task.Delay(500);
+
+                                                                WeakReferenceMessenger.Default.Send(new Tuple<string, object?>("refresh", default));
+                                                            }
+
+                                                            ; break;
+                                                        }
+                                                    case Service.Proto.Response.NotiflyStreamState.LaunchFailed:
+                                                        {
+                                                            if (response.TunnelJson.Equals("app.unhandleException"))
+                                                            {
+                                                                break;
+                                                            }
+                                                            if (Environment.OSVersion.Version.Major is 10 &&
+                                                                Settings.NotifyMode is Model.NotifyMode.Toast)
+                                                            {
+                                                                try
+                                                                {
+                                                                    new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                                     .AddText($"隧道 {tunnel.Name} 启动失败", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                                     .AddText(response.Message)
+                                                                     .AddAttributionText($"{tunnel.Type!.ToUpper()} {tunnel.Host}:{tunnel.Port}")
+                                                                     .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                                     .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                                     .Show(toast =>
+                                                                     {
+                                                                         toast.Tag = tunnel.Name;
+                                                                         try { toast.ExpiresOnReboot = true; } catch { }
+                                                                         toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                                     });
+                                                                }
+                                                                catch
+                                                                {
+                                                                    if (TaskBarIcon is not null)
+                                                                    {
+                                                                        try
+                                                                        {
+                                                                            TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
+                                                                                icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                                                        }
+                                                                        catch { }
+                                                                    }
+                                                                }
+                                                            }
+                                                            else if (TaskBarIcon is not null && Settings.NotifyMode is Model.NotifyMode.NotifyIcon)
+                                                            {
+                                                                try
+                                                                {
+                                                                    TaskBarIcon.ShowNotification($"隧道 {tunnel.Name} 启动失败", response.Message,
+                                                                        icon: H.NotifyIcon.Core.NotificationIcon.Error, timeout: TimeSpan.FromSeconds(10));
+                                                                }
+                                                                catch { }
+                                                            }
+                                                            break;
+                                                        }
+                                                    case Service.Proto.Response.NotiflyStreamState.NoticeForTunnelClosed:
+                                                        {
+                                                            WeakReferenceMessenger.Default.Send(RouteMessage<TunnelsViewModel>.Create(response));
+
+                                                            break;
+                                                        }
+                                                }
+                                            }
                                             break;
                                         }
                                 }
+                               
+                            }
+                            catch
+                            {
+
                             }
                         });
                         if (exception is not null)
@@ -713,10 +869,6 @@ namespace OpenFrp.Launcher
                             {
                                 UserName = "not-allow-display"
                             }));
-
-                            
-
-                            throw exception;
                         }
                     }
                     catch { }
@@ -740,15 +892,26 @@ namespace OpenFrp.Launcher
             }
         }
 
+        private static async void ConfigureTimer()
+        {
+            while (true)
+            {
+                var va = await ConfigureVersionCheck(FrpcVersionString);
+
+                if (va is { Exception: null, StatusCode: HttpStatusCode.OK })
+                {
+                    await Task.Delay(TimeSpan.FromHours(2));
+                }
+                else await Task.Delay(TimeSpan.FromMinutes(10));
+            }
+        }
+
         private static void ConfigureWindow(string[] args)
         {
-            var wind = App.Current?.MainWindow;
-            if (App.Current?.MainWindow is null)
+            if (App.Current is { MainWindow: var wind})
             {
                 wind = new MainWindow();
 
-              
-                
                 if (args.Contains("--minimize"))
                 {
                     wind.WindowState = WindowState.Minimized;
@@ -764,181 +927,48 @@ namespace OpenFrp.Launcher
                 {
                     if (App.Current is null) { throw null!; }
 
+                    var ctx = (ContextMenu)App.Current.TryFindResource("OpenFrp.Launcher.App.ContextMenu");
+
+                    ctx.SetBinding(ModernWpf.ThemeManager.RequestedThemeProperty, new Binding
+                    {
+                        Source = wind,
+                        Mode = BindingMode.OneWay,
+                        Path = new PropertyPath(ModernWpf.ThemeManager.RequestedThemeProperty)
+                    });
                     TaskBarIcon = new H.NotifyIcon.TaskbarIcon()
                     {
                         NoLeftClickDelay = true,
-                        LeftClickCommand = new RelayCommand(() =>
-                        {
-                            wind.ShowInTaskbar();
-                            wind.Show();
-                            
-                            if (App.Current.MainWindow.WindowState is WindowState.Minimized)
-                            {
-                                App.Current.MainWindow.WindowState = WindowState.Normal;
-                            }
-                            Awe.UI.Win32.User32.SetForegroundWindow(inp.Handle);
-                            
-                            wind.Activate();
-                        }),
+                        LeftClickCommand = ShowWindowCommand,
                         ToolTipText = "OpenFrp 桌面启动器",
                         IconSource = new BitmapImage(new Uri("pack://application:,,,/Resources/desktop.ico")),
-                        ContextMenu = CreateObject<System.Windows.Controls.ContextMenu>(x =>
-                        {
-                            x.SetBinding(ModernWpf.ThemeManager.RequestedThemeProperty, new Binding
-                            {
-                                Source = wind,
-                                Path = new PropertyPath(ModernWpf.ThemeManager.RequestedThemeProperty),
-                                Mode = BindingMode.OneWay
-                            });
-                            x.Width = 175;
-                            x.HasDropShadow = false;
-                            x.Items.Add(CreateObject<MenuItem>((xa) =>
-                            {
-                                xa.Icon = new ModernWpf.Controls.FontIcon() { Glyph = "\uE8A7" };
-                                xa.Header = "显示窗口";
-                                xa.Command = new RelayCommand(() =>
-                                {
-                                    wind.ShowInTaskbar();
-                                    wind.Show();
-
-                                    if (App.Current.MainWindow.WindowState is WindowState.Minimized)
-                                    {
-                                        App.Current.MainWindow.WindowState = WindowState.Normal;
-                                    }
-                                    Awe.UI.Win32.User32.SetForegroundWindow(inp.Handle);
-
-                                    wind.Activate();
-                                });
-                            }));
-                            x.Items.Add(new Separator());
-                            x.Items.Add(CreateObject<MenuItem>((xa)=>
-                            {
-                                xa.Header = "退出";
-                                xa.Icon = new ModernWpf.Controls.FontIcon() { Glyph = "\ue89f" };
-                                xa.Command = new AsyncRelayCommand(async () =>
-                                {
-                                    x.IsOpen = false;
-
-                                    await Task.Delay(300);
-
-                                    _ = wind.Dispatcher.Invoke(async delegate
-                                    {
-                                        var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
-                                        if (resp.IsSuccess && resp.Data is { UserLogon: true })
-                                        {
-                                            Settings.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
-                                        }
-                                        if (Environment.OSVersion.Version.Major is 10)
-                                        {
-                                            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
-                                        }
-                                        Settings.Save();
-                                        if (!string.IsNullOrEmpty(App.WebViewTemplatePath) && Directory.Exists(App.WebViewTemplatePath))
-                                        {
-                                            try { Directory.Delete(App.WebViewTemplatePath, true); } catch { }
-                                        }
-                                        App.Current.Shutdown();
-                                    });
-                                    //Environment.Exit(0);
-                                });
-                            }));
-                            x.Items.Add(CreateObject<MenuItem>((xa) =>
-                            {
-                                xa.Header = "彻底退出";
-                                xa.Icon = new ModernWpf.Controls.FontIcon() { Glyph = "\ue8bb" };
-                                xa.Command = new AsyncRelayCommand(async () =>
-                                {
-                                    x.IsOpen = false;
-
-                                    await Task.Delay(300);
-
-                                    _ = wind.Dispatcher.Invoke(async delegate
-                                    {
-                                        App.Current!.MainWindow.Visibility = Visibility.Hidden;
-                                        var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
-                                        if (resp.IsSuccess && resp.Data is { UserLogon: true })
-                                        {
-                                            Settings.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
-                                        }
-
-                                        Settings.Save();
-
-
-                                        if (Environment.OSVersion.Version.Major is 10)
-                                        {
-                                            try
-                                            {
-                                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Clear();
-                                            }
-                                            catch { }
-                                        }
-                                        try
-                                        {
-                                            if (!ServiceProcess.HasExited)
-                                            {
-                                                ServiceProcess.EnableRaisingEvents = false;
-                                                ServiceProcess.Kill();
-                                            }
-                                        }
-                                        catch
-                                        {
-
-                                        }
-
-                                        string platform = RuntimeInformation.ProcessArchitecture switch
-                                        {
-                                            Architecture.X64 => "amd64",
-                                            Architecture.X86 => "386",
-                                            Architecture.Arm64 => "arm64",
-                                            _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
-                                        };
-                                        if (Process.GetProcessesByName($"frpc_windows_{platform}") is { Length: > 0 } ck)
-                                        {
-                                            foreach (var pro in ck)
-                                            {
-                                                try
-                                                {
-                                                    if (pro.MainModule.FileName.Equals(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc", $"frpc_windows_{platform}.exe")) && !pro.HasExited)
-                                                    {
-                                                        pro.Kill();
-                                                    }
-                                                }
-                                                catch
-                                                {
-
-                                                }
-                                            }
-                                        }
-                                        Environment.Exit(0);
-                                    });
-
-                                    
-                                });
-                            }));
-                            //foreach (var va in x.Items)
-                            //{
-                            //    if (va is DependencyObject doc)
-                            //    {
-                            //        //doc.SetValue(Awe.UI.Helper.WindowsHelper.LightModeRebindProperty, true);
-                            //    }
-                            //}
-                        })
+                        ContextMenu = ctx
                     };
                     TaskBarIcon.ForceCreate(false);
                 }
-                catch (Exception?)
+                catch (Exception?) { }
+
+                if (Awe.UI.Win32.UserUxtheme.IsSupportDarkMode)
                 {
-
+                    Awe.UI.Win32.UserUxtheme.AllowDarkModeForApp(true);
+                    Awe.UI.Win32.UserUxtheme.ShouldAppsUseDarkMode();
+                    Awe.UI.Win32.UserUxtheme.ShouldSystemUseDarkMode();
                 }
-            }
 
-            if (Awe.UI.Win32.UserUxtheme.IsSupportDarkMode)
-            {
-                Awe.UI.Win32.UserUxtheme.AllowDarkModeForApp(true);
-                Awe.UI.Win32.UserUxtheme.ShouldAppsUseDarkMode();
-                Awe.UI.Win32.UserUxtheme.ShouldSystemUseDarkMode();
-            }
+                if (Settings.FontFamily is null)
+                {
+                    Settings.FontFamily = new FontFamily("Microsoft YaHei UI");
+                }
 
+                wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, Settings.ApplicationTheme);
+                if (Settings.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
+                {
+                    wind.SetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty, backdrop);
+                }
+
+                var handle = new WindowInteropHelper(wind).EnsureHandle();
+                __mainWindHandle = handle;
+                Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
+            }
             Microsoft.Win32.SystemEvents.SessionEnding += async (_, e) =>
             {
                 e.Cancel = true;
@@ -948,7 +978,7 @@ namespace OpenFrp.Launcher
                 var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
                 if (resp.IsSuccess && resp.Data is { UserLogon: true })
                 {
-                    Settings.AutoStartupTunnelId = JsonSerializer.Serialize(resp.Data.TunnelId);
+                    Settings.AutoStartupTunnelId = resp.Data.TunnelId.ToArray();
                 }
 
                 Settings.Save();
@@ -1000,26 +1030,6 @@ namespace OpenFrp.Launcher
 
                 App.Current?.Shutdown();
             };
-
-            if (wind is null) { App.Current?.Shutdown(); return; }
-
-            //var useLightMode = Settings.ApplicationTheme;
-
-            if (Settings.FontFamily is null)
-            {
-                Settings.FontFamily = new FontFamily("Microsoft YaHei UI");
-            }
-
-          
-
-            wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, Settings.ApplicationTheme);
-            if (Settings.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
-            {
-                wind.SetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty, backdrop);
-            }
-
-            var handle = new WindowInteropHelper(wind).EnsureHandle();
-            Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
         }
 
         private static void ConfigureUpdateWindow()
@@ -1040,6 +1050,58 @@ namespace OpenFrp.Launcher
 
         #endregion
 
+        internal static async Task<string> GetFrpcVersionAsync()
+        {
+            string platform = RuntimeInformation.ProcessArchitecture switch
+            {
+                Architecture.X64 => "amd64",
+                Architecture.X86 => "386",
+                Architecture.Arm64 => "arm64",
+                _ => throw new NotSupportedException("本软件暂不支持 ARMv7 等其他平台。"),
+            };
+            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "frpc");
+            var pathForFile = Path.Combine(path, $"frpc_windows_{platform}.exe");
+
+            if (!File.Exists(pathForFile))
+            {
+                return "non-frp";
+            }
+            try
+            {
+                var vk = Process.Start(new ProcessStartInfo
+                {
+                    WorkingDirectory = path,
+                    RedirectStandardOutput = true,
+                    FileName = pathForFile,
+                    Arguments = "-v",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+
+                await Task.Run(vk.WaitForExit);
+
+                while (!vk.StandardOutput.EndOfStream)
+                {
+                    string str = await vk.StandardOutput.ReadLineAsync();
+                    if (str.Contains("OpenFRP_"))
+                    {
+                        return str;
+                    }
+                }
+
+
+                Analytics.TrackEvent("User's FRPC detect failed!", new Dictionary<string, string>(){
+                    { "File",$"{pathForFile}" }
+                 });
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+
+            }
+
+            return string.Empty;
+        }
+
         private static async void TryAutoLogin()
         {
             try
@@ -1053,7 +1115,7 @@ namespace OpenFrp.Launcher
 
                         var fallbackTask = new TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>();
 
-                        var mwn = new ViewModels.LoginDialogVIewModel()
+                        var mwn = new ViewModels.LoginDialogViewModel()
                         {
                             Username = c.Username,
                             Password = pwn,
@@ -1067,6 +1129,7 @@ namespace OpenFrp.Launcher
                             if (await fallbackTask.Task is { } info)
                             {
                                 WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(info));
+                                @appLaunchTunnel_auto();
                             }
                         }
                     }
@@ -1095,6 +1158,7 @@ namespace OpenFrp.Launcher
                         {
                             WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(userInfo));
                             RpcManager.UserSecureCode = rrpc.Data;
+                            @appLaunchTunnel_auto();
 
                             return;
                         }
@@ -1105,18 +1169,108 @@ namespace OpenFrp.Launcher
             catch { }
         }
 
-        private static T CreateObject<T>(Action<T>? func = default, params object[] args)
+        private static void @appLaunchTunnel_auto()
         {
-            var vc = Activator.CreateInstance(typeof(T), args);
-
-            if (vc is null) throw new NullReferenceException();
-            else if (vc is T tt)
+            ThreadPool.QueueUserWorkItem(async delegate
             {
-                if (func is not null) { func(tt); }
-                return tt;
-            }
-            throw new TypeLoadException();
+                try
+                {
+                    if (Launcher.Properties.Settings.Default.AutoStartupTunnelId is { Length: > 0 } tb)
+                    {
+                        var userTunnels = await Service.Net.OpenFrp.GetUserTunnels();
+                        if (userTunnels.StatusCode is System.Net.HttpStatusCode.OK &&
+                            userTunnels.Data is { Total: > 0 } && userTunnels.Data.List is { } list)
+                        {
+                            HashSet<Awe.Model.OpenFrp.Response.Data.UserTunnel> s = new HashSet<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
+                            foreach (var item in userTunnels.Data!.List!)
+                            {
+                                if (tb.Contains(item.Id))
+                                {
+                                    if (!string.IsNullOrEmpty(item.TunnelCustomConfig) && Regex.IsMatch(item.TunnelCustomConfig, "launcher.isMinecraftService( )?=( )?(T)?(t)?(rue)?(RUE)?"))
+                                    {
+                                        // match
+                                        break;
+                                    }
+
+                                    s.Add(item);
+                                }
+                            }
+                 
+                            var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest
+                            {
+                                SecureCode = RpcManager.UserSecureCode,
+                                TunnelIdJson = JsonSerializer.Serialize(s),
+                                UseDebug = Settings.UseDebugMode,
+                                UseTlsEncrypt = Settings.UseTlsEncrypt,
+                                AppType = Service.Proto.Request.SyncAppType.Launcher
+                            });
+                            if (resp.IsSuccess)
+                            {
+                                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(s.Select(x => x.Id).ToArray()));
+                            }
+                        }
+                    }
+
+                }
+                catch { }
+            });
         }
+
+        public static RelayCommand DestoryAppCommand { get; } = new RelayCommand(async delegate
+        {
+            App.Current.MainWindow.Visibility = Visibility.Hidden;
+
+            var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
+            if (resp.IsSuccess && resp.Data is { UserLogon: true })
+            {
+                Settings.AutoStartupTunnelId = resp.Data.TunnelId.ToArray();
+            }
+            
+            Settings.Save();
+            ClearNotifications();
+            ClearWebviewRuntimeCache();
+            KillServiceProcess();
+
+            App.Current.Shutdown();
+        });
+
+        public static RelayCommand DestoryLauncherCommand { get; } = new RelayCommand(async delegate
+        {
+            await Task.Delay(250);
+
+            var resp = await RpcManager.SyncAsync(TimeSpan.FromSeconds(5));
+            if (resp.IsSuccess && resp.Data is { UserLogon: true })
+            {
+                Settings.AutoStartupTunnelId = resp.Data.TunnelId.ToArray();
+            }
+
+            Settings.Save();
+
+            ClearNotifications();
+            ClearWebviewRuntimeCache();
+     
+
+            App.Current.Shutdown();
+        });
+
+        public static RelayCommand ShowWindowCommand { get; } = new RelayCommand(() =>
+        {
+            if (App.Current is { MainWindow: var wind })
+            {
+                wind.ShowInTaskbar();
+                wind.Show();
+
+                if (App.Current.MainWindow.WindowState is WindowState.Minimized)
+                {
+                    App.Current.MainWindow.WindowState = WindowState.Normal;
+                }
+                Awe.UI.Win32.User32.SetForegroundWindow(__mainWindHandle);
+
+                wind.Activate();
+            }
+        });
+
+        private static IntPtr __mainWindHandle = IntPtr.Zero;
     }
 
     internal static class ExtendMethod
@@ -1139,6 +1293,18 @@ namespace OpenFrp.Launcher
 
             return default;
         }
+
+        //public static async Task<T?> WithCancellationToken<T>(this Task<T> task, CancellationToken token)
+        //{
+        //    try
+        //    {
+        //        return await Task.Run(async () => await task.ConfigureAwait(false), token);
+        //    }
+        //    catch
+        //    {
+        //        return default;
+        //    }
+        //}
 
 
         public static async Task<Exception?> RunWithTryCatch(Func<Task> task)
@@ -1172,6 +1338,5 @@ namespace OpenFrp.Launcher
             }
             // return (default, default);
         }
-
     }
 }

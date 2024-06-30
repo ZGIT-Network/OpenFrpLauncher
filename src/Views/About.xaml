@@ -38,10 +38,11 @@
             <ui:ScrollViewerEx PanningMode="VerticalFirst" RewriteWheelChange="True">
                 <Border MaxWidth="1272" Padding="36,4,36,0">
                     <ui:SimpleStackPanel Spacing="8">
-                        <TextBlock
-                            FontSize="18"
-                            Text="至远光辉技术 | Copyright 2023"
-                            TextWrapping="Wrap" />
+                        <TextBlock FontSize="18" TextWrapping="Wrap">
+                            <Run Text="至远光辉技术 | Copyright 2024" />
+                            <LineBreak />
+                            <Run Text="爱来自 Everyone,热爱即是真理。" />
+                        </TextBlock>
                         <ui:HyperlinkButton
                             Padding="0"
                             AutomationProperties.Name="开源地址"

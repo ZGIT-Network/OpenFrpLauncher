@@ -120,18 +120,6 @@ namespace OpenFrp.Launcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("[]")]
-        public string AutoStartupTunnelId {
-            get {
-                return ((string)(this["AutoStartupTunnelId"]));
-            }
-            set {
-                this["AutoStartupTunnelId"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("NotifyIconDefault")]
         public global::OpenFrp.Launcher.Model.NotifyMode NotifyMode {
             get {
@@ -187,6 +175,19 @@ namespace OpenFrp.Launcher.Properties {
             }
             set {
                 this["UseProxy"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfInt xmlns:xsd=\"http://www.w3.org" +
+            "/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" />")]
+        public int[] AutoStartupTunnelId {
+            get {
+                return ((int[])(this["AutoStartupTunnelId"]));
+            }
+            set {
+                this["AutoStartupTunnelId"] = value;
             }
         }
     }

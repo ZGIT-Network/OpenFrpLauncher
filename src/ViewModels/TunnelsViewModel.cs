@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ModernWpf.Controls;
 using OpenFrp.Launcher.Model;
+using Windows.AI.MachineLearning;
 using AppNetwork = OpenFrp.Service.Net;
 
 namespace OpenFrp.Launcher.ViewModels
@@ -22,7 +23,21 @@ namespace OpenFrp.Launcher.ViewModels
         {
             WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
 
-            WeakReferenceMessenger.Default.Register<RouteMessage<TunnelsViewModel, OpenFrp.Service.Proto.Response.NotiflyStreamResponse>>(nameof(TunnelsViewModel), (_, data) =>
+            WeakReferenceMessenger.Default.Register<RouteMessage<TunnelsViewModel, string>>(nameof(TunnelsViewModel), (_, data) =>
+            {
+                switch (data.Data)
+                {
+                    case "refresh":
+                        {
+                            if (!event_RefreshTunnelsCollectionCommand.IsRunning && refreshFinish)
+                            {
+                                _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
+                            }
+                            break;
+                        }
+                }
+            });
+            WeakReferenceMessenger.Default.Register<RouteMessage<TunnelsViewModel, Service.Proto.Response.NotiflyStreamResponse>>(nameof(TunnelsViewModel), (_, data) =>
             {
                 if (data.Data is { State: Service.Proto.Response.NotiflyStreamState.NoticeForTunnelClosed } dac)
                 {
@@ -47,7 +62,11 @@ namespace OpenFrp.Launcher.ViewModels
                                         tg.Tag = "ccv";
                                         if (Environment.OSVersion.Version.Major is 10)
                                         {
-                                            Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
+                                            try
+                                            {
+                                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
+                                            }
+                                            catch { }
                                         }
                                         tg.IsOn = false;
                                     }
@@ -63,21 +82,27 @@ namespace OpenFrp.Launcher.ViewModels
                     _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
                 }
             });
-            WeakReferenceMessenger.Default.Register<RouteMessage<TunnelsViewModel, string>>(nameof(TunnelsViewModel), (_, data) =>
+            WeakReferenceMessenger.Default.Register<RouteMessage<TunnelsViewModel, PortWaitData>>(nameof(TunnelsViewModel), (_, data) =>
             {
-                switch (data.Data)
+                if (data is { Data.Tunnel: var tunnel })
                 {
-                    case "refresh": 
+                    if (Tunnels is { Count: > 0 })
+                    {
+                        foreach (var tal in Tunnels)
                         {
-                            if (!event_RefreshTunnelsCollectionCommand.IsRunning && refreshFinish)
+                            if (tal.Id.Equals(tunnel!.Id))
                             {
-                                _ = event_RefreshTunnelsCollectionCommand.ExecuteAsync(null);
+                                OnlineTunnels.Add(tunnel.Id);
+
+                                tunnel.IsPortWaiting = false;
                             }
-                            break; 
                         }
+                    }
                 }
             });
         }
+
+ 
 
         public HashSet<int> OnlineTunnels
         {
@@ -99,8 +124,6 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (ar.Source is ModernWpf.Controls.Page pg)
             {
-
-
                 pg.Unloaded += delegate
                 {
                     _tokenSource.Cancel();
@@ -111,7 +134,7 @@ namespace OpenFrp.Launcher.ViewModels
         private bool refreshFinish;
 
         [RelayCommand]
-        private void @event_CopyConnectUrl(ModernWpf.Controls.HyperlinkButton hlb)
+        private void @event_CopyConnectUrl(HyperlinkButton hlb)
         {
             if (hlb.DataContext is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
             {
@@ -143,7 +166,7 @@ namespace OpenFrp.Launcher.ViewModels
             if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
                 Response.Data is { List: var list } && list is not null)
             {
-                Tunnels = new ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>();
+                Tunnels = new ObservableCollection<OpenFrp.Launcher.Model.UserTunnel>();
 
                 if (App.Current is { Dispatcher: var dispatcher })
                 {
@@ -155,7 +178,14 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             if (refreshFinish || _tokenSource.IsCancellationRequested) break;
 
-                            Tunnels.Add(tunnel);
+                            var va = UserTunnel.FromOriginalUserTunnel(tunnel);
+
+                            //if (va.IsMinecraftService && App.PortWaiterPool.ContainsKey(va.Name!))
+                            //{
+                            //    va.IsPortWaiting = true;
+                            //}
+
+                            Tunnels.Add(va);
 
                             await Task.Delay(50);
                         }
@@ -190,7 +220,7 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private async Task @event_EditTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        private async Task @event_EditTunnel(UserTunnel tunnel)
         {
             try
             {
@@ -213,7 +243,7 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private void @event_DeleteTunnel(Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        private void @event_DeleteTunnel(UserTunnel tunnel)
         {
             if (App.Current is { Dispatcher: var dispatcher } && dispatcher is not null &&
                 itemsControl != null)
@@ -248,20 +278,52 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_ToggleSwitchLoaded(RoutedEventArgs arg)
         {
-            if (arg.Source is ToggleSwitch switcher && switcher.DataContext is Awe.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+            if (arg.Source is ToggleSwitch switcher && switcher.DataContext is UserTunnel tunnel)
             {
+                CancellationTokenSource tokenSource = new CancellationTokenSource();
                 switcher.Toggled += async delegate
                 {
-                    if (!switcher.IsEnabled)
-                    {
-                        if ("ccv".Equals(switcher.Tag)) switcher.IsEnabled = true;
-                        switcher.ClearValue(FrameworkElement.TagProperty);
-                        return;
-                    }
+                    if (!switcher.IsEnabled) return;
 
                     switcher.IsEnabled = false;
+
+
+                    //if (tunnel.IsMinecraftService)
+                    //{
+                    //    switcher.IsOn = false;
+                    //    switcher.IsEnabled = true;
+                    //    return;
+                    //}
+
+
                     if (switcher.IsOn)
                     {
+                        if (tunnel.IsMinecraftService)
+                        {
+                            switcher.IsEnabled = true;
+                            tunnel.IsPortWaiting = true;
+
+                            var port = await Controls.TunnelEditor.PortCallback(tokenSource.Token);
+
+                            if (port > 0)
+                            {
+                                tunnel.Port = port;
+
+                                var respv = await AppNetwork.OpenFrp.EditUserTunnel(tunnel, tokenSource.Token);
+
+                                if (respv.StatusCode != System.Net.HttpStatusCode.OK || respv.Exception != null)
+                                {
+                                    MessageBox.Show(respv.Message, "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                    switcher.IsEnabled = false;
+                                    switcher.IsOn = false;
+                                    switcher.IsEnabled = true;
+                                    return;
+                                }
+                            }
+                            else return;
+
+                            tunnel.IsPortWaiting = false;
+                        }
                         var resp = await RpcManager.LaunchTunnel(tunnel); 
                         if (!resp.IsSuccess)
                         {
@@ -276,6 +338,16 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                     else
                     {
+                        if (tunnel.IsMinecraftService && tunnel.IsPortWaiting)
+                        {
+                            tokenSource.Cancel();
+
+                            tokenSource = new CancellationTokenSource();
+
+                            tunnel.IsPortWaiting = false;
+                            switcher.IsEnabled = true;
+                            return;
+                        }
                         var resp = await RpcManager.CloseTunnel(tunnel);
                         if (!resp.IsSuccess)
                         {
@@ -284,18 +356,7 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                         else
                         {
-                            try
-                            {
-                                if (Environment.OSVersion.Version.Major is 10 && Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.Toast)
-                                {
-                                    Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
-                                }
-                                else if (Launcher.Properties.Settings.Default.NotifyMode is Model.NotifyMode.NotifyIcon)
-                                {
-                                    App.TaskBarIcon.ClearNotifications();
-                                }
-                            }
-                            catch { }
+                            App.ClearNotifications(tunnel.Name);
 
                             OnlineTunnels.Remove(tunnel.Id);
                         }
@@ -309,10 +370,6 @@ namespace OpenFrp.Launcher.ViewModels
         private void @event_GoToCreatePage()
         {
             WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.CreateTunnel)));
-            //if (App.Current is { MainWindow.DataContext: ViewModels.MainViewModel mv })
-            //{
-            //    mv.NavigationView.SelectedItem = mv.NavigationView.MenuItems[2];
-            //}
         }
 
         private ItemsControl? itemsControl;
@@ -321,6 +378,6 @@ namespace OpenFrp.Launcher.ViewModels
         private Awe.Model.ApiResponse<Awe.Model.OpenFrp.Response.Data.UserTunnelData>? response;
 
         [ObservableProperty]
-        private ObservableCollection<Awe.Model.OpenFrp.Response.Data.UserTunnel>? tunnels;
+        private ObservableCollection<UserTunnel>? tunnels;
     }
 }

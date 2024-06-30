@@ -168,7 +168,7 @@
                                                 <ui:SimpleStackPanel Margin="16">
 
                                                     <ItemsControl
-                                                        Margin="4,8,4,4"
+                                                        Margin="4,6,4,4"
                                                         Focusable="False"
                                                         ItemsSource="{Binding UserInfoViewContainer}"
                                                         TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}">
@@ -227,7 +227,7 @@
                                             FontFamily="{StaticResource Montserrat}"
                                             FontWeight="Medium"
                                             Foreground="{DynamicResource AweAppGoldenColor}"
-                                            Text="Preview 42" />
+                                            Text="Preview 48" />
                                         <Run Text=" (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: " />
                                         <Run
                                             FontFamily="{StaticResource Montserrat}"
@@ -308,7 +308,7 @@
                                             <ItemsControl Focusable="False" ItemsSource="{Binding Papad, Mode=OneWay}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <awe:SelectableTextBlock
+                                                        <TextBlock
                                                             Margin="0,0,12,2"
                                                             HorizontalAlignment="Left"
                                                             FontSize="20"

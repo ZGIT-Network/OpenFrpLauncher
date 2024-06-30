@@ -11,6 +11,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using ModernWpf;
 using ModernWpf.Controls;
+using OpenFrp.Service.Call;
 
 
 namespace OpenFrp.Launcher.ViewModels
@@ -80,7 +81,8 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (arg.Source is WebView2 {  } wv)
             {
-                App.WebViewTemplatePath = OpenFrp.Service.Commands.FileDictionary.GetTemplateFolder();
+
+                App.WebViewTemplatePath = FileDictionary.GetTemplateFolder();
                 var ev = await CoreWebView2Environment.CreateAsync(userDataFolder: App.WebViewTemplatePath).ContinueWith(task =>
                 {
                     if (task.IsFaulted)

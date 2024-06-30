@@ -16,12 +16,13 @@
 		<AssemblyTitle>OpenFrp 启动器</AssemblyTitle>
 		<ApplicationIcon>Resources\desktop.ico</ApplicationIcon>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<FileVersion>4.0.0.0</FileVersion>
+		<FileVersion>4.2.0.0</FileVersion>
 		<AssemblyVersion>4.0.0.0</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 	  <None Remove="Resources\desktop.ico" />
+	  <None Remove="Resources\Images\home-bar.png" />
 	  <None Remove="Resources\Images\hsccode.jpg" />
 	  <None Remove="Resources\Images\hsccode_v2.JPG" />
 	  <None Remove="Resources\Images\pexels-joyston-judah-331625-933054.jpg" />
@@ -52,7 +53,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-	  <PackageReference Include="H.NotifyIcon.Wpf" Version="2.0.124" />
+	  <PackageReference Include="H.NotifyIcon.Wpf" Version="2.0.131" />
 	  <PackageReference Include="Microsoft.AppCenter" Version="5.0.3" />
 	  <PackageReference Include="Microsoft.AppCenter.Analytics" Version="5.0.3" />
 	  <PackageReference Include="Microsoft.AppCenter.Crashes" Version="5.0.3" />
@@ -71,11 +72,18 @@
 	  </COMReference>
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)'=='net481'">
+		
 		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="RenLink.Assets">
+	    <HintPath>E:\Visual Studio Projects\LanLink\RenLink.Assets\source\bin\Debug\net462\RenLink.Assets.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Resource Include="Resources\desktop.ico" />
+	  <Resource Include="Resources\Images\home-bar.png" />
 	  <Resource Include="Resources\Images\hsccode.jpg" />
 	  <Resource Include="Resources\Images\hsccode_v2.jpg" />
 	  <Resource Include="Resources\Images\pexels-joyston-judah-331625-933054.jpg" />

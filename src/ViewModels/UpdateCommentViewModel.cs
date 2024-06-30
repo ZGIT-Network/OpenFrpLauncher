@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using OpenFrp.Launcher.Model;
+using OpenFrp.Service.Call;
 using Windows.Foundation.Metadata;
 using AppNetwork = OpenFrp.Service.Net;
 
@@ -71,7 +72,9 @@ namespace OpenFrp.Launcher.ViewModels
 
         
 
-        public string Platfrom => $"{Service.Commands.FileDictionary.GetFrpPlatform().ToUpper()}    .NET Framework {GetDotNetVersion()}";
+
+
+        public string Platfrom => $"{FileDictionary.GetFrpPlatform().ToUpper()}    .NET Framework {GetDotNetVersion()}";
 
         private static string GetDotNetVersion()
         {
@@ -81,7 +84,8 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_OpenFrpcFolder()
         {
-            _ = Service.Commands.FileDictionary.CreateFrpFolder();
+
+            _ = FileDictionary.CreateFrpFolder();
 
             try
             {
@@ -187,7 +191,9 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 if (UpdateInfo.SoftWareVersionData?.DownloadSources is { })
                 {
-                    string v2 = Service.Commands.FileDictionary.GetFrpPlatform();
+
+
+                    string v2 = FileDictionary.GetFrpPlatform();
                     if (v2 is "i386") v2 = "x86";
 
                     if (UpdateInfo.Type is Model.UpdateInfoType.FrpClient)
@@ -247,25 +253,33 @@ namespace OpenFrp.Launcher.ViewModels
                             if (Environment.OSVersion.Version.Major is not 10)
                             {
                                 // 纯属擦屁股
-                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/OpenFRP_0.54.0_835276e2_20240205/frpc_windows_{Service.Commands.FileDictionary.GetFrpPlatform()}.zip", progress);
+
+
+                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/OpenFRP_0.54.0_835276e2_20240205/frpc_windows_{FileDictionary.GetFrpPlatform()}.zip", progress);
                             }
                             else
                             {
-                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/{UpdateInfo.SoftWareVersionData.Latest}/frpc_windows_{Service.Commands.FileDictionary.GetFrpPlatform()}.zip", progress);
+
+
+                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/{UpdateInfo.SoftWareVersionData.Latest}/frpc_windows_{FileDictionary.GetFrpPlatform()}.zip", progress);
                             }
                             if (resp.StatusCode is System.Net.HttpStatusCode.OK)
                             {
                                 try
                                 {
-                                    if (File.Exists(Service.Commands.FileDictionary.GetFrpFile()))
+
+                                    if (File.Exists(FileDictionary.GetFrpFile()))
                                     {
-                                        File.Delete(Service.Commands.FileDictionary.GetFrpFile());
+
+
+                                        File.Delete(FileDictionary.GetFrpFile());
                                     }
 
                                     using (MemoryStream ms = new MemoryStream(resp.Data.ToArray()))
                                     using (ZipArchive ac = new ZipArchive(ms, ZipArchiveMode.Read, false))
                                     {
-                                        ac.ExtractToDirectory(Service.Commands.FileDictionary.CreateFrpFolder());
+
+                                        ac.ExtractToDirectory(FileDictionary.CreateFrpFolder());
                                     }
                                 }
                                 catch (Exception ex)
@@ -386,8 +400,10 @@ namespace OpenFrp.Launcher.ViewModels
 
                                 App.ServiceProcess.Kill();
 
-                                var va = OpenFrp.Service.Commands.FileDictionary.GetFrpPlatform();
-                                var fe = OpenFrp.Service.Commands.FileDictionary.GetFrpFile();
+
+
+                                var va = FileDictionary.GetFrpPlatform();
+                                var fe = FileDictionary.GetFrpFile();
 
                                 if (Process.GetProcessesByName($"frpc_windows_{va}.exe") is { Length: > 0 } cka)
                                 {

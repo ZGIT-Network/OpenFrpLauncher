@@ -72,6 +72,7 @@ namespace OpenFrp.Launcher.Dialog
                     {
                         IsFinished = true;
 
+
                         Hide();
                     }
                 }
@@ -105,9 +106,13 @@ namespace OpenFrp.Launcher.Dialog
             base.OnApplyTemplate();
         }
 
+ 
+
         public async Task<bool> WaitForFinishAsync()
         {
             await base.ShowAsync();
+
+            Editor.CancelEdit();
 
             return IsFinished;
         }

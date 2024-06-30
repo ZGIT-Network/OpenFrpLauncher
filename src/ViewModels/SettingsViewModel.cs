@@ -16,7 +16,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ModernWpf.Controls;
 using OpenFrp.Launcher.Model;
-using FileManager = OpenFrp.Service.Commands.FileDictionary;
+using FileManager = OpenFrp.Service.Call.FileDictionary;
 
 
 

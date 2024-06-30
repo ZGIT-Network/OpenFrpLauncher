@@ -236,11 +236,11 @@
                         <awe:VisibilityTranstion>
                             <awe:VisibilityTranstion.IsDisplay>
                                 <MultiBinding Converter="{StaticResource BothConverter}" Mode="OneWay">
-                                    <Binding
+                                    <!--<Binding
                                         Converter="{StaticResource EqualConverter}"
                                         ConverterParameter="{x:Type app:UpdateWindow}"
                                         Path="MainWindow.DependencyObjectType.SystemType"
-                                        Source="{x:Static app:App.Current}" />
+                                        Source="{x:Static app:App.Current}" />-->
                                     <!--
                                         Source="{x:Static app:App.Current} "
                                         Converter="{StaticResource EqualConverter}"

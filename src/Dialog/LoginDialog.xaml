@@ -31,7 +31,7 @@
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
     <FrameworkElement.DataContext>
-        <vm:LoginDialogVIewModel />
+        <vm:LoginDialogViewModel />
     </FrameworkElement.DataContext>
     <FrameworkElement.Resources>
         <converter:EqualConverter x:Key="EqualConverter" />
@@ -87,8 +87,14 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <ui:SimpleStackPanel Spacing="12">
-                                <TextBox ui:ControlHelper.PlaceholderText="账户名/邮箱" ui:ControlHelper.Header="账户" Text="{Binding Username}" />
-                                <PasswordBox ui:ControlHelper.PlaceholderText="(注意大小写)" hv:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}" ui:ControlHelper.Header="密码" />
+                                <TextBox
+                                    ui:ControlHelper.Header="账户"
+                                    ui:ControlHelper.PlaceholderText="账户名/邮箱"
+                                    Text="{Binding Username}" />
+                                <PasswordBox
+                                    hv:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay}"
+                                    ui:ControlHelper.Header="密码"
+                                    ui:ControlHelper.PlaceholderText="(注意大小写)" />
 
                             </ui:SimpleStackPanel>
                             <ui:HyperlinkButton

@@ -162,6 +162,8 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 AvatorFilePath = "pack://application:,,,/Resources/Images/share_5bb469267f65d0c7171470739108cdae.png";
 
+                _frame?.RemoveBackEntry();
+
                 UserTunnels.Clear();
             }
             else
@@ -176,46 +178,7 @@ namespace OpenFrp.Launcher.ViewModels
                 //    global::System.Diagnostics.Debugger.Break();
                 //}
 
-                ThreadPool.QueueUserWorkItem(async delegate
-                {
-                    try
-                    {
-                        if (System.Text.Json.JsonSerializer.Deserialize<HashSet<int>>(Launcher.Properties.Settings.Default.AutoStartupTunnelId) is { Count: > 0 } tb)
-                        {
-                            var userTunnels = await Service.Net.OpenFrp.GetUserTunnels();
-                            if (userTunnels.StatusCode is System.Net.HttpStatusCode.OK &&
-                                userTunnels.Data is { Total: > 0 })
-                            {
-                                StringBuilder ob = new StringBuilder("[");
-
-                                foreach (var item in userTunnels.Data!.List!)
-                                {
-                                    if (tb.Contains(item.Id))
-                                    {
-                                        // start up;
-                                        ob.Append($"\"{System.Text.Json.JsonSerializer.Serialize(item).Replace("\"","\\\"")}\",");
-                                    }
-                                }
-                                ob.Remove(ob.Length - 1, 1);
-                                ob.Append("]");
-
-                                var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest
-                                {
-                                    SecureCode = RpcManager.UserSecureCode,
-                                    TunnelIdJson = ob.ToString(),
-                                    UseDebug = Properties.Settings.Default.UseDebugMode,
-                                    UseTlsEncrypt = Properties.Settings.Default.UseTlsEncrypt,
-                                });
-                                if (resp.IsSuccess)
-                                {
-                                    WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(tb.ToArray()));
-                                }
-                            }
-                        }
-                    
-                    }
-                    catch { }
-                });
+               
                 ThreadPool.QueueUserWorkItem(async delegate
                 {
                     var avator = await Service.Net.HttpRequest.Get($"https://api.zyghit.cn/avatar/?email={UserInfo.Email}&s=100");
@@ -316,19 +279,17 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_NavigateToSettings()
         {
-            if (_navigationView is not null)
+            if (_frame?.SourcePageType?.Equals(typeof(Views.Settings)) is true)
             {
-                _navigationView.SelectedItem = _navigationView.SettingsItem;
-            }
-            
-
-            if (_frame?.Navigate(typeof(Views.Settings)) is true && _frame?.Content is Views.Settings { DataContext: ViewModels.SettingsViewModel v })
-            {
-                if ("not-allow-display".Equals(UserInfo.UserName))
+                if (UserInfo.UserName.Equals("not-allow-display") && _frame.Content is Views.Settings { DataContext: ViewModels.SettingsViewModel s })
                 {
-                    _ = v.event_ShowLoginDialogCommand.ExecuteAsync(null);
+                    s.event_ShowLoginDialogCommand.Execute(null);
                 }
+
+                return;
             }
+
+            _frame?.Navigate(typeof(Views.Settings), "request-login");
         }
 
         [RelayCommand]
@@ -342,12 +303,20 @@ namespace OpenFrp.Launcher.ViewModels
 
                 _frame.Navigated += (_, e) =>
                 {
-                    if (e.ExtraData is string) return;
+                    if (e.ExtraData is not null && !e.ExtraData.Equals("request-login")) return;
 
                     var tgt = e.SourcePageType();
+
                     if (tgt == typeof(Views.Settings))
                     {
                         NavigationView.SelectedItem = NavigationView.SettingsItem;
+
+                        if (e.Parameter()?.Equals("request-login") is true
+                            && UserInfo.UserName.Equals("not-allow-display")
+                            && e.Content is Views.Settings { DataContext: ViewModels.SettingsViewModel s})
+                        {
+                            s.event_ShowLoginDialogCommand.Execute(null);
+                        }
 
                         return;
                     }

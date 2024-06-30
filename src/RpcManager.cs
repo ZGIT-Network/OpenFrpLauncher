@@ -92,7 +92,7 @@ namespace OpenFrp.Launcher
                 return new Service.RpcResponse<Proto.Response.SyncResponse>
                 {
                     Data = await Task.Run(async () => await Client.SyncAsync(request,deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken)),
-                    IsSuccess = true
+                    IsSuccess = true,
                 };
             }
             catch (Exception ex) { return ex; }
@@ -208,6 +208,19 @@ namespace OpenFrp.Launcher
                         responseReceive?.Invoke(lp);
                     }
                 }
+
+                return default;
+            }
+            catch (Exception ex) { return ex; }
+        }
+
+        public static async Task<Exception?> UdpProcedureCall(TimeSpan timeOut = default, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (Client is null) throw new NullReferenceException(nameof(Client));
+
+                await Task.Run(async () => await Client.UdpProcedureCallAsync(new Google.Protobuf.WellKnownTypes.Empty { },deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken));
 
                 return default;
             }
