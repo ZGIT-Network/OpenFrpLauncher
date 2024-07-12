@@ -162,7 +162,7 @@
                                                 VerticalAlignment="Top"
                                                 FontSize="18"
                                                 Text="{Binding UpdateInfo.Title, Mode=OneWay}" />
-                                            <awe:SelectableTextBlock
+                                            <awe:SelectableTextBlock FontSize="14"
                                                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                                 Text="{Binding UpdateInfo.Log, Mode=OneWay}"
                                                 TextWrapping="Wrap" />
@@ -196,11 +196,20 @@
                                                 </awe:VisibilityTranstion>
                                                 <awe:VisibilityTranstion IsDisplay="{Binding ProgressValue, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}">
                                                     <ui:SimpleStackPanel Margin="0,16,0,0" Spacing="8">
-                                                        <TextBlock
-                                                            FontSize="12"
-                                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                            Text="Updating" />
-                                                        <ui:ProgressBar Maximum="100" Value="{Binding ProgressValue, Mode=OneWay}" />
+                                                        <Grid>
+                                                            <TextBlock
+                                                                HorizontalAlignment="Left"
+                                                                FontSize="12"
+                                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                                Text="Updating" />
+                                                            <TextBlock
+                                                                HorizontalAlignment="Right"
+                                                                FontSize="12"
+                                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                                Text="{Binding ProgressValue, StringFormat='{}{0}%', Mode=OneWay}" />
+                                                        </Grid>
+                                                        <ui:ProgressBar IsIndeterminate="True" />
+                                                        <!--<ui:ProgressBar Maximum="100" Value="{Binding ProgressValue, Mode=OneWay}" />-->
                                                     </ui:SimpleStackPanel>
                                                 </awe:VisibilityTranstion>
                                             </Grid>

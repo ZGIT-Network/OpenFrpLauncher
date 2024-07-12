@@ -19,7 +19,7 @@ namespace OpenFrp.Launcher
                 {
                     WaitForCode.TrySetResult(code);
 
-                    byte[] dance = Encoding.UTF8.GetBytes($"<html><head><meta charset=\"utf-8\"/></head><body><h2>现在你可以关闭浏览器了。</h2></body></html>");
+                    byte[] dance = Encoding.UTF8.GetBytes($"<html style=\"color-scheme: dark light;user-select:none;\"><head><meta charset=\"utf-8\"/></head><body><h2>现在你可以关闭浏览器了。</h2></body></html>");
                     await context.Response.OutputStream.WriteAsync(dance, 0, dance.Length);
 
                     context.Response.Close();

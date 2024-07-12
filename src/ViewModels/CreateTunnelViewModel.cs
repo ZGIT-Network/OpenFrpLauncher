@@ -60,7 +60,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                 pg.Unloaded += delegate 
                 { 
-                    _tokenSource.Cancel(); 
+                    _tokenSource.Cancel(false); 
                 };
             }
         }
@@ -68,83 +68,90 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_RefreshNodeCollection()
         {
-            Response = await AppNetwork.OpenFrp.GetNodes(_tokenSource.Token);
-
-            if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
-                Response.Data is { List: var list } && list is not null)
+            try
             {
-                var nodesStatusResp = await OpenFrp.Service.Net.OpenFrp.GetNodeStatus(_tokenSource.Token).WithTimeout(
-                    delay: 5000);
+                Response = await AppNetwork.OpenFrp.GetNodes(_tokenSource.Token);
 
-                refreshFinish = false;
-                Nodes = new ObservableCollection<NodeInfo>();
-
-                if (App.Current is { Dispatcher: var dispatcher })
+                if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
+                    Response.Data is { List: var list } && list is not null)
                 {
-                    await Task.Delay(1500);
+                    var nodesStatusResp = await OpenFrp.Service.Net.OpenFrp.GetNodeStatus(_tokenSource.Token).WithTimeout(
+                        delay: 5000);
 
-                    _ = dispatcher.Invoke(async () =>
+                    refreshFinish = false;
+                    Nodes = new ObservableCollection<NodeInfo>();
+
+                    if (App.Current is { Dispatcher: var dispatcher })
                     {
-                        Nodes.Add(new NodeInfo
-                        {
-                            Id = 0,
-                            Name = "中国大陆",
-                            Classify = NodeClassify.ChinaMainland,
-                            Status = System.Net.HttpStatusCode.OK
-                        });
-                        Nodes.Add(new NodeInfo
-                        {
-                            Id = 0,
-                            Name = "\n中国香港 | 中国台湾 | 中国澳门",
-                            Classify = NodeClassify.ChinaHongKong,
-                            Status = System.Net.HttpStatusCode.OK
-                        });
-                        Nodes.Add(new NodeInfo
-                        {
-                            Id = 0,
-                            Name = "\n外国节点",
-                            Classify = NodeClassify.Foreign,
-                            Status = System.Net.HttpStatusCode.OK
-                        });
+                        await Task.Delay(1500);
 
-                        if (nodesStatusResp is not null && nodesStatusResp.StatusCode is System.Net.HttpStatusCode.OK && nodesStatusResp.Data is { Count: > 0 } hs)
+                        _ = dispatcher.Invoke(async () =>
                         {
-                            foreach (var tunnel in list)
+                            Nodes.Add(new NodeInfo
                             {
-                                if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+                                Id = 0,
+                                Name = "中国大陆",
+                                Classify = NodeClassify.ChinaMainland,
+                                Status = System.Net.HttpStatusCode.OK
+                            });
+                            Nodes.Add(new NodeInfo
+                            {
+                                Id = 0,
+                                Name = "\n中国香港 | 中国台湾 | 中国澳门",
+                                Classify = NodeClassify.ChinaHongKong,
+                                Status = System.Net.HttpStatusCode.OK
+                            });
+                            Nodes.Add(new NodeInfo
+                            {
+                                Id = 0,
+                                Name = "\n外国节点",
+                                Classify = NodeClassify.Foreign,
+                                Status = System.Net.HttpStatusCode.OK
+                            });
 
-                                if (tunnel.Id is 0) continue;
-
-                                var va = nodesStatusResp.Data.Where(x => { return x.NodeId == tunnel.Id; }).FirstOrDefault();
-
-                                if (va is null) continue;
-
-                                Nodes.Add(new NodeInfo(tunnel)
+                            if (nodesStatusResp is not null && nodesStatusResp.StatusCode is System.Net.HttpStatusCode.OK && nodesStatusResp.Data is { Count: > 0 } hs)
+                            {
+                                foreach (var tunnel in list)
                                 {
-                                    PressureLevel = (int)(Math.Round(va.ClientCount / va.Max, 2) * 100)
-                                });
-                                await Task.Delay(50);
+                                    if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+
+                                    if (tunnel.Id is 0) continue;
+
+                                    var va = nodesStatusResp.Data.Where(x => { return x.NodeId == tunnel.Id; }).FirstOrDefault();
+
+                                    if (va is null) continue;
+
+                                    Nodes.Add(new NodeInfo(tunnel)
+                                    {
+                                        PressureLevel = (int)(Math.Round(va.ClientCount / va.Max, 2) * 100)
+                                    });
+                                    await Task.Delay(50);
+                                }
                             }
-                        }
-                        else
-                        {
-                            foreach (var tunnel in list)
+                            else
                             {
-                                if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+                                foreach (var tunnel in list)
+                                {
+                                    if (refreshFinish || _tokenSource.IsCancellationRequested) break;
 
-                                Nodes.Add(new NodeInfo(tunnel));
+                                    Nodes.Add(new NodeInfo(tunnel));
 
-                                await Task.Delay(50);
+                                    await Task.Delay(50);
+                                }
                             }
-                        }
-                        refreshFinish = true;
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
+                            refreshFinish = true;
+                        }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
+                    }
+                }
+                else if (string.IsNullOrEmpty(Response.Message))
+                {
+                    Response.Message = Response.Exception?.Message;
+                    OnPropertyChanged(nameof(Response));
                 }
             }
-            else if (string.IsNullOrEmpty(Response.Message))
+            catch
             {
-                Response.Message = Response.Exception?.Message;
-                OnPropertyChanged(nameof(Response));
+
             }
         }
 

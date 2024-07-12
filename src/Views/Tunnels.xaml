@@ -458,7 +458,7 @@
                                                                             <behavior:ChangePropertyAction PropertyName="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
                                                                         </behavior:DataTrigger>
                                                                         <behavior:DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=awe:NarrtorContent}, Mode=OneWay}" Value="True">
-                                                                            <behavior:ChangePropertyAction PropertyName="Foreground" Value="{DynamicResource ButtonForegroundThemeBrush}" />
+                                                                            <behavior:ChangePropertyAction PropertyName="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
                                                                         </behavior:DataTrigger>
                                                                     </behavior:Interaction.Triggers>
                                                                     <Grid TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ui:ContentPresenterEx, Mode=FindAncestor}, Mode=OneWay}">
@@ -486,6 +486,7 @@
                                                                     Command="{Binding DataContext.event_EditTunnelCommand, Source={x:Reference Name=root}, Mode=OneWay}"
                                                                     CommandParameter="{Binding Mode=OneWay}"
                                                                     Foreground="{DynamicResource ButtonForegroundThemeBrush}"
+                                                                    IsEnabled="{Binding IsOn, ElementName=switcher, Converter={StaticResource RollbackConverter}, Mode=OneWay}"
                                                                     ToolTip="编辑隧道">
                                                                     <ui:SymbolIcon
                                                                         Margin="8"
@@ -498,6 +499,7 @@
                                                                     AutomationProperties.HelpText=""
                                                                     AutomationProperties.Name="{Binding Name, StringFormat='删除隧道{0}', Mode=OneWay}"
                                                                     Foreground="{DynamicResource ButtonForegroundThemeBrush}"
+                                                                    IsEnabled="{Binding IsOn, ElementName=switcher, Converter={StaticResource RollbackConverter}, Mode=OneWay}"
                                                                     ToolTip="删除隧道">
                                                                     <ui:FlyoutService.Flyout>
                                                                         <ui:Flyout x:Name="delete__flyout" AreOpenCloseAnimationsEnabled="True">
@@ -588,10 +590,10 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <TextBlock
+                            <!--<TextBlock
                                 HorizontalAlignment="Center"
                                 Foreground="{DynamicResource SystemControlForegroundBaseLowBrush}"
-                                Text="此页面已针对讲述人进行优化" />
+                                Text="此页面已针对讲述人进行优化" />-->
                         </ui:SimpleStackPanel>
                     </awe:VisibilityTranstion>
                     <awe:VisibilityTranstion>

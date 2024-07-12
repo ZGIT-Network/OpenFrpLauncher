@@ -126,7 +126,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 pg.Unloaded += delegate
                 {
-                    _tokenSource.Cancel();
+                    _tokenSource.Cancel(false);
                 };
             }
         }
@@ -160,61 +160,67 @@ namespace OpenFrp.Launcher.ViewModels
         private async Task @event_RefreshTunnelsCollection()
         {
             refreshFinish = false;
-
-            Response = await AppNetwork.OpenFrp.GetUserTunnels(_tokenSource.Token);
-
-            if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
-                Response.Data is { List: var list } && list is not null)
+            try
             {
-                Tunnels = new ObservableCollection<OpenFrp.Launcher.Model.UserTunnel>();
+                Response = await AppNetwork.OpenFrp.GetUserTunnels(_tokenSource.Token);
 
-                if (App.Current is { Dispatcher: var dispatcher })
+                if (Response.StatusCode is System.Net.HttpStatusCode.OK && Response.Exception is null &&
+                    Response.Data is { List: var list } && list is not null)
                 {
-                    await Task.Delay(200);
+                    Tunnels = new ObservableCollection<OpenFrp.Launcher.Model.UserTunnel>();
 
-                    _ = dispatcher.Invoke(async () =>
+                    if (App.Current is { Dispatcher: var dispatcher })
                     {
-                        foreach (var tunnel in list)
+                        await Task.Delay(200);
+
+                        _ = dispatcher.Invoke(async () =>
                         {
-                            if (refreshFinish || _tokenSource.IsCancellationRequested) break;
-
-                            var va = UserTunnel.FromOriginalUserTunnel(tunnel);
-
-                            //if (va.IsMinecraftService && App.PortWaiterPool.ContainsKey(va.Name!))
-                            //{
-                            //    va.IsPortWaiting = true;
-                            //}
-
-                            Tunnels.Add(va);
-
-                            await Task.Delay(50);
-                        }
-                        refreshFinish = true;
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
-
-                    _ = dispatcher.Invoke(async () =>
-                    {
-                        var resp = await RpcManager.SyncAsync(cancellationToken: _tokenSource.Token);
-
-                        if (resp.IsSuccess)
-                        {
-                            OnlineTunnels.Clear();
-                            OnPropertyChanged(nameof(OnlineTunnels));
-                            foreach (var item in resp.Data?.TunnelId ?? new Google.Protobuf.Collections.RepeatedField<int>())
+                            foreach (var tunnel in list)
                             {
                                 if (refreshFinish || _tokenSource.IsCancellationRequested) break;
 
-                                OnlineTunnels.Add(item);
+                                var va = UserTunnel.FromOriginalUserTunnel(tunnel);
+
+                                //if (va.IsMinecraftService && App.PortWaiterPool.ContainsKey(va.Name!))
+                                //{
+                                //    va.IsPortWaiting = true;
+                                //}
+
+                                Tunnels.Add(va);
+
+                                await Task.Delay(50);
                             }
-                            OnPropertyChanged(nameof(OnlineTunnels));
-                        }
-                    }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
+                            refreshFinish = true;
+                        }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
+
+                        _ = dispatcher.Invoke(async () =>
+                        {
+                            var resp = await RpcManager.SyncAsync(cancellationToken: _tokenSource.Token);
+
+                            if (resp.IsSuccess)
+                            {
+                                OnlineTunnels.Clear();
+                                OnPropertyChanged(nameof(OnlineTunnels));
+                                foreach (var item in resp.Data?.TunnelId ?? new Google.Protobuf.Collections.RepeatedField<int>())
+                                {
+                                    if (refreshFinish || _tokenSource.IsCancellationRequested) break;
+
+                                    OnlineTunnels.Add(item);
+                                }
+                                OnPropertyChanged(nameof(OnlineTunnels));
+                            }
+                        }, priority: System.Windows.Threading.DispatcherPriority.Background, _tokenSource.Token);
+                    }
+                }
+                else if (string.IsNullOrEmpty(Response.Message))
+                {
+                    Response.Message = Response.Exception?.Message;
+                    OnPropertyChanged(nameof(Response));
                 }
             }
-            else if (string.IsNullOrEmpty(Response.Message))
+            catch
             {
-                Response.Message = Response.Exception?.Message;
-                OnPropertyChanged(nameof(Response));
+
             }
             
         }

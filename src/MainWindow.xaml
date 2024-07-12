@@ -48,6 +48,12 @@
             <behavior:InvokeCommandAction Command="{Binding event_CloseingWindowCommand}" PassEventArgsToCommand="True" />
         </behavior:EventTrigger>
     </behavior:Interaction.Triggers>
+    <Window.InputBindings>
+        <KeyBinding
+            Key="C"
+            Command="{Binding event_CopyCActiveCommand}"
+            Gesture="Ctrl+C" />
+    </Window.InputBindings>
     <Grid Background="#00ffffff">
         <!--  Sidebar  -->
 

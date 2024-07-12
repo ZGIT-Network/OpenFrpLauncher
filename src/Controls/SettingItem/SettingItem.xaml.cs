@@ -27,25 +27,47 @@ namespace OpenFrp.Launcher.Controls
         {
         }
         
+
+
         // 一些东西已经迁移到统一的 Animation Resizer了。
         public override void OnApplyTemplate()
         {
-            if (GetTemplateChild("description") is TextBlock tb)
+            if (GetTemplateChild("description") is TextBlock tb &&
+                GetTemplateChild("wp") is WrapPanel wp)
             {
                 if (this.ExtendUI != null)
                 {
-                    tb.MaxWidth = tb.ActualWidth;
-                    tb.SetBinding(WidthProperty, new Binding()
+                    SizeChangedEventHandler handler = new SizeChangedEventHandler(delegate { });
+               
+                    handler = new SizeChangedEventHandler((_, e) =>
                     {
-                        RelativeSource = new RelativeSource
+                        if (e.NewSize.Width > 0 && e.NewSize.Height > 0)
                         {
-                            AncestorType = typeof(WrapPanel)
-                        },
-                        Mode = BindingMode.OneWay,
-                        Path = new PropertyPath(WrapPanel.ActualWidthProperty)
+                            //tb.MaxWidth = tb.ActualWidth;
+                            tb.MaxWidth = tb.ActualWidth;
+                            tb.SetBinding(WidthProperty, new Binding()
+                            {
+                                RelativeSource = new RelativeSource
+                                {
+                                    AncestorType = typeof(WrapPanel)
+                                },
+                                Mode = BindingMode.OneWay,
+                                Path = new PropertyPath(ActualWidthProperty)
+                            });
+                            
+
+                            tb.SizeChanged -= handler;
+                            tb.TextWrapping = TextWrapping.Wrap;
+                            wp.Orientation = Orientation.Horizontal;
+
+                        }
                     });
+
+                    tb.SizeChanged += handler;
+                    return;
                 }
                 tb.TextWrapping = TextWrapping.Wrap;
+                wp.Orientation = Orientation.Horizontal;
             }
             SetValue(ContentTypeStringProperty, Content?.GetType().ToString() ?? "");
             base.OnApplyTemplate();

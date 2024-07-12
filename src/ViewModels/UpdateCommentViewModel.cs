@@ -127,6 +127,29 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 if (!App.VersionString.Equals(data.Launcher.Latest))
                 {
+#if DEBUG
+                    if (MessageBox.Show("require to update launcher?","openfrpLauncher",MessageBoxButton.OKCancel) is MessageBoxResult.Cancel)
+                    {
+                        if (!App.FrpcVersionString.Equals(data.Latest))
+                        {
+                            if (Environment.OSVersion.Version.Major is not 10 && App.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
+                            {
+                                return;
+                            }
+                            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Model.UpdateInfo
+                            {
+                                Type = Model.UpdateInfoType.FrpClient,
+                                SoftWareVersionData = versionData.Data,
+                                Title = "FRPC 更新",
+                                Log =
+                                    (Environment.OSVersion.Version.Major is 10 ? "" : "Windows 7 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
+                                    data.FrpcUpdateLog +
+                                    (Environment.OSVersion.Version.Major is 10 ? $"\nUpdate: {App.FrpcVersionString} => {data.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
+                                    $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！"
+                            }));
+                        }
+                    }
+#endif
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Model.UpdateInfo
                     {
                         Type = Model.UpdateInfoType.Launcher,
@@ -198,6 +221,31 @@ namespace OpenFrp.Launcher.ViewModels
 
                     if (UpdateInfo.Type is Model.UpdateInfoType.FrpClient)
                     {
+                        if (App.Current is { MainWindow: MainWindow wnda })
+                        {
+                            wnda.IsEnabled = false;
+                            try
+                            {
+                                if (Process.Start(new ProcessStartInfo
+                                {
+                                    FileName = Assembly.GetExecutingAssembly().Location,
+                                    Arguments = "--update",
+                                    Verb = "runas",
+                                    UseShellExecute = true
+                                }) is Process)
+                                {
+                                    App.ServiceProcess.Kill();
+                                    App.Current?.Shutdown();
+                                    Environment.Exit(0);
+                                    return;
+                                }
+                            }
+                            catch
+                            {
+                            }
+                            wnda.IsEnabled = true;
+                            return;
+                        }
                         if (!IsAdministrator())
                         {
                             bool vl = true;
@@ -318,9 +366,26 @@ namespace OpenFrp.Launcher.ViewModels
 
                                     App.ServiceProcess.Kill();
 
-                                    App.Current.Shutdown();
-                                    Environment.Exit(0);
                                 }
+                                else
+                                {
+                                    try
+                                    {
+                                        Process.Start(new ProcessStartInfo
+                                        {
+                                            FileName = Assembly.GetExecutingAssembly().Location,
+                                            Arguments = "--finish",
+                                            CreateNoWindow = true,
+                                            UseShellExecute = false
+                                        });
+                                    }
+                                    catch
+                                    {
+
+                                    }
+                                }
+                                App.Current.Shutdown();
+                                Environment.Exit(0);
                                 return;
                             }
                             else
@@ -332,8 +397,6 @@ namespace OpenFrp.Launcher.ViewModels
                     else if (UpdateInfo.Type is UpdateInfoType.Launcher && !string.IsNullOrEmpty(UpdateInfo.SoftWareVersionData.Launcher.Argument))
                     {
                         if (UpdateInfo.SoftWareVersionData.Launcher.Argument is null) return;
-
-
 
                         ErrorMessage = default;
                         ProgressValue = 0;
@@ -381,7 +444,7 @@ namespace OpenFrp.Launcher.ViewModels
                                 {
                                     return Process.Start(new ProcessStartInfo
                                     {
-                                        FileName = launcherDf,Arguments = "/silent",
+                                        FileName = launcherDf,
                                         Verb = "runas",
                                         UseShellExecute = true
                                     }) is Process;
@@ -397,9 +460,14 @@ namespace OpenFrp.Launcher.ViewModels
                                 OpenFrp.Launcher.Properties.Settings.Default.Save();
 
                                 wnd.Close();
-
-                                App.ServiceProcess.Kill();
-
+                                try
+                                {
+                                    App.KillServiceProcess(true);
+                                }
+                                catch
+                                {
+                                    MessageBox.Show("无法他退出守护进程，请尝试以\"管理员权限\"运行本程序后重新尝试更新。", "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+                                }
 
 
                                 var va = FileDictionary.GetFrpPlatform();

@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Web.WebView2.Wpf;
 using OpenFrp.Launcher.Model;
+using AppNetwork = OpenFrp.Service.Net;
 
 
 namespace OpenFrp.Launcher.ViewModels
@@ -58,15 +59,15 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             }
             event_RefreshBoardcastCommand.Execute(null);
-            //event_LoadAdSenceCommand.Execute(null);
+            event_LoadAdSenceCommand.Execute(null);
             int h = DateTimeOffset.Now.Hour;
 
-            if (h >= 0 && h < 5) { HiString = "夜深了,早点睡觉哦,"; }
+            if (h >= 0 && h <= 5) { HiString = "夜深了,早点睡觉哦,"; }
             if (h > 5 && h <= 8) { hiString = "早啊,"; }
             if (h > 9 && h < 12) { hiString = "上午好,"; }
-            if (h >= 12 && h < 18) { hiString = "下午好,"; }
-            if (h > 18 && h < 21) { hiString = "晚上好,"; }
-            if (h > 21 && h <= 24) { hiString = "晚上好,"; }
+            if (h >= 12 && h <= 18) { hiString = "下午好,"; }
+            if (h > 18 && h < 24) { hiString = "晚上好,"; }
+            //if (h > 21 && h <= 24) { hiString = "晚上好,"; }
 
             WeakReferenceMessenger.Default.UnregisterAll(nameof(HomeViewModel));
 
@@ -174,17 +175,29 @@ namespace OpenFrp.Launcher.ViewModels
             try { Process.Start("start", "http://console.openfrp.net/"); } catch { }
         }
 
+        [RelayCommand]
+        private void @event_GotoSettingPage()
+        {
+            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.Settings)));
+        }
         
         private bool CanExcuteCallUpSign() => !App.Current.Dispatcher.Invoke(() => IsSigned);
 
         [RelayCommand(CanExecute = nameof(CanExcuteCallUpSign))]
         private async Task @event_CallUpSign()
         {
-            var dialog = new Dialog.SignWebDialog();
-
-            if (await dialog.ShowAsync() is ModernWpf.Controls.ContentDialogResult.Secondary)
+            try
             {
-                event_AppRefreshCommand.Execute(null);
+                var dialog = new Dialog.SignWebDialog();
+
+                if (await dialog.ShowAsync() is ModernWpf.Controls.ContentDialogResult.Secondary)
+                {
+                    event_AppRefreshCommand.Execute(null);
+                }
+            }
+            catch
+            {
+
             }
         }
 
@@ -193,16 +206,23 @@ namespace OpenFrp.Launcher.ViewModels
         {
             ResponseForBoardcast = default;
 
-            _ = Task.WhenAll(event_RefreshSignStateCommand.ExecuteAsync(null), event_RefreshBoardcastCommand.ExecuteAsync(null));
+            await Task.WhenAll(
+                event_RefreshSignStateCommand.ExecuteAsync(null), 
+                event_RefreshBoardcastCommand.ExecuteAsync(null),
+                event_LoadAdSenceCommand.ExecuteAsync(null),
+                Task.Run(async delegate
+                {
+                    var openfrpUserinfo = await AppNetwork.OpenFrp.GetUserInfo();
 
-            var openfrpUserinfo = await OpenFrp.Service.Net.OpenFrp.GetUserInfo();
+                    if (openfrpUserinfo.Data is not null)
+                    {
+                        WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create<Awe.Model.OpenFrp.Response.Data.UserInfo>(openfrpUserinfo.Data));
 
-            if (openfrpUserinfo.Data is not null)
-            {
-                WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create<Awe.Model.OpenFrp.Response.Data.UserInfo>(openfrpUserinfo.Data));
+                        refreshFinish = true;
+                    }
+                }));
 
-                refreshFinish = true;
-            }
+            
         }
 
         [RelayCommand]
@@ -298,10 +318,38 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private Awe.Model.ApiResponse? responseForBoardcast;
 
+        [ObservableProperty]
+        private Awe.Model.ApiResponse? responseForAdSence;
+
         [RelayCommand]
-        private void @event_LoadAdSence()
+        private async Task @event_LoadAdSence()
         {
-          
+            var resp = await AppNetwork.HttpRequest.Get<Awe.Model.OpenFrp.Response.V2Response<AdSence[]>>("https://api.zyghit.cn/zg-adsense/openfrp-lanucher");
+
+
+            try
+            {
+                if (resp.Data is { Data.Length: > 0 })
+                {
+                    resp.Message = "ok";
+
+                    ResponseForAdSence = resp;
+
+                    AdSences = new ObservableCollection<AdSence>()
+                {
+                    AdSences[0]
+                };
+
+                    foreach (var item in resp.Data.Data)
+                    {
+                        AdSences.Add(item);
+                    }
+                }
+            }
+            catch
+            {
+
+            }
         }
 
         [RelayCommand]
@@ -323,8 +371,9 @@ namespace OpenFrp.Launcher.ViewModels
             new()
             {
                 Title = "OpenFRP Preview 启动器上新啦",
-                Description = "参与使用，一起来填充这个大坑，一起走我们的路。你的赞助是前进的第一动力，往下面看，赞助启动器作者。",
+                Description = "参与使用，一起来填充这个大坑，一起走我们的路。你的赞助是前进的第一动力，欢迎赞助启动器作者。",
                 Image = @"../Resources/Images/wallhaven-28ldd9_1920x1080.png",
+                Url = "https://r.zyghit.cn/p2author"
             },
         };
 

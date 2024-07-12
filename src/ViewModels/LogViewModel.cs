@@ -44,18 +44,32 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 fe.Unloaded += delegate
                 {
+                    
                     _cancellationTokenSource?.Cancel();
+
+                    Logs = default;
+                    
+                    GC.Collect();
                 };
                 //@event_RefreshData();
                 _ = fe.Dispatcher.Invoke(async () =>
                 {
-                    await RpcManager.LogStream((x) =>
-                    {
-                        foreach (var item in x.Logs)
+                    await RpcManager.LogStream(
+                        responseReceive: (x) =>
                         {
-                            Logs?.Add(item);
-                        }
-                    }, cancellationToken: _cancellationTokenSource.Token);
+                            foreach (var item in x.Logs)
+                            {
+                                Logs?.Add(item);
+                            }
+                        }, 
+                        errorResponseReceive: (x) =>
+                        {
+                            foreach (var item in x.Logs)
+                            {
+                                Logs?.Add(item);
+                            }
+                        },
+                        cancellationToken: _cancellationTokenSource.Token);
                 });
                 _ = fe.Dispatcher.Invoke(async () =>
                 {
@@ -67,14 +81,25 @@ namespace OpenFrp.Launcher.ViewModels
                             Processes?.Add(item);
                         }
                     }
+                    else
+                    {
+                        Logs?.Add(new LogData
+                        {
+                            Date = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                            Content = "GetActiveProcess() => " + (resp.Message ?? "未知错误"),
+                            Executor = "Launcher",
+                            Id = 0,
+                            Level = 2
+                        });
+                    }
                 });
             }
         }
 
         [RelayCommand]
-        private void @event_ItemsControlLoaded(RoutedEventArgs arg)
+        private void @event_ListViewLoaded(RoutedEventArgs arg)
         {
-            if (arg.Source is ItemsControl ic)
+            if (arg.Source is ListView ic)
             {
                 ic.Items.SortDescriptions.Add(new SortDescription("Date", ListSortDirection.Ascending));
                 itemsControl = ic;

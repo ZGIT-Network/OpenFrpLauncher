@@ -7,11 +7,14 @@
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.modernwpf.com/2019"
+    xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     Title="About"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-
+    <ui:Page.DataContext>
+        <vm:AboutViewModel />
+    </ui:Page.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -66,6 +69,52 @@
                                 IsOpen="True"
                                 Message="该版本由越越开发，如有需求可前往 Github 上开源库的 Discussion 去进行讨论。" />
                         </awe:Resizer>
+
+                        <awe:Resizer>
+                            <Expander HorizontalAlignment="Stretch">
+                                <Expander.Header>
+                                    <Grid Height="68">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="12" />
+                                            <!--  内容  -->
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="12" />
+                                            <!--  控件  -->
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ui:SymbolIcon
+                                            Grid.Column="0"
+                                            Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Focusable="False"
+                                            Symbol="ReShare" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Padding="1,18"
+                                            VerticalAlignment="Center">
+                                            <Run Text="开源软件引用说明" />
+
+                                        </TextBlock>
+                                    </Grid>
+                                </Expander.Header>
+                                <ItemsControl ItemsSource="{Binding Refs, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Margin="8">
+                                                <Run Text="{Binding Name, Mode=OneWay}" />
+                                                <LineBreak />
+                                                <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" Text="{Binding Descirption, Mode=OneWay}" />
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Expander>
+                        </awe:Resizer>
+                        <TextBlock
+                            Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
+                            Text="特此感谢 &amp; 灵感来自: SakuraFRP 启动器"
+                            TextWrapping="Wrap" />
                     </ui:SimpleStackPanel>
                 </Border>
             </ui:ScrollViewerEx>

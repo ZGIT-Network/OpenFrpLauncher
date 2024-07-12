@@ -23,6 +23,7 @@
         <ofConverter:LongToTimeZone x:Key="LongToTimeZone" />
         <ofConverter:IntToLogLevel x:Key="IntToLogLevel" />
         <converter:AddInCalcuator x:Key="AddInCalcuator" />
+        <converter:NotEqualConverter x:Key="NotEqualConverter" />
     </ui:Page.Resources>
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
@@ -53,7 +54,7 @@
         </ui:SimpleStackPanel>
 
         <Grid Grid.Row="1" MaxWidth="1272">
-            <WrapPanel Margin="36,8,24,0">
+            <WrapPanel Margin="36,8,24,0" IsEnabled="{Binding Processes.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}">
                 <ComboBox
                     MinWidth="175"
                     MinHeight="32"
@@ -61,6 +62,7 @@
                     ItemsSource="{Binding Processes, Mode=OneWay}"
                     SelectedIndex="{Binding SelectedIndex, Mode=OneWay}"
                     SelectedValue="{Binding SelectedProcess, Mode=TwoWay}">
+
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock>
@@ -85,6 +87,7 @@
                     MinHeight="32"
                     Margin="0,0,4,8"
                     VerticalAlignment="Stretch"
+                    AutomationProperties.Name="保存日志"
                     Command="{Binding event_SaveLogCommand}">
                     <ui:SimpleStackPanel Orientation="Horizontal" Spacing="6">
                         <ui:SymbolIcon FontSize="16" Symbol="Save" />
@@ -95,6 +98,7 @@
                     MinHeight="32"
                     Margin="0,0,4,8"
                     VerticalAlignment="Stretch"
+                    AutomationProperties.Name="清除所有日志"
                     Command="{Binding event_ClearLogCommand}">
                     <ui:SimpleStackPanel Orientation="Horizontal" Spacing="6">
                         <ui:SymbolIcon FontSize="16" Symbol="Clear" />
@@ -105,69 +109,137 @@
             </WrapPanel>
         </Grid>
         <Grid Grid.Row="2">
-            <ui:ScrollViewerEx PanningMode="VerticalFirst" RewriteWheelChange="True">
-                <Grid Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}" MaxWidth="1272">
-                    <ItemsControl
-                        Margin="0,0,0,24"
-                        Focusable="False"
-                        ItemsSource="{Binding Logs, Mode=OneWay}"
-                        TextElement.FontSize="{Binding Path=FontSize, Source={x:Static app:Settings.Default}, Mode=OneWay}"
-                        TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}">
-                        <behavior:Interaction.Triggers>
-                            <behavior:EventTrigger EventName="Loaded">
-                                <behavior:InvokeCommandAction Command="{Binding event_ItemsControlLoadedCommand}" PassEventArgsToCommand="True" />
-                            </behavior:EventTrigger>
-                        </behavior:Interaction.Triggers>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style TargetType="ContentPresenter">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Content, Mode=OneWay}" Value="">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding Level, Mode=OneWay}" Value="1" />
-                                            <Condition Binding="{Binding Path=ZoomErrorMessage, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="True" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="TextElement.FontSize" Value="{Binding Path=FontSize, Converter={StaticResource AddInCalcuator}, ConverterParameter='2', Source={x:Static app:Settings.Default}, Mode=OneWay}" />
-                                    </MultiDataTrigger>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding Level, Mode=OneWay}" Value="4" />
-                                            <Condition Binding="{Binding Path=UseDebugMode, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="False" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </MultiDataTrigger>
-                                    <DataTrigger Binding="{Binding Level, Mode=OneWay}" Value="1">
-                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Level, Mode=OneWay}" Value="2">
-                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <awe:SelectableTextBlock Margin="36,4,36,-4" TextWrapping="Wrap">
-                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Date, Converter={StaticResource LongToTimeZone}, Mode=OneWay}" />
-                                    <!--<Run
-                                        FontFamily="{StaticResource Montserrat}"
-                                        FontWeight="Medium"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
-                                        Text="{Binding Level, Converter={StaticResource IntToLogLevel}, Mode=OneWay}" />-->
-                                    <Run
-                                        FontFamily="{StaticResource Montserrat}"
-                                        FontWeight="Medium"
-                                        Foreground="{DynamicResource AweAppGoldenColor}"
-                                        Text="{Binding Executor, Mode=OneWay}" />
+            <ListView
+                d:ItemsSource="{d:SampleData ItemCount=300}"
+                Focusable="False"
+                ItemsSource="{Binding Logs, Mode=OneWay}"
+                ScrollViewer.CanContentScroll="True"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                ScrollViewer.IsDeferredScrollingEnabled="False"
+                TextElement.FontSize="{Binding Path=FontSize, Source={x:Static app:Settings.Default}, Mode=OneWay}"
+                TextOptions.TextHintingMode="{Binding Path=EnableTextAnimatedHitting, Source={x:Static app:Settings.Default}, Mode=OneWay}"
+                VirtualizingPanel.CacheLength="20,20"
+                VirtualizingPanel.CacheLengthUnit="Item"
+                VirtualizingPanel.IsVirtualizing="True"
+                VirtualizingPanel.ScrollUnit="Item"
+                VirtualizingPanel.VirtualizationMode="Recycling">
 
-                                    <Run Text="{Binding Content, Mode=OneWay}" TextElement.FontFamily="{Binding Path=FontFamily, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
-                                </awe:SelectableTextBlock>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Loaded">
+                        <behavior:InvokeCommandAction Command="{Binding event_ListViewLoadedCommand}" PassEventArgsToCommand="True" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+                <ListView.Style>
+                    <Style TargetType="ListView">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListView">
+                                    <ScrollViewer
+                                        CanContentScroll="True"
+                                        Focusable="False"
+                                        PanningMode="VerticalFirst"
+                                        VerticalScrollBarVisibility="Auto">
+                                        <behavior:Interaction.Triggers>
+                                            <behavior:DataTrigger Binding="{Binding Path=AllowLogTextWrap, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="True">
+                                                <behavior:ChangePropertyAction PropertyName="HorizontalScrollBarVisibility" Value="Disabled" />
+                                            </behavior:DataTrigger>
+                                            <behavior:DataTrigger Binding="{Binding Path=AllowLogTextWrap, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="False">
+                                                <behavior:ChangePropertyAction PropertyName="HorizontalScrollBarVisibility" Value="Auto" />
+                                            </behavior:DataTrigger>
+                                        </behavior:Interaction.Triggers>
+                                        <ItemsPresenter Margin="0,0,0,24" Focusable="False" />
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListView.Style>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="OverridesDefaultStyle" Value="True" />
+                        <Setter Property="Focusable" Value="True" />
+                        <!--<Setter Property="MaxWidth" Value="1272" />-->
+
+                        <Setter Property="AutomationProperties.Name" Value="{Binding Content, Mode=OneWay}" />
+                        <!--<Setter Property="Width" Value="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}" />-->
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListViewItem">
+                                    <ContentPresenter Focusable="False" />
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="TextElement.Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Content, Mode=OneWay}" Value="">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Level, Mode=OneWay}" Value="1" />
+                                    <Condition Binding="{Binding Path=ZoomErrorMessage, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="True" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="TextElement.FontSize" Value="{Binding Path=FontSize, Converter={StaticResource AddInCalcuator}, ConverterParameter='2', Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Level, Mode=OneWay}" Value="4" />
+                                    <Condition Binding="{Binding Path=UseDebugMode, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="False" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </MultiDataTrigger>
+                            <DataTrigger Binding="{Binding Level, Mode=OneWay}" Value="1">
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Level, Mode=OneWay}" Value="2">
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <awe:SelectableTextBlock
+                            Margin="36,0"
+                            HorizontalAlignment="Left"
+                            ui:FocusVisualHelper.IsTemplateFocusTarget="False"
+                            Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ListViewItem}, Mode=OneWay}"
+                            FocusVisualStyle="{x:Null}"
+                            Focusable="True"
+                            KeyboardNavigation.ControlTabNavigation="None"
+                            KeyboardNavigation.DirectionalNavigation="None"
+                            KeyboardNavigation.IsTabStop="False"
+                            KeyboardNavigation.TabNavigation="None">
+                            <behavior:Interaction.Triggers>
+                                <behavior:DataTrigger Binding="{Binding Path=AllowLogTextWrap, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="True">
+                                    <behavior:ChangePropertyAction PropertyName="TextWrapping" Value="Wrap" />
+                                </behavior:DataTrigger>
+                                <behavior:DataTrigger Binding="{Binding Path=AllowLogTextWrap, Source={x:Static app:Settings.Default}, Mode=OneWay}" Value="False">
+                                    <behavior:ChangePropertyAction PropertyName="TextWrapping" Value="NoWrap" />
+                                </behavior:DataTrigger>
+                            </behavior:Interaction.Triggers>
+                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Date, Converter={StaticResource LongToTimeZone}, Mode=OneWay}" />
+                            <!--<Run
+         FontFamily="{StaticResource Montserrat}"
+         FontWeight="Medium"
+         Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+         Text="{Binding Level, Converter={StaticResource IntToLogLevel}, Mode=OneWay}" />-->
+                            <Run
+                                FontFamily="{StaticResource Montserrat}"
+                                FontWeight="Medium"
+                                Foreground="{DynamicResource AweAppGoldenColor}"
+                                Text="{Binding Executor, Mode=OneWay}" />
+
+                            <Run Text="{Binding Content, Mode=OneWay}" TextElement.FontFamily="{Binding Path=FontFamily, Source={x:Static app:Settings.Default}, Mode=OneWay}" />
+                        </awe:SelectableTextBlock>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <ui:ScrollViewerEx
+                PanningMode="VerticalFirst"
+                RewriteWheelChange="True"
+                Visibility="Collapsed">
+                <Grid />
             </ui:ScrollViewerEx>
         </Grid>
     </Grid>

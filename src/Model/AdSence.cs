@@ -44,5 +44,18 @@ namespace OpenFrp.Launcher.Model
 
         [JsonPropertyName("url")]
         public string? Url { get; set; }
+
+
+        public Uri UAU
+        {
+            get
+            {
+                if (Uri.TryCreate(Url, UriKind.RelativeOrAbsolute, out var va))
+                {
+                    return va;
+                }
+                throw new NullReferenceException();
+            }
+        }
     }
 }

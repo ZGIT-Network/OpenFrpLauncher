@@ -15,8 +15,8 @@
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     Title="Settings"
-    d:DesignHeight="950"
-    d:DesignWidth="650"
+    d:DesignHeight="1175"
+    d:DesignWidth="600"
     mc:Ignorable="d">
     <FrameworkElement.DataContext>
         <vm:SettingsViewModel />
@@ -24,6 +24,7 @@
     <FrameworkElement.Resources>
         <converter:EqualConverter x:Key="EqualConverter" />
         <converter:NotEqualConverter x:Key="NotEqualConverter" />
+        <converter:RollbackConverter x:Key="RollbackConverter" />
     </FrameworkElement.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -239,6 +240,7 @@
                                             </behavior:Interaction.Triggers>
                                         </ui:NumberBox>
                                         <CheckBox Content="错误内容放大显示" IsChecked="{Binding ZoomErrorMessage, Mode=TwoWay}" />
+                                        <CheckBox Content="允许换行显示" IsChecked="{Binding AllowLogTextWrap, Mode=TwoWay}" />
                                     </ui:SimpleStackPanel>
                                 </Grid>
                             </Expander>
@@ -262,7 +264,7 @@
                             Description="可以在您登录后自动开启启动器。"
                             IsEnabled="True">
                             <of:SettingItem.Icon>
-                                <ui:FontIcon FontSize="24" Glyph="&#xEE49;" />
+                                <ui:FontIcon FontSize="24" Glyph="&#xE768;" />
                             </of:SettingItem.Icon>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -283,12 +285,28 @@
                             </of:SettingItem.Icon>
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
                                     <ColumnDefinition Width="75" />
                                 </Grid.ColumnDefinitions>
+                                <ui:ProgressRing
+                                    Width="20"
+                                    Height="20"
+                                    IsActive="{Binding IsEnabled, Converter={StaticResource RollbackConverter}, ElementName=useDebug, Mode=OneWay}" />
                                 <ui:ToggleSwitch
+                                    x:Name="useDebug"
+                                    Grid.Column="2"
                                     FocusVisualMargin="-3,-4,8,-5"
-                                    IsOn="{Binding UseDebugMode, UpdateSourceTrigger=PropertyChanged}"
-                                    Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                                    IsEnabled="{Binding StateOfService, Mode=OneWay}"
+                                    IsOn="{Binding UseDebug, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource LeftLabelToggleSwitchStyle}"
+                                    Tag="UseDebug">
+                                    <behavior:Interaction.Triggers>
+                                        <behavior:EventTrigger EventName="Loaded">
+                                            <behavior:InvokeCommandAction Command="{Binding event_UploadSettingToggleSwitchLoadedCommand}" PassEventArgsToCommand="True" />
+                                        </behavior:EventTrigger>
+                                    </behavior:Interaction.Triggers>
+                                </ui:ToggleSwitch>
                             </Grid>
                         </of:SettingItem>
                         <of:SettingItem
@@ -300,12 +318,29 @@
                             </of:SettingItem.Icon>
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
                                     <ColumnDefinition Width="75" />
                                 </Grid.ColumnDefinitions>
+                                <ui:ProgressRing
+                                    Width="20"
+                                    Height="20"
+                                    IsActive="{Binding IsEnabled, Converter={StaticResource RollbackConverter}, ElementName=useProxy, Mode=OneWay}" />
                                 <ui:ToggleSwitch
+                                    x:Name="useProxy"
+                                    Grid.Column="2"
                                     FocusVisualMargin="-3,-4,8,-5"
+                                    IsEnabled="{Binding StateOfService, Mode=OneWay}"
                                     IsOn="{Binding UseProxy, UpdateSourceTrigger=PropertyChanged}"
-                                    Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                                    Style="{StaticResource LeftLabelToggleSwitchStyle}"
+                                    Tag="UseProxy">
+                                    <behavior:Interaction.Triggers>
+                                        <behavior:EventTrigger EventName="Loaded">
+                                            <behavior:InvokeCommandAction Command="{Binding event_UploadSettingToggleSwitchLoadedCommand}" PassEventArgsToCommand="True" />
+                                        </behavior:EventTrigger>
+                                    </behavior:Interaction.Triggers>
+                                </ui:ToggleSwitch>
+
                             </Grid>
                         </of:SettingItem>
                         <of:SettingItem
@@ -317,13 +352,58 @@
                             </of:SettingItem.Icon>
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
                                     <ColumnDefinition Width="75" />
                                 </Grid.ColumnDefinitions>
+                                <ui:ProgressRing
+                                    Width="20"
+                                    Height="20"
+                                    IsActive="{Binding IsEnabled, Converter={StaticResource RollbackConverter}, ElementName=useTlsEncrypt, Mode=OneWay}" />
                                 <ui:ToggleSwitch
+                                    x:Name="useTlsEncrypt"
+                                    Grid.Column="2"
                                     FocusVisualMargin="-3,-4,8,-5"
+                                    IsEnabled="{Binding StateOfService, Mode=OneWay}"
                                     IsOn="{Binding UseTlsEncrypt, UpdateSourceTrigger=PropertyChanged}"
-                                    Style="{StaticResource LeftLabelToggleSwitchStyle}" />
+                                    Style="{StaticResource LeftLabelToggleSwitchStyle}"
+                                    Tag="UseTlsEncrypt">
+                                    <behavior:Interaction.Triggers>
+                                        <behavior:EventTrigger EventName="Loaded">
+                                            <behavior:InvokeCommandAction Command="{Binding event_UploadSettingToggleSwitchLoadedCommand}" PassEventArgsToCommand="True" />
+                                        </behavior:EventTrigger>
+                                    </behavior:Interaction.Triggers>
+                                </ui:ToggleSwitch>
                             </Grid>
+                        </of:SettingItem>
+                        <of:SettingItem
+                            Title="系统服务"
+                            Description="在登录屏幕时启动 FRPC 进程。一般你用不到，你就不要试试啦。本机只允许存在一个 OpenFRP 系统服务。"
+                            IsEnabled="{Binding AllowInstallOrUninstallService}">
+                            <of:SettingItem.Icon>
+                                <ui:FontIcon FontSize="24" Glyph="&#xF259;" />
+                            </of:SettingItem.Icon>
+                            <ui:SimpleStackPanel Orientation="Horizontal" Spacing="16">
+                                <ui:HyperlinkButton
+                                    Margin="-2,0,-2,-1.5"
+                                    Padding="0"
+                                    FontSize="13"
+                                    NavigateUri="https://openfrp.wiki/use/desktop-launcher.html#%E7%B3%BB%E7%BB%9F%E6%9C%8D%E5%8A%A1%E6%A8%A1%E5%BC%8F"
+                                    ToolTip="https://openfrp.wiki/use/desktop-launcher.html#%E7%B3%BB%E7%BB%9F%E6%9C%8D%E5%8A%A1%E6%A8%A1%E5%BC%8F">
+                                    查看文档
+                                </ui:HyperlinkButton>
+                                <Button Command="{Binding event_ServiceControlCommand}" Style="{StaticResource AccentButtonStyle}">
+                                    <behavior:Interaction.Triggers>
+                                        <behavior:DataTrigger Binding="{Binding IsServiceInstall, Mode=OneWay}" Value="True">
+                                            <behavior:ChangePropertyAction PropertyName="Content" Value="卸载服务" />
+                                        </behavior:DataTrigger>
+                                        <behavior:DataTrigger Binding="{Binding IsServiceInstall, Mode=OneWay}" Value="False">
+                                            <behavior:ChangePropertyAction PropertyName="Content" Value="安装服务" />
+                                        </behavior:DataTrigger>
+                                    </behavior:Interaction.Triggers>
+                                </Button>
+                            </ui:SimpleStackPanel>
+
                         </of:SettingItem>
                         <of:SettingItem
                             Title="通知模式"
@@ -337,6 +417,17 @@
                                 <ComboBoxItem Content="任务栏信息" />
                                 <ComboBoxItem Content="Toast (Win10+)" />
                             </ComboBox>
+                        </of:SettingItem>
+                        <of:SettingItem
+                            Title="关闭本平台上已有的 FRPC"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            Command="{Binding event_CloseFrpcCommand}"
+                            Description="临时开关;若您发现隧道冲突，可尝试此选项。"
+                            IsClickable="True">
+                            <of:SettingItem.Icon>
+                                <ui:SymbolIcon FontSize="24" Symbol="BackToWindow" />
+                            </of:SettingItem.Icon>
                         </of:SettingItem>
                     </ui:SimpleStackPanel>
                 </Border>

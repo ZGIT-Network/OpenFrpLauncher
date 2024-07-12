@@ -207,6 +207,7 @@
                                         Margin="4,8,4,8"
                                         ui:ControlHelper.Header="本地端口 - 本地服务端口"
                                         AutomationProperties.Name="本地端口"
+                                        IsEnabled="{Binding IsMinecraftService, Converter={StaticResource RollbackConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                         Maximum="65535"
                                         Minimum="1"
                                         PlaceholderText="25565"
@@ -218,7 +219,7 @@
                                                 <ui:ProgressRing
                                                     Width="16"
                                                     Height="16"
-                                                    IsActive="{Binding IsEnabled, ElementName=GetByLocalMCInstance, Converter={StaticResource RollbackConverter}, Mode=OneWay}" />
+                                                    IsActive="{Binding Command.IsRunning, ElementName=GetByLocalMCInstance, Mode=OneWay}" />
                                                 <Button
                                                     x:Name="GetByLocalMCInstance"
                                                     Width="30"

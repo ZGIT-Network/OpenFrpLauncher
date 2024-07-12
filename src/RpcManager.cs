@@ -145,13 +145,15 @@ namespace OpenFrp.Launcher
 
                 return new Service.RpcResponse<Proto.Response.ActiveProcessResponse>
                 {
-                    Data = resp.Data.Is(Proto.Response.ActiveProcessResponse.Descriptor) ? resp.Data.Unpack<Proto.Response.ActiveProcessResponse>() : default,
+                    Data = resp.Data.Is(Proto.Response.ActiveProcessResponse.Descriptor)  ? resp.Data.Unpack<Proto.Response.ActiveProcessResponse>() : default,
                     IsSuccess = resp.Flag,
                     Message = resp.Message
                 };
             }
             catch (Exception ex) { return ex; }
         }
+
+
 
         public static async Task<Service.RpcResponse> ClearLogStream(TimeSpan timeOut = default, CancellationToken cancellationToken = default)
         {
@@ -175,7 +177,11 @@ namespace OpenFrp.Launcher
             {
                 if (Client is null) throw new NullReferenceException(nameof(Client));
 
-                var stream = Client.NotifiyStream(new Google.Protobuf.WellKnownTypes.Empty(), 
+                var stream = Client.NotifiyStream(
+                    new Proto.Request.BaseRequest
+                    {
+                        SecureCode = UserSecureCode ?? string.Empty
+                    }, 
                     deadline: CreateDeadline(timeOut), 
                     cancellationToken: cancellationToken);
 
@@ -191,6 +197,7 @@ namespace OpenFrp.Launcher
 
         public static async Task<Exception?> LogStream(
             Action<Proto.Response.LogResponse> responseReceive,
+            Action<Proto.Response.LogResponse> errorResponseReceive,
             TimeSpan timeOut = default, CancellationToken cancellationToken = default)
         {
             try
@@ -201,11 +208,35 @@ namespace OpenFrp.Launcher
 
                 while (await resp.ResponseStream.MoveNext(cancellationToken))
                 {
-                    
-                    if (resp.ResponseStream.Current.Flag && resp.ResponseStream.Current.Data.Is(Proto.Response.LogResponse.Descriptor) &&
-                        resp.ResponseStream.Current.Data.TryUnpack<Proto.Response.LogResponse>(out var lp))
+                    if (resp.ResponseStream.Current is not { Data: not null } current) continue;
+
+                    if (current.Data.Is(Proto.Response.LogResponse.Descriptor) && current.Data.TryUnpack<Proto.Response.LogResponse>(out var lp))
                     {
-                        responseReceive?.Invoke(lp);
+                        if (resp.ResponseStream.Current.Flag)
+                        {
+                            responseReceive?.Invoke(lp);
+                        }
+                        else
+                        {
+                            errorResponseReceive?.Invoke(lp);
+                        }
+                    }
+                    else if (current.Data.Is(Google.Protobuf.WellKnownTypes.Empty.Descriptor))
+                    {
+                        errorResponseReceive?.Invoke(new Proto.Response.LogResponse
+                        {
+                            Logs =
+                            {
+                                 new Proto.Response.LogResponse.Types.LogData()
+                                 {
+                                     Date = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                                     Content = $"LogStream() => {current.Message}",
+                                     Executor = "Launcher",
+                                     Id = 0,
+                                     Level = 2
+                                 }
+                            }
+                        });
                     }
                 }
 

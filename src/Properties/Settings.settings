@@ -5,9 +5,6 @@
     <Setting Name="ApplicationTheme" Type="ModernWpf.ElementTheme" Scope="User">
       <Value Profile="(Default)">Default</Value>
     </Setting>
-    <Setting Name="UserPwn" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="ZoomErrorMessage" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -23,9 +20,6 @@
     <Setting Name="EnableTextAnimatedHitting" Type="System.Windows.Media.TextHintingMode" Scope="User">
       <Value Profile="(Default)">Animated</Value>
     </Setting>
-    <Setting Name="UserAvator" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="NotifyMode" Type="OpenFrp.Launcher.Model.NotifyMode" Scope="User">
       <Value Profile="(Default)">NotifyIconDefault</Value>
     </Setting>
@@ -35,7 +29,7 @@
     <Setting Name="UseTlsEncrypt" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="UserAuthorization" Type="System.String" Scope="User">
+    <Setting Name="Account" Type="OpenFrp.Service.UsrLogin" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="UseProxy" Type="System.Boolean" Scope="User">
@@ -44,6 +38,9 @@
     <Setting Name="AutoStartupTunnelId" Type="System.Int32[]" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;ArrayOfInt xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" /&gt;</Value>
+    </Setting>
+    <Setting Name="AllowLogTextWrap" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

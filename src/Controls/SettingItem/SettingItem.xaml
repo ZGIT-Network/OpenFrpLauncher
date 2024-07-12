@@ -82,17 +82,21 @@
                                         FontSize="13.5"
                                         Text="{TemplateBinding Title}"
                                         TextWrapping="Wrap" />
-                                    <WrapPanel Grid.Row="1">
+                                    <WrapPanel
+                                        x:Name="wp"
+                                        Grid.Row="1"
+                                        Orientation="Vertical">
                                         <awe:VisibilityTranstion IsDisplay="{TemplateBinding Description, Converter={StaticResource NotEqualConverter}, ConverterParameter=''}">
                                             <TextBlock
                                                 x:Name="description"
+                                                HorizontalAlignment="Left"
                                                 FontSize="13"
                                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                 Text="{TemplateBinding Description}"
                                                 TextWrapping="NoWrap" />
 
                                         </awe:VisibilityTranstion>
-                                        <awe:VisibilityTranstion IsDisplay="{TemplateBinding ExtendUI, Converter={StaticResource EqualConverter}, ConverterParameter={x:Null}}">
+                                        <awe:VisibilityTranstion IsDisplay="{TemplateBinding ExtendUI, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}}">
                                             <ContentPresenter
                                                 VerticalAlignment="Bottom"
                                                 Content="{TemplateBinding ExtendUI}"

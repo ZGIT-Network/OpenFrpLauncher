@@ -156,6 +156,11 @@ namespace OpenFrp.Launcher.ViewModels
         #endregion
 
         #region Settings Properties
+
+        public bool AllowInstallOrUninstallService
+        {
+            get => Service.Call.WindowsServiceCall.AllowInstallOrUninstall;
+        }
         public int ApplicationTheme
         {
             get
@@ -231,6 +236,17 @@ namespace OpenFrp.Launcher.ViewModels
                 Properties.Settings.Default.ZoomErrorMessage = value;
             }
         }
+        public bool AllowLogTextWrap
+        {
+            get
+            {
+                return Properties.Settings.Default.AllowLogTextWrap;
+            }
+            set
+            {
+                Properties.Settings.Default.AllowLogTextWrap = value;
+            }
+        }
         public double FontSize
         {
             get
@@ -253,7 +269,7 @@ namespace OpenFrp.Launcher.ViewModels
                 Properties.Settings.Default.FontFamily = value;
             }
         }
-        public bool UseDebugMode
+        public bool UseDebug
         {
             get
             {
@@ -285,6 +301,13 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 OpenFrp.Service.Net.HttpRequest.ProxyEditor(value);
                 Properties.Settings.Default.UseProxy = value;
+            }
+        }
+        public bool IsServiceInstall
+        {
+            get
+            {
+                return Service.Call.WindowsServiceCall.IsInstalledService();
             }
         }
         public bool AutoStartup
@@ -322,6 +345,8 @@ namespace OpenFrp.Launcher.ViewModels
 
         private bool CanExecuteLogin() => StateOfService;
 
+        private bool CanInstallOrUninstallService() => Service.Call.WindowsServiceCall.AllowInstallOrUninstall;
+
         /// <summary>
         /// 显示登录窗口
         /// </summary>
@@ -343,7 +368,65 @@ namespace OpenFrp.Launcher.ViewModels
 
         }
 
-        
+        private async Task<Service.RpcResponse<Service.Proto.Response.SyncResponse>> UploadSetting(PropertyInfo? changedValue)
+        {
+            var se = new Service.Proto.Request.SyncRequest.Types.SyncSetting
+            {
+                UseDebug = UseDebug,
+                UseProxy = UseProxy,
+                UseTlsEncrypt = UseTlsEncrypt
+            };
+            if (changedValue is { Name: string name })
+            {
+                se.GetType().GetProperty(name).SetValue(se, changedValue.GetValue(this) is false);
+            }
+            return await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest
+            {
+                SecureCode = RpcManager.UserSecureCode,
+                Setting = se
+            });
+        }
+
+        [RelayCommand]
+        private void @event_UploadSettingToggleSwitchLoaded(RoutedEventArgs arg)
+        {
+            
+            if (arg.Source is ToggleSwitch @switch)
+            {
+                if (Service.Call.WindowsServiceCall.IsInstalledService())
+                {
+                    BindingOperations.ClearBinding(@switch, ToggleSwitch.IsOnProperty);
+
+                    var property = GetType().GetProperty(@switch.Tag.ToString());
+
+                    @switch.IsOn = property?.GetValue(this) is true;
+                    @switch.Toggled += async delegate
+                    {
+                        if (!@switch.IsEnabled)
+                        {
+                            @switch.IsEnabled = true;
+                            return;
+                        }
+                        @switch.IsEnabled = false;
+
+                        var resp = await UploadSetting(property);
+                        if (resp.IsSuccess && (-41404).Equals(resp.Data?.TunnelId.FirstOrDefault()))
+                        {
+                            property?.SetValue(this, @switch.IsOn);
+                        }
+                        else
+                        {
+                            MessageBox.Show(resp.Message, "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                            @switch.IsOn = !@switch.IsOn;
+
+                            return;
+                        }
+                        @switch.IsEnabled = true;
+                    };
+                }
+            }
+        }
 
         [RelayCommand]
         private async Task @event_Logout()
@@ -361,8 +444,9 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     RpcManager.UserSecureCode = null;
                     Service.Net.OpenFrp.Logout();
-                    Properties.Settings.Default.UserPwn = string.Empty;
-                    Properties.Settings.Default.UserAuthorization = string.Empty;
+                    Properties.Settings.Default.Account = new Service.UsrLogin();
+
+                    
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(UserInfo = new Awe.Model.OpenFrp.Response.Data.UserInfo
                     {
                         UserName = "not-allow-display"
@@ -401,5 +485,134 @@ namespace OpenFrp.Launcher.ViewModels
                 };
             }
         }
+
+        [RelayCommand(CanExecute = nameof(CanInstallOrUninstallService))]
+        private async Task @event_ServiceControl()
+        {
+            if (!IsServiceInstall)
+            {
+                // goto install
+                var dialog = new ContentDialog
+                {
+                    Title = "安装服务",
+                    Content = new TextBlock
+                    {
+                        TextWrapping = TextWrapping.Wrap,
+                        Inlines =
+                        {
+                            new Run("请注意，安装服务会使守护进程及其子 FRPC 进程被结束，若您在使用远程桌面类程序，请慎重考虑是否安装。"),
+                            new LineBreak(),
+                            new Run("您的账户也会被退出。在重新打开启动器后,您需要重新登录。"),
+                            new LineBreak(),
+                            new Run("建议您保留"),
+                            new Run("至少一款以上"){ FontWeight = FontWeights.Bold },
+                            new Run("远程软件以防止失链。"),
+                            new LineBreak(),
+                            new Run("建议您保留"),
+                            new Run("至少一款以上"){ FontWeight = FontWeights.Bold },
+                            new Run("远程软件以防止失链。"),
+                            new LineBreak(),
+                        }
+                    },
+                    CloseButtonText = "取消",
+                    PrimaryButtonText = "安装",
+                    DefaultButton = ContentDialogButton.Primary
+                };
+                if (await dialog.ShowAsync() is ContentDialogResult.Primary)
+                {
+
+                    App.Settings.Account = new Service.UsrLogin();
+                    App.Settings.AutoStartupTunnelId = Array.Empty<int>();
+
+                    App.Settings.Save();
+
+                    App.ClearNotifications();
+                    App.ClearWebviewRuntimeCache();
+
+                    App.TokenSource.Cancel(false);
+
+                    App.KillServiceProcess(true);
+
+                    try
+                    {
+                        _ = Process.Start(new ProcessStartInfo(Assembly.GetAssembly(typeof(Service.RpcResponse)).Location, "service install")
+                        {
+                            Verb = "runas",
+                            UseShellExecute = true,
+                            WindowStyle = ProcessWindowStyle.Hidden,
+                            CreateNoWindow = true
+                        });
+                    }
+                    catch
+                    {
+
+                    }
+                    Environment.Exit(0);
+                }
+            }
+            else
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "卸载服务",
+                    Content = new TextBlock
+                    {
+                        TextWrapping = TextWrapping.Wrap,
+                        Inlines =
+                        {
+                            new Run("请注意，卸载服务会使守护进程及其子 FRPC 进程被结束，若您在使用远程桌面类程序，请慎重考虑是否安装。"),
+                            new LineBreak(),
+                            new Run("建议您保留"),
+                            new Run("至少一款以上"){ FontWeight = FontWeights.Bold },
+                            new Run("远程软件以防止失链。"),
+                            new LineBreak(),
+                            new Run("建议您保留"),
+                            new Run("至少一款以上"){ FontWeight = FontWeights.Bold },
+                            new Run("远程软件以防止失链。"),
+                            new LineBreak(),
+                            new Run("(其实就是安装的反向操作，"),
+                            new Run("可别说我水"){TextDecorations = TextDecorations.Strikethrough},
+                            new Run(")"),
+                            new LineBreak(),
+                        }
+                    },
+                    CloseButtonText = "取消",
+                    PrimaryButtonText = "卸载",
+                    DefaultButton = ContentDialogButton.Primary
+                };
+                if (await dialog.ShowAsync() is ContentDialogResult.Primary)
+                {
+
+                    //App.Settings.Account = new Service.UsrLogin();
+                    App.Settings.AutoStartupTunnelId = Array.Empty<int>();
+
+                    App.Settings.Save();
+
+                    App.ClearNotifications();
+                    App.ClearWebviewRuntimeCache();
+
+                    App.TokenSource.Cancel(false);
+
+                    //App.KillServiceProcess(true);
+
+                    try
+                    {
+                        _ = Process.Start(new ProcessStartInfo(Assembly.GetAssembly(typeof(Service.RpcResponse)).Location, "service uninstall")
+                        {
+                            Verb = "runAs",
+                            UseShellExecute = true,
+                            WindowStyle = ProcessWindowStyle.Hidden,
+                            CreateNoWindow = true
+                        });
+                    }
+                    catch { }
+
+                    Environment.Exit(0);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void @event_CloseFrpc() => App.KillFrpcProcess();
     }
 }

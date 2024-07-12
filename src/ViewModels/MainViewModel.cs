@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
@@ -96,6 +97,11 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         case "onService":
                             {
+                                if ("not-allow-display".Equals(UserInfo.UserName))
+                                {
+                                    App.TryAutoLogin();
+                                }
+
                                 StateOfService = true;
 
                                 break;
@@ -116,15 +122,9 @@ namespace OpenFrp.Launcher.ViewModels
                     if (e.PropertyName is nameof(UserInfo))
                     {
                         event_OnUserInfoChanged();
-                        if (_frame is { Content: var c } &&
-                            c is Views.Home or Views.Settings)
-                        {
-                            //event_RouterItemInvoked(c.GetType());
-                        }
                     }
                 });
             };
-           // AvatorFilePath = Properties.Settings.Default.UserAvator;
         }
 
         public HashSet<int> OnlineTunnels { get; } = new HashSet<int>();
@@ -156,6 +156,19 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private string avatorFilePath = @"pack://application:,,,/Resources/Images/share_5bb469267f65d0c7171470739108cdae.png";
 
+        [RelayCommand]
+        private void @event_CopyCActive()
+        {
+            if (System.Windows.Input.Keyboard.FocusedElement is System.Windows.Controls.ListViewItem { DataContext: OpenFrp.Service.Proto.Response.LogResponse.Types.LogData log })
+            {
+                try
+                {
+                    Clipboard.SetText($"{DateTimeOffset.FromUnixTimeMilliseconds(log.Date):yyyy/MM/dd HH:mm:ss} {log.Executor} {log.Content} (Level: {log.Level})");
+                }
+                catch { }
+            }
+        }
+
         private void @event_OnUserInfoChanged()
         {
             if (UserInfo.UserName.Equals("not-allow-display"))
@@ -185,26 +198,21 @@ namespace OpenFrp.Launcher.ViewModels
 
                     if (avator.StatusCode is System.Net.HttpStatusCode.OK && avator.Data.Count() > 0)
                     {
-                        Properties.Settings.Default.UserAvator = System.IO.Path.GetTempFileName();
+                        string ab = System.IO.Path.GetTempFileName();
 
                         try
                         {
-                            using var fs = System.IO.File.OpenWrite(Properties.Settings.Default.UserAvator);
-
+                            using var fs = System.IO.File.OpenWrite(ab);
                             await fs.WriteAsync(avator.Data.ToArray(), 0, avator.Data.Count());
-
-
-
                             await fs.FlushAsync();
                         }
                         catch
                         {
-                            Properties.Settings.Default.UserAvator = "";
+                            ab = "";
 
                             return;
                         }
-
-                        AvatorFilePath = Properties.Settings.Default.UserAvator;
+                        AvatorFilePath = ab;
                     }
                 });
             }
@@ -219,11 +227,13 @@ namespace OpenFrp.Launcher.ViewModels
 
                 nv.BackRequested += delegate
                 {
+                    
                     if (_frame is not null)
                     {
                         if (_frame.CanGoBack)
                         {
-                            _frame.GoBack();
+                            _frame.Tag = "goback";
+                            _frame.NavigationService.GoBack();
                         }
                     }
                 };
@@ -301,8 +311,22 @@ namespace OpenFrp.Launcher.ViewModels
 
                 _frame = cc;
 
+                _frame.Navigating += (_, e) =>
+                {
+                    if ("goback".Equals(_frame.Tag))
+                    {
+                        _frame.ClearValue(ModernWpf.Controls.Frame.TagProperty);
+
+                        return;
+                    }
+                    if (e.NavigationMode is System.Windows.Navigation.NavigationMode.Forward or System.Windows.Navigation.NavigationMode.Back)
+                    {
+                        e.Cancel = true;
+                    }
+                };
                 _frame.Navigated += (_, e) =>
                 {
+                    
                     if (e.ExtraData is not null && !e.ExtraData.Equals("request-login")) return;
 
                     var tgt = e.SourcePageType();

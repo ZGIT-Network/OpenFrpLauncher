@@ -95,19 +95,21 @@ namespace OpenFrp.Launcher.ViewModels
             if (!event_UploadState(openfrpUserinfo, () => openfrpUserinfo.Data is not null)) { await @event_LoginDelay(); return; }
             else if (openfrpUserinfo.Data is { } userInfo)
             {
+                var va = new Service.UsrLogin
+                {
+                    UserAuthroization = Service.Net.HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz")
+                };
                 var rrpc = await RpcManager.LoginAsync(new Service.Proto.Request.LoginRequest
                 {
                     UserToken = userInfo.UserToken,
-                    UserTag = $"@!{userInfo.UserID}+{userInfo.UserName}"
-                }, TimeSpan.FromSeconds(10), cancellationToken: CancellationTokenSource.Token);
+                    UserTag = $"@!{userInfo.UserID}+{userInfo.UserName}",
+                    UserAccount = va.ToString()
+                }, TimeSpan.FromSeconds(10), cancellationToken: CancellationTokenSource.Token); ;
 
                 if (rrpc.IsSuccess)
                 {
-                    Properties.Settings.Default.UserPwn = System.Text.Json.JsonSerializer.Serialize(new Awe.Model.OAuth.Request.LoginRequest
-                    {
-                        Username = Username,
-                        Password = Launcher.PndCodec.EncryptString(Encoding.UTF8.GetBytes(Password))
-                    });
+                    Properties.Settings.Default.Account = va;
+
                     RpcManager.UserSecureCode = rrpc.Data;
 
                     taskCompletionSource?.TrySetResult(userInfo);
@@ -171,38 +173,29 @@ namespace OpenFrp.Launcher.ViewModels
 
             else if (openfrpUserinfo.Data is { } userInfo)
             {
+                var va = new Service.UsrLogin
+                {
+                    UserAuthroization = OpenFrp.Service.Net.HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz")
+                };
                 var rrpc = await RpcManager.LoginAsync(new Service.Proto.Request.LoginRequest
                 {
                     UserToken = userInfo.UserToken,
-                    UserTag = $"@!{userInfo.UserID}+{userInfo.UserName}"
+                    UserTag = $"@!{userInfo.UserID}+{userInfo.UserName}",
+                    UserAccount = va.ToString()
                 }, TimeSpan.FromSeconds(10));
 
                 if (rrpc.IsSuccess)
                 {
-                    //WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(UserInfo = openfrpUserinfo.Data));
-
-                    //Properties.Settings.Default.UserPwn = code;
-                    //Properties.Settings.Default.UserPwnRedirectUrl = Launcher.PndCodec.EncryptString(Encoding.UTF8.GetBytes(redirect_url));
-
                     RpcManager.UserSecureCode = rrpc.Data;
 
-                    //Properties.Settings.Default.UserPwn = System.Text.Json.JsonSerializer.Serialize(new Awe.Model.OAuth.Request.LoginRequest
-                    //{
-                    //    Username = Username,
-                    //    Password = Launcher.PndCodec.EncryptString(Encoding.UTF8.GetBytes(Password))
-                    //});
-                    //RpcManager.UserSecureCode = rrpc.Data;
-
-                    Properties.Settings.Default.UserAuthorization = OpenFrp.Service.Net.HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz");
-
+                    Properties.Settings.Default.Account = va;
+                   
                     taskCompletionSource?.TrySetResult(userInfo);
 
-                    //Service.Net.OpenFrp.Logout();
                     return;
                 }
                 else
                 {
-                    //System.Windows.MessageBox.Show(rrpc.Message, "OpenFrp Launcher", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                     Reason = rrpc.Message ?? "发生了未知错误";
                     Exception = rrpc.Exception;
                 }

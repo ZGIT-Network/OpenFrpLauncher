@@ -37,18 +37,6 @@ namespace OpenFrp.Launcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string UserPwn {
-            get {
-                return ((string)(this["UserPwn"]));
-            }
-            set {
-                this["UserPwn"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool ZoomErrorMessage {
             get {
@@ -108,18 +96,6 @@ namespace OpenFrp.Launcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string UserAvator {
-            get {
-                return ((string)(this["UserAvator"]));
-            }
-            set {
-                this["UserAvator"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("NotifyIconDefault")]
         public global::OpenFrp.Launcher.Model.NotifyMode NotifyMode {
             get {
@@ -156,13 +132,12 @@ namespace OpenFrp.Launcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string UserAuthorization {
+        public global::OpenFrp.Service.UsrLogin Account {
             get {
-                return ((string)(this["UserAuthorization"]));
+                return ((global::OpenFrp.Service.UsrLogin)(this["Account"]));
             }
             set {
-                this["UserAuthorization"] = value;
+                this["Account"] = value;
             }
         }
         
@@ -188,6 +163,18 @@ namespace OpenFrp.Launcher.Properties {
             }
             set {
                 this["AutoStartupTunnelId"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AllowLogTextWrap {
+            get {
+                return ((bool)(this["AllowLogTextWrap"]));
+            }
+            set {
+                this["AllowLogTextWrap"] = value;
             }
         }
     }
