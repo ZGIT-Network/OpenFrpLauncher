@@ -34,6 +34,8 @@ namespace OpenFrp.Launcher
         public override void CorruptException(Exception exception)
         {
             System.Windows.MessageBox.Show(exception.Message,"OpenFrp Launcher",System.Windows.MessageBoxButton.OK,System.Windows.MessageBoxImage.Error);
+
+            WaitForCode.TrySetResult("");
         }
 
         public string? OriginalRedirectUrl { get; private set; }

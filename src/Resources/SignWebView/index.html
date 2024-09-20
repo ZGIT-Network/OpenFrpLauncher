@@ -15,45 +15,45 @@
     <script>
         chrome.webview.addEventListener('message', event => {
             const data = String(event.data);
-            
+
             switch (data) {
                 case "darkValueSet":
-                       document.body.classList.add("awe_appDarkMode");
+                    document.body.classList.add("awe_appDarkMode");
                     break;
                 case "lightValueSet":
-                       document.body.classList.add("awe_appLightMode");
+                    document.body.classList.add("awe_appLightMode");
                     break;
                 default:
                     break;
             }
         });
-        window.print = (function () {})
+        window.print = (function () { })
         const app = {
             requestCaptchaDataUrl: 'https://tac.8i.ink/gen',
             validCaptchaUrl: 'https://tac.8i.ink/check',
             bindEl: '#captcha-box',
             chainString: 'cl>json>rsaaes>base64',
             customParentClass: 'tianai-custom-parent',
-            
+
             validSuccess: (result, c, t) => {
                 // 销毁
                 //chrome.webview.hostObjects.dialog.CodeFallback(result.data.token)
                 chrome.webview.postMessage(result.data.token);
             },
         };
-        var vid = setInterval(function(){
-            if(window["TAC"] !== undefined){
+        var vid = setInterval(function () {
+            if (window["TAC"] !== undefined) {
                 clearInterval(vid);
                 var va = new window.TAC(app);
                 va.init();
                 chrome.webview.postMessage("themeRequest");
             }
-        },250);
+        }, 250);
         //window.TAC(config).init();
     </script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+    <script src="./tianai/jsencrypt.min.js"></script>
     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/core.min.js"></script> -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="./tianai/crypto-js.min.js"></script>
     <script src="./tianai/tac.min.js"></script>
     <script src="./tianai/enc.js"></script>
     <link rel="stylesheet" href="./tianai/styles/tac-custom.css">

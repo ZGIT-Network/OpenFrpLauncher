@@ -70,7 +70,7 @@
                             Title="打开 FRPC 文件夹"
                             Margin="0,0,0,8"
                             Command="{Binding event_OpenFrpcFolderCommand}"
-                            Description="当你无法通过更新来获取 FRPC 时，你可以手动下载后放入 FRPC 文件夹。"
+                            Description="当你无法通过更新来获取 FRPC 时，你可以手动下载后放入 FRPC 文件夹。(注意: 请勿将未解压的 FRPC 压缩包放入，这样并不会生效)"
                             Icon="&#xE8F4;"
                             IsClickable="True" />
                         <awe:Resizer Margin="0,0,0,8">
@@ -162,7 +162,8 @@
                                                 VerticalAlignment="Top"
                                                 FontSize="18"
                                                 Text="{Binding UpdateInfo.Title, Mode=OneWay}" />
-                                            <awe:SelectableTextBlock FontSize="14"
+                                            <awe:SelectableTextBlock
+                                                FontSize="14"
                                                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                                 Text="{Binding UpdateInfo.Log, Mode=OneWay}"
                                                 TextWrapping="Wrap" />

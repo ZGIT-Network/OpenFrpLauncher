@@ -235,55 +235,7 @@
                                         </awe:Resizer>
                                     </awe:VisibilityTranstion>
                                 </Grid>
-                                <WrapPanel>
-                                    <Grid MaxWidth="342" Margin="0,0,48,16">
-                                        <Image ui:ClipHelper.CornerRadius="6">
-                                            <Image.Style>
-                                                <Style TargetType="Image">
-                                                    <Setter Property="Source" Value="../Resources/Images/hsccode_v2.jpg" />
-                                                    <Style.Triggers>
-                                                        <Trigger Property="ui:ThemeManager.ActualTheme" Value="Dark">
-                                                            <Setter Property="Source" Value="../Resources/Images/hsccode.jpg" />
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Image.Style>
-                                        </Image>
-                                        <TextBlock
-                                            Margin="0,16,0,0"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Top"
-                                            Foreground="#afafaf"
-                                            IsHitTestVisible="False"
-                                            Text="请注意:要进入赞助列表请勿匿名赞助" />
-                                    </Grid>
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        FontSize="24"
-                                        TextWrapping="Wrap">
-                                        <Run
-                                            FontFamily="{StaticResource Montserrat}"
-                                            FontWeight="Medium"
-                                            Foreground="{DynamicResource AweAppGoldenColor}"
-                                            Text="Preview 57" />
-                                        <Run Text=" (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: " />
-                                        <Run
-                                            FontFamily="{StaticResource Montserrat}"
-                                            FontWeight="Medium"
-                                            Foreground="{DynamicResource AweAppGoldenColor}"
-                                            Text="2024SR0589290" />
-                                        <LineBreak />
-                                        <Run
-                                            FontWeight="Medium"
-                                            Foreground="{DynamicResource AweAppGoldenColor}"
-                                            Text="我们在尝试着一些新特性，若您有意见，欢迎投稿！" />
-                                        <LineBreak />
-                                        <Run
-                                            FontWeight="Medium"
-                                            Foreground="{DynamicResource AweAppGoldenColor}"
-                                            Text="也同时欢迎您赞助在爱发电上的我们。" />
-                                    </TextBlock>
-                                </WrapPanel>
+
                                 <Grid>
                                     <awe:VisibilityTranstion>
                                         <awe:VisibilityTranstion.IsDisplay>
@@ -369,6 +321,29 @@
                                         </ItemsControl>
                                     </awe:VisibilityTranstion>
                                 </Grid>
+                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" TextWrapping="Wrap">
+                                    <Run Text="也许你会好奇，为什么有广告？" />
+                                    <LineBreak />
+                                    <Run Text="我们也想过，那，你又从哪了解了我们？" />
+                                    <LineBreak />
+                                    <LineBreak />
+                                    <Run Text="广告也很精彩，无论何时何地都能看见。" />
+                                    <LineBreak />
+                                    <Run Text="可能惨淡而无人问访，寂寥而沉默于海底。但什么时候都可以转变，因为有你，这一切不会如此。" />
+                                    <LineBreak />
+                                    <Run Text="它们也许是为了谋生，将心比心，或让你知道世界上有个它。" />
+                                    <LineBreak />
+                                    <Run Text="它是 OpenFRP, 和每一位合作伙伴。" />
+
+                                    <LineBreak /><LineBreak />
+                                    <Run Text="除非需要，我们不会在除了首页的地方插入广告，愿众知。" />
+                                    <LineBreak /><LineBreak />
+                                    <Run Text="托一些小伙伴的言在这:"/>
+                                    <LineBreak />
+                                    <Run Text="1.充 VIP / SVIP 上官网充值。如果不知道官网可以去设置页面 - 打开官网按钮进入，或访问 https://of.gs"/>
+                                    <LineBreak />
+                                    <Run Text="2.使用不了可能是由于一些不可阻力（如服务器维护），遇到了别冲动给我赞助啦！"/>
+                                </TextBlock>
                                 <Grid>
                                     <awe:VisibilityTranstion IsDisplay="{Binding event_RefreshBoardcastCommand.IsRunning, Mode=OneWay}">
                                         <ui:ProgressRing
@@ -424,7 +399,7 @@
                                                 Margin="0,0,0,-4"
                                                 FontSize="24"
                                                 TextWrapping="Wrap">
-                                                <Run Text="感谢以下各位赞助作者(越越)的人: " />
+                                                <Run Text="感谢以下赞赏列表的伙伴们:" />
                                             </TextBlock>
                                             <ItemsControl
                                                 Focusable="False"
@@ -450,6 +425,7 @@
                                         </ui:SimpleStackPanel>
                                     </awe:VisibilityTranstion>
                                 </Grid>
+
                             </ui:SimpleStackPanel>
                         </awe:VisibilityTranstion>
                     </Grid>
@@ -457,5 +433,57 @@
             </ui:SimpleStackPanel>
 
         </ui:ScrollViewerEx>
+        <Grid
+            Grid.Row="1"
+            Width="250"
+            Height="250"
+            Margin="0,0,40,40"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom">
+            <ui:ThemeShadowChrome Depth="30" />
+            <Border
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+                <Image ui:ClipHelper.CornerRadius="6">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Setter Property="Source" Value="../Resources/Images/hsccode_v2.jpg" />
+                            <Style.Triggers>
+                                <Trigger Property="ui:ThemeManager.ActualTheme" Value="Dark">
+                                    <Setter Property="Source" Value="../Resources/Images/hsccode.jpg" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </Border>
+            <TextBlock
+                Margin="0,16,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                FontSize="10"
+                Foreground="#afafaf"
+                IsHitTestVisible="False"
+                Text="请注意:要进入赞助列表请勿匿名赞助" />
+
+            <ui:HyperlinkButton
+                Margin="0,17,20,0"
+                Padding="0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Background="Transparent"
+                Focusable="False"
+                AutomationProperties.Name="关闭浮窗"
+                ToolTip="关闭浮窗">
+                <behavior:Interaction.Triggers>
+                    <behavior:EventTrigger EventName="Click">
+                        <behavior:RemoveElementAction TargetObject="{Binding RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}" />
+                    </behavior:EventTrigger>
+                </behavior:Interaction.Triggers>
+                <ui:FontIcon FontSize="10" Glyph="&#xE653;" />
+            </ui:HyperlinkButton>
+        </Grid>
+
     </Grid>
 </ui:Page>

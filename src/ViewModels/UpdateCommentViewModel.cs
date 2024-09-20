@@ -125,6 +125,12 @@ namespace OpenFrp.Launcher.ViewModels
             if (versionData.StatusCode is System.Net.HttpStatusCode.OK &&
                 versionData.Data is { } data)
             {
+                if (ProgressValue is 100 && !string.IsNullOrEmpty(ErrorMessage) && !event_EnterUpdateCommand.IsRunning)
+                {
+                    ProgressValue = 0;
+                    ErrorMessage = null;
+                }
+
                 if (!App.VersionString.Equals(data.Launcher.Latest))
                 {
 #if DEBUG
@@ -149,7 +155,7 @@ namespace OpenFrp.Launcher.ViewModels
                             }));
                         }
                     }
-#endif
+#endif  
                     WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(new Model.UpdateInfo
                     {
                         Type = Model.UpdateInfoType.Launcher,
@@ -234,9 +240,9 @@ namespace OpenFrp.Launcher.ViewModels
                                     UseShellExecute = true
                                 }) is Process)
                                 {
-                                    App.ServiceProcess.Kill();
-                                    App.Current?.Shutdown();
-                                    Environment.Exit(0);
+                                    
+                                    App.DestoryAppCommand.Execute(null);
+
                                     return;
                                 }
                             }
@@ -270,9 +276,8 @@ namespace OpenFrp.Launcher.ViewModels
                                         UseShellExecute = true
                                     }) is Process)
                                     {
-                                        App.ServiceProcess.Kill();
-                                        App.Current?.Shutdown();
-                                        Environment.Exit(0);
+                                        App.DestoryAppCommand.Execute(null);
+
                                         return;
                                     }
                                 }
@@ -297,20 +302,19 @@ namespace OpenFrp.Launcher.ViewModels
                         foreach (var item in UpdateInfo.SoftWareVersionData.DownloadSources)
                         {
                             // win 7 version fall back
+                            string requestUrl = "";
                             Awe.Model.ApiResponse<IEnumerable<byte>> resp;
                             if (Environment.OSVersion.Version.Major is not 10)
                             {
                                 // 纯属擦屁股
 
-
-                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/OpenFRP_0.54.0_835276e2_20240205/frpc_windows_{FileDictionary.GetFrpPlatform()}.zip", progress);
+                                requestUrl = $"{item.BaseUrl}/OpenFRP_0.54.0_835276e2_20240205/frpc_windows_{FileDictionary.GetFrpPlatform()}.zip";
                             }
                             else
                             {
-
-
-                                resp = await AppNetwork.HttpRequest.Get($"{item.BaseUrl}/{UpdateInfo.SoftWareVersionData.Latest}/frpc_windows_{FileDictionary.GetFrpPlatform()}.zip", progress);
+                                requestUrl = $"{item.BaseUrl}/{UpdateInfo.SoftWareVersionData.Latest}/frpc_windows_{FileDictionary.GetFrpPlatform()}.zip";
                             }
+                            resp = await AppNetwork.HttpRequest.Get(requestUrl, progress);
                             if (resp.StatusCode is System.Net.HttpStatusCode.OK)
                             {
                                 try
@@ -330,9 +334,13 @@ namespace OpenFrp.Launcher.ViewModels
                                         ac.ExtractToDirectory(FileDictionary.CreateFrpFolder());
                                     }
                                 }
+                                catch (System.UnauthorizedAccessException ex)
+                                {
+                                    ErrorMessage += "\n请先检查操作是否已被杀软拦截，若如此请看 https://openfrp.wiki/use/desktop-launcher.html#加入系统白名单" + ex.ToString() + "\n" + resp.Message;
+                                }
                                 catch (Exception ex)
                                 {
-                                    ErrorMessage += "\n" + ex.ToString();
+                                    ErrorMessage += "\n" + ex.ToString() + "\n" + resp.Message;
                                     return;
                                 }
 
@@ -364,7 +372,9 @@ namespace OpenFrp.Launcher.ViewModels
 
                                     wnd.Close();
 
-                                    App.ServiceProcess.Kill();
+                                    if (App.ServiceProcess is not null) {
+                                        App.ServiceProcess.Kill();
+                                    }
 
                                 }
                                 else
@@ -390,7 +400,7 @@ namespace OpenFrp.Launcher.ViewModels
                             }
                             else
                             {
-                                ErrorMessage += "\n" + resp.Exception?.ToString() ?? resp.Message;
+                                ErrorMessage += "\n" + (resp.Exception?.ToString() ?? resp.Message) + $"\nRequest Url:{requestUrl}";
                             }
                         }
                     }
@@ -496,6 +506,7 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             }
         }
+
 
         public bool UseProxy
         {

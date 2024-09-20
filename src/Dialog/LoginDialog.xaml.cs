@@ -37,9 +37,9 @@ namespace OpenFrp.Launcher.Dialog
 
                 base.Hide();
 
-                if (!task.Equals(showDialog))
+                if (!task.Equals(showDialog) && await TaskCompletionSource.Task is { } t)
                 {
-                    return await TaskCompletionSource.Task;
+                    return t;
                 }
             }
             catch(TaskCanceledException)

@@ -144,6 +144,7 @@ namespace OpenFrp.Launcher.ViewModels
                 wv.CoreWebView2.Settings.AreDefaultContextMenusEnabled = System.Diagnostics.Debugger.IsAttached;
 
                 wv.CoreWebView2.Navigate("http://openfrp.signInAppPack/index.html");
+                //TabIndex = 1;
             }
         }
 
@@ -204,6 +205,13 @@ namespace OpenFrp.Launcher.ViewModels
             try
             {
                 var file = e.Request.Uri.Replace("http://openfrp.signinapppack/", "");
+
+                if (file.Equals("favicon.ico"))
+                {
+                    e.Response = wv.Environment.CreateWebResourceResponse(Stream.Null, 502, "Service Unavaliable", $"Content-Type: text/plain;");
+                    return;
+                }
+
                 var source = App.GetResourceStream(new Uri($"pack://application:,,,/Resources/SignWebView/{file}"));
 
                 if (source is { Stream.Length: > 0 })

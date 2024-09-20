@@ -42,6 +42,21 @@
                 <Border MaxWidth="1272" Padding="36,4,36,0">
                     <ui:SimpleStackPanel Spacing="8">
                         <TextBlock FontSize="18" TextWrapping="Wrap">
+                            <Run
+                                FontFamily="{StaticResource Montserrat}"
+                                FontSize="24"
+                                FontWeight="Medium"
+                                Foreground="{DynamicResource AweAppGoldenColor}"
+                                Text="OpenFrp Launcher 5.0.0" />
+                            <LineBreak />
+
+                            <Run Text=" (赞助码！谢谢各位！求求你啦！) &#x0a;开放映射启动器软件 登记号: " />
+                            <Run
+                                FontFamily="{StaticResource Montserrat}"
+                                FontWeight="Medium"
+                                Foreground="{DynamicResource AweAppGoldenColor}"
+                                Text="2024SR0589290" />
+                            <LineBreak />
                             <Run Text="至远光辉技术 | Copyright 2024" />
                             <LineBreak />
                             <Run Text="爱来自 Everyone,热爱即是真理。" />
@@ -62,13 +77,7 @@
                             ToolTip="https://www.gnu.org/licenses/gpl-3.0.html">
                             <TextBlock Text="GPL-3 Document(https://www.gnu.org/licenses/gpl-3.0.html)" TextTrimming="CharacterEllipsis" />
                         </ui:HyperlinkButton>
-                        <awe:Resizer>
-                            <ui:InfoBar
-                                Title="测试版"
-                                IsClosable="False"
-                                IsOpen="True"
-                                Message="该版本由越越开发，如有需求可前往 Github 上开源库的 Discussion 去进行讨论。" />
-                        </awe:Resizer>
+                        <awe:Resizer />
 
                         <awe:Resizer>
                             <Expander HorizontalAlignment="Stretch">
@@ -115,6 +124,22 @@
                             Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
                             Text="特此感谢 &amp; 灵感来自: SakuraFRP 启动器"
                             TextWrapping="Wrap" />
+                        <Image
+                            MaxWidth="300"
+                            Margin="0,10"
+                            HorizontalAlignment="Left"
+                            ui:ClipHelper.CornerRadius="6">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <Setter Property="Source" Value="../Resources/Images/hsccode_v2.jpg" />
+                                    <Style.Triggers>
+                                        <Trigger Property="ui:ThemeManager.ActualTheme" Value="Dark">
+                                            <Setter Property="Source" Value="../Resources/Images/hsccode.jpg" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
+                        </Image>
                     </ui:SimpleStackPanel>
                 </Border>
             </ui:ScrollViewerEx>

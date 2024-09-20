@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,17 @@ namespace OpenFrp.Launcher
         public UpdateWindow()
         {
             InitializeComponent();
+        }
+
+        protected override async void OnClosing(CancelEventArgs e)
+        {
+            e.Cancel = true;
+
+            Properties.Settings.Default.Save();
+
+            await Task.Delay(500);
+
+            Environment.Exit(0);
         }
     }
 }

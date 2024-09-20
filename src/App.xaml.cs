@@ -40,7 +40,7 @@ using OpenFrp.Launcher.Model;
 using OpenFrp.Launcher.ViewModels;
 using OpenFrp.Service.Call;
 using OpenFrp.Service.Net;
-using static Google.Protobuf.WellKnownTypes.Field.Types;
+
 
 
 namespace OpenFrp.Launcher
@@ -53,10 +53,13 @@ namespace OpenFrp.Launcher
         private enum AppStartEnum
         {
             None = 0,
-            Minimize = 1,
+            NoneWithoutEffect,
+            Minimize,
+            MinimizeWithoutEffect,
             Update,
+            UpdateWithoutEffect,
             UpdateFinish,
-            Uninstall
+            Uninstall,
         }
 
         public App()
@@ -68,7 +71,7 @@ namespace OpenFrp.Launcher
 
         public static string? WebViewTemplatePath { get; set; }
 
-        public static string VersionString { get; } = "OpenFrpLauncher.v100.VupiKelbel";
+        public static string VersionString { get; } = "OpenFrpLauncher5.0.0";
 
         public static string FrpcVersionString { get; private set; } = "Unknown";
 
@@ -89,8 +92,10 @@ namespace OpenFrp.Launcher
             } 
         }
 
+        public static H.NotifyIcon.TaskbarIcon? TaskBarIcon { get; set; }
+
 #pragma warning disable CS8618
-        public static H.NotifyIcon.TaskbarIcon TaskBarIcon { get; set; }
+
 
         public static Process ServiceProcess { get; set; }
 
@@ -102,10 +107,22 @@ namespace OpenFrp.Launcher
 
             ExcepitonHandler = (ex) =>
             {
-                try { Clipboard.SetText(ex.ToString()); } catch { }
+                string ext = "";
+                try { Clipboard.SetText(ex.ToString()); } catch
+                {
+                    MessageBox.Show(ex.ToString(), "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
 
+                    Environment.Exit(ex.HResult);
+
+                    return;
+                }
+
+                if (ex.Source.Contains("System.Configuration.ConfigurationErrorsException"))
+                {
+                    ext += "请根据官方下载页中 - 常见问题来解决此问题。";
+                }
                 MessageBox.Show($"错误内容已复制，按下Ctrl+V | 粘贴 来显示内容。" +
-                $"\n{ex.Message}", "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
+                     $"\n{ex.Message}" + $"\n{ext}", "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 Environment.Exit(ex.HResult);
             };
@@ -117,6 +134,7 @@ namespace OpenFrp.Launcher
                     ExcepitonHandler?.Invoke(ex);
                 }
             };
+            //Debugger.Launch();
 
             switch (ase)
             {
@@ -155,6 +173,10 @@ namespace OpenFrp.Launcher
                         
                         break;
                     }
+                case AppStartEnum.UpdateWithoutEffect:
+                    {
+                        goto case AppStartEnum.Update;
+                    };
                 case AppStartEnum.Update:
                     {
                         if (IsAdministrator())
@@ -165,11 +187,12 @@ namespace OpenFrp.Launcher
                             SetSecureApp();
 
                             _ = ConfigureVersionCheck(FrpcVersionString);
-                            ConfigureUpdateWindow();
+
+                            ConfigureUpdateWindow(ase);
                         }
                         else
                         {
-                            if (ase is AppStartEnum.UpdateFinish or AppStartEnum.None)
+                            if (ase is AppStartEnum.UpdateWithoutEffect or AppStartEnum.None or AppStartEnum.Update)
                             {
                                 try
                                 {
@@ -177,7 +200,7 @@ namespace OpenFrp.Launcher
                                     {
                                         FileName = Assembly.GetExecutingAssembly().Location,
                                         Verb = "runas",
-                                        Arguments = "--update",
+                                        Arguments = "--update " + (ase is AppStartEnum.UpdateWithoutEffect ? "--no-effect" : ""),
                                         ErrorDialog = false
                                     });
                                 } catch { }
@@ -186,6 +209,8 @@ namespace OpenFrp.Launcher
                         break;
                     }
                 case AppStartEnum.Minimize: goto case AppStartEnum.None;
+                case AppStartEnum.MinimizeWithoutEffect: goto case AppStartEnum.None;
+                case AppStartEnum.NoneWithoutEffect: goto case AppStartEnum.None;
                 case AppStartEnum.UpdateFinish:
                     {
                         FrpcVersionString = await GetFrpcVersionAsync();
@@ -197,8 +222,16 @@ namespace OpenFrp.Launcher
                             }
                             goto case AppStartEnum.Update;
                         }
+                        else if (string.IsNullOrEmpty(FrpcVersionString))
+                        {
+                            MessageBox.Show("对于 FRPC 的请求被拒绝，请查看是否被杀软拦截。如果如此，请将本软件加入白名单。", "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                            {
+                                break;
+                            }
+                        }
                         goto case AppStartEnum.None;
                     }
+
                 case AppStartEnum.None:
                     {
                         try
@@ -232,7 +265,7 @@ namespace OpenFrp.Launcher
                         catch { }
                         try
                         {
-                            if (!e.Args.Contains("--update") && e.Args.Contains("--finish") && Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1 } lt)
+                            if (!(e.Args.Contains("--update") || e.Args.Contains("--finish")) && Process.GetProcessesByName("OpenFrpLauncher") is { Length: > 1 } lt)
                             {
                                 var self = Process.GetCurrentProcess();
 
@@ -242,20 +275,17 @@ namespace OpenFrp.Launcher
 
                                     if (item.MainModule.FileName == Assembly.GetEntryAssembly().Location)
                                     {
-                                        if (item.MainWindowHandle == IntPtr.Zero)
+                                        string hash = OpenFrp.Service.HashCalculator.CompushHash(Assembly.GetEntryAssembly().Location);
+                                        IntPtr hWnd = Awe.UI.Win32.User32.FindWindowA(null!, hash);
+
+                                        if (hWnd != null)
                                         {
-                                            MessageBox.Show(
-                                                "OpenFrp 启动器已启动。若您想运行多个启动器实例，更推荐您使用 FRPC 进行进程管理。\n请单击\"托盘图标\"来显示主窗口。", "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                            Awe.UI.Win32.User32.ShowWindow(hWnd, 5);
+                                            Awe.UI.Win32.User32.SetForegroundWindow(hWnd);
 
-                                            break;
+                                            Environment.Exit(0);
+                                            return;
                                         }
-                                        try { item.Refresh(); } catch { }
-                                        
-                                        Awe.UI.Win32.User32.ShowWindow(item.MainWindowHandle, 9);
-                                        Awe.UI.Win32.User32.SetForegroundWindow(item.MainWindowHandle);
-
-                                        App.Current.Shutdown();
-                                        return;
                                     }
                                     break;
                                 }
@@ -264,18 +294,26 @@ namespace OpenFrp.Launcher
                         }
                         catch { }
 
+                        FrpcVersionString = await GetFrpcVersionAsync();
                         if (ase != AppStartEnum.UpdateFinish)
                         {
-                            FrpcVersionString = await GetFrpcVersionAsync();
                             if ("non-frp".Equals(FrpcVersionString))
                             {
                                 goto case AppStartEnum.Update;
                             }
                         }
+                        if (string.IsNullOrEmpty(FrpcVersionString))
+                        {
+                            MessageBox.Show("对于 FRPC 的请求被拒绝，请查看是否被杀软拦截。如果如此，请将本软件加入白名单。否则，请尝试卸载软件。", "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                            {
+                                break;
+                            }
+                        }
 
                         SetSecureApp();
 
-                      
+                        
+
                         if (WindowsServiceCall.IsInstalledService())
                         {
                             if (!WindowsServiceCall.IsServiceLaunched)
@@ -296,10 +334,10 @@ namespace OpenFrp.Launcher
                         ConfigureAppCenter();
                         ConfigureToast();
                         ConfigureTimer();
-
+                        ConfigureWindow(ase);
                         //TryAutoLogin();
 
-                        ConfigureWindow(ase is AppStartEnum.Minimize);
+
 
 
                         return;
@@ -316,15 +354,27 @@ namespace OpenFrp.Launcher
             }
             else if (arg.Contains("--update"))
             {
+                if (arg.Contains("--no-effect"))
+                {
+                    return AppStartEnum.UpdateWithoutEffect;
+                }
                 return AppStartEnum.Update;
             }
             else if (arg.Contains("--minimize"))
             {
+                if (arg.Contains("--no-effect"))
+                {
+                    return AppStartEnum.MinimizeWithoutEffect;
+                }
                 return AppStartEnum.Minimize;
             }
             else if (arg.Contains("--finish"))
             {
                 return AppStartEnum.UpdateFinish;
+            }
+            if (arg.Contains("--no-effect"))
+            {
+                return AppStartEnum.NoneWithoutEffect;
             }
             return AppStartEnum.None;
         }
@@ -379,7 +429,7 @@ namespace OpenFrp.Launcher
             {
                 try
                 {
-                    App.TaskBarIcon.ClearNotifications();
+                    App.TaskBarIcon?.ClearNotifications();
                 }
                 catch
                 {
@@ -402,7 +452,7 @@ namespace OpenFrp.Launcher
                 {
                     try
                     {
-                        App.TaskBarIcon.ClearNotifications();
+                        App.TaskBarIcon?.ClearNotifications();
                     }
                     catch
                     {
@@ -514,7 +564,7 @@ namespace OpenFrp.Launcher
         {
 
 
-            AppCenter.Start("84e8ed84-8a2d-4eeb-ae5a-cc073b745677", typeof(Analytics), typeof(Crashes));
+            AppCenter.Start("823d5a1d-e6a1-4246-aff5-387696052d74", typeof(Analytics), typeof(Crashes));
 
             var id = await AppCenter.GetInstallIdAsync();
 
@@ -555,8 +605,12 @@ namespace OpenFrp.Launcher
 
         public static Action<Exception> ExcepitonHandler { get; set; } = delegate { };
 
+        private static TaskCompletionSource<string?> tk = new TaskCompletionSource<string?>();
+
         private static void ConfigureProcess()
         {
+            if (tk.Task.Status is TaskStatus.RanToCompletion) return;
+            
             if (Process.GetProcessesByName("OpenFrpService") is { Length: > 0 } ck)
             {
                 var asm = Assembly.GetAssembly(typeof(OpenFrp.Service.RpcResponse));
@@ -583,13 +637,24 @@ namespace OpenFrp.Launcher
                     FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrpService.exe"),
                     CreateNoWindow = true,
                     Arguments = $"deamon --pn openfrpLauncher.{@ev_AssemblyAc()}",
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true
                 },
                 EnableRaisingEvents = true
             };
+            ServiceProcess.OutputDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data) && e.Data.StartsWith("ex."))
+                {
+                    tk.TrySetResult(e.Data);
+                    
+                }
+            };
+            
             try
             {
                 ServiceProcess.Start();
+                ServiceProcess.BeginOutputReadLine();
             }
             catch (Exception ex)
             {
@@ -612,6 +677,21 @@ namespace OpenFrp.Launcher
             ServiceProcess.Exited += async delegate
             {
                 if (CancellationToken.IsCancellationRequested) return;
+
+                
+
+                if (tk.Task.IsCompleted)
+                {
+                    var v = await App.Current.Dispatcher.InvokeAsync(() => MessageBox.Show(App.Current.MainWindow,
+                        $"!!!!!!!辅助进程启动失败!!!!!!\n\n{tk.Task.Result?.Substring(3)}\n\n是 - 尝试重新启动辅助进程\n否 - 彻底退出启动器", "OpenFrp Launcher", MessageBoxButton.YesNo, MessageBoxImage.Error,MessageBoxResult.Yes));
+                    if (v is MessageBoxResult.No)
+                    {
+                        App.Current.Dispatcher.Invoke(delegate { App.DestoryAppCommand.Execute(null); });
+                        return;
+                    }
+
+                    tk = new TaskCompletionSource<string?>();
+                }
 
                 await Task.Delay(500);
 
@@ -762,22 +842,24 @@ namespace OpenFrp.Launcher
 
             while (!CancellationToken.IsCancellationRequested)
             {
-                var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest(),cancellationToken: CancellationToken);
-
-                if (resp.IsSuccess && resp.Data != null)
+                if (await RefreshOnlineTunnels())
                 {
-                    WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(resp.Data.TunnelId.ToArray()));
                     try
                     {
                         WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create("onService"));
-
-
+                        bool flag = await TryAutoLogin();
+                        if (!flag)
+                        {
+                            await Task.Delay(1500);
+                            continue;
+                        }
                         if (string.IsNullOrEmpty(RpcManager.UserSecureCode))
                         {
                             await Task.Delay(1500);
                             continue;
                         }
 
+                        
                         var exception = await RpcManager.NotifiyStream(async (response) =>
                         {
                             try
@@ -1030,7 +1112,10 @@ namespace OpenFrp.Launcher
                             continue;
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Crashes.TrackError(ex);
+                    }
                 }
                 WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create("offService"));
                 await Task.Delay(1000);
@@ -1079,13 +1164,25 @@ namespace OpenFrp.Launcher
             }
         }
 
-        private static void ConfigureWindow(bool minimize = false)
+        private static void ConfigureWindow(AppStartEnum ease)
         {
-            if (App.Current is { MainWindow: var wind})
+            if (App.Current is { MainWindow: var wind })
             {
+                var dwnEnable = Awe.UI.Win32.DwmApi.DwmIsCompositionEnabled();
+
+                if (ease is AppStartEnum.NoneWithoutEffect or AppStartEnum.MinimizeWithoutEffect)
+                {
+                    dwnEnable = false;
+                }
+
                 wind = new MainWindow();
 
-                if (minimize)
+                if (dwnEnable)
+                {
+                    wind.SetValue(ModernWpf.Controls.Primitives.WindowHelper.UseModernWindowStyleProperty, true);
+                }
+
+                if (ease is AppStartEnum.Minimize or AppStartEnum.MinimizeWithoutEffect)
                 {
                     wind.WindowState = WindowState.Minimized;
                 }
@@ -1106,19 +1203,23 @@ namespace OpenFrp.Launcher
                     {
                         Source = wind,
                         Mode = BindingMode.OneWay,
-                        Path = new PropertyPath(ModernWpf.ThemeManager.RequestedThemeProperty)
+                        Path = new PropertyPath(ModernWpf.ThemeManager.ActualThemeProperty)
                     });
                     TaskBarIcon = new H.NotifyIcon.TaskbarIcon()
                     {
                         NoLeftClickDelay = true,
                         LeftClickCommand = ShowWindowCommand,
                         ToolTipText = "OpenFrp 桌面启动器",
+                        Id = AppCenter.GetInstallIdAsync().GetAwaiter().GetResult() ?? default(Guid),
                         IconSource = new BitmapImage(new Uri("pack://application:,,,/Resources/desktop.ico")),
                         ContextMenu = ctx
                     };
                     TaskBarIcon.ForceCreate(false);
                 }
-                catch (Exception?) { }
+                catch (Exception?)
+                {
+                    TaskBarIcon = null;
+                }
 
                 if (Awe.UI.Win32.UserUxtheme.IsSupportDarkMode)
                 {
@@ -1132,15 +1233,28 @@ namespace OpenFrp.Launcher
                     Settings.FontFamily = new FontFamily("Microsoft YaHei UI");
                 }
 
-                wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, Settings.ApplicationTheme);
-                if (Settings.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
-                {
-                    wind.SetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty, backdrop);
-                }
-
                 var handle = new WindowInteropHelper(wind).EnsureHandle();
                 __mainWindHandle = handle;
-                Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
+
+               
+                if (dwnEnable)
+                {
+                    if (Settings.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
+                    {
+                        wind.SetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty, backdrop);
+                    }
+                    Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
+                }
+                else
+                {
+                    Settings.ApplicationTheme = ModernWpf.ElementTheme.Light;
+                    Settings.ApplicationBackdrop = ModernWpf.Controls.Primitives.BackdropType.None;
+                }
+
+
+                wind.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, Settings.ApplicationTheme);
+                wind.SetValue(TextElement.FontSizeProperty, new FontSizeConverter().ConvertFromString("14"));
+
             }
             Microsoft.Win32.SystemEvents.SessionEnding += (_, e) =>
             {
@@ -1171,7 +1285,14 @@ namespace OpenFrp.Launcher
                     UserAuthroization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz")
                 };
 
-                Settings.Save();
+                try
+                {
+                    Settings.Save();
+                }
+                catch
+                {
+
+                }
 
                 ClearNotifications();
                 ClearWebviewRuntimeCache();
@@ -1182,9 +1303,23 @@ namespace OpenFrp.Launcher
             };
         }
 
-        private static void ConfigureUpdateWindow()
+        private static void ConfigureUpdateWindow(AppStartEnum ease)
         {
+
+
+            var dwnEnable = Awe.UI.Win32.DwmApi.DwmIsCompositionEnabled();
+            if (ease is AppStartEnum.UpdateWithoutEffect)
+            {
+                dwnEnable = false;
+            }
+
             var wnd = new UpdateWindow();
+            var handle = new WindowInteropHelper(wnd).Handle;
+
+            if (dwnEnable)
+            {
+                wnd.SetValue(ModernWpf.Controls.Primitives.WindowHelper.UseModernWindowStyleProperty, true);
+            }
 
             if (Awe.UI.Win32.UserUxtheme.IsSupportDarkMode)
             {
@@ -1195,10 +1330,34 @@ namespace OpenFrp.Launcher
 
             _ = ConfigureVersionCheck(FrpcVersionString);
 
+            
+
+            wnd.ContentRendered += delegate
+            {
+                if (dwnEnable)
+                {
+                    if (Settings.ApplicationBackdrop is { } backdrop && backdrop != ModernWpf.Controls.Primitives.BackdropType.None)
+                    {
+                        wnd.SetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty, backdrop);
+                    }
+                    Awe.UI.Win32.UserUxtheme.SetWindowLong(handle, -16, Awe.UI.Win32.UserUxtheme.GetWindowLong(handle, -16) & ~0x80000);
+                }
+                else
+                {
+                    Settings.ApplicationTheme = ModernWpf.ElementTheme.Light;
+                    Settings.ApplicationBackdrop = ModernWpf.Controls.Primitives.BackdropType.None;
+                }
+
+
+                wnd.SetValue(ModernWpf.ThemeManager.RequestedThemeProperty, Settings.ApplicationTheme);
+                wnd.SetValue(TextElement.FontSizeProperty, new FontSizeConverter().ConvertFromString("14"));
+            };
             wnd.ShowDialog();
         }
 
         #endregion
+
+        internal static bool AllowDisableConsoleColor = false;
 
         internal static async Task<string> GetFrpcVersionAsync()
         {
@@ -1235,6 +1394,10 @@ namespace OpenFrp.Launcher
                     string str = await vk.StandardOutput.ReadLineAsync();
                     if (str.Contains("OpenFRP_"))
                     {
+                        if (str.Split('.') is string[] c && c.Length is 3 && int.TryParse(c[1],out var vi) && vi >= 60)
+                        {
+                            AllowDisableConsoleColor = true;
+                        }
                         return str;
                     }
                 }
@@ -1252,13 +1415,13 @@ namespace OpenFrp.Launcher
             return string.Empty;
         }
 
-        internal static async void TryAutoLogin()
+        internal static async Task<bool> TryAutoLogin()
         {
             try
             {
                 if (Settings.Account is not { } account || Settings.Account.IsEmpty())
                 {
-                    return;
+                    return false;
                 }
                 try
                 {
@@ -1283,17 +1446,42 @@ namespace OpenFrp.Launcher
                             RpcManager.UserSecureCode = rrpc.Data;
                             @appLaunchTunnel_auto();
 
-                            return;
+                            return true;
                         }
                         Service.Net.OpenFrp.Logout();
+                    }
+                    else if ("登录凭证无效, 请重新登录".Equals(openfrpUserinfo.Message))
+                    {
+                        Settings.Account = new Service.UsrLogin()
+                        {
+
+                        };
                     }
                 }
                 catch
                 {
-
+                    return false;
                 }
             }
             catch { }
+            return false;
+        }
+
+        public static async Task<bool> RefreshOnlineTunnels()
+        {
+            try
+            {
+                var resp = await RpcManager.SyncAsync(new Service.Proto.Request.SyncRequest(), cancellationToken: CancellationToken);
+
+                if (resp.IsSuccess && resp.Data != null)
+                {
+                    WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(resp.Data.TunnelId.ToArray()));
+
+                    return true;
+                }
+            }
+            catch { }
+            return false;
         }
 
         private static void @appLaunchTunnel_auto()
@@ -1346,6 +1534,12 @@ namespace OpenFrp.Launcher
 
         public static RelayCommand DestoryAppCommand { get; } = new RelayCommand(async delegate
         {
+            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create("noConfig"));
+            if (__mainWindHandle != IntPtr.Zero && App.Current.MainWindow.Visibility == Visibility.Visible)
+            {
+                HiddenWindow();
+            }
+            App.Current.MainWindow.IsEnabled = false;
             App.Current.MainWindow.Visibility = Visibility.Hidden;
 
             if (!WindowsServiceCall.IsInstalledService())
@@ -1358,6 +1552,7 @@ namespace OpenFrp.Launcher
             }
             else
             {
+                WindowsServiceCall.StopService(true);
                 Settings.AutoStartupTunnelId = Array.Empty<int>();
             }
 
@@ -1366,7 +1561,15 @@ namespace OpenFrp.Launcher
                 UserAuthroization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz")
             };
 
-            Settings.Save();
+            try
+            {
+                Settings.Save();
+                await Task.Delay(500);
+            }
+            catch
+            {
+
+            }
             ClearNotifications();
             ClearWebviewRuntimeCache();
            
@@ -1377,6 +1580,12 @@ namespace OpenFrp.Launcher
 
         public static RelayCommand DestoryLauncherCommand { get; } = new RelayCommand(async delegate
         {
+            App.Current.MainWindow.IsEnabled = false;
+            WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create("noConfig"));
+            if (__mainWindHandle != IntPtr.Zero && App.Current.MainWindow.Visibility == Visibility.Visible)
+            {
+                HiddenWindow();
+            }
             await Task.Delay(250);
 
             if (!WindowsServiceCall.IsInstalledService())
@@ -1397,8 +1606,15 @@ namespace OpenFrp.Launcher
                 UserAuthroization = HttpRequest.GetUserAuthroization("of-dev-api.bfsea.xyz")
             };
 
-            Settings.Save();
+            try
+            {
+                Settings.Save();
+                await Task.Delay(500);
+            }
+            catch
+            {
 
+            }
             ClearNotifications();
             ClearWebviewRuntimeCache();
      
@@ -1407,20 +1623,37 @@ namespace OpenFrp.Launcher
 
         public static RelayCommand ShowWindowCommand { get; } = new RelayCommand(() =>
         {
+
             if (App.Current is { MainWindow: var wind })
             {
-                wind.ShowInTaskbar();
-                wind.Show();
+                //App.Current.MainWindow.Visibility = Visibility.Visible;
+                //wind.ShowInTaskbar();
+                //wind.Show();
+                if (__mainWindHandle == IntPtr.Zero)
+                {
+                    wind.WindowState = WindowState.Normal;
+                    wind.Show();
+                    wind.Activate();
+
+                    return;
+                }
+                App.ShowWindow();
 
                 if (App.Current.MainWindow.WindowState is WindowState.Minimized)
                 {
                     App.Current.MainWindow.WindowState = WindowState.Normal;
                 }
                 Awe.UI.Win32.User32.SetForegroundWindow(__mainWindHandle);
-
-                wind.Activate();
+                try
+                {
+                    wind.Activate();
+                }
+                catch { }
             }
         });
+
+        internal static void ShowWindow() => Awe.UI.Win32.User32.ShowWindow(__mainWindHandle, 5);
+        internal static void HiddenWindow() => Awe.UI.Win32.User32.ShowWindow(__mainWindHandle, 0);
 
         private static IntPtr __mainWindHandle = IntPtr.Zero;
     }

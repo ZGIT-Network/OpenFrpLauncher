@@ -31,6 +31,7 @@ namespace OpenFrp.Launcher.ViewModels
 
         public TaskCompletionSource<Awe.Model.OpenFrp.Response.Data.UserInfo>? taskCompletionSource;
 
+
         [RelayCommand]
         private void @event_DialogLoaded(RoutedEventArgs e)
         {
@@ -156,11 +157,15 @@ namespace OpenFrp.Launcher.ViewModels
             Reason = string.Empty;
             Exception = default;
 
+            
+
             ws = new LoginWebService();
 
             var code = await ws.WaitForCode.Task;
 
-            await @event_cowjeCaldroWXELREMeo_LoginCode(code, ws.OriginalRedirectUrl);
+            if (string.IsNullOrEmpty(code)) return;
+
+            await @event_cowjeCaldroWXELREMeo_LoginCode(code!, ws.OriginalRedirectUrl);
         }
 
         private async Task @event_cowjeCaldroWXELREMeo_LoginCode(string code, string? redirect_url = default)

@@ -29,8 +29,8 @@
     d:DesignWidth="1190"
     modernwpf:ThemeManager.RequestedTheme="Default"
     modernwpf:TitleBar.ExtendViewIntoTitleBar="True"
-    modernwpf:WindowHelper.UseModernWindowStyle="True"
     FontFamily="{DynamicResource Awe.UI.DisplayFont}"
+    ShowActivated="True"
     WindowStartupLocation="CenterScreen"
     WindowState="Normal"
     mc:Ignorable="d">
@@ -47,6 +47,53 @@
         <behavior:EventTrigger EventName="Closing">
             <behavior:InvokeCommandAction Command="{Binding event_CloseingWindowCommand}" PassEventArgsToCommand="True" />
         </behavior:EventTrigger>
+        <behavior:EventTrigger EventName="Activated">
+            <behavior:InvokeCommandAction Command="{Binding event_ActiveWindowCommand}" />
+        </behavior:EventTrigger>
+        <behavior:DataTrigger Value="True">
+            <behavior:DataTrigger.Binding>
+                <MultiBinding Converter="{StaticResource BothConverter}">
+                    <Binding
+                        Converter="{StaticResource EqualConverter}"
+                        ConverterParameter="{x:Static modernwpf:ElementTheme.Dark}"
+                        Path="(modernwpf:ThemeManager.ActualTheme)"
+                        RelativeSource="{RelativeSource AncestorType=Window}" />
+                    <Binding
+                        Converter="{StaticResource EqualConverter}"
+                        ConverterParameter="False"
+                        Path="(modernwpf:WindowHelper.UseModernWindowStyle)"
+                        RelativeSource="{RelativeSource AncestorType=Window}" />
+                </MultiBinding>
+
+            </behavior:DataTrigger.Binding>
+            <behavior:ChangePropertyAction PropertyName="Background">
+                <behavior:ChangePropertyAction.Value>
+                    <SolidColorBrush Color="Black" />
+                </behavior:ChangePropertyAction.Value>
+            </behavior:ChangePropertyAction>
+        </behavior:DataTrigger>
+        <behavior:DataTrigger Value="True">
+            <behavior:DataTrigger.Binding>
+                <MultiBinding Converter="{StaticResource BothConverter}">
+                    <Binding
+                        Converter="{StaticResource EqualConverter}"
+                        ConverterParameter="{x:Static modernwpf:ElementTheme.Light}"
+                        Path="(modernwpf:ThemeManager.ActualTheme)"
+                        RelativeSource="{RelativeSource AncestorType=Window}" />
+                    <Binding
+                        Converter="{StaticResource EqualConverter}"
+                        ConverterParameter="False"
+                        Path="(modernwpf:WindowHelper.UseModernWindowStyle)"
+                        RelativeSource="{RelativeSource AncestorType=Window}" />
+                </MultiBinding>
+
+            </behavior:DataTrigger.Binding>
+            <behavior:ChangePropertyAction PropertyName="Background">
+                <behavior:ChangePropertyAction.Value>
+                    <SolidColorBrush Color="White" />
+                </behavior:ChangePropertyAction.Value>
+            </behavior:ChangePropertyAction>
+        </behavior:DataTrigger>
     </behavior:Interaction.Triggers>
     <Window.InputBindings>
         <KeyBinding
@@ -291,17 +338,14 @@
                 <TextBlock
                     VerticalAlignment="Center"
                     FontWeight="Normal"
+                    Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
                     IsHitTestVisible="False">
                     <Run
                         FontFamily="{StaticResource Montserrat}"
                         FontWeight="Medium"
                         Text="OpenFrp" />
                     <Run Text="启动器" />
-                    <Run
-                        FontFamily="{StaticResource Montserrat}"
-                        FontWeight="Medium"
-                        Foreground="{DynamicResource AweAppGoldenColor}"
-                        Text="Preview" />
+
                 </TextBlock>
             </Grid>
         </Grid>

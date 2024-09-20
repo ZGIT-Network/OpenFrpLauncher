@@ -1,4 +1,13 @@
-
+html,body{
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+img,canvas {
+    user-drag: none;
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+}
 .awe_appDarkMode{
     --app-fg: #fff;
     --app-silider-bg: #363535;

@@ -15,6 +15,7 @@ using System.Windows.Media.Animation;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+
 using Microsoft.Web.WebView2.Wpf;
 using OpenFrp.Launcher.Model;
 using AppNetwork = OpenFrp.Service.Net;
@@ -195,9 +196,9 @@ namespace OpenFrp.Launcher.ViewModels
                     event_AppRefreshCommand.Execute(null);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                System.Windows.MessageBox.Show(ex.Message, "OpenFrp Launcher", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -221,8 +222,6 @@ namespace OpenFrp.Launcher.ViewModels
                         refreshFinish = true;
                     }
                 }));
-
-            
         }
 
         [RelayCommand]
@@ -335,10 +334,10 @@ namespace OpenFrp.Launcher.ViewModels
 
                     ResponseForAdSence = resp;
 
-                    AdSences = new ObservableCollection<AdSence>()
-                {
-                    AdSences[0]
-                };
+                    AdSences = new ObservableCollection<AdSence>();
+                    //{
+                    //    AdSences[0]
+                    //};
 
                     foreach (var item in resp.Data.Data)
                     {
@@ -368,13 +367,13 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private ObservableCollection<AdSence> adSences = new ObservableCollection<AdSence>()
         {
-            new()
-            {
-                Title = "OpenFRP Preview 启动器上新啦",
-                Description = "参与使用，一起来填充这个大坑，一起走我们的路。你的赞助是前进的第一动力，欢迎赞助启动器作者。",
-                Image = @"../Resources/Images/wallhaven-28ldd9_1920x1080.png",
-                Url = "https://r.zyghit.cn/p2author"
-            },
+            //new()
+            //{
+            //    Title = "OpenFRP Preview 启动器上新啦",
+            //    Description = "参与使用，一起来填充这个大坑，一起走我们的路。你的赞助是前进的第一动力，欢迎赞助启动器作者。",
+            //    Image = @"../Resources/Images/wallhaven-28ldd9_1920x1080.png",
+            //    Url = "https://r.zyghit.cn/p2author"
+            //},
         };
 
         [ObservableProperty]

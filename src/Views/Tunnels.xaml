@@ -460,6 +460,9 @@
                                                                         <behavior:DataTrigger Binding="{Binding IsEnabled, RelativeSource={RelativeSource AncestorType=awe:NarrtorContent}, Mode=OneWay}" Value="True">
                                                                             <behavior:ChangePropertyAction PropertyName="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
                                                                         </behavior:DataTrigger>
+                                                                        <behavior:EventTrigger EventName="ContextMenuOpening">
+                                                                            <behavior:CallMethodAction MethodName="CopyExtraAddress" TargetObject="{Binding}" />
+                                                                        </behavior:EventTrigger>
                                                                     </behavior:Interaction.Triggers>
                                                                     <Grid TextElement.Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ui:ContentPresenterEx, Mode=FindAncestor}, Mode=OneWay}">
                                                                         <awe:VisibilityTranstion IsDisplay="{Binding Tag, Converter={StaticResource EqualConverter}, ConverterParameter='success', RelativeSource={RelativeSource AncestorType=ui:HyperlinkButton}, Mode=OneWay}">
@@ -476,7 +479,6 @@
                                                                                 Symbol="Copy" />
                                                                         </awe:VisibilityTranstion>
                                                                     </Grid>
-
                                                                 </ui:HyperlinkButton>
                                                                 <ui:HyperlinkButton
                                                                     Padding="0"

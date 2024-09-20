@@ -26,10 +26,10 @@ namespace OpenFrp.Launcher
         public MainWindow()
         {
             InitializeComponent();
+        }
 
-
-
-
+        private void windHost_Activated(object sender, EventArgs e)
+        {
 
         }
     }

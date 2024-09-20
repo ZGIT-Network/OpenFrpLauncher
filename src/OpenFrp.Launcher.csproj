@@ -16,8 +16,9 @@
 		<AssemblyTitle>OpenFrp 启动器</AssemblyTitle>
 		<ApplicationIcon>Resources\desktop.ico</ApplicationIcon>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<FileVersion>4.2.0.0</FileVersion>
-		<AssemblyVersion>4.0.0.0</AssemblyVersion>
+		<FileVersion>5.0.0.0</FileVersion>
+		<AssemblyVersion>5.0.0.0</AssemblyVersion>
+		<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,15 +29,16 @@
 	  <None Remove="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <None Remove="Resources\Images\UI_EmotionIcon69.png" />
 	  <None Remove="Resources\Images\wallhaven-28ldd9_1920x1080.png" />
-	  <None Remove="Resources\Lexend.ttf" />
 	  <None Remove="Resources\loginBackground.png" />
 	  <None Remove="Resources\Montserrat-VariableFont_wght.ttf" />
 	  <None Remove="Resources\Montserrat.ttf" />
 	  <None Remove="Resources\SignWebView\index.html" />
+	  <None Remove="Resources\SignWebView\tianai\crypto-js.min.js" />
 	  <None Remove="Resources\SignWebView\tianai\enc.js" />
 	  <None Remove="Resources\SignWebView\tianai\images\axis.png" />
 	  <None Remove="Resources\SignWebView\tianai\images\dun.jpeg" />
 	  <None Remove="Resources\SignWebView\tianai\images\icon.png" />
+	  <None Remove="Resources\SignWebView\tianai\jsencrypt.min.js" />
 	  <None Remove="Resources\SignWebView\tianai\styles\tac-custom.css" />
 	  <None Remove="Resources\SignWebView\tianai\styles\tac.css" />
 	  <None Remove="Resources\SignWebView\tianai\tac.min.js" />
@@ -59,7 +61,7 @@
 	  <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
 	  <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
 	  <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.122" />
-	  <PackageReference Include="ModernWpfUI" Version="11.0.4" />
+	  <PackageReference Include="ModernWpfUI" Version="11.0.8" />
 	  <COMReference Include="IWshRuntimeLibrary">
 	    <WrapperTool>tlbimp</WrapperTool>
 	    <VersionMinor>0</VersionMinor>
@@ -70,6 +72,7 @@
 	    <EmbedInteropTypes>true</EmbedInteropTypes>
 	  </COMReference>
 	</ItemGroup>
+
 	<ItemGroup Condition="'$(TargetFramework)'=='net481'">
 		
 		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
@@ -88,13 +91,14 @@
 	  <Resource Include="Resources\Images\share_5bb469267f65d0c7171470739108cdae.png" />
 	  <Resource Include="Resources\Images\UI_EmotionIcon69.png" />
 	  <Resource Include="Resources\Images\wallhaven-28ldd9_1920x1080.png" />
-	  <Resource Include="Resources\Lexend.ttf" />
 	  <Resource Include="Resources\Montserrat.ttf" />
 	  <Resource Include="Resources\SignWebView\index.html" />
+	  <Resource Include="Resources\SignWebView\tianai\crypto-js.min.js" />
 	  <Resource Include="Resources\SignWebView\tianai\enc.js" />
 	  <Resource Include="Resources\SignWebView\tianai\images\axis.png" />
 	  <Resource Include="Resources\SignWebView\tianai\images\dun.jpeg" />
 	  <Resource Include="Resources\SignWebView\tianai\images\icon.png" />
+	  <Resource Include="Resources\SignWebView\tianai\jsencrypt.min.js" />
 	  <Resource Include="Resources\SignWebView\tianai\styles\tac-custom.css" />
 	  <Resource Include="Resources\SignWebView\tianai\styles\tac.css" />
 	  <Resource Include="Resources\SignWebView\tianai\tac.min.js" />

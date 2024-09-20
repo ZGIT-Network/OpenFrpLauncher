@@ -44,5 +44,21 @@ namespace OpenFrp.Launcher.Model
 
             return @this;
         }
+
+        public void CopyExtraAddress()
+        {
+            if (ExtraConnectAddress.Length is 0) return;
+
+            try
+            {
+                System.Windows.Clipboard.SetText(ExtraConnectAddress[0]);
+
+                System.Windows.MessageBox.Show(
+                    "你刚刚右键了\"复制按钮\"，复制了该节点的扩展链接。\n该链接有应于该节点物理服务器的各种限制，为了保证你的链接，需要使用该链接进行链接。\n\n节点: #" + NodeId + " " + NodeName, "OpenFrp Launcher", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
+            catch{
+
+            }
+        }
     }
 }

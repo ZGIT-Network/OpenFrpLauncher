@@ -97,10 +97,14 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         case "onService":
                             {
-                                if ("not-allow-display".Equals(UserInfo.UserName))
-                                {
-                                    App.TryAutoLogin();
-                                }
+                                //if ("not-allow-display".Equals(UserInfo.UserName) && string.IsNullOrEmpty(RpcManager.UserSecureCode))
+                                //{
+                                //    bool flag = await App.TryAutoLogin();
+                                //    if (flag)
+                                //    {
+
+                                //    }
+                                //}
 
                                 StateOfService = true;
 
@@ -110,6 +114,11 @@ namespace OpenFrp.Launcher.ViewModels
                             {
                                 StateOfService = false;
 
+                                break;
+                            }
+                        case "noConfig":
+                            {
+                                allowToSaveConfig = false;
                                 break;
                             }
                     }
@@ -126,6 +135,8 @@ namespace OpenFrp.Launcher.ViewModels
                 });
             };
         }
+
+        private bool allowToSaveConfig = true;
 
         public HashSet<int> OnlineTunnels { get; } = new HashSet<int>();
 
@@ -384,22 +395,63 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (App.Current is { MainWindow: var mw})
             {
-                
+                if (App.TaskBarIcon is { IsCreated: false })
+                {
+                    try { App.TaskBarIcon?.ForceCreate(false); } catch { }
+                }
+                if (App.TaskBarIcon is null || !App.TaskBarIcon.IsCreated)
+                {
+                    c.Cancel = true;
+                    var result = MessageBox.Show("本次关闭将附带关闭 启动器，后台服务以及 FRPC (由于任务栏图标创建失败)" +
+                        "若您不想要关闭后台服务，请不要关闭本窗口且点击\"取消\"","OpenFrp Launcher",
+                        MessageBoxButton.OKCancel,MessageBoxImage.Question, MessageBoxResult.Cancel);
+                    if (result is MessageBoxResult.Cancel)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        App.DestoryAppCommand.Execute(default);
+
+                        return;
+                    }
+                }
 
                 Properties.Settings.Default.ApplicationTheme = (ModernWpf.ElementTheme)App.Current.MainWindow.GetValue(ModernWpf.ThemeManager.RequestedThemeProperty);
                 Properties.Settings.Default.ApplicationBackdrop = (ModernWpf.Controls.Primitives.BackdropType)App.Current.MainWindow.GetValue(ModernWpf.Controls.Primitives.WindowHelper.SystemBackdropTypeProperty);
                 try
                 {
-                    Properties.Settings.Default.Save();
+                    if (allowToSaveConfig)
+                    {
+                        Properties.Settings.Default.Save();
+                    }
                 }
                 catch { }
 
-                if (Debugger.IsAttached) return;
+                App.Current.MainWindow.Title = OpenFrp.Service.HashCalculator.CompushHash(Assembly.GetEntryAssembly().Location);
+                App.Current.MainWindow.Visibility = Visibility.Collapsed;
+                //App.HiddenWindow();
+                //if (Debugger.IsAttached) return;
 
-                mw.HideInTaskbar();
-                mw.Hide();
+                //mw.HideInTaskbar();
+                //mw.Hide();
 
                 c.Cancel = true;
+            }
+        }
+
+        [RelayCommand]
+        private void @event_ActiveWindow()
+        {
+            if (!App.Current.MainWindow.IsEnabled) return;
+            try
+            {
+                App.Current.MainWindow.Visibility = Visibility.Visible;
+                App.Current.MainWindow.Title = "OpenFRP 启动器";
+            }
+            catch
+            {
+
             }
         }
 

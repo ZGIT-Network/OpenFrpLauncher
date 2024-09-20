@@ -110,6 +110,7 @@ namespace OpenFrp.Launcher
                     SecureCode = UserSecureCode ?? string.Empty,
                     UseDebug = Properties.Settings.Default.UseDebugMode,
                     UseTlsEncrypt = Properties.Settings.Default.UseTlsEncrypt,
+                    DisableConsoleColor = App.AllowDisableConsoleColor,
                     UserTunnelJson = JsonSerializer.Serialize(tunnel)
                 }, deadline: CreateDeadline(timeOut), cancellationToken: cancellationToken));
             }

@@ -15,7 +15,7 @@
     xmlns:ui="http://schemas.modernwpf.com/2019"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     Title="Settings"
-    d:DesignHeight="1175"
+    d:DesignHeight="1510"
     d:DesignWidth="600"
     mc:Ignorable="d">
     <FrameworkElement.DataContext>
@@ -72,7 +72,7 @@
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Top"
                                     Command="{Binding event_ShowLoginDialogCommand}"
-                                    Description="可使用网页单点登录。"
+                                    Description=""
                                     IsClickable="True">
                                     <of:SettingItem.Icon>
                                         <ui:SymbolIcon FontSize="24" Symbol="Account" />
@@ -110,7 +110,7 @@
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Padding="0,0,10,4">
+                                                        <TextBlock Padding="0,0,10,4" FontSize="14">
                                                             <Run Text="{Binding Title, Mode=OneWay}" />
                                                             <LineBreak />
                                                             <Run helper:TwiceBindingHelper.Binding="{Binding Binding, Mode=OneWay}" />
@@ -152,7 +152,7 @@
                         <of:SettingItem
                             Title="背景效果"
                             Description="该效果仅支持在 Windows 11 上使用"
-                            IsEnabled="True">
+                            IsEnabled="{x:Static ui:OSVersionHelper.IsWindows11OrGreater}">
                             <of:SettingItem.Icon>
                                 <ui:FontIcon FontSize="24" Glyph="&#xE81E;" />
                             </of:SettingItem.Icon>
@@ -378,7 +378,7 @@
                         </of:SettingItem>
                         <of:SettingItem
                             Title="系统服务"
-                            Description="在登录屏幕时启动 FRPC 进程。一般你用不到，你就不要试试啦。本机只允许存在一个 OpenFRP 系统服务。"
+                            Description="在登录屏幕时启动服务，且本机只允许存在一个 OpenFRP 系统服务。"
                             IsEnabled="{Binding AllowInstallOrUninstallService}">
                             <of:SettingItem.Icon>
                                 <ui:FontIcon FontSize="24" Glyph="&#xF259;" />
@@ -407,7 +407,7 @@
                         </of:SettingItem>
                         <of:SettingItem
                             Title="通知模式"
-                            Description="通知的模式"
+                            Description=""
                             IsEnabled="True">
                             <of:SettingItem.Icon>
                                 <ui:FontIcon FontSize="24" Glyph="&#xE8F3;" />
@@ -418,12 +418,13 @@
                                 <ComboBoxItem Content="Toast (Win10+)" />
                             </ComboBox>
                         </of:SettingItem>
+
                         <of:SettingItem
                             Title="关闭本平台上已有的 FRPC"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
                             Command="{Binding event_CloseFrpcCommand}"
-                            Description="临时开关;若您发现隧道冲突，可尝试此选项。"
+                            Description="若您发现隧道冲突，可尝试此选项。"
                             IsClickable="True">
                             <of:SettingItem.Icon>
                                 <ui:SymbolIcon FontSize="24" Symbol="BackToWindow" />

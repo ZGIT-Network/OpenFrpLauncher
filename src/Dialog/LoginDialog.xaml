@@ -40,11 +40,18 @@
         <converter:BothConverter x:Key="BothConverter" />
     </FrameworkElement.Resources>
     <ui:ContentDialog.IsPrimaryButtonEnabled>
-        <Binding
-            Converter="{StaticResource EqualConverter}"
-            ConverterParameter="False"
-            Mode="OneWay"
-            Path="event_LoginCommand.IsRunning" />
+        <MultiBinding Converter="{StaticResource BothConverter}">
+            <Binding
+                Converter="{StaticResource EqualConverter}"
+                ConverterParameter="False"
+                Mode="OneWay"
+                Path="event_LoginCommand.IsRunning" />
+            <Binding
+                Converter="{StaticResource EqualConverter}"
+                ConverterParameter="False"
+                Mode="OneWay"
+                Path="event_UseWebModeCommand.IsRunning" />
+        </MultiBinding>
     </ui:ContentDialog.IsPrimaryButtonEnabled>
     <ui:ScrollViewerEx
         Width="500"

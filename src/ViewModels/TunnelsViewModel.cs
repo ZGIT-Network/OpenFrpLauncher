@@ -124,6 +124,8 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (ar.Source is ModernWpf.Controls.Page pg)
             {
+                _ = App.RefreshOnlineTunnels();
+
                 pg.Unloaded += delegate
                 {
                     _tokenSource.Cancel(false);
@@ -377,6 +379,8 @@ namespace OpenFrp.Launcher.ViewModels
         {
             WeakReferenceMessenger.Default.Send(RouteMessage<MainViewModel>.Create(typeof(Views.CreateTunnel)));
         }
+
+
 
         private ItemsControl? itemsControl;
 
