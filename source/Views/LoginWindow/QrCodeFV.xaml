@@ -1,0 +1,180 @@
+﻿<UserControl
+    x:Class="OpenFrp.Launcher.Views.LoginWindow.QrCodeFV"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:PresentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:conv="clr-namespace:OpenFrp.Launcher.Converter"
+    xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
+    xmlns:local="clr-namespace:OpenFrp.Launcher.Views.LoginWindow"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
+    xmlns:wp="http://schemas.inkore.net/lib/ui/wpf"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <FrameworkElement.DataContext>
+        <vm:QrCodeFVViewModel />
+    </FrameworkElement.DataContext>
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:InvokeCommandAction Command="{Binding event_PageLoadedCommand}" PassEventArgsToCommand="True" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <wp:SimpleStackPanel
+            Margin="4,4,0,0"
+            Orientation="Horizontal"
+            Spacing="12">
+            <Button
+                x:Name="callback"
+                Width="40"
+                Height="40"
+                Padding="0"
+                AutomationProperties.Name="返回"
+                Background="Transparent"
+                BorderThickness="0">
+                <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.Back}" />
+            </Button>
+            <TextBlock
+                Margin="-4,0,0,0"
+                Padding="0,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="16"
+                Text="扫码登录"
+                UseLayoutRounding="True" />
+        </wp:SimpleStackPanel>
+        <Grid Grid.Row="1" Margin="12,0">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <wp:SimpleStackPanel VerticalAlignment="Center" Spacing="8">
+                <FrameworkElement.Resources>
+                    <ink:BindingProxy x:Key="IsSuccess" Value="{Binding IsFailed, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}" />
+                </FrameworkElement.Resources>
+                <Grid>
+                    <ctrl:QRCode
+                        x:Name="appQrCodeWorker"
+                        Width="175"
+                        Height="175"
+                        ink:ThemeManager.RequestedTheme="Light"
+                        Background="White"
+                        BorderThickness="0" />
+                    <ink:FontIcon
+                        FontSize="48"
+                        Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                        Icon="{x:Static ink:SegoeFluentIcons.Error}"
+                        Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                </Grid>
+
+                <TextBlock
+                    Padding="16,0"
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap"
+                    Visibility="{Binding Value, Converter={StaticResource BooleanToVisibilityConverter}, Source={StaticResource IsSuccess}, Mode=OneWay}">
+                    <Run Text="使用移动设备的相机扫描二维码" />
+                    <LineBreak />
+                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="在网页上完成授权" />
+                    <LineBreak />
+                    <LineBreak />
+                    <Run
+                        FontSize="14"
+                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        Text="您也可以点击下方中间的按钮在本计算机上授权。" />
+                </TextBlock>
+                <TextBlock
+                    Padding="16,0"
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap"
+                    Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                    <Run Text="{Binding ExecuteResult.Message, Mode=OneWay}" />
+                    <LineBreak />
+                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="点击刷新重试" />
+
+                </TextBlock>
+
+            </wp:SimpleStackPanel>
+            <Grid Grid.Row="1" Background="Transparent">
+                <Grid.Resources>
+                    <CubicEase
+                        x:Key="_DefaultCubicEase"
+                        PresentationOptions:Freeze="True"
+                        EasingMode="EaseOut" />
+
+                    <Style BasedOn="{StaticResource ButtonStyledHyperlinkButton}" TargetType="ink:HyperlinkButton">
+
+                        <Setter Property="Margin" Value="0,4,0,16" />
+                        <Setter Property="Padding" Value="12" />
+                        <Setter Property="Cursor" Value="Arrow" />
+                    </Style>
+                </Grid.Resources>
+                <wp:SimpleStackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <ink:HyperlinkButton
+                        AutomationProperties.Name="刷新"
+                        Command="{Binding event_RefreshLinkCommand}"
+                        IsEnabled="{Binding event_RefreshLinkCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}"
+                        ToolTip="刷新">
+                        <StackPanel Orientation="Horizontal">
+                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
+                        </StackPanel>
+                    </ink:HyperlinkButton>
+                    <ink:HyperlinkButton
+                        AutomationProperties.Name="在浏览器中授权"
+                        Command="{Binding event_OpenLinkInWebCommand}"
+                        ToolTip="在浏览器中授权">
+                        <StackPanel Orientation="Horizontal">
+                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.OpenFile}" />
+                            <TextBlock
+                                Padding="6,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                Text="在浏览器中授权"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                    </ink:HyperlinkButton>
+                    <ink:HyperlinkButton AutomationProperties.Name="打开帮助页面" ToolTip="打开帮助页面">
+                        <StackPanel Orientation="Horizontal">
+                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Help}" />
+                        </StackPanel>
+                    </ink:HyperlinkButton>
+                </wp:SimpleStackPanel>
+                <!--<StackPanel
+                    Margin="0,4,0,12"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+                    <ctrl:HyperlinkTp1
+                        AutomationProperties.Name="跳过"
+                        Content="在网页中打开"
+                        FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    <Rectangle
+                        Width="1"
+                        Margin="0,7"
+                        Fill="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                    <ctrl:HyperlinkTp1
+                        AutomationProperties.Name="设置"
+                        Content="设置"
+                        FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                </StackPanel>-->
+            </Grid>
+        </Grid>
+
+    </Grid>
+</UserControl>

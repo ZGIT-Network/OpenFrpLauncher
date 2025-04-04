@@ -1,0 +1,60 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+
+namespace OpenFrp.Launcher.Views.LoginWindow
+{
+    /// <summary>
+    /// Settings.xaml 的交互逻辑
+    /// </summary>
+    public partial class Settings : UserControl
+    {
+        public Settings() : this(delegate { })
+        {
+            
+        }
+
+        public Settings(Action<string> callbackAction)
+        {
+            this.DataContext ??= new ViewModels.SettingsViewModel();
+            this.CallbackAction = callbackAction;
+
+            InitializeComponent();
+        }
+        internal Settings(ViewModels.SettingsViewModel svm,Action<string> callbackAction)
+        {
+            this.DataContext = svm;
+            this.CallbackAction = callbackAction;
+
+            InitializeComponent();
+        }
+
+        private readonly Action<string> CallbackAction = delegate { };
+
+
+        public override void OnApplyTemplate()
+        {
+            if (FindName("callback") is Button button)
+            {
+                button.AddHandler(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, new RoutedEventHandler((_,_) =>
+                {
+                    CallbackAction?.Invoke(ViewModels.LoginWindowViewModel.LoginState);
+                }));
+            }
+
+            base.OnApplyTemplate();
+        }
+    }
+}

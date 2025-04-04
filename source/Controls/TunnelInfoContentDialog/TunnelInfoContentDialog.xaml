@@ -1,0 +1,122 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
+    xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern">
+    <Style TargetType="ctrl:TunnelInfoContentDialog">
+        <Setter Property="DataContext" Value="{Binding Tunnel, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
+        <Setter Property="Content">
+            <Setter.Value>
+                <Grid Width="480" MinHeight="200">
+                    <ink:ScrollViewerEx
+                        Margin="-24,0,0,0"
+                        PanningMode="VerticalOnly"
+                        VerticalScrollBarVisibility="Auto">
+                        <WrapPanel Margin="24,0" Orientation="Horizontal">
+                            <StackPanel Margin="0,0,4,8" HorizontalAlignment="Stretch">
+                                <!--  如果使外围容器设置 MinWidth，则内容会被裁剪(包括FocusVisualStyle)  -->
+                                <TextBlock
+                                    MinWidth="460"
+                                    Margin="0,0,0,2"
+                                    FontSize="16"
+                                    Text="链接地址" />
+                                <ctrl:SelectableTextBlock
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    Text="{Binding ConnectAddress, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <StackPanel
+                                Margin="0,0,4,8"
+                                HorizontalAlignment="Stretch"
+                                Visibility="{Binding HasExtraConnectAddress, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <StackPanel MinWidth="460" Orientation="Horizontal">
+                                    <TextBlock
+                                        Margin="0,0,4,2"
+                                        FontSize="16"
+                                        Text="扩展地址" />
+                                    <ink:FontIcon
+                                        FontSize="14"
+                                        Icon="{x:Static ink:SegoeFluentIcons.Info}"
+                                        ToolTip="如果您不知道这是做什么用，请默认使用上方链接地址。" />
+                                </StackPanel>
+                                <ItemsControl Focusable="False" ItemsSource="{Binding ExtraConnectAddress, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ctrl:SelectableTextBlock
+                                                HorizontalAlignment="Stretch"
+                                                FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                                FontSize="16"
+                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                Text="{Binding Mode=OneWay}"
+                                                TextWrapping="WrapWithOverflow" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8" HorizontalAlignment="Left">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    Text="ID" />
+                                <ctrl:SelectableTextBlock
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    Text="{Binding Id, Mode=OneWay}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8" HorizontalAlignment="Left">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="16"
+                                    Text="节点" />
+                                <ctrl:SelectableTextBlock
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    TextWrapping="Wrap">
+                                    <Run Text="{Binding NodeId, StringFormat='#{0}', Mode=OneWay}" />
+                                    <Run Text="{Binding NodeName, Mode=OneWay}" />
+                                </ctrl:SelectableTextBlock>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,8,8" HorizontalAlignment="Left">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="16"
+                                    Text="映射对象" />
+                                <ctrl:SelectableTextBlock
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    TextWrapping="Wrap">
+                                    <Run Text="{Binding Type, Mode=OneWay}" />
+                                    <Run>
+                                        <MultiBinding StringFormat="{}{0}:{1}">
+                                            <Binding Mode="OneWay" Path="Host" />
+                                            <Binding Mode="OneWay" Path="Port" />
+                                        </MultiBinding>
+                                    </Run>
+                                </ctrl:SelectableTextBlock>
+                            </StackPanel>
+                        </WrapPanel>
+                    </ink:ScrollViewerEx>
+                </Grid>
+
+            </Setter.Value>
+        </Setter>
+        <Setter Property="CloseButtonText" Value="确定" />
+        <Setter Property="DefaultButton" Value="Close" />
+        <Setter Property="Title" Value="{Binding Path=Name, StringFormat='隧道 {0}', Mode=OneWay}" />
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,67 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
+    xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern">
+    <Style TargetType="ctrl:ErrorContentDialog">
+        <Setter Property="Title" Value="详细错误内容" />
+        <Setter Property="Content">
+            <Setter.Value>
+                <Grid Width="480" MinHeight="200">
+                    <ink:ScrollViewerEx PanningMode="VerticalOnly" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Orientation="Vertical">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ink:FontIcon
+                                    VerticalAlignment="Top"
+                                    FontSize="18"
+                                    Icon="{x:Static ink:SegoeFluentIcons.Message}" />
+                                <StackPanel Grid.Column="1" Margin="6,-2,0,0">
+                                    <TextBlock
+                                        Margin="0,0,0,2"
+                                        FontSize="18"
+                                        Text="消息" />
+                                    <ctrl:SelectableTextBlock
+                                        HorizontalAlignment="Left"
+                                        FontSize="16"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                        Text="{Binding Exception.Message, RelativeSource={RelativeSource AncestorType=ctrl:ErrorContentDialog}, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ink:FontIcon
+                                    VerticalAlignment="Top"
+                                    FontSize="18"
+                                    Icon="{x:Static ink:SegoeFluentIcons.Error}" />
+                                <StackPanel Grid.Column="1" Margin="6,-2,0,0">
+                                    <TextBlock
+                                        Margin="0,0,0,2"
+                                        FontSize="18"
+                                        Text="跟踪栈" />
+                                    <ctrl:SelectableTextBlock
+                                        HorizontalAlignment="Left"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                        Text="{Binding Exception.StackTrace, RelativeSource={RelativeSource AncestorType=ctrl:ErrorContentDialog}, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ink:ScrollViewerEx>
+                </Grid>
+
+            </Setter.Value>
+        </Setter>
+        <Setter Property="CloseButtonText" Value="确定" />
+        <Setter Property="PrimaryButtonText" Value="复制错误内容" />
+        <Setter Property="DefaultButton" Value="Close" />
+    </Style>
+</ResourceDictionary>
