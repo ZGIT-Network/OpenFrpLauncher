@@ -17,6 +17,7 @@
     <Style TargetType="local:UserTunnel">
         <Setter Property="FocusVisualStyle" Value="{DynamicResource Awe__ControlFocusVisualStyle}" />
         <Setter Property="IsEnabled" Value="{Binding Tunnel.IsEnable, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
+        <Setter Property="TabIndex" Value="1" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:UserTunnel">

@@ -10,6 +10,7 @@ using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Google.Protobuf.WellKnownTypes;
+using Google.Rpc;
 using Grpc.Core;
 using Grpc.Core.Utils;
 using iNKORE.UI.WPF.Modern.Controls;
@@ -80,9 +81,19 @@ namespace OpenFrp.Launcher.ViewModels
             }
             if (disposableStream is null)
             {
-                disposableStream = await App.RpcManager.TunnelStream("testConnection", delegate { }, delegate { });
+                CancellationTokenSource s = new CancellationTokenSource();
+
+                s.CancelAfter(1000);
+
+                disposableStream = await App.RpcManager.TunnelStream("testConnection", delegate { }, delegate { },s.Token);
+
+                s.Dispose();
 
                 disposableStream.Dispose();
+            }
+            else
+            {
+                await Task.Delay(500, cancellationToken);
             }
             disposableStream = await App.RpcManager.TunnelStream(UserInfo.UserToken, writer => _writer = writer, StreamReader, cancellationToken);
         }
@@ -97,7 +108,7 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         if (resp.Data.TryUnpack<Service.Proto.Response.BaseResponse>(out var bp))
                         {
-                            ShowAlertAction("无法创建隧道流", bp.Message, InfoBarSeverity.Error);
+                            ShowAlertAction("无法创建隧道流(请尝试重新加载页面)", bp.Message, InfoBarSeverity.Error);
                             //_ = bp.Message;
                         }
                         else if (resp.Data.TryUnpack<Service.Proto.Response.TunnelStreamResponse.Types.TunnelControlFailed>(out var cfl))
@@ -106,6 +117,26 @@ namespace OpenFrp.Launcher.ViewModels
                             {
 
                             }
+                        }
+                        else if (resp.Data.TryUnpack<Google.Rpc.DebugInfo>(out var dbInfo))
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            {
+                                if (dbInfo.StackEntries.Count > 0)
+                                {
+                                    sb.Append("栈列表:");
+                                    foreach (var stack in dbInfo.StackEntries)
+                                    {
+                                        sb.Append('\n');
+                                        sb.Append(stack);
+                                    }
+                                }
+                                else
+                                {
+                                    sb.Append("额...好像有点意外");
+                                }
+                            }
+                            ShowAlertAction($"发生了错误: \n{dbInfo.Detail}", sb.ToString(), InfoBarSeverity.Error);
                         }
                     };break;
                 case Service.Proto.Response.TunnelStreamResponse.Types.TunnelStreamResponseState.UpdateTunnel:
@@ -138,7 +169,7 @@ namespace OpenFrp.Launcher.ViewModels
                         var vi = itemsController.ItemContainerGenerator.ContainerFromItem(tunnel);
                         if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
                         {
-                            userTunnel.ToggleStateTo(flag.Value);
+                            userTunnel.ToggleStateTo(flag.Value,force:true);
 
 
 
@@ -150,6 +181,7 @@ namespace OpenFrp.Launcher.ViewModels
                                 }
                                 catch { }
                             }
+                            break;
                         }
                         continue;
                     }
@@ -282,7 +314,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             CreatePreloadSkeleton();
 
-            await Task.Delay(800,cancellationToken);
+            await Task.Delay(1000,cancellationToken);
 
             if (!true)
             {
@@ -323,6 +355,11 @@ namespace OpenFrp.Launcher.ViewModels
             else
             {
                 var onlineTunnels = await firstStateWaiter.Task.WaitAsync(cancellationToken);
+
+                if (onlineTunnels is null || cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
 
                 UserTunnels = new ObservableCollection<Model.UserTunnel>();
 

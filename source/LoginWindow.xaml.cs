@@ -30,6 +30,13 @@ namespace OpenFrp.Launcher
                 Path = new PropertyPath(nameof(App.Settings.ApplicationTheme)),
                 Mode = BindingMode.OneWay
             });
+            iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
+            //this.SetBinding(iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SystemBackdropTypeProperty, new Binding
+            //{
+            //    Source = App.Settings,
+            //    Path = new PropertyPath(nameof(App.Settings.BackdropType)),
+            //    Mode = BindingMode.OneWayToSource
+            //});
         }
 
         protected override void OnClosing(CancelEventArgs e)

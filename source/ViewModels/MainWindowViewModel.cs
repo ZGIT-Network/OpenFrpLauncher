@@ -16,6 +16,8 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public MainWindowViewModel()
         {
+
+
             WeakReferenceMessenger.Default.UnregisterAll(nameof(MainWindowViewModel));
 
             WeakReferenceMessenger.Default.Register<Model.RouteMessage<MainWindowViewModel, Yue3.Model.OpenFrp.Response.Data.UserInfoData>>(nameof(MainWindowViewModel), (_, message) =>
@@ -260,6 +262,13 @@ namespace OpenFrp.Launcher.ViewModels
                                                catch { }
                                                toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
                                            });
+                        }
+                    };break;
+                case Service.Proto.Response.NotificationStreamResponse.Types.NotificationStreamResponseState.Messaging:
+                    {
+                        if (response.Data.TryUnpack<Service.Proto.Response.NotificationStreamResponse.Types.UIWarningNotice>(out var warning))
+                        {
+                            ShowAlert(warning.Title, warning.Data, InfoBarSeverity.Warning);
                         }
                     };break;
             }

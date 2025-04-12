@@ -23,7 +23,7 @@
     ink:WindowHelper.UseModernWindowStyle="True"
     IsHitTestVisible="False"
     RenderOptions.ClearTypeHint="Enabled"
-    ResizeMode="CanMinimize"
+    ResizeMode="CanResize"
     mc:Ignorable="d">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo Description="OpenFrp 启动器 - 登录" />
@@ -65,6 +65,7 @@
             <behavior:InvokeCommandAction Command="{Binding event_DisplayLoadingControlCommand}" CommandParameter="{x:Static sys:Boolean.FalseString}" />
         </behavior:DataTrigger>
     </behavior:Interaction.Triggers>
+
     <Grid
         x:Name="app"
         d:Opacity="1"
@@ -73,10 +74,46 @@
             <ColumnDefinition />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <Grid x:Name="background" Grid.ColumnSpan="2">
+
+        <Grid
+            x:Name="background"
+            Grid.ColumnSpan="2"
+            RenderTransformOrigin=".5,.5">
+            <Grid.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Grid.RenderTransform>
             <Viewbox Stretch="UniformToFill">
-                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="E:\Desktop\Download\pexels-yanping-ma-452610387-15983513 (1).JPG" />
+                <!--<Viewbox.CacheMode>
+                    <BitmapCache EnableClearType="False" RenderAtScale="1"/>
+                </Viewbox.CacheMode>-->
+                <!--  "pack://application:,,,/Resources/Images/pexels-xieyun-15415001.jpg"  -->
+                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="F:\tanime-photo-ssc\[wallhaven.cc],gp312l.jpg" />
             </Viewbox>
+
+        </Grid>
+        <Grid
+            Grid.ColumnSpan="2"
+            Width="{Binding (ink:TitleBar.SystemOverlayRightInset), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+            Height="{Binding (ink:TitleBar.Height), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Visibility="Visible">
+            <Rectangle
+                x:Name="titleBarDarkAcrylicFill"
+                Fill="#2f2f2f"
+                Opacity="0" />
+            <Rectangle
+                x:Name="titleBarLightAcrylicFill"
+                Fill="#ffffff"
+                Opacity="0" />
+            <ink:AcrylicPanel
+                x:Name="acrylicPanel2"
+                Amount="30"
+                Focusable="False"
+                NoiseOpacity="0.01"
+                ScaleCanvasVal="1.2"
+                TintOpacity=".45" />
+
         </Grid>
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
@@ -112,7 +149,7 @@
                         FontFamily="方正清刻本悦宋简体"
                         Foreground="#FFFFFFFF"
                         TextWrapping="Wrap"
-                        Visibility="Visible">
+                        Visibility="Collapsed">
                         <Run FontSize="26" Text="“因过竹院逢僧话，偷得浮生半日闲”" />
 
 
@@ -122,7 +159,7 @@
                         FontFamily="方正清刻本悦宋简体"
                         Foreground="#90FFFFFF"
                         TextWrapping="Wrap"
-                        Visibility="Visible">
+                        Visibility="Collapsed">
                         <Run FontSize="20" Text="经过一个种满竹子的寺院，与一僧人攀谈许久，&#10;难得在这纷扰的世事中暂且得到片刻的清闲" />
                     </TextBlock>
                     <TextBlock
@@ -143,11 +180,11 @@
                 Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
                 MaxWidth="375"
                 HorizontalAlignment="Right">
-                <ink:ThemeShadowChrome Margin="8" Depth="60" />
+                <ink:ThemeShadowChrome Margin="8,-4,8,8" Depth="80" />
                 <Border
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
+                    BorderThickness="1,1,1,1"
                     ClipToBounds="True"
                     CornerRadius="6">
                     <Grid IsHitTestVisible="False">
@@ -230,11 +267,11 @@
                                                                         <ColumnDefinition Width="38" />
                                                                         <ColumnDefinition />
                                                                     </Grid.ColumnDefinitions>
+                                                                    <!--  ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
                                                                     <ink:PersonPicture
                                                                         Grid.Column="0"
                                                                         Width="38"
                                                                         Height="38"
-                                                                        ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"
                                                                         RenderOptions.BitmapScalingMode="HighQuality"
                                                                         UseLayoutRounding="True" />
                                                                     <TextBlock
@@ -252,7 +289,8 @@
                                                                         HorizontalAlignment="Right"
                                                                         VerticalAlignment="Top"
                                                                         FontFamily="{StaticResource SoraMediumMixYahei}"
-                                                                        FontSize="12">
+                                                                        FontSize="12"
+                                                                        Visibility="Collapsed">
                                                                         <Run>6 天前</Run>
                                                                     </TextBlock>
                                                                 </Grid>
@@ -265,7 +303,7 @@
                                                     Padding="12,12,8,12"
                                                     HorizontalAlignment="Stretch"
                                                     HorizontalContentAlignment="Left"
-                                                    AutomationProperties.Name="登录新账户"
+                                                    AutomationProperties.Name="Natayark ID 登录"
                                                     BorderBrush="Transparent"
                                                     Command="{Binding event_WebLoginCommand}">
                                                     <Grid>
@@ -278,12 +316,12 @@
                                                             Width="38"
                                                             Height="38"
                                                             FontSize="24"
-                                                            Icon="{x:Static ink:SegoeFluentIcons.OtherUser}" />
+                                                            Icon="{x:Static ink:SegoeFluentIcons.PassiveAuthentication}" />
                                                         <TextBlock
                                                             Grid.Column="1"
                                                             Margin="8,0,0,0"
                                                             VerticalAlignment="Center">
-                                                            <Run FontSize="18" Text="登录新账户" />
+                                                            <Run FontSize="18" Text="Natayark ID 登录" />
 
                                                         </TextBlock>
                                                     </Grid>
@@ -323,7 +361,7 @@
                                             </wp:SimpleStackPanel>
                                         </ink:ScrollViewerEx>
                                     </TabItem>
-                                    <TabItem Header="账密登录">
+                                    <TabItem Header="账密登录" IsEnabled="False">
                                         <ink:ScrollViewerEx Margin="-12,0,-12,0" PanningMode="VerticalOnly">
                                             <wp:SimpleStackPanel Margin="24,16,24,16" Spacing="8">
                                                 <TextBox
@@ -505,10 +543,23 @@
                         Duration="0:0:.3" />
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="titleBarDarkAcrylicFill"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.3" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="titleBarLightAcrylicFill"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.3" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="darkAcrylicFill"
                         Storyboard.TargetProperty="Opacity"
                         To="1"
                         Duration="0:0:.3" />
+
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="lightAcrylicFill"
@@ -539,7 +590,19 @@
                         Duration="0:0:.3" />
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="titleBarDarkAcrylicFill"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.3" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="lightAcrylicFill"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.3" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="titleBarLightAcrylicFill"
                         Storyboard.TargetProperty="Opacity"
                         To="1"
                         Duration="0:0:.3" />

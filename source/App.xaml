@@ -60,6 +60,7 @@
                 <ResourceDictionary Source="./Controls/SettingItem/SettingItem.xaml" />
                 <ResourceDictionary Source="./Controls/Skeleton/Skeleton.xaml" />
                 <ResourceDictionary Source="./Controls/QRCode/QRCode.xaml" />
+                <ResourceDictionary Source="./Controls/SettingExpander/SettingExpander.xaml" />
                 <!--  用户隧道展示用组件  -->
                 <ResourceDictionary Source="./Controls/UserTunnel/UserTunnel.xaml" />
             </ResourceDictionary.MergedDictionaries>

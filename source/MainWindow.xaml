@@ -19,7 +19,6 @@
     ink:ThemeManager.RequestedTheme="Default"
     ink:TitleBar.ExtendViewIntoTitleBar="True"
     ink:TitleBar.Height="34"
-    ink:WindowHelper.SystemBackdropType="Tabbed"
     ink:WindowHelper.UseModernWindowStyle="True"
     RenderOptions.ClearTypeHint="Enabled"
     mc:Ignorable="d">
@@ -39,18 +38,18 @@
                 </behavior:EventTrigger>
             </behavior:Interaction.Triggers>
             <ink:NavigationView.MenuItems>
-                <ink:NavigationViewItem Content="首页">
+                <ink:NavigationViewItem Content="首页" Tag="{x:Type views:Home}">
                     <ink:NavigationViewItem.Icon>
                         <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Home}" />
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
                 <ink:NavigationViewItem Content="隧道" Tag="{x:Type views:Tunnels}">
-                    <!--<FrameworkElement.IsEnabled>
+                    <FrameworkElement.IsEnabled>
                         <MultiBinding Converter="{StaticResource BothConverter}">
                             <Binding Mode="OneWay" Path="IsDaemonConnected" />
                             <Binding Mode="OneWay" Path="IsUserLogon" />
                         </MultiBinding>
-                    </FrameworkElement.IsEnabled>-->
+                    </FrameworkElement.IsEnabled>
                     <ink:NavigationViewItem.Icon>
                         <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.MultimediaDMS}" />
                     </ink:NavigationViewItem.Icon>
@@ -64,11 +63,11 @@
             <ink:NavigationView.FooterMenuItems>
                 <ink:NavigationViewItem Content="{Binding UserInfo.UserName, Mode=OneWay}" SelectsOnInvoked="False">
                     <ink:NavigationViewItem.Icon>
+                        <!--  Source="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
                         <ink:ImageIcon
                             ink:ClipHelper.CornerRadius="1000"
                             RenderOptions.BitmapScalingMode="HighQuality"
-                            RenderTransformOrigin=".5,.5"
-                            Source="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG">
+                            RenderTransformOrigin=".5,.5">
                             <FrameworkElement.RenderTransform>
                                 <ScaleTransform ScaleX="1.3" ScaleY="1.3" />
                             </FrameworkElement.RenderTransform>

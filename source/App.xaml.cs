@@ -57,7 +57,6 @@ namespace OpenFrp.Launcher
                     }
                 }
             };
-
             if (OSVersionHelper.IsWindows10OrGreater)
             {
                 try
@@ -82,8 +81,11 @@ namespace OpenFrp.Launcher
                 }
                 catch { }
             }
-            
+
         }
+
+
+        
 
         internal static Properties.Settings Settings { get => OpenFrp.Launcher.Properties.Settings.Default; }
 
@@ -344,6 +346,7 @@ namespace OpenFrp.Launcher
             if (exitCode is 0 or 768 && !stdErrData.StartsWith("fail"))
             {
                 Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
+                Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
 
 
                 return;

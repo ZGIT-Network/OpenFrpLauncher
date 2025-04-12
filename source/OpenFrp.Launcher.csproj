@@ -15,9 +15,11 @@
 		<LangVersion>10</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="Resources\Images\pexels-xieyun-15415001.jpg" />
 	  <None Remove="Resources\Sora-Medium.ttf" />
 	</ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\Images\pexels-xieyun-15415001.jpg" />
     <Resource Include="Resources\Sora-Medium.ttf" />
     <Resource Include="Resources\SourceCodePro-Medium.ttf" />
     <Resource Include="Resources\OAuth\index.html" />
@@ -26,7 +28,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="iNKORE.UI.WPF.Modern.Controls" Version="1.8.0" />
+    <PackageReference Include="iNKORE.UI.WPF" Version="1.2.8" />
+    <PackageReference Include="iNKORE.UI.WPF.Emojis" Version="0.3.6.4" />
+    <!--<PackageReference Include="iNKORE.UI.WPF.Modern.Controls" Version="1.8.13" />-->
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
@@ -34,6 +38,22 @@
   <ItemGroup>
     <ProjectReference Include="..\..\OpenFrp.Service\OpenFrp.Service.csproj" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net9.0-windows10.0.18362.0'">
+    <Reference Include="iNKORE.UI.WPF.Modern">
+      <HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net9.0-windows10.0.18362.0\iNKORE.UI.WPF.Modern.dll</HintPath>
+    </Reference>
+    <Reference Include="iNKORE.UI.WPF.Modern.Controls">
+      <HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net9.0-windows10.0.18362.0\iNKORE.UI.WPF.Modern.Controls.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='net48'">
+		<Reference Include="iNKORE.UI.WPF.Modern">
+			<HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net48\iNKORE.UI.WPF.Modern.dll</HintPath>
+		</Reference>
+		<Reference Include="iNKORE.UI.WPF.Modern.Controls">
+			<HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net48\iNKORE.UI.WPF.Modern.Controls.dll</HintPath>
+		</Reference>
+	</ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>

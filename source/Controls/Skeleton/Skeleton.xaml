@@ -57,15 +57,15 @@
                                             <EasingColorKeyFrame
                                                 EasingFunction="{StaticResource easingOutFunc}"
                                                 KeyTime="0:0:0"
-                                                Value="#0EFFFFFF" />
+                                                Value="#0CFFFFFF" />
                                             <EasingColorKeyFrame
                                                 EasingFunction="{StaticResource easingOutFunc}"
                                                 KeyTime="0:0:1"
-                                                Value="#1EFFFFFF" />
+                                                Value="#1CFFFFFF" />
                                             <EasingColorKeyFrame
                                                 EasingFunction="{StaticResource easingInFunc}"
                                                 KeyTime="0:0:2"
-                                                Value="#0EFFFFFF" />
+                                                Value="#0CFFFFFF" />
                                         </ColorAnimationUsingKeyFrames>
                                         <ColorAnimationUsingKeyFrames
                                             RepeatBehavior="Forever"
@@ -75,15 +75,15 @@
                                             <EasingColorKeyFrame
                                                 EasingFunction="{StaticResource easingOutFunc}"
                                                 KeyTime="0:0:0"
-                                                Value="#FFEEEEEE" />
+                                                Value="#CFEEEEEE" />
                                             <EasingColorKeyFrame
                                                 EasingFunction="{StaticResource easingOutFunc}"
                                                 KeyTime="0:0:1"
-                                                Value="#FFDDDDDD" />
+                                                Value="#CFDDDDDD" />
                                             <EasingColorKeyFrame
                                                 EasingFunction="{StaticResource easingInFunc}"
                                                 KeyTime="0:0:2"
-                                                Value="#FFEEEEEE" />
+                                                Value="#CFEEEEEE" />
                                         </ColorAnimationUsingKeyFrames>
                                     </Storyboard>
                                 </BeginStoryboard>

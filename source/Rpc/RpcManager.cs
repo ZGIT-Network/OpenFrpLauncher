@@ -166,7 +166,10 @@ namespace OpenFrp.Launcher.Rpc
                 }
             }
             catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Cancelled) { }
-            //catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.) { }
+            catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Unavailable && e.Status.Detail.Equals("failed to connect to all addresses"))
+            {
+
+            }
 
             return duplex;
         }
@@ -193,16 +196,7 @@ namespace OpenFrp.Launcher.Rpc
 
             writerCallback.Invoke(duplex.RequestStream);
 
-#if NET
-            await duplex.RequestStream.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
-            {
-                State = Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.Prepare,
-                Data = Any.Pack(new StringValue
-                {
-                    Value = userTokenAccess
-                }) 
-            },cancellationToken);
-#elif NETFRAMEWORK
+
             await duplex.RequestStream.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
             {
                 State = Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.Prepare,
@@ -211,7 +205,7 @@ namespace OpenFrp.Launcher.Rpc
                     Value = userTokenAccess
                 }) 
             });
-#endif
+
             //var status = duplex.GetStatus();
             
             

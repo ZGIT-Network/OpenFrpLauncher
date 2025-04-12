@@ -58,10 +58,28 @@
                         <ctrl:SettingItem.Icon>
                             <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.CharacterAppearance}" />
                         </ctrl:SettingItem.Icon>
-                        <ComboBox Width="150" SelectedIndex="{Binding ApplicationTheme, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <ComboBox
+                            Width="150"
+                            AutomationProperties.Name="主题色"
+                            SelectedIndex="{Binding ApplicationTheme, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <ComboBoxItem Content="默认(跟随系统)" />
                             <ComboBoxItem Content="浅色模式" />
                             <ComboBoxItem Content="深色模式" />
+                        </ComboBox>
+                    </ctrl:SettingItem>
+                    <ctrl:SettingItem Title="窗口背景效果" Description="整的挺花里胡哨的...">
+                        <ctrl:SettingItem.Icon>
+                            <ink:FontIcon FontSize="24" Glyph="&#xEB1D;" />
+                        </ctrl:SettingItem.Icon>
+                        <ComboBox
+                            Width="150"
+                            AutomationProperties.Name="窗口背景效果"
+                            SelectedIndex="{Binding BackdropType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <ComboBoxItem Content="None" />
+                            <ComboBoxItem Content="Mica" />
+                            <ComboBoxItem Content="Acrylic" />
+                            <ComboBoxItem Content="Tabbed" />
+
                         </ComboBox>
                     </ctrl:SettingItem>
 

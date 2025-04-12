@@ -68,8 +68,10 @@ namespace OpenFrp.Launcher.Controls
 
                 @switch.Toggled += (_, e) =>
                 {
-                    if (!@switch.IsEnabled)
+                    if (!@switch.IsEnabled || @switch.Tag is object)
                     {
+                        @switch.ClearValue(TagProperty);
+
                         return;
                     }
                     @switch.IsEnabled = false;
@@ -126,14 +128,20 @@ namespace OpenFrp.Launcher.Controls
             }
         }
 
-        public void ToggleStateTo(bool flag)
+        public void ToggleStateTo(bool flag, bool force = false)
         {
             if (GetTemplateChild("switcher") is ToggleSwitch @switch)
             {
+                // !false = true;
                 if (!@switch.IsEnabled)
                 {
                     @switch.IsOn = flag;
                     @switch.IsEnabled = true;
+                }
+                else if (force) // true
+                {
+                    @switch.Tag = new object { };
+                    @switch.IsOn = flag;
                 }
             }
         }

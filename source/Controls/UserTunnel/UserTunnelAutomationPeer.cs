@@ -16,7 +16,7 @@ namespace OpenFrp.Launcher.Controls
 
         public override object GetPattern(PatternInterface patternInterface)
         {
-            if (patternInterface == PatternInterface.ItemContainer)
+            if (patternInterface == PatternInterface.SelectionItem)
             {
                 return patternInterface;
             }

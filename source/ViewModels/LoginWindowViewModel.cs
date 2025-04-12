@@ -54,7 +54,7 @@ namespace OpenFrp.Launcher.ViewModels
                             {
                                 if (!CanCancelLogin)
                                 {
-                                    conve_RelayPrepareCommand.Execute(default);
+                                    App.Current.Dispatcher.Invoke(() => conve_RelayPrepareCommand.Execute(default));
                                 }
                             }
                         }; break;
@@ -138,12 +138,14 @@ namespace OpenFrp.Launcher.ViewModels
             wind.TaskbarItemInfo ??= new System.Windows.Shell.TaskbarItemInfo { };
 
             if (wind.FindName("acrylicPanel") is iNKORE.UI.WPF.Modern.Controls.AcrylicPanel panel &&
+                wind.FindName("acrylicPanel2") is iNKORE.UI.WPF.Modern.Controls.AcrylicPanel panel2 &&
                 wind.FindName("background") is FrameworkElement fe &&
                 !window.UserInfoCallback.Task.IsCanceled)
             {
                 try
                 {
                     panel.Target = fe;
+                    panel2.Target = fe;
                 }
                 catch
                 {
@@ -152,6 +154,7 @@ namespace OpenFrp.Launcher.ViewModels
                     return;
                 }
             }
+
             if (window != null)
             {
                 VisualStateManager.GoToElementState(window, LoginState, false);

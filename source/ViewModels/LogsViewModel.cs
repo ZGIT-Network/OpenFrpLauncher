@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using iNKORE.UI.WPF.Modern.Controls;
@@ -19,11 +21,14 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 _mainWindowViewModel = mv;
 
+                ShowAlertAction = mv.ShowAlert;
+
                 mv.LogsCache ??= new ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogContainer>();
                 mv.PropertyChanged += (_, e) =>
                 {
                     OnPropertyChanged(e.PropertyName);
                 };
+                
             }
             else
             {
@@ -33,8 +38,19 @@ namespace OpenFrp.Launcher.ViewModels
             conve_CreateStreamCommand.Execute(default);
         }
 
+        private readonly Action<string, string, InfoBarSeverity> ShowAlertAction = delegate { };
         private readonly MainWindowViewModel _mainWindowViewModel;
         private IDisposable? disposableStream;
+
+#if NET
+        [GeneratedRegex(@"\[I?E?W?D?\] ")]
+        private static partial Regex LogLevelRegexFallback();
+#elif NETFRAMEWORK
+        private static Regex LogLevelRegexFallback() => new Regex(@"\[I?E?W?D?\] ");
+#endif
+
+
+        private Regex LogLevelRegex = LogLevelRegexFallback();
 
         private System.Windows.Controls.ListView? listView;
 
@@ -123,6 +139,21 @@ namespace OpenFrp.Launcher.ViewModels
                 if (page.FindName("flv") is System.Windows.Controls.ListView ve)
                 {
                     this.listView = ve;
+
+                    ve.SetBinding(System.Windows.Documents.TextElement.FontSizeProperty,new Binding
+                    {
+                        Source = App.Settings,
+                        Path = new PropertyPath("LogFontSize"),
+                        Mode = BindingMode.OneWay
+                    });
+                    if (string.IsNullOrEmpty(App.Settings.LogFontFamily) && App.Current.TryFindResource("SourceCodeProMixYahei") is System.Windows.Media.FontFamily ff)
+                    {
+                        ve.FontFamily = ff;
+                    }
+                    else
+                    {
+                        ve.FontFamily = new System.Windows.Media.FontFamily(App.Settings.LogFontFamily);
+                    }
                 }
                 page.Unloaded += delegate
                 {
@@ -223,8 +254,12 @@ namespace OpenFrp.Launcher.ViewModels
                 OverwritePrompt = true,
                 AddExtension = true,
                 ValidateNames = true,
-                Filter = "日志文件(*.log)|*.log"
+                Filter = "日志文件(*.log)|*.log",
             };
+            if(SelectedTag != null)
+            {
+                fDialog.FileName = $"OFLauncher-{SelectedTag.Tag}.log";
+            }
             if (fDialog.ShowDialog() is true)
             {
                 using (var f = System.IO.File.Open(fDialog.FileName,System.IO.FileMode.OpenOrCreate))
@@ -246,10 +281,10 @@ namespace OpenFrp.Launcher.ViewModels
                         if (v is Service.Proto.Response.LogStreamResponse.Types.LogContainer vc)
                         {
 #if NET
-                            ReadOnlyMemory<byte> fs = Encoding.UTF8.GetBytes($"{vc.Date.ToDateTime():yyyy/MM/dd HH:mm:ss} [{vc.Level}] {vc.Tag} {vc.Data}\n");
+                            ReadOnlyMemory<byte> fs = Encoding.UTF8.GetBytes($"{vc.Date.ToDateTime():yyyy/MM/dd HH:mm:ss} [{vc.Level}] {vc.Tag} {LogLevelRegex.Replace(vc.Data,string.Empty)}\n");
                             await f.WriteAsync(fs,CancellationToken.None);
 #elif NETFRAMEWORK
-                            byte[] fs = Encoding.UTF8.GetBytes($"{vc.Date.ToDateTime():yyyy/MM/dd HH:mm:ss} [{vc.Level}] {vc.Tag} {vc.Data}\n");
+                            byte[] fs = Encoding.UTF8.GetBytes($"{vc.Date.ToDateTime():yyyy/MM/dd HH:mm:ss} [{vc.Level}] {vc.Tag} {LogLevelRegex.Replace(vc.Data,string.Empty)}\n");
                             await f.WriteAsync(fs,0,fs.Length);
 #endif
                         }
@@ -258,6 +293,9 @@ namespace OpenFrp.Launcher.ViewModels
 
                     f.Close();
                 }
+
+                ShowAlertAction($"日志 \"{fDialog.SafeFileName}\" 保存成功!", $"已成功保存在: {fDialog.FileName}", InfoBarSeverity.Success);
+
                 // log notice
             }
         }
@@ -271,5 +309,7 @@ namespace OpenFrp.Launcher.ViewModels
         {
             get => _mainWindowViewModel.KnownLogIndexMapping;
         }
+
+
     }
 }

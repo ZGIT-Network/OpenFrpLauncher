@@ -3,20 +3,32 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace OpenFrp.Launcher.Converter
 {
-    internal class ProtobufTimestampToTimeString : IValueConverter
+    public class RegexReplaceConverter : IValueConverter
     {
+        private Regex? regex;
+
+        public string RegexPatten
+        {
+            set => regex = new Regex(value);
+        }
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is Google.Protobuf.WellKnownTypes.Timestamp ts)
+            if (regex is null)
             {
-                return ts.ToDateTimeOffset().LocalDateTime.ToString("yyyy/MM/dd HH:mm:ss");
+                throw new NullReferenceException(nameof(regex));
             }
-            throw new NotSupportedException(value.GetType().ToString());
+            if (value is string s1 && parameter is string v2)
+            {
+                return regex.Replace(s1,v2);
+            }
+            throw new NotSupportedException();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

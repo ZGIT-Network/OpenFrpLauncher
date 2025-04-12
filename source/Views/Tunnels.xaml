@@ -87,7 +87,7 @@
                                         HorizontalAlignment="Stretch"
                                         CornerRadius="4" />
                                 </Grid>
-                                <ItemsControl Grid.Row="1" ItemsSource="{Binding PreloadSkeletons, Mode=OneWay}">
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding PreloadSkeletons, Mode=OneWay, IsAsync=True}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <WrapPanel />
@@ -261,7 +261,7 @@
                                         x:Name="itemsController"
                                         d:ItemsSource="{d:SampleData ItemCount=10}"
                                         Focusable="False"
-                                        ItemsSource="{Binding UserTunnels}">
+                                        ItemsSource="{Binding UserTunnels, Mode=OneWay, IsAsync=True}">
                                         <ItemsControl.IsEnabled>
                                             <MultiBinding Converter="{StaticResource ReflagdEitherConverter}" Mode="OneWay">
                                                 <Binding Mode="OneWay" Path="event_DeleteUserTunnelCommand.IsRunning" />

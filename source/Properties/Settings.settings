@@ -5,10 +5,19 @@
     <Setting Name="ApplicationTheme" Type="iNKORE.UI.WPF.Modern.ElementTheme" Scope="User">
       <Value Profile="(Default)">Default</Value>
     </Setting>
+    <Setting Name="BackdropType" Type="iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType" Scope="User">
+      <Value Profile="(Default)">None</Value>
+    </Setting>
     <Setting Name="UseProxy" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="Token" GenerateDefaultValueInCode="false" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LogFontSize" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">12</Value>
+    </Setting>
+    <Setting Name="LogFontFamily" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

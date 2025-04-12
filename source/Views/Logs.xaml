@@ -20,6 +20,7 @@
     </FrameworkElement.DataContext>
     <FrameworkElement.Resources>
         <conv:ProtobufTimestampToTimeString x:Key="ProtobufTimestampToTimeString" />
+        <conv:RegexReplaceConverter x:Key="RegexReplaceConverter" RegexPatten="\[[^I?E?W?D]*/[^\]]*\] " />
     </FrameworkElement.Resources>
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
@@ -56,6 +57,7 @@
             <xa:SimpleStackPanel Orientation="Horizontal" Spacing="8">
                 <ComboBox
                     MinWidth="250"
+                    AutomationProperties.Name="日志过滤器"
                     ItemsSource="{Binding TagSelector, Mode=OneWay}"
                     SelectedIndex="0"
                     SelectedValue="{Binding SelectedTag, Mode=OneWayToSource}">
@@ -106,7 +108,7 @@
                 x:Name="flv"
                 d:ItemsSource="{d:SampleData ItemCount=5}"
                 Focusable="False"
-                ItemsSource="{Binding Logs, Mode=OneWay}"
+                ItemsSource="{Binding Logs, Mode=OneWay, IsAsync=True}"
                 ScrollViewer.CanContentScroll="True"
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                 ScrollViewer.IsDeferredScrollingEnabled="False"
@@ -189,12 +191,13 @@
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
+
                         <ctrl:SelectableTextBlock
+                            x:Name="textBlockDisplay"
                             Margin="36,0"
                             HorizontalAlignment="Left"
                             Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ListViewItem}, Mode=OneWay}"
                             FocusVisualStyle="{x:Null}"
-                            FontSize="14"
                             KeyboardNavigation.ControlTabNavigation="None"
                             KeyboardNavigation.DirectionalNavigation="None"
                             KeyboardNavigation.IsTabStop="False"
@@ -210,18 +213,22 @@
                             </behavior:Interaction.Triggers>-->
                             <!--<Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Date, Converter={StaticResource LongToTimeZone}, Mode=OneWay}" />-->
 
+                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Date, Converter={StaticResource ProtobufTimestampToTimeString}, Mode=OneWay}" />
                             <Run
-                                FontFamily="{StaticResource SourceCodePro}"
-                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                Text="{Binding Date, Converter={StaticResource ProtobufTimestampToTimeString}, Mode=OneWay}" />
-                            <Run
-                                FontFamily="{StaticResource SourceCodePro}"
                                 FontWeight="Medium"
                                 Foreground="{DynamicResource AweAppGoldenColor}"
                                 Text="{Binding Tag, Mode=OneWay}" />
 
-                            <Run FontFamily="{StaticResource SourceCodeProMixYahei}" Text="{Binding Data, Mode=OneWay}" />
+                            <Run Text="{Binding Data, ConverterParameter='', Converter={StaticResource RegexReplaceConverter}, Mode=OneWay}" />
                         </ctrl:SelectableTextBlock>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Level}" Value="Warning">
+                                <Setter TargetName="textBlockDisplay" Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Level}" Value="Error">
+                                <Setter TargetName="textBlockDisplay" Property="Foreground" Value="{DynamicResource SystemControlErrorTextForegroundBrush}" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
