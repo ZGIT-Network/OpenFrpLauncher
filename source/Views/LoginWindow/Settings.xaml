@@ -82,7 +82,20 @@
 
                         </ComboBox>
                     </ctrl:SettingItem>
+                    <TextBlock
+                        Margin="0,24,0,0"
+                        FontSize="18"
+                        Text="网络" />
+                    <ctrl:SettingItem Title="绕过系统代理" Description="此项适用于直接访问 API 而不经过代理。">
+                        <ctrl:SettingItem.Icon>
+                            <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.MultimediaDMS}" />
+                        </ctrl:SettingItem.Icon>
+                        <ink:ToggleSwitch
+                            MinWidth="0"
+                            IsOn="{Binding BypassProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            IsRightAlignedCompact="True" />
 
+                    </ctrl:SettingItem>
                 </wp:SimpleStackPanel>
             </Grid>
 

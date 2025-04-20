@@ -23,7 +23,7 @@
     ink:WindowHelper.UseModernWindowStyle="True"
     IsHitTestVisible="False"
     RenderOptions.ClearTypeHint="Enabled"
-    ResizeMode="CanResize"
+    ResizeMode="CanMinimize"
     mc:Ignorable="d">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo Description="OpenFrp 启动器 - 登录" />
@@ -86,8 +86,9 @@
                 <!--<Viewbox.CacheMode>
                     <BitmapCache EnableClearType="False" RenderAtScale="1"/>
                 </Viewbox.CacheMode>-->
+                <!--  "pack://application:,,,/Resources/Images/v2-bg.jpg"  -->
                 <!--  "pack://application:,,,/Resources/Images/pexels-xieyun-15415001.jpg"  -->
-                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="F:\tanime-photo-ssc\[wallhaven.cc],gp312l.jpg" />
+                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="pack://application:,,,/Resources/Images/v2-bg.jpg" />
             </Viewbox>
 
         </Grid>
@@ -246,6 +247,7 @@
                                                     Margin="0,4,0,-8"
                                                     Focusable="False"
                                                     ItemsSource="{Binding PlatformUsers, Mode=OneWay}">
+
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <Button
@@ -269,9 +271,11 @@
                                                                     </Grid.ColumnDefinitions>
                                                                     <!--  ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
                                                                     <ink:PersonPicture
+                                                                        x:Name="picpic"
                                                                         Grid.Column="0"
                                                                         Width="38"
                                                                         Height="38"
+                                                                        ProfilePicture="pack://application:,,,/Resources/Images/weavatar.png"
                                                                         RenderOptions.BitmapScalingMode="HighQuality"
                                                                         UseLayoutRounding="True" />
                                                                     <TextBlock

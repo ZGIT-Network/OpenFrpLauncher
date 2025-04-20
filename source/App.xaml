@@ -13,11 +13,14 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-
                 <ResourceDictionary>
                     <conv:EqualConverter x:Key="EqualConverter" />
                     <conv:NotEqualConverter x:Key="NotEqualConverter" />
                     <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+                    <!--  For MultiBinding  -->
+                    <conv:BothConverter x:Key="BothConverter" />
+                    <conv:EitherConverter x:Key="EitherConverter" />
+
 
                     <FontFamily x:Key="SourceCodePro">
                         ./Resources/SourceCodePro-Medium.ttf#Source Code Pro Medium
@@ -26,7 +29,8 @@
                         ./Resources/SourceCodePro-Medium.ttf#Source Code Pro Medium,Microsoft YaHei UI
                     </FontFamily>
 
-                    <!--  TODO: Sora Fontfamily  -->
+
+
 
                     <FontFamily x:Key="SoraMedium">
                         ./Resources/Sora-Medium.ttf#Sora Medium
@@ -61,14 +65,13 @@
                 <ResourceDictionary Source="./Controls/Skeleton/Skeleton.xaml" />
                 <ResourceDictionary Source="./Controls/QRCode/QRCode.xaml" />
                 <ResourceDictionary Source="./Controls/SettingExpander/SettingExpander.xaml" />
+
                 <!--  用户隧道展示用组件  -->
                 <ResourceDictionary Source="./Controls/UserTunnel/UserTunnel.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
 
-            <!--  For MultiBinding  -->
-            <conv:BothConverter x:Key="BothConverter" />
-            <conv:EitherConverter x:Key="EitherConverter" />
+
 
             <Style x:Key="Awe__ControlFocusVisualStyle">
                 <Setter Property="Control.Template">

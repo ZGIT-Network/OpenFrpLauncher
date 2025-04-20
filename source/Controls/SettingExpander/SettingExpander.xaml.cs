@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Windows.Media.Animation;
 using iNKORE.UI.WPF.Modern.Controls;
 
 namespace OpenFrp.Launcher.Controls
@@ -38,5 +40,37 @@ namespace OpenFrp.Launcher.Controls
         public static readonly DependencyProperty DescriptionProperty =
             DependencyProperty.Register("Description", typeof(string), typeof(SettingExpander), new PropertyMetadata(""));
         #endregion
+
+        protected override void OnCollapsed()
+        {
+            if (GetTemplateChild("RootPanel") is FrameworkElement panel && GetTemplateChild("ExpandSite") is ContentPresenter cp)
+            {
+                foreach (var group in VisualStateManager.GetVisualStateGroups(panel))
+                {
+                    if (group is VisualStateGroup vsg)
+                    {
+                        switch (vsg.Name)
+                        {
+                            case "ExpansionStates":
+                                {
+                                    foreach (var state in vsg.States)
+                                    {
+                                        if (state is VisualState { Name: "Collapsed" } vs)
+                                        {
+                                            if (vs.Storyboard.Children[1] is DoubleAnimation dAnimation)
+                                            {
+                                                dAnimation.To = -cp.ActualHeight + 20;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                        }
+                    }
+                }
+            }
+
+            base.OnCollapsed();
+        }
     }
 }

@@ -24,6 +24,7 @@
                     <ControlTemplate.Resources>
                         <CubicEase x:Key="__ApCubicEase" />
                         <conv:EitherConverter x:Key="ReflagdEitherConverter" ReflagValue="True" />
+
                     </ControlTemplate.Resources>
                     <Border
                         x:Name="subfr"
@@ -34,53 +35,6 @@
                         BorderThickness="1"
                         CornerRadius="4"
                         DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
-
-                        <FrameworkElement.ContextMenu>
-                            <ContextMenu MinWidth="150">
-                                <MenuItem
-                                    Padding="0,3"
-                                    IsEnabled="False"
-                                    StaysOpenOnClick="True">
-                                    <MenuItem.Header>
-                                        <TextBlock
-                                            Margin="-20,0,0,0"
-                                            FontFamily="{StaticResource SoraMedium}"
-                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
-                                            <Run Text="{Binding Tunnel.Id, StringFormat='#{0}', Mode=OneWay}" />
-                                            <Run Text="{Binding Tunnel.Name, Mode=OneWay}" />
-                                        </TextBlock>
-                                    </MenuItem.Header>
-                                </MenuItem>
-                                <Separator />
-                                <MenuItem
-                                    Command="{Binding UserContextMenuCommandBinding, Mode=OneWay}"
-                                    CommandParameter="copy-extra-address"
-                                    Header="复制扩展地址"
-                                    Visibility="{Binding Tunnel.HasExtraConnectAddress, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
-                                    <MenuItem.Icon>
-                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem
-                                    Command="{Binding UserContextMenuCommandBinding, Mode=OneWay}"
-                                    CommandParameter="view-info"
-                                    Header="详情">
-                                    <MenuItem.Icon>
-                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Info}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem
-                                    Name="deleteUserTunnel"
-                                    Header="删除"
-                                    IsEnabled="{Binding DeleteCommandBinding.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}"
-                                    StaysOpenOnClick="True">
-
-                                    <MenuItem.Icon>
-                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Delete}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </FrameworkElement.ContextMenu>
                         <Grid DataContext="{Binding Tunnel, Mode=OneWay}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -125,21 +79,29 @@
                                         Text="{Binding NodeName, Mode=OneWay}"
                                         TextOptions.TextFormattingMode="Display" />
                                 </TextBlock>
+                                <!--<TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                                    <Run
+                                        FontFamily="{StaticResource SoraMedium}"
+                                        FontSize="18"
+                                        Text="{Binding Tunnel.NodeId, RelativeSource={RelativeSource Mode=TemplatedParent}, StringFormat='#{0}', Mode=OneWay}" />
+                                    <Run
+                                        FontSize="16"
+                                        Text="{Binding NodeName, Mode=OneWay}"
+                                        TextOptions.TextFormattingMode="Display" />
+                                </TextBlock>-->
                             </xa:SimpleStackPanel>
+                            <!--  Tag  -->
                             <xa:SimpleStackPanel
                                 Grid.Row="2"
                                 Grid.Column="0"
                                 Margin="20,0,0,18"
                                 Orientation="Vertical"
                                 Spacing="2">
-
                                 <TextBlock
                                     FontFamily="{StaticResource SoraMedium}"
                                     FontSize="16"
                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
                                     <Run Text="{Binding Type, Mode=OneWay}" />
-
-
                                 </TextBlock>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock
@@ -169,6 +131,7 @@
                                         Visibility="{Binding IsHasRemotePort, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
                                 </StackPanel>
                             </xa:SimpleStackPanel>
+                            <!--  Controller  -->
                             <xa:SimpleStackPanel
                                 Grid.Row="2"
                                 Grid.Column="0"
@@ -177,6 +140,7 @@
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom"
                                 Orientation="Horizontal">
+
                                 <ink:HyperlinkButton
                                     x:Name="copyLink"
                                     Padding="0"
@@ -185,15 +149,15 @@
                                     Style="{StaticResource ButtonStyledHyperlinkButton}"
                                     TabIndex="1"
                                     ToolTip="复制链接">
-                                    <Grid Margin="8">
+                                    <Grid Margin="8.5">
                                         <ink:FontIcon
                                             x:Name="copyNormalFlag"
-                                            FontSize="18"
+                                            FontSize="19.5"
                                             Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ink:HyperlinkButton}, Mode=OneWay}"
                                             Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
                                         <ink:FontIcon
                                             x:Name="copySuccessFlag"
-                                            FontSize="18"
+                                            FontSize="19.5"
                                             Foreground="{DynamicResource SystemFillColorSuccessBrush}"
                                             Icon="{x:Static ink:SegoeFluentIcons.CheckMark}" />
                                     </Grid>
@@ -239,7 +203,6 @@
                                     </VisualStateManager.VisualStateGroups>
                                 </ink:HyperlinkButton>
 
-
                                 <ink:HyperlinkButton
                                     x:Name="displayContextMenu"
                                     Padding="0"
@@ -249,21 +212,74 @@
                                     Style="{StaticResource ButtonStyledHyperlinkButton}"
                                     TabIndex="1"
                                     ToolTip="操作">
+                                    <ink:FlyoutService.Flyout>
+                                        <ink:MenuFlyout>
+                                            <MenuItem
+                                                Padding="0,3,8,3"
+                                                IsEnabled="False"
+                                                StaysOpenOnClick="True">
+                                                <MenuItem.Header>
+                                                    <TextBlock
+                                                        Margin="-20,0,0,0"
+                                                        FontFamily="{StaticResource SoraMedium}"
+                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                                                        <Run Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
+                                                        <Run Text="{Binding Name, Mode=OneWay}" />
+                                                    </TextBlock>
+                                                </MenuItem.Header>
+                                            </MenuItem>
+                                            <Separator />
+                                            <MenuItem
+                                                CommandParameter="copy-extra-address"
+                                                Header="复制扩展地址"
+                                                Visibility="{Binding HasExtraConnectAddress, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                                <MenuItem.Icon>
+                                                    <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem x:Name="viewInfo" Header="详细">
+                                                <MenuItem.Icon>
+                                                    <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Info}" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem x:Name="deleteTunnel" Header="删除">
+                                                <MenuItem.Icon>
+                                                    <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Delete}" />
+                                                </MenuItem.Icon>
+                                                <MenuItem.IsEnabled>
+                                                    <MultiBinding Converter="{StaticResource BothConverter}">
+                                                        <Binding
+                                                            Converter="{StaticResource EqualConverter}"
+                                                            ConverterParameter="False"
+                                                            Mode="OneWay"
+                                                            Path="IsOn"
+                                                            Source="{x:Reference Name=switcher}" />
+                                                        <Binding
+                                                            Converter="{StaticResource EqualConverter}"
+                                                            ConverterParameter="False"
+                                                            Mode="OneWay"
+                                                            Path="DeleteCommandBinding.IsRunning"
+                                                            RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                                    </MultiBinding>
+                                                </MenuItem.IsEnabled>
+                                            </MenuItem>
+                                        </ink:MenuFlyout>
+                                    </ink:FlyoutService.Flyout>
                                     <ink:HyperlinkButton.IsEnabled>
                                         <MultiBinding Converter="{StaticResource ReflagdEitherConverter}">
                                             <Binding
                                                 Mode="OneWay"
                                                 Path="IsOn"
                                                 Source="{x:Reference Name=switcher}" />
-                                            <Binding
+                                            <!--<Binding
                                                 Mode="OneWay"
                                                 Path="event_DefaultUserContextMenuActionCommand.IsRunning"
-                                                RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                                RelativeSource="{RelativeSource Mode=TemplatedParent}" />-->
                                         </MultiBinding>
                                     </ink:HyperlinkButton.IsEnabled>
                                     <ink:FontIcon
-                                        Margin="8"
-                                        FontSize="20"
+                                        Margin="6"
+                                        FontSize="24"
                                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ink:HyperlinkButton}, Mode=OneWay}"
                                         Icon="{x:Static ink:SegoeFluentIcons.More}" />
                                 </ink:HyperlinkButton>
@@ -320,8 +336,12 @@
                             HorizontalAlignment="Stretch"
                             AutomationProperties.Name="{Binding Name, StringFormat='刪除隧道 {0}', Mode=OneWay}"
                             CommandParameter="{Binding Mode=OneWay}"
-                            Content="删除"
-                            Style="{StaticResource AccentButtonStyle}" />
+                            Style="{StaticResource AccentButtonStyle}">
+                            <xa:SimpleStackPanel Orientation="Horizontal" Spacing="4">
+                                <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.Delete}" />
+                                <TextBlock Text="删除" />
+                            </xa:SimpleStackPanel>
+                        </Button>
                         <Button
                             x:Name="cancelAndCloseFlyout"
                             Grid.Row="1"

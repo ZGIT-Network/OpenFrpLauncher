@@ -18,6 +18,9 @@ namespace OpenFrp.Launcher.Model
         [ObservableProperty]
         private string? emailAddress;
 
+        [ObservableProperty]
+        private string? userAvatorHash;
+
         public string? UserAuthorzation { get; set; }
     }
 }

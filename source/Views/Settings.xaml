@@ -80,12 +80,28 @@
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
                                         Spacing="12">
+                                        <!--  ProfilePicture="E:\Desktop\Photo\IMG_9865.JPG"  -->
                                         <ink:PersonPicture
                                             Width="48"
                                             Height="48"
                                             HorizontalAlignment="Left"
-                                            ProfilePicture="E:\Desktop\Photo\IMG_9865.JPG"
-                                            RenderOptions.BitmapScalingMode="HighQuality" />
+                                            RenderOptions.BitmapScalingMode="HighQuality">
+                                            <behavior:Interaction.Triggers>
+                                                <behavior:DataTrigger Binding="{Binding UserAvatorSource, Mode=OneWay}" Value="{x:Null}">
+                                                    <behavior:ChangePropertyAction PropertyName="ProfilePicture">
+                                                        <behavior:ChangePropertyAction.Value>
+                                                            <BitmapImage UriSource="pack://application:,,,/Resources/Images/weavatar.png" />
+                                                        </behavior:ChangePropertyAction.Value>
+                                                    </behavior:ChangePropertyAction>
+                                                </behavior:DataTrigger>
+                                                <behavior:DataTrigger
+                                                    Binding="{Binding UserAvatorSource, Mode=OneWay}"
+                                                    Comparison="NotEqual"
+                                                    Value="{x:Null}">
+                                                    <behavior:ChangePropertyAction PropertyName="ProfilePicture" Value="{Binding UserAvatorSource, Mode=OneWay}" />
+                                                </behavior:DataTrigger>
+                                            </behavior:Interaction.Triggers>
+                                        </ink:PersonPicture>
                                         <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" TextWrapping="Wrap">
                                             <Run FontSize="24" Text="{Binding UserInfo.UserName, Mode=OneWay}" />
                                             <Run

@@ -14,6 +14,11 @@ using OpenFrp.Launcher.Rpc;
 using OpenFrp.Service.Daemon;
 using iNKORE.UI.WPF.Helpers;
 using System.Runtime.InteropServices;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using System.Windows.Data;
+using System.Diagnostics.Metrics;
+
 
 namespace OpenFrp.Launcher
 {
@@ -22,24 +27,84 @@ namespace OpenFrp.Launcher
     /// </summary>
     public partial class App : Application
     {
-        [DllImport("kernel32.dll")]
-        private static extern bool AllocConsole();//显示控制台
-
-        [DllImport("kernel32.dll")]
-        private static extern bool FreeConsole(); //释放控制台、关闭控制台
-
         public App()
         {
-            //AllocConsole();
-
-            
-            //RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
-
             AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.EnablePointerSupport", true);
             AppContext.SetSwitch("Switch.System.Windows.Media.EnableHardwareAccelerationInRdp", true);
 
             Dispatcher.UnhandledException += Dispatcher_UnhandledException;
 
+
+#if !DEBUG
+            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            {
+                if (e.IsTerminating)
+                    if (e.ExceptionObject is Exception ex)
+                    {
+                        try { Clipboard.SetText(ex.ToString()); }
+                        catch
+                        {
+                            MessageBox.Show(ex.ToString(), "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                            Environment.Exit(ex.HResult);
+
+                            return;
+                        }
+
+                        MessageBox.Show($"错误内容已复制，按下Ctrl+V | 粘贴 来显示内容。" +
+                   $"\n{ex.Message}" , "OpenFrp Launcher Throw Out!!", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                        Environment.Exit(ex.HResult);
+                    }
+            };
+#endif
+        }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            string launcherFilePath = Path.Combine(AppContext.BaseDirectory, "OpenFrp.Launcher.exe");
+            string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(AppContext.BaseDirectory);
+
+            launcherMutex = new Mutex(false, $"openfrp.launcher.{appHash}", out var createdNewFlag);
+
+#if DEBUG
+            //MessageBox.Show("" +
+            //    $"AppContext.BaseDirectory: {AppContext.BaseDirectory}" + 
+            //    $"\nopenfrp.launcher.{appHash}" +
+            //    $"\ncreatedNewFlag : {createdNewFlag}" +
+            //    $"\nlauncherMutex.SafeWaitHandle.IsClosed: {launcherMutex.SafeWaitHandle.IsClosed}");
+#endif
+            if (!createdNewFlag && !launcherMutex.SafeWaitHandle.IsClosed)
+            {
+                launcherMutex.Close();
+
+                var currentId = Process.GetCurrentProcess().Id;
+
+                foreach (var proc in Process.GetProcessesByName("OpenFrp.Launcher"))
+                {
+                    try
+                    {
+                        if (proc.Id == currentId) continue;
+                        if (proc.MainModule is { } && proc.MainModule.FileName == launcherFilePath)
+                        {
+                            if (proc.MainWindowHandle != IntPtr.Zero)
+                            {
+                                Win32.User32.ShowWindow(proc.MainWindowHandle, Win32.User32.SW_TYPE.SW_RESTORE);
+                                Win32.User32.SetForegroundWindow(proc.MainWindowHandle);
+                                break;
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+
+                Environment.Exit(0);
+
+                return;
+            }
 
             Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
 
@@ -52,11 +117,13 @@ namespace OpenFrp.Launcher
                         case "UseProxy" when e.NewValue is bool nv1:
                             {
                                 Service.Net.HttpClient.DefualtInstance.SetUseProxy(nv1);
-                            }; break;
+                            }
+                            ; break;
                         default: return;
                     }
                 }
             };
+
             if (OSVersionHelper.IsWindows10OrGreater)
             {
                 try
@@ -82,16 +149,68 @@ namespace OpenFrp.Launcher
                 catch { }
             }
 
+            if (!Uri.TryCreate("pack://application:,,,/Resources/Images/desktop.ico",UriKind.RelativeOrAbsolute,out var result)) return;
+
+            TaskBarIcon = new H.NotifyIcon.TaskbarIcon()
+            {
+                IconSource = new BitmapImage(result),
+                CustomName = $"OpenFrp Launcher (App {appHash})",
+                ToolTipText = UiLauncherVersionString,
+                PopupPlacement = System.Windows.Controls.Primitives.PlacementMode.AbsolutePoint,
+                TrayPopup = new Controls.AppPopup { },
+                PopupActivation = H.NotifyIcon.Core.PopupActivationMode.RightClick,
+                NoLeftClickDelay = true
+                
+            };
+            if (TaskBarIcon.TrayPopupResolved is not null)
+            {
+                TaskBarIcon.LeftClickCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(delegate
+                {
+                    switch (App.Current.MainWindow)
+                    {
+                        case LoginWindow lw:
+                            {
+                                lw.ShowByHwndCC();
+                            };break;
+                        case MainWindow mw:
+                            {
+                                mw.ShowByHwndCC();  
+                            };break;
+                    }
+                });
+                TaskBarIcon.TrayPopupResolved.PopupAnimation = System.Windows.Controls.Primitives.PopupAnimation.Fade;
+                TaskBarIcon.TrayPopupResolved.SetBinding(iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty, new Binding
+                {
+                    Source = App.Settings,
+                    Path = new PropertyPath(nameof(App.Settings.ApplicationTheme)),
+                    Mode = BindingMode.OneWay
+                });
+            }
+            if (!TaskBarIcon.IsCreated)
+            {
+                TaskBarIcon.ForceCreate(false);
+            }
+          
+            base.OnStartup(e);
         }
 
+        private Mutex? launcherMutex;
 
-        
+        internal static H.NotifyIcon.TaskbarIcon? TaskBarIcon;
 
         internal static Properties.Settings Settings { get => OpenFrp.Launcher.Properties.Settings.Default; }
 
         internal static Process? ServiceProcess { get; set; }
 
         internal static Rpc.RpcManager? RpcManager { get; set; }
+
+        internal static Model.FrpcFeatrue FrpcFeature { get; } = new Model.FrpcFeatrue();
+
+        public static string FrpcVersionString { get; set; } = "Unknown";
+
+        public static string LauncherVersionString => "5.7.3 Preview";
+
+        public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 
         private static Task? prevListenDaemonTask;
 
@@ -171,9 +290,10 @@ namespace OpenFrp.Launcher
                     {
                         FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
                         Arguments = "--daemon",
-                        CreateNoWindow = !true,
+                        CreateNoWindow = true,
                         ErrorDialog = false,
                         UseShellExecute = false,
+                        RedirectStandardInput = true,
                         RedirectStandardError = true,
                         RedirectStandardOutput = true,
                         StandardErrorEncoding = System.Text.Encoding.Default,
@@ -263,7 +383,7 @@ namespace OpenFrp.Launcher
                     ServiceProcess?.WaitForExit();
 
                     // TODO: notice here //
-
+                    
                     prevListenDaemonTask = null;
 
                     DaemonProcessExited(ServiceProcess, EventArgs.Empty);
@@ -305,6 +425,7 @@ namespace OpenFrp.Launcher
 
         private static void DaemonProcessExited(object? sender, EventArgs? e)
         {
+            if (App.TaskBarIcon is { IsDisposed: true }) return;
             if (sender is Process process)
             {
                 if (e != EventArgs.Empty)
@@ -345,9 +466,11 @@ namespace OpenFrp.Launcher
 
             if (exitCode is 0 or 768 && !stdErrData.StartsWith("fail"))
             {
-                Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-                Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
-
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
+                    Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
+                });
 
                 return;
             }

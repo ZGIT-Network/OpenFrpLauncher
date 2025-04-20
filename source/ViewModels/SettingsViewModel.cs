@@ -11,6 +11,7 @@ using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Google.Protobuf.WellKnownTypes;
 using OpenFrp.Launcher.Model;
 
 namespace OpenFrp.Launcher.ViewModels
@@ -30,6 +31,7 @@ namespace OpenFrp.Launcher.ViewModels
                 mvW = v;
                 _mainWindowViewModel = mv;
 
+                
                 mv.PropertyChanged += (_, e) =>
                 {
                     OnPropertyChanged(e.PropertyName);
@@ -39,7 +41,6 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 mvW = lWnd;
                 IsAtLoginWindow = true;
-
             }
         }
 
@@ -52,6 +53,12 @@ namespace OpenFrp.Launcher.ViewModels
 
         [ObservableProperty]
         private bool isAtLoginWindow = false;
+
+  
+        public Uri? UserAvatorSource
+        {
+            get => _mainWindowViewModel?.UserAvatorSource;
+        }
 
         private readonly Window? mvW;
         private readonly MainWindowViewModel? _mainWindowViewModel;
@@ -139,10 +146,6 @@ namespace OpenFrp.Launcher.ViewModels
                 }
                 return __userInfo_Defualt;
             }
-            set
-            {
-                Model.RouteMessage<MainWindowViewModel>.Send(value);
-            }
         }
 
         [RelayCommand(IncludeCancelCommand = true)]
@@ -154,7 +157,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (@value is not null)
             {
-                UserInfo = new Model.UserInfo(value);
+                Model.RouteMessage<MainWindowViewModel>.Send(new Model.UserInfo(value));
             }
             GC.Collect();
         }
@@ -166,7 +169,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (ruxe.Data is { } userInfo)
             {
-                UserInfo = new Model.UserInfo(userInfo);
+                Model.RouteMessage<MainWindowViewModel>.Send(new Model.UserInfo(userInfo));
             }
         }
 
@@ -224,7 +227,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                         FontDisplays.Add(dfc);
 
-                        if (App.Settings.LogFontFamily is null || ff.Equals(ff2233))
+                        if (string.IsNullOrEmpty(App.Settings.LogFontFamily) || ff.Equals(ff2233))
                         {
                             cmb.SetCurrentValue(ComboBox.SelectedValueProperty, SelectedFont = dfc);
                         }
@@ -284,7 +287,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
             catch { }
 
-            UserInfo = __userInfo_Defualt;
+            Model.RouteMessage<MainWindowViewModel>.Send(__userInfo_Defualt);
         }
     }
 }

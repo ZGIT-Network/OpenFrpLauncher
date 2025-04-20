@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace OpenFrp.Launcher.Model
 {
-    public partial class UserTunnel : ObservableObject
+    public partial class UserTunnel : ObservableObject,ICloneable
     {
         // 仅作 Example
         public UserTunnel(int ce)
@@ -65,6 +65,16 @@ namespace OpenFrp.Launcher.Model
         }
 
         public void Update() => OnPropertyChanged(nameof(Tunnel));
+
+        public object Clone()
+        {
+            return MemberwiseClone();
+        }
+
+        public UserTunnel ModelClone()
+        {
+            return (UserTunnel)Clone();
+        }
 
         private byte[]? _buffer;
 

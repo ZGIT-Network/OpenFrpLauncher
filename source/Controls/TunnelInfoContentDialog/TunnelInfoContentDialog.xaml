@@ -5,6 +5,7 @@
     xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern">
     <Style TargetType="ctrl:TunnelInfoContentDialog">
+        <Setter Property="Title" Value="{Binding Path=Name, StringFormat='隧道 {0}', Mode=OneWay}" />
         <Setter Property="DataContext" Value="{Binding Tunnel, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
         <Setter Property="Content">
             <Setter.Value>
@@ -116,7 +117,6 @@
         </Setter>
         <Setter Property="CloseButtonText" Value="确定" />
         <Setter Property="DefaultButton" Value="Close" />
-        <Setter Property="Title" Value="{Binding Path=Name, StringFormat='隧道 {0}', Mode=OneWay}" />
     </Style>
 
 </ResourceDictionary>

@@ -165,7 +165,7 @@
                         <xa:CornerRadiusFilterConverter x:Key="BottomCornerRadiusFilterConverter" Filter="Bottom" />
                         <xa:CornerRadiusFilterConverter x:Key="TopCornerRadiusFilterConverter" Filter="Top" />
                     </ControlTemplate.Resources>
-                    <DockPanel LastChildFill="True">
+                    <DockPanel x:Name="RootPanel" LastChildFill="True">
                         <self:ExpandFeatureToggleHeader
                             x:Name="ExpanderHeader"
                             Title="{TemplateBinding Title}"
@@ -227,7 +227,6 @@
                                         <DoubleAnimation
                                             Storyboard.TargetName="ExpanderAnimationReoTranslate"
                                             Storyboard.TargetProperty="Y"
-                                            From="-160"
                                             To="0.0"
                                             Duration="0:0:0.35">
                                             <DoubleAnimation.EasingFunction>

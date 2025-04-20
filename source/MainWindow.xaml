@@ -25,10 +25,15 @@
     <d:FrameworkElement.DataContext>
         <vm:MainWindowViewModel />
     </d:FrameworkElement.DataContext>
-
+    <behavior:Interaction.Triggers>
+        <behavior:EventTrigger EventName="Loaded">
+            <behavior:InvokeCommandAction Command="{Binding event_WindowLoadedCommand}" PassEventArgsToCommand="True" />
+        </behavior:EventTrigger>
+    </behavior:Interaction.Triggers>
     <Grid>
         <ink:NavigationView
             x:Name="viewer"
+            IsBackButtonVisible="Collapsed"
             IsSettingsVisible="True"
             IsTitleBarAutoPaddingEnabled="False"
             OpenPaneLength="250.5">
@@ -36,6 +41,7 @@
                 <behavior:EventTrigger EventName="Loaded">
                     <behavior:InvokeCommandAction Command="{Binding event_NavigationViewLoadedCommand}" PassEventArgsToCommand="True" />
                 </behavior:EventTrigger>
+
             </behavior:Interaction.Triggers>
             <ink:NavigationView.MenuItems>
                 <ink:NavigationViewItem Content="首页" Tag="{x:Type views:Home}">
@@ -51,7 +57,20 @@
                         </MultiBinding>
                     </FrameworkElement.IsEnabled>
                     <ink:NavigationViewItem.Icon>
-                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.MultimediaDMS}" />
+                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Communications}" />
+                    </ink:NavigationViewItem.Icon>
+                </ink:NavigationViewItem>
+                <ink:NavigationViewItem Content="创建隧道" SelectsOnInvoked="True">
+                    <behavior:Interaction.Triggers>
+                        <behavior:DataTrigger Binding="{Binding SelectsOnInvoked, RelativeSource={RelativeSource AncestorType=ink:NavigationViewItem}, Mode=OneWay}" Value="True">
+                            <behavior:ChangePropertyAction PropertyName="Tag" Value="{x:Type views:CreateTunnel}" />
+                        </behavior:DataTrigger>
+                        <behavior:DataTrigger Binding="{Binding SelectsOnInvoked, RelativeSource={RelativeSource AncestorType=ink:NavigationViewItem}, Mode=OneWay}" Value="False">
+                            <behavior:ChangePropertyAction PropertyName="Tag" Value="{x:Null}" />
+                        </behavior:DataTrigger>
+                    </behavior:Interaction.Triggers>
+                    <ink:NavigationViewItem.Icon>
+                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.AddSurfaceHub}" />
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
                 <ink:NavigationViewItem Content="日志" Tag="{x:Type views:Logs}">
@@ -61,18 +80,69 @@
                 </ink:NavigationViewItem>
             </ink:NavigationView.MenuItems>
             <ink:NavigationView.FooterMenuItems>
-                <ink:NavigationViewItem Content="{Binding UserInfo.UserName, Mode=OneWay}" SelectsOnInvoked="False">
+
+
+                <ink:NavigationViewItem
+                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                    SelectsOnInvoked="False"
+                    Tag="usrInfo">
+                    <behavior:Interaction.Triggers>
+                        <behavior:DataTrigger Binding="{Binding UserInfo.UserName, Mode=OneWay}" Value="non-display-user">
+                            <behavior:ChangePropertyAction PropertyName="Content" Value="点击登录" />
+                        </behavior:DataTrigger>
+                        <behavior:DataTrigger
+                            Binding="{Binding UserInfo.UserName, Mode=OneWay}"
+                            Comparison="NotEqual"
+                            Value="non-display-user">
+                            <behavior:ChangePropertyAction PropertyName="Content" Value="{Binding UserInfo.UserName, Mode=OneWay}" />
+                        </behavior:DataTrigger>
+                    </behavior:Interaction.Triggers>
                     <ink:NavigationViewItem.Icon>
                         <!--  Source="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
                         <ink:ImageIcon
                             ink:ClipHelper.CornerRadius="1000"
                             RenderOptions.BitmapScalingMode="HighQuality"
                             RenderTransformOrigin=".5,.5">
+                            <behavior:Interaction.Triggers>
+                                <behavior:DataTrigger Binding="{Binding UserAvatorSource, Mode=OneWay}" Value="{x:Null}">
+                                    <behavior:ChangePropertyAction PropertyName="Source">
+                                        <behavior:ChangePropertyAction.Value>
+                                            <BitmapImage UriSource="pack://application:,,,/Resources/Images/weavatar.png" />
+                                        </behavior:ChangePropertyAction.Value>
+                                    </behavior:ChangePropertyAction>
+                                </behavior:DataTrigger>
+                                <behavior:DataTrigger
+                                    Binding="{Binding UserAvatorSource, Mode=OneWay}"
+                                    Comparison="NotEqual"
+                                    Value="{x:Null}">
+                                    <behavior:ChangePropertyAction PropertyName="Source" Value="{Binding UserAvatorSource, Mode=OneWay}" />
+                                </behavior:DataTrigger>
+                            </behavior:Interaction.Triggers>
                             <FrameworkElement.RenderTransform>
                                 <ScaleTransform ScaleX="1.3" ScaleY="1.3" />
                             </FrameworkElement.RenderTransform>
                         </ink:ImageIcon>
                     </ink:NavigationViewItem.Icon>
+                </ink:NavigationViewItem>
+                <ink:NavigationViewItemSeparator />
+                <ink:NavigationViewItem Content="更新" Tag="{x:Type views:UpdateComment}">
+                    <ink:NavigationViewItem.Icon>
+                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.DevUpdate}" />
+                    </ink:NavigationViewItem.Icon>
+                    <behavior:Interaction.Triggers>
+                        <behavior:DataTrigger Binding="{Binding HasUpdate, Mode=OneWay}" Value="False">
+                            <behavior:ChangePropertyAction PropertyName="Content" Value="更新" />
+                            <behavior:ChangePropertyAction PropertyName="InfoBadge" Value="{x:Null}" />
+                        </behavior:DataTrigger>
+                        <behavior:DataTrigger Binding="{Binding HasUpdate, Mode=OneWay}" Value="True">
+                            <behavior:ChangePropertyAction PropertyName="Content" Value="新的更新可用" />
+                            <behavior:ChangePropertyAction PropertyName="InfoBadge">
+                                <behavior:ChangePropertyAction.Value>
+                                    <ink:InfoBadge Width="6" Height="6" />
+                                </behavior:ChangePropertyAction.Value>
+                            </behavior:ChangePropertyAction>
+                        </behavior:DataTrigger>
+                    </behavior:Interaction.Triggers>
                 </ink:NavigationViewItem>
             </ink:NavigationView.FooterMenuItems>
             <ink:Frame x:Name="frame" Focusable="False">
@@ -102,9 +172,7 @@
                         <Setter Property="TextElement.FontSize" Value="15" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding DisplayMode, ElementName=viewer, Mode=OneWay}" Value="{x:Static ink:NavigationViewDisplayMode.Minimal}">
-                                <Setter Property="Grid.Column" Value="2" />
-                                <Setter Property="Grid.ColumnSpan" Value="1" />
-                                <Setter Property="Margin" Value="-12,0,0,0" />
+                                <Setter Property="Margin" Value="0,0,0,0" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -117,9 +185,9 @@
                     Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
                     IsHitTestVisible="False">
                     <Run
-                        FontFamily="{StaticResource SoraMedium}"
+                        FontFamily="{StaticResource SoraMediumMixYahei}"
                         FontWeight="Medium"
-                        Text="OpenFRP" />
+                        Text="{x:Static local:App.UiLauncherVersionString}" />
                     <!--<Run Text="LAUNCHER" />-->
 
                 </TextBlock>

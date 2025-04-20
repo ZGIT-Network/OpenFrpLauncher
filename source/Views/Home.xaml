@@ -48,8 +48,32 @@
                     <Grid TextOptions.TextHintingMode="Auto">
                         <xa:SimpleStackPanel>
                             <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" FontSize="24">
-                                <Run Text="It's still a 长期工作" />
+                                <Run Text="It's still a 长期工作...赞助继续助力！" />
                             </TextBlock>
+                            <Grid
+                                MaxWidth="342"
+                                Margin="0,0,16,16"
+                                HorizontalAlignment="Left">
+                                <Image ink:ClipHelper.CornerRadius="6">
+                                    <Image.Style>
+                                        <Style TargetType="Image">
+                                            <Setter Property="Source" Value="../Resources/Images/hsccode_v2.jpg" />
+
+                                        </Style>
+                                    </Image.Style>
+                                </Image>
+                                <TextBlock
+                                    Margin="0,16,0,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Top"
+                                    Foreground="#afafaf"
+                                    IsHitTestVisible="False"
+                                    TextAlignment="Center">
+                                    <Run Text="请注意:要进入赞助列表请勿匿名赞助" />
+                                    <LineBreak />
+                                    <Run Text="微信" />
+                                </TextBlock>
+                            </Grid>
                         </xa:SimpleStackPanel>
                     </Grid>
                 </Border>

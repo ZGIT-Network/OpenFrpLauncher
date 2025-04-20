@@ -96,7 +96,11 @@ namespace OpenFrp.Launcher.ViewModels
             var access = await OpenFrpApi.AccessRequestLogin(base64_publicKey, cancellationToken);
 
             
-            if (!this.UpdateState(access, () => access.Data is { AuthorizeUrl: not null, GuidString: not null })) { _ = appQrCodeWorker?.ApplyQRCodeAsync(null, default); return; }
+            if (!this.UpdateState(access, () => access.Data is { AuthorizeUrl: not null, GuidString: not null }))
+            {
+                _ = appQrCodeWorker?.ApplyQRCodeAsync(null, default);
+                return;
+            }
 
 
             // for example
@@ -245,9 +249,6 @@ namespace OpenFrp.Launcher.ViewModels
             } catch { }
             
         }
-
-
-
 
         private bool CanOpenLinkInWeb() => !IsFailed;
         

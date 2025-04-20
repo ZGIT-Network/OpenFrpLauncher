@@ -9,6 +9,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Google.Protobuf.WellKnownTypes;
 using Google.Rpc;
 using Grpc.Core;
@@ -39,6 +40,30 @@ namespace OpenFrp.Launcher.ViewModels
             {
 
             }
+            WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
+            WeakReferenceMessenger.Default.Register<Model.RouteMessage<TunnelsViewModel, string>>(nameof(TunnelsViewModel), (_, message) =>
+            {
+                switch (message)
+                {
+                    case "processOffline":
+                        {
+                            disposableStream = null;
+
+                        };break;
+                    case "processOnlineWithAccount":
+                        {
+                            conve_CreateStreamCommand.Execute(null);
+
+                            if (container is not null)
+                            {
+                                VisualStateManager.GoToElementState(container, LoadingState, false);
+                            }
+
+                            event_RefreshUserTunnelCommand.Execute(null);
+                        }
+                        ;break;
+                }
+            });
             conve_CreateStreamCommand.Execute(null);
         }
 
@@ -57,6 +82,10 @@ namespace OpenFrp.Launcher.ViewModels
 
         private static IDisposable? disposableStream;
 
+        public bool IsDaemonConnected
+        {
+            get => _mainWindowViewModel?.IsDaemonConnected ?? false;
+        }
         public Model.UserInfo UserInfo
         {
             get
@@ -81,27 +110,19 @@ namespace OpenFrp.Launcher.ViewModels
             }
             if (disposableStream is null)
             {
-                CancellationTokenSource s = new CancellationTokenSource();
-
-                s.CancelAfter(1000);
-
-                disposableStream = await App.RpcManager.TunnelStream("testConnection", delegate { }, delegate { },s.Token);
-
-                s.Dispose();
+                disposableStream = await App.RpcManager.TunnelStream("testConnection", delegate { }, delegate { },cancellationToken);
 
                 disposableStream.Dispose();
             }
             else
             {
-                await Task.Delay(500, cancellationToken);
+                await Task.Delay(250, cancellationToken);
             }
             disposableStream = await App.RpcManager.TunnelStream(UserInfo.UserToken, writer => _writer = writer, StreamReader, cancellationToken);
         }
 
         private void StreamReader(Service.Proto.Response.TunnelStreamResponse resp)
         {
-            //System.Diagnostics.Debug.WriteLine($"[Tunnel Stream Reader] {resp.State} {resp.Data?.TypeUrl}");
-
             switch (resp.State)
             {
                 case Service.Proto.Response.TunnelStreamResponse.Types.TunnelStreamResponseState.Messaging:
@@ -207,6 +228,8 @@ namespace OpenFrp.Launcher.ViewModels
 
                 page.Unloaded += delegate
                 {
+                    WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
+
                     event_RefreshUserTunnelCommand.Cancel();
 
                     _ = firstStateWaiter?.TrySetCanceled();
@@ -270,12 +293,6 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        //[RelayCommand]
-        //private async Task @event_UserContextMenuInvoked(string action)
-        //{
-            
-        //}
-
         [RelayCommand(AllowConcurrentExecutions = true)]
         private async Task @event_TunnelSwitchInvoked(ToggleSwitch @switch)
         {
@@ -289,7 +306,8 @@ namespace OpenFrp.Launcher.ViewModels
                     Data = Any.Pack(new BytesValue()
                     {
                         Value = Google.Protobuf.ByteString.CopyFrom(tunnel.GetTunnelJsonBuffer())
-                    })
+                    }),
+                    AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor
                 });
             }
         }
@@ -315,32 +333,6 @@ namespace OpenFrp.Launcher.ViewModels
             CreatePreloadSkeleton();
 
             await Task.Delay(1000,cancellationToken);
-
-            if (!true)
-            {
-                UserTunnels = new ObservableCollection<Model.UserTunnel>();
-
-                var onlineTunnels = await firstStateWaiter.Task.WaitAsync(cancellationToken);
-
-                if (cancellationToken.IsCancellationRequested) return;
-
-                for (global::System.Int32 i = 0; i < 4; i++)
-                {
-                    var tun = new Model.UserTunnel(1444+i) { };
-                    if (onlineTunnels.Contains(tun.Id))
-                    {
-                        tun.FirstState = true;
-                    }
-                    UserTunnels.Add(tun);
-
-                    await Task.Delay(75, cancellationToken);
-                }
-
-                VisualStateManager.GoToElementState(container, NormalState, false);
-
-                firstStateWaiter = null;
-                return;
-            }
 
             var resp = await Service.Net.OpenFrpApi.GetUserTunnels(cancellationToken);
 

@@ -33,6 +33,8 @@
 
             public string? User { get; set; }
 
+            public string? UserAvator { get; set; }
+
             public string? Authorization { get; set; }
         }
     }

@@ -217,6 +217,10 @@ namespace OpenFrp.Launcher.Rpc
                 }
             }
             catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Cancelled) {  }
+            catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Unavailable && e.Status.Detail.Equals("failed to connect to all addresses"))
+            {
+
+            }
 
             return duplex;
         }

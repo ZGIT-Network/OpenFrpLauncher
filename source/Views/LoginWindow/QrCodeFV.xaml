@@ -69,7 +69,7 @@
                         BorderThickness="0" />
                     <ink:FontIcon
                         FontSize="48"
-                        Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                        Foreground="#FF0000"
                         Icon="{x:Static ink:SegoeFluentIcons.Error}"
                         Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
                 </Grid>
