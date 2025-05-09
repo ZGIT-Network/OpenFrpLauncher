@@ -109,10 +109,11 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (ExecuteResult is { HasException: true, Exception: not null and Exception ex })
             {
-                var dialog = new Controls.ErrorContentDialog
+                var dialog = new Dialogs.ErrorContentDialog
                 {
-                    Exception = ex
+
                 };
+                dialog.SetValue(Controls.ErrorViewer.ExceptionProperty, ex);
                 await dialog.ShowAsync();
             }
         }
@@ -149,6 +150,8 @@ namespace OpenFrp.Launcher.ViewModels
 
             }
         }
+
+
 
         [RelayCommand]
         private void @event_PageLoaded(RoutedEventArgs e)

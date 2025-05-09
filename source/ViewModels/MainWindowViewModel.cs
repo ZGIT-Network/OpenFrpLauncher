@@ -51,6 +51,25 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                 }
             });
+            WeakReferenceMessenger.Default.Register<Model.RouteMessage<MainWindowViewModel, Type>>(nameof(MainWindowViewModel), (_, message) =>
+            {
+                if (message.Data is { Namespace: not null } tp && tp.Namespace.StartsWith("OpenFrp.Launcher.Views"))
+                {
+                    if (frame is { HasContent: true,Content: var content } && content.GetType().Equals(tp))
+                    {
+                        switch (content)
+                        {
+                            case Views.Tunnels {DataContext: ViewModels.TunnelsViewModel vtv }:
+                                {
+                                    vtv.event_RefreshUserTunnelCommand.Execute(null);
+                                }
+                                ;break;
+                        }
+                        return;
+                    }
+                    frame?.Navigate(tp);
+                }
+            });
             WeakReferenceMessenger.Default.Register<Model.RouteMessage<MainWindowViewModel, string>>(nameof(MainWindowViewModel), (_, message) =>
             {
                 switch (message)
@@ -577,11 +596,13 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 case MainWindow mw:
                     {
+                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
                         mw.HideByHwndCC();
                     }
                     ; break;
                 case LoginWindow lw:
                     {
+                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
                         lw.HideByHwndCC();
                     }
                     ; break;

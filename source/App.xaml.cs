@@ -208,7 +208,7 @@ namespace OpenFrp.Launcher
 
         public static string FrpcVersionString { get; set; } = "Unknown";
 
-        public static string LauncherVersionString => "5.7.3 Preview";
+        public static string LauncherVersionString => "5.7.5 Preview";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 
@@ -526,7 +526,7 @@ namespace OpenFrp.Launcher
 
             if (response.StatusCode is not System.Net.HttpStatusCode.OK || response.Exception is not null)
             {
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }
@@ -540,7 +540,7 @@ namespace OpenFrp.Launcher
                 {
                     return true;
                 }
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }
@@ -558,7 +558,7 @@ namespace OpenFrp.Launcher
 
             if (response.Data is null)
             {
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }
@@ -586,7 +586,7 @@ namespace OpenFrp.Launcher
                     StatusCode = -1
                 });
                 
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }
@@ -598,7 +598,7 @@ namespace OpenFrp.Launcher
             }
             if (response.StatusCode is not Grpc.Core.StatusCode.OK || response.Exception is not null)
             {
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }
@@ -612,7 +612,7 @@ namespace OpenFrp.Launcher
                 {
                     return true;
                 }
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }
@@ -640,7 +640,7 @@ namespace OpenFrp.Launcher
                     StatusCode = -1
                 });
                 
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }
@@ -649,7 +649,7 @@ namespace OpenFrp.Launcher
             }
             if (response.Data is null)
             {
-                if (response is { Message: null })
+                if (response is { Message: null or "" })
                 {
                     response.Message = "发生了错误";
                 }

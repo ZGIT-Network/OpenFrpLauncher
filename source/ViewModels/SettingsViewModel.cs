@@ -7,7 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -44,12 +46,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        //public SettingsViewModel(LoginWindow v) : this()
-        //{
-        //    mvW = v;
 
-        //    IsAtLoginWindow = true;
-        //} 
 
         [ObservableProperty]
         private bool isAtLoginWindow = false;
@@ -173,6 +170,29 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+
+        [RelayCommand]
+        private void @event_OnPicpicControlLoaded(RoutedEventArgs e)
+        {
+            if (e.Source is iNKORE.UI.WPF.Modern.Controls.PersonPicture pipc)
+            {
+                pipc.Dispatcher.UnhandledExceptionFilter += (_, e) =>
+                {
+                    if (e.Exception is NotSupportedException or BadImageFormatException)
+                    {
+                        e.RequestCatch = true;
+                    }
+                };
+                
+                pipc.SetBinding(iNKORE.UI.WPF.Modern.Controls.PersonPicture.ProfilePictureProperty, new Binding
+                {
+                    Source = this,
+                    Path = new PropertyPath("UserAvatorSource"),
+                    FallbackValue = new BitmapImage(new Uri("pack://application:,,,/Resources/Images/weavatar.png")),
+                    Mode=  BindingMode.OneWay
+                });
+            }
+        }
         //[RelayCommand]
         //private void @event_MessageTest()
         //{

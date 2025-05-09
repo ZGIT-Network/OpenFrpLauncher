@@ -41,11 +41,15 @@ namespace OpenFrp.Launcher.Controls
             {
                 case MainWindow mw:
                     {
+                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
+
                         mw.HideByHwndCC();
                     }
                      ; break;
                 case LoginWindow lw:
                     {
+                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
+
                         lw.HideByHwndCC();
                         //CloseLauncher_Click(sender, e);
                         //lw.ShowByHwndCC();

@@ -242,6 +242,11 @@
                                                     <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Info}" />
                                                 </MenuItem.Icon>
                                             </MenuItem>
+                                            <MenuItem x:Name="editTunnel" Header="编辑">
+                                                <MenuItem.Icon>
+                                                    <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Edit}" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
                                             <MenuItem x:Name="deleteTunnel" Header="删除">
                                                 <MenuItem.Icon>
                                                     <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Delete}" />

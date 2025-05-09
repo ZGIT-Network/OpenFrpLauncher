@@ -9,6 +9,7 @@
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:OpenFrp.Launcher.Model"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
     Title="CreateTunnel"
@@ -20,6 +21,172 @@
             x:Key="_DefaultCubicEase"
             PresentationOptions:Freeze="True"
             EasingMode="EaseOut" />
+        <DataTemplate x:Key="TitleDataTemplate" DataType="{x:Type model:Node}">
+            <TextBlock Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}" Margin="0,0,0,12">
+                <Run FontSize="24" Text="{Binding NodeName, Mode=OneWay}" />
+                <Run
+                    FontSize="16"
+                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    Text="{Binding Comments, Mode=OneWay}" />
+            </TextBlock>
+        </DataTemplate>
+        <DataTemplate x:Key="NormalDataTemplate" DataType="{x:Type model:Node}">
+            <Button
+                Width="325"
+                MinHeight="170"
+                Margin="0,0,8,8"
+                Padding="0"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Command="{Binding DataContext.event_SelectNodeAndCreteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
+                CommandParameter="{Binding Mode=OneWay}">
+                <AutomationProperties.Name>
+                    <MultiBinding StringFormat="{}{0} {1}">
+                        <Binding Mode="OneWay" Path="NodeName" />
+                        <Binding
+                            Mode="OneWay"
+                            Path="FriendlyGroupRequire"
+                            StringFormat="{}{0} 节点" />
+                    </MultiBinding>
+                </AutomationProperties.Name>
+                <Grid Margin="20">
+                    <xa:SimpleStackPanel HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}">
+                            <Run FontSize="22" Text="{Binding NodeName, Mode=OneWay}" />
+                            <Run
+                                FontSize="18"
+                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                Text="{Binding NodeId, StringFormat='#{0}', Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBlock
+                            FontFamily="{StaticResource SoraMediumMixYahei}"
+                            FontSize="16"
+                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                            Text="{Binding Comments, Mode=OneWay}"
+                            TextWrapping="Wrap"
+                            Visibility="{Binding HasComments, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                        <WrapPanel Margin="0,4,0,0">
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
+                                Visibility="{Binding ProtocolSupport.UDP, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
+                                <TextBlock
+                                    Padding="0,1,0,0"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="UDP" />
+                            </xa:SimpleStackPanel>
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
+                                Visibility="{Binding IsHttpSupportOnly, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
+                                <TextBlock
+                                    Padding="0,1,0,0"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="HTTP" />
+                            </xa:SimpleStackPanel>
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
+                                Visibility="{Binding IsHttpsSupportOnly, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
+                                <TextBlock
+                                    Padding="0,1,0,0"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="HTTPS" />
+                            </xa:SimpleStackPanel>
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
+                                Visibility="{Binding IsHttpOrHttpsSupport, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
+                                <TextBlock
+                                    Padding="0,1,0,0"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="HTTP(S)" />
+                            </xa:SimpleStackPanel>
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource AweAppGoldenColor}"
+                                Visibility="{Binding NeedRealname, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xEB95;" />
+                                <TextBlock
+                                    Padding="2,1,0,0"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="需要实名" />
+                            </xa:SimpleStackPanel>
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource SystemFillColorSuccessBrush}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xEC48;" />
+                                <TextBlock
+                                    Padding="0,1,0,0"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="{Binding BandwidthWithScaleString, Mode=OneWay}" />
+                            </xa:SimpleStackPanel>
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                Visibility="{Binding NotAvaliable, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xE7BA;" />
+                                <TextBlock
+                                    Padding="0,1,0,0"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="状态异常" />
+                            </xa:SimpleStackPanel>
+                            <xa:SimpleStackPanel
+                                Margin="0,0,6,4"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                TextElement.Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                Visibility="{Binding IsFullyLoaded, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <ink:FontIcon FontSize="18" Glyph="&#xE9CA;" />
+                                <TextBlock
+                                    Padding="0,1,0,0"
+                                    FontSize="16"
+                                    FontWeight="Medium"
+                                    Text="满载" />
+                            </xa:SimpleStackPanel>
+                        </WrapPanel>
+                    </xa:SimpleStackPanel>
+                    <TextBlock
+                        HorizontalAlignment="Right"
+                        FontFamily="{StaticResource SoraMedium}"
+                        FontSize="18"
+                        Foreground="{DynamicResource AweAppGoldenColor}"
+                        Text="{Binding FriendlyGroupRequire, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+
+                </Grid>
+            </Button>
+        </DataTemplate>
     </FrameworkElement.Resources>
     <FrameworkElement.DataContext>
         <vm:CreateTunnelViewModel />
@@ -109,6 +276,7 @@
                                             Margin="0,0,8,8"
                                             Padding="14,9"
                                             AutomationProperties.Name="刷新"
+                                            Command="{Binding event_RefreshNodeListCommand}"
                                             Style="{StaticResource AccentButtonStyle}">
                                             <StackPanel Orientation="Horizontal">
                                                 <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
@@ -119,6 +287,7 @@
                                             Margin="0,0,8,8"
                                             Padding="14,9"
                                             AutomationProperties.Name="查看错误"
+                                            Command="{Binding event_DisplayExceptionCommand}"
                                             Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
                                             <StackPanel Orientation="Horizontal">
                                                 <ink:FontIcon FontSize="18" Icon="{x:Static ink:SegoeFluentIcons.Error}" />
@@ -139,7 +308,38 @@
                                 <TranslateTransform X="0" Y="0" />
                             </FrameworkElement.RenderTransform>
                             <Grid>
-                                <ItemsControl ItemsSource="{Binding Nodes, IsAsync=True, Mode=OneWay}" />
+                                <ItemsControl x:Name="itemsController" ItemsSource="{Binding Nodes, IsAsync=True, Mode=OneWay}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplateSelector>
+                                        <model:NodeDataTemplateSelector NormalTemplate="{StaticResource NormalDataTemplate}" TitleTemplate="{StaticResource TitleDataTemplate}" />
+                                    </ItemsControl.ItemTemplateSelector>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="FrameworkElement">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsFullyLoaded}" Value="True">
+                                                    <Setter Property="Opacity" Value=".8" />
+                                                </DataTrigger>
+                                                <EventTrigger RoutedEvent="Loaded">
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation
+                                                                FillBehavior="Stop"
+                                                                Storyboard.TargetProperty="Opacity"
+                                                                From="0"
+                                                                To="1"
+                                                                Duration="0:0:.15" />
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </EventTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <!--<ItemsControl.ItemTemplate />-->
+                                </ItemsControl>
                             </Grid>
                         </Border>
                     </Grid>
@@ -165,12 +365,6 @@
                         Duration="0:0:.25">
                         <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
                     </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="1"
-                        Duration="0:0:.25" />
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="defaultLoadingCtrl"

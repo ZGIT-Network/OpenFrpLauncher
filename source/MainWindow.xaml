@@ -60,7 +60,10 @@
                         <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Communications}" />
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
-                <ink:NavigationViewItem Content="创建隧道" SelectsOnInvoked="True">
+                <ink:NavigationViewItem
+                    Content="创建隧道"
+                    IsEnabled="{Binding IsUserLogon, Mode=OneWay}"
+                    SelectsOnInvoked="True">
                     <behavior:Interaction.Triggers>
                         <behavior:DataTrigger Binding="{Binding SelectsOnInvoked, RelativeSource={RelativeSource AncestorType=ink:NavigationViewItem}, Mode=OneWay}" Value="True">
                             <behavior:ChangePropertyAction PropertyName="Tag" Value="{x:Type views:CreateTunnel}" />

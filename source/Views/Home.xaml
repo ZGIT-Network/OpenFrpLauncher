@@ -32,7 +32,7 @@
                 Padding="0,0,0,0"
                 VerticalAlignment="Center"
                 FontSize="24"
-                Text="Home" />
+                Text="首页" />
         </xa:SimpleStackPanel>
         <Grid Grid.Row="1">
             <ink:ScrollViewerEx
@@ -48,7 +48,7 @@
                     <Grid TextOptions.TextHintingMode="Auto">
                         <xa:SimpleStackPanel>
                             <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" FontSize="24">
-                                <Run Text="It's still a 长期工作...赞助继续助力！" />
+                                <Run Text="星空目而不可及......赞助继续助力！" />
                             </TextBlock>
                             <Grid
                                 MaxWidth="342"

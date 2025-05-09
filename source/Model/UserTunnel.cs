@@ -99,11 +99,42 @@ namespace OpenFrp.Launcher.Model
         public bool IsEnable { get => Tunnel?.IsEnabled ?? throw new NullReferenceException(nameof(Tunnel)); }
         public bool UseEncryption { get => Tunnel?.UseEncryption ?? throw new NullReferenceException(nameof(Tunnel)); }
         public bool UseCompression { get => Tunnel?.UseCompression ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public bool ProxyProtocolVersion2 { get => Tunnel?.ProxyProtocolVersion2 ?? throw new NullReferenceException(nameof(Tunnel)); }
 
-        public string ConnectAddress { get => Tunnel?.ConnectAddress ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public string ConnectAddress
+        {
+            get
+            {
+                if (Tunnel is not { ConnectAddress: not null,Type: not null })
+                {
+                    throw new NullReferenceException(nameof(Tunnel));
+                }
+                if (Tunnel.Type.Contains("HTTP") || Tunnel.Type.Contains("http"))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var dom in Tunnel.Domains)
+                    {
+                        sb.Append(dom);
+                        sb.Append(',');
+                    }
+                    sb.Remove(sb.Length - 1, 1);
+
+                    return sb.ToString();
+                }
+                else
+                {
+                    return Tunnel.ConnectAddress;
+                }
+            }
+        }
         public string[] ExtraConnectAddress { get => Tunnel?.ExtraConnectAddress ?? throw new NullReferenceException(nameof(Tunnel)); }
         public string[] Domains { get => Tunnel?.Domains.ToArray() ?? throw new NullReferenceException(nameof(Tunnel)); }
 
         public bool HasExtraConnectAddress { get => Tunnel?.ExtraConnectAddress.Length > 0; }
+
+        public override string ToString()
+        {
+            return "隧道 #" + Id + " " + Name;
+        }
     }
 }

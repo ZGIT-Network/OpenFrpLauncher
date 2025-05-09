@@ -3,12 +3,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern">
-    <Style TargetType="ctrl:ErrorContentDialog">
-        <Setter Property="Title" Value="详细错误内容" />
-        <Setter Property="Content">
+    <Style TargetType="ctrl:ErrorViewer">
+        <Setter Property="MinWidth" Value="480" />
+        <Setter Property="MinHeight" Value="200" />
+        <Setter Property="Template">
             <Setter.Value>
-                <Grid Width="480" MinHeight="200">
-                    <ink:ScrollViewerEx PanningMode="VerticalOnly" VerticalScrollBarVisibility="Auto">
+                <ControlTemplate TargetType="ctrl:ErrorViewer">
+                    <Grid
+                        MinWidth="{TemplateBinding MinWidth}"
+                        MinHeight="{TemplateBinding MinHeight}"
+                        Margin="{TemplateBinding Padding}">
                         <StackPanel Orientation="Vertical">
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
@@ -26,13 +30,24 @@
                                         Text="消息" />
                                     <ctrl:SelectableTextBlock
                                         HorizontalAlignment="Left"
+                                        FontFamily="{StaticResource SoraMediumMixYahei}"
                                         FontSize="16"
                                         Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Text="{Binding Exception.Message, RelativeSource={RelativeSource AncestorType=ctrl:ErrorContentDialog}, Mode=OneWay}"
+                                        Text="{Binding Exception.Message, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                             <Grid>
+                                <FrameworkElement.Visibility>
+                                    <Binding
+                                        Converter="{StaticResource BooleanToVisibilityConverter}"
+                                        Mode="OneWay"
+                                        Path="Value">
+                                        <Binding.Source>
+                                            <ink:BindingProxy Value="{Binding Exception.StackTrace.Length, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                        </Binding.Source>
+                                    </Binding>
+                                </FrameworkElement.Visibility>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -42,26 +57,25 @@
                                     FontSize="18"
                                     Icon="{x:Static ink:SegoeFluentIcons.Error}" />
                                 <StackPanel Grid.Column="1" Margin="6,-2,0,0">
+
                                     <TextBlock
                                         Margin="0,0,0,2"
                                         FontSize="18"
                                         Text="跟踪栈" />
                                     <ctrl:SelectableTextBlock
                                         HorizontalAlignment="Left"
+                                        FontFamily="{StaticResource SoraMediumMixYahei}"
                                         FontSize="14"
                                         Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Text="{Binding Exception.StackTrace, RelativeSource={RelativeSource AncestorType=ctrl:ErrorContentDialog}, Mode=OneWay}"
+                                        Text="{Binding Exception.StackTrace, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
-                    </ink:ScrollViewerEx>
-                </Grid>
 
+                    </Grid>
+                </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="CloseButtonText" Value="确定" />
-        <Setter Property="PrimaryButtonText" Value="复制错误内容" />
-        <Setter Property="DefaultButton" Value="Close" />
     </Style>
 </ResourceDictionary>

@@ -174,7 +174,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                             picpic.Dispatcher.UnhandledExceptionFilter += (_, e) =>
                             {
-                                if (e.Exception is BadImageFormatException)
+                                if (e.Exception is BadImageFormatException or NotSupportedException)
                                 {
                                     e.RequestCatch = true;
                                 }
@@ -640,10 +640,11 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (ExecuteResult is { HasException: true,Exception: not null and Exception ex })
             {
-                var dialog = new Controls.ErrorContentDialog
+                var dialog = new Dialogs.ErrorContentDialog
                 {
-                    Exception = ex
+
                 };
+                dialog.SetValue(Controls.ErrorViewer.ExceptionProperty, ex);
                 await dialog.ShowAsync();
             }
         }
@@ -668,8 +669,9 @@ namespace OpenFrp.Launcher.ViewModels
                             Arguments = "-v"
                         }
                     };
-
-                    if (pro.Start())
+                    // 待回复... 火绒拦截
+                    //if(pro.Start())
+                    if (await Task.Run(pro.Start))
                     {
 #if NET
                         await pro.WaitForExitAsync();

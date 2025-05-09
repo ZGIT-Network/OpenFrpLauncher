@@ -308,12 +308,6 @@
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="1"
-                        Duration="0:0:.25" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
                         Storyboard.TargetProperty="RenderTransform.ScaleX"
                         To="1"
                         Duration="0:0:.35" />

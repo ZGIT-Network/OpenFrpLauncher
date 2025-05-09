@@ -231,6 +231,7 @@ namespace OpenFrp.Launcher.ViewModels
                     WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
 
                     event_RefreshUserTunnelCommand.Cancel();
+                    event_DisplayExceptionCommand.Cancel();
 
                     _ = firstStateWaiter?.TrySetCanceled();
 
@@ -252,15 +253,18 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private ObservableCollection<Model.UserTunnel> userTunnels = new ObservableCollection<Model.UserTunnel> { };
 
-        [RelayCommand]
-        private async Task @event_DisplayException()
+        [RelayCommand(IncludeCancelCommand = true)]
+        private async Task @event_DisplayException(CancellationToken cancellationToken)
         {
             if (ExecuteResult is { HasException: true, Exception: not null and Exception ex })
             {
-                var dialog = new Controls.ErrorContentDialog
+                var dialog = new Dialogs.ErrorContentDialog
                 {
-                    Exception = ex
+
                 };
+                cancellationToken.Register(dialog.Hide);
+
+                dialog.SetValue(Controls.ErrorViewer.ExceptionProperty, ex);
                 await dialog.ShowAsync();
             }
         }
@@ -359,6 +363,10 @@ namespace OpenFrp.Launcher.ViewModels
 
                 foreach (var tunnel in resp.Data.List!)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
                     var v = new Model.UserTunnel(tunnel);
                     if (onlineTunnels.Contains(tunnel.Id))
                     {

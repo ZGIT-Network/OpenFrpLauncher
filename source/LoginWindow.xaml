@@ -88,7 +88,7 @@
                 </Viewbox.CacheMode>-->
                 <!--  "pack://application:,,,/Resources/Images/v2-bg.jpg"  -->
                 <!--  "pack://application:,,,/Resources/Images/pexels-xieyun-15415001.jpg"  -->
-                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="pack://application:,,,/Resources/Images/v2-bg.jpg" />
+                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="E:\Desktop\Photo\爱情公寓5张伟请坐高清壁纸_彼岸壁纸.jpg" />
             </Viewbox>
 
         </Grid>

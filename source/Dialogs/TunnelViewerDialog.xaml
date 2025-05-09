@@ -1,0 +1,21 @@
+﻿<ink:ContentDialog
+    x:Class="OpenFrp.Launcher.Dialogs.TunnelViewerDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:control="clr-namespace:OpenFrp.Launcher.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
+    xmlns:local="clr-namespace:OpenFrp.Launcher.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="{Binding (control:TunnelConfViewer.Tunnel), RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    CloseButtonText="好的"
+    mc:Ignorable="d">
+    <ink:ScrollViewerEx Margin="-24" PanningMode="VerticalOnly">
+        <control:TunnelConfViewer
+            Padding="24"
+            Focusable="False"
+            Tunnel="{Binding (control:TunnelConfViewer.Tunnel), RelativeSource={RelativeSource AncestorType=ink:ContentDialog}, Mode=OneWay}" />
+    </ink:ScrollViewerEx>
+</ink:ContentDialog>

@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:conv="clr-namespace:OpenFrp.Launcher.Converter"
+    xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     ShutdownMode="OnExplicitShutdown">
@@ -40,9 +41,7 @@
                     </FontFamily>
                 </ResourceDictionary>
 
-                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/DesignTime/SystemColors.xaml" />
-                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/Schemes/Light.xaml" />
-                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/ControlsResources.xaml" />
+
 
                 <ink:ThemeResources>
                     <ink:ThemeResources.ThemeDictionaries>
@@ -56,10 +55,17 @@
                 </ink:ThemeResources>
                 <ink:XamlControlsResources />
 
+                <!--#region Design Resource-->
+                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/DesignTime/SystemColors.xaml" />
+                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/Schemes/Light.xaml" />
+                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/ControlsResources.xaml" />
+                <!--#endregion-->
+
                 <ResourceDictionary Source="./Controls/CenterTab/CenterTab.xaml" />
                 <ResourceDictionary Source="./Controls/HyperlinkTp1/HyperlinkTp1.xaml" />
-                <ResourceDictionary Source="./Controls/ErrorContentDialog/ErrorContentDialog.xaml" />
-                <ResourceDictionary Source="./Controls/TunnelInfoContentDialog/TunnelInfoContentDialog.xaml" />
+                <ResourceDictionary Source="./Controls/ErrorViewer/ErrorViewer.xaml" />
+                <ResourceDictionary Source="./Controls/TunnelConfViewer/TunnelConfViewer.xaml" />
+                <ResourceDictionary Source="./Controls/TunnelConfEditor/TunnelConfEditor.xaml" />
                 <ResourceDictionary Source="./Controls/SelectableTextblock/SelectableTextblock.xaml" />
                 <ResourceDictionary Source="./Controls/SettingItem/SettingItem.xaml" />
                 <ResourceDictionary Source="./Controls/Skeleton/Skeleton.xaml" />
@@ -101,6 +107,7 @@
                     <Style TargetType="ink:ProgressRing">
                         <Setter Property="IsActive" Value="{Binding IsVisible, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
                     </Style>
+
                 </Style.Resources>
                 <Style.Triggers>
                     <Trigger Property="IsHitTestVisible" Value="False">

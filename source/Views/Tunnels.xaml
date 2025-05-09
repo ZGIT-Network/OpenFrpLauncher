@@ -87,10 +87,16 @@
                                         HorizontalAlignment="Stretch"
                                         CornerRadius="4" />
                                 </Grid>
-                                <ItemsControl
-                                    Grid.Row="1"
-                                    IsEnabled="{Binding IsDaemonConnected, Mode=OneWay}"
-                                    ItemsSource="{Binding PreloadSkeletons, Mode=OneWay, IsAsync=True}">
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding PreloadSkeletons, Mode=OneWay, IsAsync=True}">
+                                    <ItemsControl.IsEnabled>
+                                        <MultiBinding Converter="{StaticResource BothConverter}">
+                                            <Binding Mode="OneWay" Path="IsDaemonConnected" />
+                                            <Binding
+                                                Mode="OneWay"
+                                                Path="IsVisible"
+                                                RelativeSource="{RelativeSource Mode=Self}" />
+                                        </MultiBinding>
+                                    </ItemsControl.IsEnabled>
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <WrapPanel />
@@ -283,6 +289,7 @@
                                                     Margin="0,0,8,8"
                                                     BeginWithOpacityAnimation="True"
                                                     DeleteCommandBinding="{Binding DataContext.event_DeleteUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                    RefreshCommandBinding="{Binding DataContext.event_RefreshUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
                                                     ToggledCommandBinding="{Binding DataContext.event_TunnelSwitchInvokedCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
                                                     Tunnel="{Binding Mode=OneWay}">
                                                     <behavior:Interaction.Triggers>
@@ -320,12 +327,6 @@
                         Duration="0:0:.25">
                         <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
                     </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="1"
-                        Duration="0:0:.25" />
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="defaultLoadingCtrl"

@@ -4,17 +4,18 @@
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern">
-    <Style TargetType="ctrl:TunnelInfoContentDialog">
-        <Setter Property="Title" Value="{Binding Path=Name, StringFormat='隧道 {0}', Mode=OneWay}" />
-        <Setter Property="DataContext" Value="{Binding Tunnel, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
-        <Setter Property="Content">
+    <Style TargetType="ctrl:TunnelConfViewer">
+        <Setter Property="MinWidth" Value="480" />
+        <Setter Property="MinHeight" Value="200" />
+        <Setter Property="Template">
             <Setter.Value>
-                <Grid Width="480" MinHeight="200">
-                    <ink:ScrollViewerEx
-                        Margin="-24,0,0,0"
-                        PanningMode="VerticalOnly"
-                        VerticalScrollBarVisibility="Auto">
-                        <WrapPanel Margin="24,0" Orientation="Horizontal">
+                <ControlTemplate TargetType="ctrl:TunnelConfViewer">
+                    <Grid
+                        MinWidth="{TemplateBinding MinWidth}"
+                        MinHeight="{TemplateBinding MinHeight}"
+                        Margin="{TemplateBinding Padding}"
+                        DataContext="{TemplateBinding Tunnel}">
+                        <WrapPanel Orientation="Horizontal">
                             <StackPanel Margin="0,0,4,8" HorizontalAlignment="Stretch">
                                 <!--  如果使外围容器设置 MinWidth，则内容会被裁剪(包括FocusVisualStyle)  -->
                                 <TextBlock
@@ -27,7 +28,7 @@
                                     FontFamily="{StaticResource SourceCodeProMixYahei}"
                                     FontSize="16"
                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                    Text="{Binding ConnectAddress, Mode=OneWay}"
+                                    Text="{Binding ConnectAddress, IsAsync=True, Mode=OneWay}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
 
@@ -109,14 +110,63 @@
                                     </Run>
                                 </ctrl:SelectableTextBlock>
                             </StackPanel>
+                            <StackPanel
+                                Margin="0,0,8,8"
+                                HorizontalAlignment="Left"
+                                Visibility="{Binding UseEncryption, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="16"
+                                    Text="数据加密" />
+                                <ctrl:SelectableTextBlock
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    TextWrapping="Wrap">
+                                    <Run Text="启用" />
+                                </ctrl:SelectableTextBlock>
+                            </StackPanel>
+                            <StackPanel
+                                Margin="0,0,8,8"
+                                HorizontalAlignment="Left"
+                                Visibility="{Binding UseCompression, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="16"
+                                    Text="数据压缩" />
+                                <ctrl:SelectableTextBlock
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    TextWrapping="Wrap">
+                                    <Run Text="启用" />
+                                </ctrl:SelectableTextBlock>
+                            </StackPanel>
+                            <StackPanel
+                                Margin="0,0,8,8"
+                                HorizontalAlignment="Left"
+                                Visibility="{Binding ProxyProtocolVersion2, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <TextBlock
+                                    Margin="0,0,0,2"
+                                    FontSize="16"
+                                    Text="Proxy Protocol Verison 2" />
+                                <ctrl:SelectableTextBlock
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    TextWrapping="Wrap">
+                                    <Run Text="启用" />
+                                </ctrl:SelectableTextBlock>
+                            </StackPanel>
                         </WrapPanel>
-                    </ink:ScrollViewerEx>
-                </Grid>
+
+                    </Grid>
+                </ControlTemplate>
 
             </Setter.Value>
         </Setter>
-        <Setter Property="CloseButtonText" Value="确定" />
-        <Setter Property="DefaultButton" Value="Close" />
     </Style>
-
 </ResourceDictionary>

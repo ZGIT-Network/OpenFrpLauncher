@@ -82,11 +82,17 @@
                                         Spacing="12">
                                         <!--  ProfilePicture="E:\Desktop\Photo\IMG_9865.JPG"  -->
                                         <ink:PersonPicture
+                                            x:Name="picpic"
                                             Width="48"
                                             Height="48"
                                             HorizontalAlignment="Left"
                                             RenderOptions.BitmapScalingMode="HighQuality">
                                             <behavior:Interaction.Triggers>
+                                                <behavior:EventTrigger EventName="Loaded">
+                                                    <behavior:InvokeCommandAction Command="{Binding event_OnPicpicControlLoadedCommand}" PassEventArgsToCommand="True" />
+                                                </behavior:EventTrigger>
+                                            </behavior:Interaction.Triggers>
+                                            <!--<behavior:Interaction.Triggers>
                                                 <behavior:DataTrigger Binding="{Binding UserAvatorSource, Mode=OneWay}" Value="{x:Null}">
                                                     <behavior:ChangePropertyAction PropertyName="ProfilePicture">
                                                         <behavior:ChangePropertyAction.Value>
@@ -100,7 +106,7 @@
                                                     Value="{x:Null}">
                                                     <behavior:ChangePropertyAction PropertyName="ProfilePicture" Value="{Binding UserAvatorSource, Mode=OneWay}" />
                                                 </behavior:DataTrigger>
-                                            </behavior:Interaction.Triggers>
+                                            </behavior:Interaction.Triggers>-->
                                         </ink:PersonPicture>
                                         <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" TextWrapping="Wrap">
                                             <Run FontSize="24" Text="{Binding UserInfo.UserName, Mode=OneWay}" />

@@ -10,7 +10,7 @@ using iNKORE.UI.WPF.Modern.Controls;
 
 namespace OpenFrp.Launcher.Controls
 {
-    public partial class TunnelInfoContentDialog : ContentDialog
+    public partial class TunnelConfViewer : ContentControl
     {
         #region Tunnel
         public Model.UserTunnel Tunnel
@@ -21,7 +21,7 @@ namespace OpenFrp.Launcher.Controls
 
         // Using a DependencyProperty as the backing store for Tunnel.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty TunnelProperty =
-            DependencyProperty.Register("Tunnel", typeof(Model.UserTunnel), typeof(TunnelInfoContentDialog), new PropertyMetadata(null));
+            DependencyProperty.Register("Tunnel", typeof(Model.UserTunnel), typeof(TunnelConfViewer), new PropertyMetadata(null));
 
         #endregion
     }

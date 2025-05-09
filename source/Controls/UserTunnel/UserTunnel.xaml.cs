@@ -59,26 +59,38 @@ namespace OpenFrp.Launcher.Controls
                         mf.ShowAt(btn);
                     });
                 }
-                if (GetTemplateChild("viewInfo") is MenuItem mf2)
+                if (GetTemplateChild("editTunnel") is MenuItem mf2)
                 {
-                    mf2.Command = new AsyncRelayCommand(async () =>
+                    mf2.Command = new RelayCommand(() =>
                     {
-                        var dialog = new Controls.TunnelInfoContentDialog()
+                        var dialog = new Dialogs.TunnelEditDialog
                         {
-                            Tunnel = this.Tunnel.ModelClone()
+
                         };
-                        await dialog.ShowAsync();
+                        dialog.SetValue(TunnelConfEditor.EditorTemplateProperty, new Model.TunnelEditorTemplate(this.Tunnel));
+                        dialog.Dispatcher.Invoke(async () =>
+                        {
+                            await dialog.ShowAsync();
+                        });
+                    });
+                }
+                if (GetTemplateChild("viewInfo") is MenuItem mf3)
+                {
+                    mf3.Command = new RelayCommand(() =>
+                    {
+                        var dialog = new Dialogs.TunnelViewerDialog()
+                        {
+
+                        };
+                        dialog.SetValue(TunnelConfViewer.TunnelProperty, this.Tunnel.ModelClone());
+                        dialog.Dispatcher.Invoke(async () =>
+                        {
+                            await dialog.ShowAsync();
+                        });
                     });
                 }
             }
          
-            //if (GetTemplateChild("displayContextMenu") is HyperlinkButton btn)
-            //{
-            //    btn.Command = new RelayCommand(delegate
-            //    {
-                    
-            //    });
-            //}
             if (GetTemplateChild("switcher") is ToggleSwitch @switch)
             {
                 @switch.IsOn = Tunnel.FirstState;
@@ -105,15 +117,27 @@ namespace OpenFrp.Launcher.Controls
                 btnCopy.Command = new RelayCommand(() =>
                 {
                     if (cs.CurrentState.Name is "CopySuccess") return;
+
+                    string address = "";
+
+                    if (Tunnel.Type.Contains("http") || Tunnel.Type.Contains("HTTP"))
+                    {
+                        address = Tunnel.Domains.First() ?? "Unknown Domain";
+                    }
+                    else
+                    {
+                        address = Tunnel.ConnectAddress;
+                    }
+
                     try
                     {
-                        Clipboard.SetText(Tunnel.ConnectAddress);
+                        Clipboard.SetText(address);
 
-                        VisualStateManager.GoToElementState(btnCopy, "CopySuccess",false);
+                        VisualStateManager.GoToElementState(btnCopy, "CopySuccess", false);
 
                         _ = btnCopy.Dispatcher.Invoke(async () => { await Task.Delay(1500); VisualStateManager.GoToElementState(btnCopy, "CopyNormal", false); });
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Error.Invoke(this, ex);
                     }
@@ -178,19 +202,23 @@ namespace OpenFrp.Launcher.Controls
         public static readonly DependencyProperty DeleteCommandBindingProperty =
             DependencyProperty.Register("DeleteCommandBinding", typeof(IAsyncRelayCommand), typeof(UserTunnel), new PropertyMetadata());
         #endregion
-        //#region UserContextMenuCommandBinding
 
-        //public ICommand UserContextMenuCommandBinding
-        //{
-        //    get { return (ICommand)GetValue(UserContextMenuCommandBindingProperty); }
-        //    set { SetValue(UserContextMenuCommandBindingProperty, value); }
-        //}
+        #region RefreshCommandBinding
 
-        //// Using a DependencyProperty as the backing store for UserContextMenuCommandBinding.  This enables animation, styling, binding, etc...
-        //public static readonly DependencyProperty UserContextMenuCommandBindingProperty =
-        //    DependencyProperty.Register("UserContextMenuCommandBinding", typeof(ICommand), typeof(UserTunnel), new PropertyMetadata());
 
-        //#endregion
+        public ICommand RefreshCommandBinding
+        {
+            get { return (ICommand)GetValue(RefreshCommandBindingProperty); }
+            set { SetValue(RefreshCommandBindingProperty, value); }
+        }
+        
+        public static readonly DependencyProperty RefreshCommandBindingProperty =
+            DependencyProperty.Register("RefreshCommandBinding", typeof(ICommand), typeof(UserTunnel), new PropertyMetadata());
+
+
+
+        #endregion
+
         #region ToggledCommandBinding
         public IAsyncRelayCommand ToggledCommandBinding
         {
