@@ -127,6 +127,11 @@
                         </ink:ImageIcon>
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
+                <ink:NavigationViewItem Content="关于" Tag="{x:Type views:About}">
+                    <ink:NavigationViewItem.Icon>
+                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Info}" />
+                    </ink:NavigationViewItem.Icon>
+                </ink:NavigationViewItem>
                 <ink:NavigationViewItemSeparator />
                 <ink:NavigationViewItem Content="更新" Tag="{x:Type views:UpdateComment}">
                     <ink:NavigationViewItem.Icon>

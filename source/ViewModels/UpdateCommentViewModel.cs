@@ -211,8 +211,6 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(CanExecute = nameof(CanExecuteInstallUpdate))]
         private void @event_InstallUpdate()
         {
-           
-
             conve_InstallUpdateCommand.Execute(UpdateType); 
             //mv.conve_InstallUpdateCommand.exe
             //switch (UpdateType)
@@ -236,7 +234,7 @@ namespace OpenFrp.Launcher.ViewModels
             //}
         }
 
-        private bool CanExecuteInstallUpdate() => UpdateType is UpdateType.Frpc && SoftwareConfig is not null;
+        private bool CanExecuteInstallUpdate() => UpdateType is UpdateType.Frpc or UpdateType.Launcher && SoftwareConfig is not null;
 
         public bool BypassProxy
         {

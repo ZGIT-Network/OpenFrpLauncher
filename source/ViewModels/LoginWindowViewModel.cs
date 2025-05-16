@@ -63,25 +63,8 @@ namespace OpenFrp.Launcher.ViewModels
                         }; break;
                 }
             });
-            try
-            {
-                var r1 = System.Text.Json.JsonSerializer.Deserialize<OpenFrp.Launcher.Properties.Settings.UserProperty[]>(App.Settings.Token);
-                if (r1 is not null && r1.Select(x => new Model.PlatformUser { EmailAddress = x.Email, UserAuthorzation = x.Authorization, Username = x.User,UserAvatorHash = x.UserAvator }) is { } col)
-                {
-                    PlatformUsers = new ObservableCollection<Model.PlatformUser>(col);
-
-                    return;
-                }
-            }
-            catch
-            {
-
-            }
-            PlatformUsers = new ObservableCollection<Model.PlatformUser>()
-            {
-
-            };
-            
+            Helpers.UsrTokenService.RefreshPlatformUsers();
+            OnPropertyChanged(nameof(PlatformUsers));
         }
 
         internal const string LoadingState = "DisplayLoadingCtrl";
@@ -107,11 +90,16 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty,NotifyPropertyChangedFor(nameof(IsExceptionInfobarOpen),nameof(HttpResponseMessage))]
         private Model.ExecuteResult? executeResult;
 
+
+
         [ObservableProperty]
         private string? httpResponseMessage;
 
-        [ObservableProperty]
-        private ObservableCollection<Model.PlatformUser> platformUsers = new() { };
+        //[ObservableProperty]
+        public ObservableCollection<Model.PlatformUser> PlatformUsers
+        {
+            get => Helpers.UsrTokenService.PlatformUserCache;
+        }
 
         public bool HasOwnerWindow
         {
@@ -160,36 +148,47 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 VisualStateManager.GoToElementState(window, LoginState, false);
             }
-            if (wind.FindName("selfor") is ItemsControl isc)
+            if (string.IsNullOrEmpty(App.Settings.AutoLoginId))
             {
-                for (global::System.Int32 i = 0; i < isc.ItemContainerGenerator.Items.Count; i++)
+                if (wind.FindName("selfor") is ItemsControl isc)
                 {
-                    if (isc.ItemContainerGenerator.Items[i] is not Model.PlatformUser { UserAvatorHash: not null or "" } platUser) continue;
-                    if (isc.ItemContainerGenerator.ContainerFromIndex(i) is ContentPresenter cp && cp.ContentTemplate.FindName("picpic",cp) is iNKORE.UI.WPF.Modern.Controls.PersonPicture picpic)
+                    for (global::System.Int32 i = 0; i < isc.ItemContainerGenerator.Items.Count; i++)
                     {
-                        //btn.FindName("picpic") is iNKORE.UI.WPF.Modern.Controls.PersonPicture picpic
-                        if (System.IO.File.Exists(platUser.UserAvatorHash) && Uri.TryCreate(platUser.UserAvatorHash,UriKind.RelativeOrAbsolute,out var iiccv))
+                        if (isc.ItemContainerGenerator.Items[i] is not Model.PlatformUser { UserAvatorHash: not null or "" } platUser) continue;
+                        if (isc.ItemContainerGenerator.ContainerFromIndex(i) is ContentPresenter cp && cp.ContentTemplate.FindName("picpic", cp) is iNKORE.UI.WPF.Modern.Controls.PersonPicture picpic)
                         {
-                            var bmp = new BitmapImage();
-
-                            picpic.Dispatcher.UnhandledExceptionFilter += (_, e) =>
+                            //btn.FindName("picpic") is iNKORE.UI.WPF.Modern.Controls.PersonPicture picpic
+                            if (System.IO.File.Exists(platUser.UserAvatorHash) && Uri.TryCreate(platUser.UserAvatorHash, UriKind.RelativeOrAbsolute, out var iiccv))
                             {
-                                if (e.Exception is BadImageFormatException or NotSupportedException)
+                                var bmp = new BitmapImage();
+
+                                picpic.Dispatcher.UnhandledException += (_, e) =>
                                 {
-                                    e.RequestCatch = true;
-                                }
-                            };
-                            picpic.Dispatcher.Invoke(() =>
-                            {
-                                bmp.BeginInit();
-                                bmp.UriSource = iiccv;
-                                bmp.EndInit();
-                                bmp.Freeze();
+                                    if (e.Exception is BadImageFormatException or NotSupportedException)
+                                    {
+                                        e.Handled = true;
+                                    }
+                                };
+                                picpic.Dispatcher.Invoke(() =>
+                                {
+                                    bmp.BeginInit();
+                                    bmp.UriSource = iiccv;
+                                    bmp.EndInit();
+                                    bmp.Freeze();
 
-                                picpic.ProfilePicture = bmp;
-                            });
+                                    picpic.ProfilePicture = bmp;
+                                });
+                            }
                         }
                     }
+                }
+            }
+            else
+            {
+                var usr = Helpers.UsrTokenService.GetUserFromAutoLoginId(App.Settings.AutoLoginId);
+                if (usr is not null)
+                {
+                    event_FastLoginCommand.Execute(usr);
                 }
             }
 
@@ -649,6 +648,12 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void @event_RemoveUserRecord(Model.PlatformUser usr)
+        {
+            Helpers.UsrTokenService.RemoveUser(usr, true);
+        }
+
         private Regex FrpcVersionRegex = FrpcVersionRegexFun();
 
         private async Task<Model.ExecuteResult> TryGetFrpcVersionString()
@@ -779,28 +784,9 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (Service.Net.OpenFrpApi.GetAuthorization() is { Length: > 0} ap)
             {
-                bool hadAccount = false;
-                for (global::System.Int32 i = 0; i < PlatformUsers.Count; i++)
-                {
-                    if (userInfo.Email.Equals(PlatformUsers[i].EmailAddress))
-                    {
-                        hadAccount = true;
-                        PlatformUsers[i].UserAuthorzation = ap;
-                        PlatformUsers[i].Username = userInfo.UserName;
-                    }
-                }
-                if (!hadAccount)
-                {
-                    PlatformUsers.Add(new Model.PlatformUser
-                    {
-                        EmailAddress = userInfo.Email,
-                        Username = userInfo.UserName,
-                        UserAuthorzation = ap
-                    });
-                }
+                Helpers.UsrTokenService.AddUser(userInfo.UserName, userInfo.Email, ap, true);
             }
-            App.Settings.Token = System.Text.Json.JsonSerializer.Serialize(PlatformUsers.Select(x => new Properties.Settings.UserProperty { Authorization = x.UserAuthorzation, Email = x.EmailAddress, User = x.Username,UserAvator = x.UserAvatorHash }));
-
+           
 
             if (window is not null)
             {

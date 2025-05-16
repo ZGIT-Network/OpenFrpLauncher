@@ -50,6 +50,10 @@ namespace OpenFrp.Launcher.Views.LoginWindow
             {
                 button.AddHandler(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, new RoutedEventHandler((_, _) =>
                 {
+                    if (this.DataContext is ViewModels.QrCodeFVViewModel q)
+                    {
+                        q.conve_WaitForPollLoginCommand.Cancel();
+                    }
                     CallbackAction?.Invoke(ViewModels.LoginWindowViewModel.LoginState);
                 }));
             }

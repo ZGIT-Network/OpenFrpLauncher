@@ -47,7 +47,7 @@
                 Padding="0,0,0,0"
                 VerticalAlignment="Center"
                 FontSize="16"
-                Text="扫码登录"
+                Text="扫码登录 / 面板快捷登录"
                 UseLayoutRounding="True" />
         </wp:SimpleStackPanel>
         <Grid Grid.Row="1" Margin="12,0">
@@ -73,36 +73,45 @@
                         Icon="{x:Static ink:SegoeFluentIcons.Error}"
                         Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
                 </Grid>
+                <StackPanel HorizontalAlignment="Center">
+                    <Grid>
+                        <TextBlock
+                            Padding="16,0"
+                            FontSize="18"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="{Binding Value, Converter={StaticResource BooleanToVisibilityConverter}, Source={StaticResource IsSuccess}, Mode=OneWay}">
+                            <Run Text="使用移动设备的相机扫描" />
+                            <Run FontFamily="{StaticResource SoraMedium}" Text="QR Code" />
+                            <LineBreak />
+                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="在网页上完成授权" />
+                            <LineBreak />
+                            <LineBreak />
+                            <Run
+                                FontSize="14"
+                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                Text="您也可以点击下方中间的按钮在本计算机上授权。" />
+                        </TextBlock>
+                        <TextBlock
+                            Padding="16,0"
+                            HorizontalAlignment="Center"
+                            FontSize="18"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                            <Run Text="{Binding ExecuteResult.Message, Mode=OneWay}" />
+                            <LineBreak />
+                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="点击刷新重试" />
 
-                <TextBlock
-                    Padding="16,0"
-                    HorizontalAlignment="Center"
-                    FontSize="18"
-                    TextAlignment="Center"
-                    TextWrapping="Wrap"
-                    Visibility="{Binding Value, Converter={StaticResource BooleanToVisibilityConverter}, Source={StaticResource IsSuccess}, Mode=OneWay}">
-                    <Run Text="使用移动设备的相机扫描二维码" />
-                    <LineBreak />
-                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="在网页上完成授权" />
-                    <LineBreak />
-                    <LineBreak />
-                    <Run
+                        </TextBlock>
+                    </Grid>
+                    <ctrl:SelectableTextBlock
                         FontSize="14"
-                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                        Text="您也可以点击下方中间的按钮在本计算机上授权。" />
-                </TextBlock>
-                <TextBlock
-                    Padding="16,0"
-                    HorizontalAlignment="Center"
-                    FontSize="18"
-                    TextAlignment="Center"
-                    TextWrapping="Wrap"
-                    Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
-                    <Run Text="{Binding ExecuteResult.Message, Mode=OneWay}" />
-                    <LineBreak />
-                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="点击刷新重试" />
-
-                </TextBlock>
+                        Text="{Binding User_AuthorizationUrl, Mode=OneWay}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap"
+                        Visibility="{Binding NeedDisplayUrl, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                </StackPanel>
 
             </wp:SimpleStackPanel>
             <Grid Grid.Row="1" Background="Transparent">
@@ -135,6 +144,7 @@
                     <ink:HyperlinkButton
                         AutomationProperties.Name="在浏览器中授权"
                         Command="{Binding event_OpenLinkInWebCommand}"
+                        IsEnabled="{Binding HasAuthorizationUrl, Mode=OneWay}"
                         ToolTip="在浏览器中授权">
                         <StackPanel Orientation="Horizontal">
                             <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.OpenFile}" />
@@ -146,7 +156,11 @@
                                 Visibility="Collapsed" />
                         </StackPanel>
                     </ink:HyperlinkButton>
-                    <ink:HyperlinkButton AutomationProperties.Name="打开帮助页面" ToolTip="打开帮助页面">
+                    <!--  Todo: Help Page  -->
+                    <ink:HyperlinkButton
+                        AutomationProperties.Name="打开帮助页面"
+                        ToolTip="打开帮助页面"
+                        Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Help}" />
                         </StackPanel>

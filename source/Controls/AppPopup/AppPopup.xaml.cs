@@ -66,6 +66,7 @@ namespace OpenFrp.Launcher.Controls
 
             }
 
+            Helpers.UsrTokenService.WriteConfig();
             App.Settings.Save();
 
             App.TaskBarIcon?.Dispose();

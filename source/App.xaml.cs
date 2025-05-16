@@ -18,6 +18,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Data;
 using System.Diagnostics.Metrics;
+using System.Runtime.ConstrainedExecution;
 
 
 namespace OpenFrp.Launcher
@@ -32,9 +33,8 @@ namespace OpenFrp.Launcher
             AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.EnablePointerSupport", true);
             AppContext.SetSwitch("Switch.System.Windows.Media.EnableHardwareAccelerationInRdp", true);
 
+            Dispatcher.UnhandledExceptionFilter += Dispatcher_UnhandledExceptionFilter;
             Dispatcher.UnhandledException += Dispatcher_UnhandledException;
-
-
 #if !DEBUG
             AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             {
@@ -58,10 +58,143 @@ namespace OpenFrp.Launcher
                     }
             };
 #endif
+            if (OSVersionHelper.IsWindows10OrGreater)
+            {
+                try
+                {
+                    Type? tp = typeof(Windows.UI.Notifications.ToastNotification);
+                    if (tp is not null)
+                    {
+                        var putMethod = tp.GetMethod("put_ExpiresOnReboot", new Type[1] { typeof(bool) });
+                        if (putMethod is not null)
+                        {
+                            Notification_UseExpiredReboot = true;
+                        }
+                    }
+                }
+                catch
+                {
+                    return;
+                }
+            }
+        }
+
+        internal static bool Notification_UseExpiredReboot = false;
+
+        private void Dispatcher_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            if (e.Exception is TaskCanceledException or Grpc.Core.RpcException { StatusCode: Grpc.Core.StatusCode.Cancelled })
+            {
+                var flag = new StackTrace(e.Exception).GetFrames().Any(x =>
+                {
+                    if (x.GetMethod() is { DeclaringType.DeclaringType.Namespace: string @namespace } &&
+                        @namespace.Contains("OpenFrp.Launcher.ViewModels"))
+                    {
+                        return true;
+                    }
+                    return false;
+                });
+
+                e.Handled = flag;
+                return;
+            }
+        }
+
+        private void Dispatcher_UnhandledExceptionFilter(object sender, DispatcherUnhandledExceptionFilterEventArgs e)
+        {
+            // RequestCatch set true => avoid crash app!;
+
+            if (e.Exception is TaskCanceledException or Grpc.Core.RpcException { StatusCode: Grpc.Core.StatusCode.Cancelled })
+            {
+                var flag = new StackTrace(e.Exception).GetFrames().Any(x =>
+                {
+                    if (x.GetMethod() is { DeclaringType.DeclaringType.Namespace: string @namespace } &&
+                        @namespace.Contains("OpenFrp.Launcher.ViewModels"))
+                    {
+                        return true;
+                    }
+                    return false;
+                });
+
+                e.RequestCatch = flag;
+                return;
+            }
+            if (e.Exception is System.Configuration.ConfigurationErrorsException)
+            {
+                e.RequestCatch = true;
+            }
+        }
+
+        private static bool Settings_TryReadConfiguration()
+        {
+            // 防止错误的配置被读取
+            // https://github.com/petergolde/PurplePen/blob/faa285b1a2a60aa8b1d4bf5d99bd8bf23e07cfe0/src/PurplePen/Program.cs#L62
+            try
+            {
+                _ = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+            }
+            catch (ConfigurationErrorsException ex)
+            {
+                if (!DeleteFileAndResetConfig(ex.Filename))
+                {
+                    return false;
+                }
+            }
+            catch (ConfigurationException exception)
+            {
+                if (exception.InnerException is ConfigurationErrorsException ce2)
+                {
+                    if (!DeleteFileAndResetConfig(ce2.Filename))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+
+            static bool DeleteFileAndResetConfig(string fileName)
+            {
+                try
+                {
+                    File.Delete(fileName);
+
+                    App.Settings.Reload();
+
+                    App.Settings.Save();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        "配置文件无法读取，且已尝试删除文件，但删除失败:" +
+                        $"\n文件路径: {fileName}" +
+                        $"\n提示内容: {ex.Message}", "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    return false;
+                }
+                return true;
+            }
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // false is failed to delete config / read config
+            if (!Settings_TryReadConfiguration())
+            {
+                Environment.Exit(-1);
+
+                App.Current.Shutdown(-1);
+
+                return;
+            }
+
+            if (e.Args.Contains("--no-effect"))
+            {
+
+            }
+
+
+
             string launcherFilePath = Path.Combine(AppContext.BaseDirectory, "OpenFrp.Launcher.exe");
             string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(AppContext.BaseDirectory);
 
@@ -123,7 +256,7 @@ namespace OpenFrp.Launcher
                     }
                 }
             };
-
+            #region Prepare for window
             if (OSVersionHelper.IsWindows10OrGreater)
             {
                 try
@@ -190,7 +323,11 @@ namespace OpenFrp.Launcher
             {
                 TaskBarIcon.ForceCreate(false);
             }
-          
+            if (e.Args.Contains("--minimize"))
+            {
+
+            }
+            #endregion
             base.OnStartup(e);
         }
 
@@ -208,23 +345,13 @@ namespace OpenFrp.Launcher
 
         public static string FrpcVersionString { get; set; } = "Unknown";
 
-        public static string LauncherVersionString => "5.7.5 Preview";
+        public static string LauncherVersionString => "5.7.6 Preview";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 
         private static Task? prevListenDaemonTask;
 
         private static EventWaitHandle? _daemon_ProcessEventWaitHandle;
-
-        private void Dispatcher_UnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
-        {
-            if (e.Exception is TaskCanceledException or Grpc.Core.RpcException { StatusCode: Grpc.Core.StatusCode.Cancelled })
-            {
-                var flag = new StackTrace(e.Exception).GetFrames().Any(x => x.GetMethod() is { DeclaringType.DeclaringType.Namespace: string @namespace } && @namespace.Contains("OpenFrp.Launcher.ViewModels"));
-
-                e.Handled = flag;
-            }
-        }
 
         internal static async Task WaitForProcessLaunch(CancellationToken cancellationToken = default)
         {

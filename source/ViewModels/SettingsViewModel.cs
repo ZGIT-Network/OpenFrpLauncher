@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -33,11 +34,18 @@ namespace OpenFrp.Launcher.ViewModels
                 mvW = v;
                 _mainWindowViewModel = mv;
 
-                
+
                 mv.PropertyChanged += (_, e) =>
                 {
                     OnPropertyChanged(e.PropertyName);
+
+                    if (e.PropertyName is "UserInfo")
+                    {
+                        UpdateCurrentAutoLogonId();
+                    }
                 };
+
+                UpdateCurrentAutoLogonId();
             }
             else if (Application.Current.MainWindow is LoginWindow lWnd)
             {
@@ -46,7 +54,8 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-
+        private string? currentUserAutoLogonId;
+        private string astLaunchFile = Service.Helpers.FileHelper.GetAutoStartupFile();
 
         [ObservableProperty]
         private bool isAtLoginWindow = false;
@@ -126,6 +135,75 @@ namespace OpenFrp.Launcher.ViewModels
                 OnPropertyChanged(nameof(BypassProxy));
             }
         }
+        public bool AutoLaunchWhenLogon
+        {
+            get
+            {
+                return false;
+                //return System.IO.File.Exists(astLaunchFile);
+            }
+            set
+            {
+                return;
+
+                if (!value)
+                {
+                    try
+                    {
+                        System.IO.File.Delete(astLaunchFile);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(
+                            "无法删除开机自启动文件，请手动删除:" +
+                            $"\n路径: {astLaunchFile}" +
+                            $"\nReason: {ex}", "OpenFrp Launcher", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    return;
+                }
+                var shellType = System.Type.GetTypeFromProgID("WScript.Shell");
+                if (shellType is null)
+                {
+                    return;
+                }
+                dynamic? shell = Activator.CreateInstance(shellType);
+                if (shell is null || Assembly.GetEntryAssembly() is not { Location: string location })
+                {
+                    return;
+                }
+                var shortcut = shell.CreateShortcut(astLaunchFile);
+
+                shortcut.TargetPath = location;
+                shortcut.Arguments = "--minimize";
+                shortcut.WorkingDirectory = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+                shortcut.Save();
+            }
+        }
+        public bool AutoLogonWithCurrentUser
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(currentUserAutoLogonId) || string.IsNullOrEmpty(App.Settings.AutoLoginId))
+                {
+                    return false;
+                }
+                return App.Settings.AutoLoginId.Equals(currentUserAutoLogonId);
+            }
+            set
+            {
+                if (!value)
+                {
+                    App.Settings.AutoLoginId = "";
+                    return;
+                }
+                if (string.IsNullOrEmpty(currentUserAutoLogonId))
+                {
+                    return;
+                }
+                App.Settings.AutoLoginId = currentUserAutoLogonId;
+            }
+        }
+
 
         [ObservableProperty]
         private ObservableCollection<FontDisplay>? fontDisplays;
@@ -142,6 +220,18 @@ namespace OpenFrp.Launcher.ViewModels
                     return _mainWindowViewModel.UserInfo;
                 }
                 return __userInfo_Defualt;
+            }
+        }
+
+        private void UpdateCurrentAutoLogonId()
+        {
+            if (UserInfo.Equals(__userInfo_Defualt))
+            {
+                currentUserAutoLogonId = null;
+            }
+            else
+            {
+                currentUserAutoLogonId = Helpers.UsrTokenService.GetCurrentUserAutoLogonId(UserInfo.UserName);
             }
         }
 
@@ -176,11 +266,11 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (e.Source is iNKORE.UI.WPF.Modern.Controls.PersonPicture pipc)
             {
-                pipc.Dispatcher.UnhandledExceptionFilter += (_, e) =>
+                pipc.Dispatcher.UnhandledException += (_, e) =>
                 {
                     if (e.Exception is NotSupportedException or BadImageFormatException)
                     {
-                        e.RequestCatch = true;
+                        e.Handled = true;
                     }
                 };
                 
@@ -293,17 +383,11 @@ namespace OpenFrp.Launcher.ViewModels
 
             Service.Net.OpenFrpApi.Logout();
 
+            App.Settings.AutoLoginId = "";
+
             try
             {
-                var v = System.Text.Json.JsonSerializer.Deserialize<HashSet<Properties.Settings.UserProperty>>(App.Settings.Token);
-
-                if (v is { Count: > 0 })
-                {
-                    v.RemoveWhere((x) => x.Equals(UserInfo));
-
-                    App.Settings.Token = System.Text.Json.JsonSerializer.Serialize(v);
-                    App.Settings.Save();
-                }
+                Helpers.UsrTokenService.RemoveUser(UserInfo.UserName, true);
             }
             catch { }
 

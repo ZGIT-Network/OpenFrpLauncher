@@ -93,5 +93,17 @@ namespace OpenFrp.Launcher.Properties {
                 this["LogFontFamily"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AutoLoginId {
+            get {
+                return ((string)(this["AutoLoginId"]));
+            }
+            set {
+                this["AutoLoginId"] = value;
+            }
+        }
     }
 }

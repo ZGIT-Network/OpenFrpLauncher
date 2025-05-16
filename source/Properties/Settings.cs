@@ -29,6 +29,16 @@
     {
         public class UserProperty
         {
+            public UserProperty() { }
+
+            internal UserProperty(Model.PlatformUser usr)
+            {
+                Email = usr.EmailAddress;
+                UserAvator = usr.UserAvatorHash;
+                Authorization = usr.UserAuthorzation;
+                User = usr.Username;
+            }
+
             public string? Email { get; set; }
 
             public string? User { get; set; }
@@ -36,6 +46,8 @@
             public string? UserAvator { get; set; }
 
             public string? Authorization { get; set; }
+
+            
         }
     }
 }

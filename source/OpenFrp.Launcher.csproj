@@ -46,6 +46,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\OpenFrp.Service\OpenFrp.Service.csproj" />
   </ItemGroup>
+	
   <ItemGroup Condition="'$(TargetFramework)'=='net9.0-windows10.0.18362.0'">
     <Reference Include="iNKORE.UI.WPF.Modern">
       <HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net9.0-windows10.0.18362.0\iNKORE.UI.WPF.Modern.dll</HintPath>
@@ -55,20 +56,22 @@
     </Reference>
 
   </ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)'=='net48'">
-		<Reference Include="iNKORE.UI.WPF.Modern">
-			<HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net48\iNKORE.UI.WPF.Modern.dll</HintPath>
-		</Reference>
-		<Reference Include="iNKORE.UI.WPF.Modern.Controls">
-			<HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net48\iNKORE.UI.WPF.Modern.Controls.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-  <ItemGroup>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
+	
+  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+   <Reference Include="iNKORE.UI.WPF.Modern">
+    <HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net48\iNKORE.UI.WPF.Modern.dll</HintPath>
+   </Reference>
+   <Reference Include="iNKORE.UI.WPF.Modern.Controls">
+    <HintPath>..\..\..\UI.WPF.Modern-main\UI.WPF.Modern-main\source\iNKORE.UI.WPF.Modern.Controls\bin\Debug\net48\iNKORE.UI.WPF.Modern.Controls.dll</HintPath>
+   </Reference>
+   <Reference Include="System.Configuration" />
+  </ItemGroup>
+  <ItemGroup>  
+      <Compile Update="Properties\Settings.Designer.cs">
+          <DesignTimeSharedInput>True</DesignTimeSharedInput>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>Settings.settings</DependentUpon>
+      </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Update="Properties\Settings.settings">

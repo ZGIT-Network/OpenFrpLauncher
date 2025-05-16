@@ -315,16 +315,16 @@ namespace OpenFrp.Launcher.ViewModels
         private async Task @event_LoadUserAvator(CancellationToken cancellationToken)
         {
             // https://api.zyghit.cn/avatar/?email={email}&s=100
-            var r1 = System.Text.Json.JsonSerializer.Deserialize<OpenFrp.Launcher.Properties.Settings.UserProperty[]>(App.Settings.Token);
+
             int currentCount = -1;
-            if (r1 is { Length: > 0 })
+            if (Helpers.UsrTokenService.PlatformUserCache is { Count: > 0 } r1)
             {
-                for (global::System.Int32 i = 0; i < r1.Length; i++)
+                for (global::System.Int32 i = 0; i < r1.Count; i++)
                 {
-                    if (UserInfo.Email.Equals(r1[i].Email))
+                    if (UserInfo.Email.Equals(r1[i].EmailAddress))
                     {
                         currentCount = i;
-                        if (!string.IsNullOrEmpty(r1[i].UserAvator) && System.IO.File.Exists(r1[i].UserAvator) && Uri.TryCreate(r1[i].UserAvator, UriKind.RelativeOrAbsolute, out var neio))
+                        if (!string.IsNullOrEmpty(r1[i].UserAvatorHash) && System.IO.File.Exists(r1[i].UserAvatorHash) && Uri.TryCreate(r1[i].UserAvatorHash, UriKind.RelativeOrAbsolute, out var neio))
                         {
                             UserAvatorSource = neio;
                         }
@@ -334,6 +334,8 @@ namespace OpenFrp.Launcher.ViewModels
             }
             else
             {
+                // exit here
+                return;
                 // ????
             }
 
@@ -358,14 +360,12 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         UserAvatorSource = uir;
 
-                        if (currentCount >= 0 && r1 is not null)
+                        if (currentCount >= 0 && Helpers.UsrTokenService.PlatformUserCache is not null)
                         {
-                            r1[currentCount].UserAvator = fp;
+                            Helpers.UsrTokenService.PlatformUserCache[currentCount].UserAvatorHash = fp;
                         }
 
-                        App.Settings.Token = System.Text.Json.JsonSerializer.Serialize(r1);
-
-                        App.Settings.Save();
+                        Helpers.UsrTokenService.SaveUser();
                     }
                 }
                 catch
@@ -389,6 +389,27 @@ namespace OpenFrp.Launcher.ViewModels
 
             switch (type)
             {
+                case UpdateType.Launcher:
+                    {
+                        try
+                        {
+                            Process.Start("https://console.openfrp.net/download");
+                            return;
+                        }
+                        catch
+                        {
+
+                        }
+                        try
+                        {
+                            Process.Start("cmd", "/c start https://console.openfrp.net/download");
+                        }
+                        catch
+                        {
+
+                        }
+                        return;
+                    };
                 case UpdateType.Frpc:
                     {
                         string targetVersion = software.Latest!;
@@ -429,6 +450,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
             catch(System.ComponentModel.Win32Exception ex)
             {
+                _ = ex;
                 return;
             }
             catch (Exception ex2)
@@ -533,6 +555,8 @@ namespace OpenFrp.Launcher.ViewModels
                                     sb.Append(item + ",");
                                 }
                             }
+                      
+                         
 
                             new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
                                            .AddText($"隧道 {msg.TunnelName} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
@@ -546,8 +570,11 @@ namespace OpenFrp.Launcher.ViewModels
                                            .Show(toast =>
                                            {
                                                toast.Tag = msg.TunnelName;
-                                               try { toast.ExpiresOnReboot = true; }
-                                               catch { }
+                                               if (App.Notification_UseExpiredReboot)
+                                               {
+                                                   try { toast.ExpiresOnReboot = true; }
+                                                   catch (System.MissingMethodException) { }
+                                               }
                                                toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
                                            });
                         }
@@ -616,6 +643,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
 
             }
+            Helpers.UsrTokenService.WriteConfig();
             App.Settings.Save();
 
             App.TaskBarIcon?.Dispose();

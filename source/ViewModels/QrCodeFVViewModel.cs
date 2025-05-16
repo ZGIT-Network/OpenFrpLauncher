@@ -27,7 +27,14 @@ namespace OpenFrp.Launcher.ViewModels
 
         private DateTimeOffset LastUpdateTime = DateTimeOffset.MinValue;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasAuthorizationUrl))]
         private string? user_AuthorizationUrl;
+
+        [ObservableProperty]
+        private bool needDisplayUrl;
+
+        public bool HasAuthorizationUrl { get => !string.IsNullOrEmpty(User_AuthorizationUrl); }
 
         private string? user_lastWatingUuid;
 
@@ -67,11 +74,13 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (appQrCodeWorker is null) return;
 
+            NeedDisplayUrl = false;
+
             this.ClearExecuteResult();
 
             conve_WaitForPollLoginCommand.Cancel();
 
-            user_AuthorizationUrl = user_lastWatingUuid = default;
+            User_AuthorizationUrl = user_lastWatingUuid = default;
 
             this.user_privateKey = null;
 
@@ -104,11 +113,11 @@ namespace OpenFrp.Launcher.ViewModels
 
 
             // for example
-            user_AuthorizationUrl = access.Data!.AuthorizeUrl!;
+            User_AuthorizationUrl = access.Data!.AuthorizeUrl!;
             user_lastWatingUuid = access.Data.GuidString!;
 
 
-            await appQrCodeWorker.ApplyQRCodeAsync(user_AuthorizationUrl, cancellationToken);
+            await appQrCodeWorker.ApplyQRCodeAsync(User_AuthorizationUrl, cancellationToken);
 
             _ = conve_WaitForPollLoginCommand.ExecuteAsync(null);
         }
@@ -138,6 +147,10 @@ namespace OpenFrp.Launcher.ViewModels
 
                 if (resp.StatusCode is not System.Net.HttpStatusCode.NoContent && resp.StatusCode is not System.Net.HttpStatusCode.OK)
                 {
+                    if (resp.Exception is System.Threading.Tasks.TaskCanceledException)
+                    {
+                        return;
+                    }
                     if (resp.StatusCode is System.Net.HttpStatusCode.NotFound)
                     {
                         break;
@@ -208,22 +221,19 @@ namespace OpenFrp.Launcher.ViewModels
 
                 }
                 
-
                 await Task.Delay(4500, cancellationToken);
             }
             requrieClearContainer = false;
             // 超时自动刷新
             _ = event_RefreshLinkCommand.ExecuteAsync(null);
-
-            
         }
 
         [RelayCommand(CanExecute = nameof(CanOpenLinkInWeb))]
         private void @event_OpenLinkInWeb()
         {
-            if (string.IsNullOrEmpty(user_AuthorizationUrl)) return;
+            if (string.IsNullOrEmpty(User_AuthorizationUrl)) return;
 
-            string egx = user_AuthorizationUrl!.Replace("&", "^&");
+            string egx = User_AuthorizationUrl!.Replace("&", "^&");
 
             try 
             { 
@@ -246,7 +256,7 @@ namespace OpenFrp.Launcher.ViewModels
                     FileName = egx
                 });
                 return; 
-            } catch { }
+            } catch { NeedDisplayUrl = true; }
             
         }
 

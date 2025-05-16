@@ -88,7 +88,7 @@
                 </Viewbox.CacheMode>-->
                 <!--  "pack://application:,,,/Resources/Images/v2-bg.jpg"  -->
                 <!--  "pack://application:,,,/Resources/Images/pexels-xieyun-15415001.jpg"  -->
-                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="E:\Desktop\Photo\爱情公寓5张伟请坐高清壁纸_彼岸壁纸.jpg" />
+                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="F:\OF-HOMEPAGE-IMAGE\未标题-12.png" />
             </Viewbox>
 
         </Grid>
@@ -146,33 +146,14 @@
             <Grid Grid.Row="2" Margin="36,0,0,40">
                 <StackPanel Orientation="Vertical">
                     <TextBlock
-                        Margin="-12,0,0,10"
-                        FontFamily="方正清刻本悦宋简体"
-                        Foreground="#FFFFFFFF"
-                        TextWrapping="Wrap"
-                        Visibility="Collapsed">
-                        <Run FontSize="26" Text="“因过竹院逢僧话，偷得浮生半日闲”" />
-
-
-                    </TextBlock>
-                    <TextBlock
-                        Margin="0,0,0,48"
-                        FontFamily="方正清刻本悦宋简体"
-                        Foreground="#90FFFFFF"
-                        TextWrapping="Wrap"
-                        Visibility="Collapsed">
-                        <Run FontSize="20" Text="经过一个种满竹子的寺院，与一僧人攀谈许久，&#10;难得在这纷扰的世事中暂且得到片刻的清闲" />
-                    </TextBlock>
-                    <TextBlock
                         Margin="0,0,0,0"
                         FontSize="18"
-                        Foreground="#40FFFFFF"
+                        Foreground="#08FFFFFF"
                         Visibility="Visible">
-                        <Run Text="本界面为预览界面，请以实际为准。" />
-                        <LineBreak />
-                        <Run Text="湘ICP备2021009274号-3" />
+                        <!--<Run Text="本界面为预览界面，请以实际为准。" />
+                        <LineBreak />-->
+                        <Run FontFamily="{StaticResource SoraMediumMixYahei}" Text="湘ICP备2021009274号-3" />
                     </TextBlock>
-
                 </StackPanel>
             </Grid>
         </Grid>
@@ -238,10 +219,14 @@
                                                     </TextBlock>
                                                 </StackPanel>
                                                 <TextBlock
+                                                    x:Name="cont"
                                                     Margin="3,0,0,0"
                                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                    Text="选择该平台上已记录的账户，或登录新账号。"
-                                                    TextWrapping="Wrap" />
+                                                    TextWrapping="Wrap">
+                                                    <Run Text="选择该平台上已记录的账户，或登录新账号。" />
+                                                    <LineBreak />
+                                                    <Run Text="若需取消记录已登录的账户，在菜单中删除。" />
+                                                </TextBlock>
                                                 <ItemsControl
                                                     x:Name="selfor"
                                                     Margin="0,4,0,-8"
@@ -258,6 +243,18 @@
                                                                 BorderBrush="Transparent"
                                                                 Command="{Binding DataContext.event_FastLoginCommand, ElementName=selfor, Mode=OneWay}"
                                                                 CommandParameter="{Binding Mode=OneWay}">
+                                                                <Button.ContextMenu>
+                                                                    <ContextMenu MinWidth="100">
+                                                                        <MenuItem
+                                                                            Command="{Binding DataContext.event_RemoveUserRecordCommand, Source={x:Reference Name=cont}, Mode=OneWay}"
+                                                                            CommandParameter="{Binding Mode=OneWay}"
+                                                                            Header="取消记录">
+                                                                            <MenuItem.Icon>
+                                                                                <ink:FontIcon Glyph="&#xF69B;" />
+                                                                            </MenuItem.Icon>
+                                                                        </MenuItem>
+                                                                    </ContextMenu>
+                                                                </Button.ContextMenu>
                                                                 <AutomationProperties.Name>
                                                                     <MultiBinding StringFormat="{}账户 {0}(邮箱: {1})">
                                                                         <Binding Mode="OneWay" Path="Username" />
@@ -324,7 +321,8 @@
                                                         <TextBlock
                                                             Grid.Column="1"
                                                             Margin="8,0,0,0"
-                                                            VerticalAlignment="Center">
+                                                            VerticalAlignment="Center"
+                                                            FontFamily="{StaticResource SoraMediumMixYahei}">
                                                             <Run FontSize="18" Text="Natayark ID 登录" />
 
                                                         </TextBlock>

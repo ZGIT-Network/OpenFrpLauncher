@@ -74,6 +74,10 @@
                                 CornerRadius="6"
                                 Visibility="{Binding Value, Source={StaticResource IsUserLogin}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
                                 <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
                                     <!--  Main Content  -->
                                     <xa:SimpleStackPanel
                                         Margin="24"
@@ -92,21 +96,6 @@
                                                     <behavior:InvokeCommandAction Command="{Binding event_OnPicpicControlLoadedCommand}" PassEventArgsToCommand="True" />
                                                 </behavior:EventTrigger>
                                             </behavior:Interaction.Triggers>
-                                            <!--<behavior:Interaction.Triggers>
-                                                <behavior:DataTrigger Binding="{Binding UserAvatorSource, Mode=OneWay}" Value="{x:Null}">
-                                                    <behavior:ChangePropertyAction PropertyName="ProfilePicture">
-                                                        <behavior:ChangePropertyAction.Value>
-                                                            <BitmapImage UriSource="pack://application:,,,/Resources/Images/weavatar.png" />
-                                                        </behavior:ChangePropertyAction.Value>
-                                                    </behavior:ChangePropertyAction>
-                                                </behavior:DataTrigger>
-                                                <behavior:DataTrigger
-                                                    Binding="{Binding UserAvatorSource, Mode=OneWay}"
-                                                    Comparison="NotEqual"
-                                                    Value="{x:Null}">
-                                                    <behavior:ChangePropertyAction PropertyName="ProfilePicture" Value="{Binding UserAvatorSource, Mode=OneWay}" />
-                                                </behavior:DataTrigger>
-                                            </behavior:Interaction.Triggers>-->
                                         </ink:PersonPicture>
                                         <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" TextWrapping="Wrap">
                                             <Run FontSize="24" Text="{Binding UserInfo.UserName, Mode=OneWay}" />
@@ -193,6 +182,24 @@
                                         IsHitTestVisible="False"
                                         IsIndeterminate="{Binding event_RefreshUserInfoCommand.IsRunning, Mode=OneWay}"
                                         Visibility="{Binding event_RefreshUserInfoCommand.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                    <Grid Grid.Row="1">
+                                        <Separator VerticalAlignment="Top" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+                                        <xa:SimpleStackPanel Margin="0">
+                                            <ctrl:SettingItem
+                                                Title="自动登录"
+                                                Background="{x:Null}"
+                                                BorderThickness="0"
+                                                Description="正常情况下，直接自动登录该账户而无需在登录窗口等待。">
+                                                <ctrl:SettingItem.Icon>
+                                                    <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Click}" />
+                                                </ctrl:SettingItem.Icon>
+                                                <ink:ToggleSwitch
+                                                    MinWidth="0"
+                                                    IsOn="{Binding AutoLogonWithCurrentUser, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                    IsRightAlignedCompact="True" />
+                                            </ctrl:SettingItem>
+                                        </xa:SimpleStackPanel>
+                                    </Grid>
                                 </Grid>
                             </Border>
                             <ctrl:SettingItem
@@ -320,6 +327,19 @@
                                 IsOn="{Binding BypassProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 IsRightAlignedCompact="True" />
 
+                        </ctrl:SettingItem>
+                        <TextBlock
+                            Margin="0,24,0,0"
+                            FontSize="18"
+                            Text="高级选项" />
+                        <ctrl:SettingItem
+                            Title="开机静默启动"
+                            Description="该项适用于登录后在桌面环境自动启动启动器(不显示窗口)"
+                            IsEnabled="False">
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Play}" />
+                            </ctrl:SettingItem.Icon>
+                            <ink:ToggleSwitch MinWidth="0" IsRightAlignedCompact="True" />
                         </ctrl:SettingItem>
                     </xa:SimpleStackPanel>
                 </Border>

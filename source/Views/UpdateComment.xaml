@@ -261,16 +261,25 @@
                                                         <TextBlock
                                                             VerticalAlignment="Center"
                                                             FontSize="16"
-                                                            Text="安装更新" />
+                                                            Text="操作">
+                                                            <behavior:Interaction.Triggers>
+                                                                <behavior:DataTrigger Binding="{Binding UpdateType, Mode=OneWay}" Value="Launcher">
+                                                                    <behavior:ChangePropertyAction PropertyName="Text" Value="打开官网下载" />
+                                                                </behavior:DataTrigger>
+                                                                <behavior:DataTrigger Binding="{Binding UpdateType, Mode=OneWay}" Value="Frpc">
+                                                                    <behavior:ChangePropertyAction PropertyName="Text" Value="安装更新" />
+                                                                </behavior:DataTrigger>
+                                                            </behavior:Interaction.Triggers>
+                                                        </TextBlock>
                                                     </xa:SimpleStackPanel>
                                                 </Button>
-                                                <TextBlock
+                                                <!--<TextBlock
                                                     Margin="0,0,10,4"
                                                     VerticalAlignment="Center"
                                                     FontSize="16"
                                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                                                     Text="*由于当前开发时间有限，功能暂未完成开发。"
-                                                    TextWrapping="Wrap" />
+                                                    TextWrapping="Wrap" />-->
                                             </WrapPanel>
                                         </Grid>
                                     </Border>
