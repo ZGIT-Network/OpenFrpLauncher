@@ -51,22 +51,23 @@
                                 <Run Text="星空目而不可及......赞助继续助力！" />
                             </TextBlock>
                             <Grid
-                                MaxWidth="342"
+                                MaxWidth="318"
                                 Margin="0,0,16,16"
-                                HorizontalAlignment="Left">
+                                HorizontalAlignment="Left"
+                                RenderOptions.BitmapScalingMode="HighQuality">
                                 <Image ink:ClipHelper.CornerRadius="6">
                                     <Image.Style>
                                         <Style TargetType="Image">
                                             <Setter Property="Source" Value="../Resources/Images/hsccode_v2.jpg" />
-
                                         </Style>
                                     </Image.Style>
                                 </Image>
+
                                 <TextBlock
                                     Margin="0,16,0,0"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Top"
-                                    Foreground="#afafaf"
+                                    Foreground="#afafaf" FontSize="12"
                                     IsHitTestVisible="False"
                                     TextAlignment="Center">
                                     <Run Text="请注意:要进入赞助列表请勿匿名赞助" />

@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:app="clr-namespace:OpenFrp.Launcher"
+    xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
@@ -34,7 +35,6 @@
                 VerticalAlignment="Center"
                 FontSize="24">
                 <Run Text="关于 启动器" />
-                <Run FontFamily="{StaticResource SoraMedium}" Text="{x:Static app:App.LauncherVersionString}" />
             </TextBlock>
         </xa:SimpleStackPanel>
         <Grid Grid.Row="1">
@@ -50,32 +50,33 @@
                     HorizontalAlignment="Center">
                     <Grid TextOptions.TextHintingMode="Auto">
                         <xa:SimpleStackPanel>
-                            <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" FontSize="24">
+                            <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" FontSize="18">
+                                <Run FontSize="24" Text="{x:Static app:App.UiLauncherVersionString}" />
+                                <LineBreak />
+                                <Run Text="版权所有 ZGIT Network" />
+                                <LineBreak/>
+                                <Run Text="本软件按 GPL v3 协议开源，二次开发时请注意。" />
+                                <LineBreak />
                                 <Run Text="星空目而不可及......赞助继续助力！" />
                             </TextBlock>
+                            <ctrl:SelectableTextBlock
+                                Margin="0,0,0,8"
+                                Focusable="False"
+                                FontSize="18"
+                                Text="https://github.com/ZGIT-Network/OpenFrpLauncher"
+                                TextWrapping="Wrap" />
                             <Grid
-                                MaxWidth="342"
+                                MaxWidth="318"
                                 Margin="0,0,16,16"
-                                HorizontalAlignment="Left">
+                                HorizontalAlignment="Left"
+                                RenderOptions.BitmapScalingMode="HighQuality">
                                 <Image ink:ClipHelper.CornerRadius="6">
                                     <Image.Style>
                                         <Style TargetType="Image">
                                             <Setter Property="Source" Value="../Resources/Images/hsccode_v2.jpg" />
-
                                         </Style>
                                     </Image.Style>
                                 </Image>
-                                <TextBlock
-                                    Margin="0,16,0,0"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Top"
-                                    Foreground="#afafaf"
-                                    IsHitTestVisible="False"
-                                    TextAlignment="Center">
-                                    <Run Text="请注意:要进入赞助列表请勿匿名赞助" />
-                                    <LineBreak />
-                                    <Run Text="微信" />
-                                </TextBlock>
                             </Grid>
                         </xa:SimpleStackPanel>
                     </Grid>

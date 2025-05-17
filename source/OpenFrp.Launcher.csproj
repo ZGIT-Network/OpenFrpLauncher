@@ -11,12 +11,15 @@
 	<PublishAot>false</PublishAot>
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	  <ApplicationIcon>Resources\Images\desktop.ico</ApplicationIcon>
+	  <AssemblyName>OpenFrp Launcher</AssemblyName>
   </PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net48'">
 		<LangVersion>10</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="Resources\Images\desktop.ico" />
+	  <None Remove="Resources\Images\desktop_64w.png" />
+	  <None Remove="Resources\Images\funx.png" />
 	  <None Remove="Resources\Images\hsccode_v2.jpg" />
 	  <None Remove="Resources\Images\v2-bg.jpg" />
 	  <None Remove="Resources\Images\weavatar.png" />
@@ -24,13 +27,13 @@
 	</ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Images\desktop.ico" />
+    <Resource Include="Resources\Images\desktop_64w.png" />
+    <Resource Include="Resources\Images\funx.png" />
     <Resource Include="Resources\Images\hsccode_v2.jpg" />
-    <Resource Include="Resources\Images\v2-bg.jpg" />
     <Resource Include="Resources\Images\weavatar.png" />
     <Resource Include="Resources\Sora-Medium.ttf" />
     <Resource Include="Resources\SourceCodePro-Medium.ttf" />
     <Resource Include="Resources\OAuth\index.html" />
-	  <Resource Include="Resources\Images\of-logo.png" />
 	  
   </ItemGroup>
   <ItemGroup>

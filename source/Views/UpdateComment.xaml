@@ -65,6 +65,24 @@
                     HorizontalAlignment="Center">
                     <Grid TextOptions.TextHintingMode="Auto">
                         <xa:SimpleStackPanel Spacing="8">
+                            <ctrl:SelectableTextBlock
+HorizontalAlignment="Left"
+FontFamily="{StaticResource SoraMediumMixYahei}"
+FontSize="20"
+TextWrapping="Wrap">
+                                <Run Text="FRPC 版本号 :" />
+                                <Run Text="{x:Static gapp:App.FrpcVersionString}" />
+
+                            </ctrl:SelectableTextBlock>
+                            <ctrl:SelectableTextBlock
+HorizontalAlignment="Left"
+FontFamily="{StaticResource SoraMediumMixYahei}"
+FontSize="20"
+TextWrapping="Wrap">
+
+                                <Run Text="启动器 版本号 :" />
+                                <Run Text="{x:Static gapp:App.LauncherVersionString}" />
+                            </ctrl:SelectableTextBlock>
                             <ctrl:SettingItem
                                 Title="刷新"
                                 Command="{Binding conve_CheckUpdateCommand}"
@@ -93,34 +111,6 @@
                                     IsRightAlignedCompact="True" />
 
                             </ctrl:SettingItem>
-                            <Border
-                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                BorderThickness="1"
-                                ClipToBounds="True"
-                                CornerRadius="6">
-                                <xa:SimpleStackPanel Margin="20" Spacing="4">
-                                    <ctrl:SelectableTextBlock
-                                        HorizontalAlignment="Left"
-                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                        FontSize="20"
-                                        TextWrapping="Wrap">
-                                        <Run Text="FRPC 版本号 :" />
-                                        <Run Text="{x:Static gapp:App.FrpcVersionString}" />
-
-                                    </ctrl:SelectableTextBlock>
-                                    <ctrl:SelectableTextBlock
-                                        HorizontalAlignment="Left"
-                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                        FontSize="20"
-                                        TextWrapping="Wrap">
-
-                                        <Run Text="启动器 版本号 :" />
-                                        <Run Text="{x:Static gapp:App.LauncherVersionString}" />
-                                    </ctrl:SelectableTextBlock>
-                                </xa:SimpleStackPanel>
-                            </Border>
-
                             <!--  Vsg Container  -->
                             <Border
                                 MinHeight="150"
@@ -209,13 +199,13 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             Spacing="8"
-                                            TextElement.Foreground="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                            TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
                                             <ink:FontIcon
                                                 HorizontalAlignment="Center"
-                                                FontSize="64"
+                                                FontSize="48"
                                                 Icon="{x:Static ink:SegoeFluentIcons.Airplane}" />
                                             <TextBlock TextWrapping="Wrap">
-                                                <Run FontSize="24" Text="暂无可用的新更新..." />
+                                                <Run FontSize="20" Text="暂无可用的新更新" />
                                             </TextBlock>
                                         </xa:SimpleStackPanel>
                                     </Border>

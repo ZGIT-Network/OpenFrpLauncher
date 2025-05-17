@@ -105,5 +105,17 @@ namespace OpenFrp.Launcher.Properties {
                 this["AutoLoginId"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("ToastNotification")]
+        public global::OpenFrp.Launcher.Model.NotificationMode NotificationMode {
+            get {
+                return ((global::OpenFrp.Launcher.Model.NotificationMode)(this["NotificationMode"]));
+            }
+            set {
+                this["NotificationMode"] = value;
+            }
+        }
     }
 }

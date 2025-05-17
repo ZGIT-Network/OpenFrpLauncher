@@ -230,12 +230,15 @@
                                 <ComboBoxItem Content="深色模式" />
                             </ComboBox>
                         </ctrl:SettingItem>
-                        <ctrl:SettingItem Title="窗口背景效果" Description="整的挺花里胡哨的...">
+                        <ctrl:SettingItem
+                            Title="窗口背景效果"
+                            Description="整的挺花里胡哨的..."
+                            IsEnabled="{x:Static xa:OSVersionHelper.IsWindows11OrGreater}">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon FontSize="24" Glyph="&#xEB1D;" />
                             </ctrl:SettingItem.Icon>
                             <ComboBox
-                                Width="150"
+                                MinWidth="150"
                                 AutomationProperties.Name="窗口背景效果"
                                 SelectedIndex="{Binding BackdropType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                 <ComboBoxItem Content="无" />
@@ -332,14 +335,27 @@
                             Margin="0,24,0,0"
                             FontSize="18"
                             Text="高级选项" />
-                        <ctrl:SettingItem
-                            Title="开机静默启动"
-                            Description="该项适用于登录后在桌面环境自动启动启动器(不显示窗口)"
-                            IsEnabled="False">
+                        <ctrl:SettingItem Title="通知模式" Description="该项适用于登录后在桌面环境自动启动启动器(不显示窗口">
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Message}" />
+                            </ctrl:SettingItem.Icon>
+                            <ComboBox
+                                MinWidth="150"
+                                AutomationProperties.Name="通知模式"
+                                SelectedIndex="{Binding NotificationMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <ComboBoxItem Content="Toast 通知" IsEnabled="{x:Static xa:OSVersionHelper.IsWindows10OrGreater}" />
+                                <ComboBoxItem Content="任务栏 (旧版通知)" />
+                                <ComboBoxItem Content="不通知" />
+                            </ComboBox>
+                        </ctrl:SettingItem>
+                        <ctrl:SettingItem Title="开机静默启动" Description="该项适用于登录后在桌面环境自动启动启动器(不显示窗口)">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Play}" />
                             </ctrl:SettingItem.Icon>
-                            <ink:ToggleSwitch MinWidth="0" IsRightAlignedCompact="True" />
+                            <ink:ToggleSwitch
+                                MinWidth="0"
+                                IsOn="{Binding AutoLaunchWhenLogon, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                IsRightAlignedCompact="True" />
                         </ctrl:SettingItem>
                     </xa:SimpleStackPanel>
                 </Border>

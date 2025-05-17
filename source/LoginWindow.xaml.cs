@@ -11,6 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using OpenFrp.Service;
+using static Google.Protobuf.WellKnownTypes.Field.Types;
 
 namespace OpenFrp.Launcher
 {
@@ -34,6 +35,8 @@ namespace OpenFrp.Launcher
             iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
 
             hWnd = new WindowInteropHelper(this).EnsureHandle();
+
+
         }
 
 
@@ -48,6 +51,8 @@ namespace OpenFrp.Launcher
         {
             if (hWnd != IntPtr.Zero)
             {
+                ShowInTaskbar = true;
+
                 Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_SHOW);
 
                 if (WindowState is WindowState.Minimized)
@@ -67,6 +72,14 @@ namespace OpenFrp.Launcher
             if (hWnd != IntPtr.Zero)
             {
                 Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_MINIMIZE);
+            }
+        }
+
+        public void HideByHwndCC2()
+        {
+            if (hWnd != IntPtr.Zero)
+            {
+                Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_HIDE);
             }
         }
 

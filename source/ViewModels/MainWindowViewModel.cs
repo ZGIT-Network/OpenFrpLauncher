@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Interop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -301,6 +302,11 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (arg.Source is MainWindow mw)
             {
+
+                if (App.StartupArguments.Contains("--minimize") && mw.Tag is false)
+                {
+                    mw.HideByHwndCC();
+                }
                 ShowAlertAction = mw.ShowAlert;
 
                 mw.Closing += (_, e) =>
@@ -541,43 +547,75 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 case Service.Proto.Response.NotificationStreamResponse.Types.NotificationStreamResponseState.LaunchSuccess:
                     {
-                        if (OSVersionHelper.IsWindows10OrGreater)
-                        if (response.Data.TryUnpack<Service.Proto.Response.NotificationStreamResponse.Types.LaunchSuccessMsg>(out var msg))
+                        if (!response.Data.TryUnpack<Service.Proto.Response.NotificationStreamResponse.Types.LaunchSuccessMsg>(out var msg)) return;
+
+                        string[] addresses = msg.ConnectAddresses.ToArray();
+
+                        var sb = new StringBuilder();
+
+                        if (msg.TunnelType.Contains("HTTP"))
                         {
-                            string[] addresses = msg.ConnectAddresses.ToArray();
-
-                            var sb = new StringBuilder();
-
-                            if (msg.TunnelType.Contains("HTTP"))
+                            foreach (var item in msg.ConnectAddresses)
                             {
-                                foreach (var item in msg.ConnectAddresses)
-                                {
-                                    sb.Append(item + ",");
-                                }
+                                sb.Append(item + ",");
                             }
-                      
-                         
-
-                            new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
-                                           .AddText($"隧道 {msg.TunnelName} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
-                                           .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
-                                           .AddText($"可用地址: {(msg.TunnelType.Contains("HTTP") ? sb.ToString().Remove(sb.Length - 1) : addresses.First())}" + ("HTTP".Contains(msg.TunnelType) ? "\n注: 请先将该上列域名解析到对应节点的地址。" : ""))
-                                           .AddAttributionText($"{msg.TunnelType.ToUpper()} {msg.Host}:{msg.Port}")
-                                           .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {(msg.HasExtraConnectAddress ? msg.ExtraConnectAddress : addresses.First())}")
-                                           .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
-                                           .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
-                                           .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
-                                           .Show(toast =>
-                                           {
-                                               toast.Tag = msg.TunnelName;
-                                               if (App.Notification_UseExpiredReboot)
-                                               {
-                                                   try { toast.ExpiresOnReboot = true; }
-                                                   catch (System.MissingMethodException) { }
-                                               }
-                                               toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
-                                           });
                         }
+                        switch (App.Settings.NotificationMode)
+                        {
+                            case NotificationMode.ToastNotification:
+                                {
+                                    if (OSVersionHelper.IsWindows10OrGreater)
+                                    {
+                                        try
+                                        {
+                                            new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                            .AddText($"隧道 {msg.TunnelName} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                            .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
+                                                            .AddText($"可用地址: {(msg.TunnelType.Contains("HTTP") ? sb.ToString().Remove(sb.Length - 1) : addresses.First())}" + ("HTTP".Contains(msg.TunnelType) ? "\n注: 请先将该上列域名解析到对应节点的地址。" : ""))
+                                                            .AddAttributionText($"{msg.TunnelType.ToUpper()} {msg.Host}:{msg.Port}")
+                                                            .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {(msg.HasExtraConnectAddress ? msg.ExtraConnectAddress : addresses.First())}")
+                                                            .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
+                                                            .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                            .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                            .Show(toast =>
+                                                            {
+                                                                toast.Tag = msg.TunnelName;
+                                                                if (App.Notification_UseExpiredReboot)
+                                                                {
+                                                                    toast.ExpiresOnReboot = true;
+                                                                }
+                                                                toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                            });
+                                            return;
+                                        }
+                                        catch
+                                        {
+                                            goto case Model.NotificationMode.TaskbarNotify;
+                                        }
+                                    }
+                                }
+                                ;break;
+                            case NotificationMode.TaskbarNotify:
+                                {
+                                    if (App.TaskBarIcon is null)
+                                    {
+                                        return;
+                                    }
+                                    try
+                                    {
+                                        App.TaskBarIcon.ShowNotification(
+                                            title: $"隧道 {msg.TunnelName} 启动成功!",
+                                            message: $"可用地址: {(msg.TunnelType.Contains("HTTP") ? sb.ToString().Remove(sb.Length - 1) : addresses.First())}" + ("HTTP".Contains(msg.TunnelType) ? "\n注: 请先将该上列域名解析到对应节点的地址。" : ""),
+                                            icon: H.NotifyIcon.Core.NotificationIcon.Info);
+                                    }
+                                    catch
+                                    {
+
+                                    }
+                                }
+                                ;break;
+                        }
+                        
                     };break;
                 case Service.Proto.Response.NotificationStreamResponse.Types.NotificationStreamResponseState.Messaging:
                     {

@@ -23,5 +23,8 @@
     <Setting Name="AutoLoginId" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="NotificationMode" Type="OpenFrp.Launcher.Model.NotificationMode" Scope="User">
+      <Value Profile="(Default)">ToastNotification</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -125,6 +125,17 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             }
         }
+        public int NotificationMode
+        {
+            get
+            {
+                return (int)App.Settings.NotificationMode;
+            }
+            set
+            {
+                App.Settings.NotificationMode = (Model.NotificationMode)value;
+            }
+        }
 
         public bool BypassProxy
         {
@@ -139,12 +150,12 @@ namespace OpenFrp.Launcher.ViewModels
         {
             get
             {
-                return false;
-                //return System.IO.File.Exists(astLaunchFile);
+                //return false;
+                return System.IO.File.Exists(astLaunchFile);
             }
             set
             {
-                return;
+                //return;
 
                 if (!value)
                 {
@@ -239,6 +250,8 @@ namespace OpenFrp.Launcher.ViewModels
         private async Task @event_CallUpLoginWindow(CancellationToken cancellationToken)
         {
             var lf = new LoginWindow(Application.Current.MainWindow);
+
+            lf.WindowState = WindowState.Normal;
 
             var @value = await lf.LoginWndProcAsync(cancellationToken);
 
@@ -385,11 +398,11 @@ namespace OpenFrp.Launcher.ViewModels
 
             App.Settings.AutoLoginId = "";
 
-            try
-            {
-                Helpers.UsrTokenService.RemoveUser(UserInfo.UserName, true);
-            }
-            catch { }
+            //try
+            //{
+            //    Helpers.UsrTokenService.RemoveUser(UserInfo.UserName, true);
+            //}
+            //catch { }
 
             Model.RouteMessage<MainWindowViewModel>.Send(__userInfo_Defualt);
         }

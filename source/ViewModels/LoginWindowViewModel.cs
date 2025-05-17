@@ -115,10 +115,23 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        private bool _loaded = false;
+
         [RelayCommand]
         private async Task @event_MainWindowLoaded(LoginWindow wind)
         {
+            if (_loaded) { return; }
+            else { _loaded = true; }
             window = wind;
+
+            if (App.StartupArguments.Contains("--minimize") && window.Owner is not MainWindow)
+            {
+                wind.HideByHwndCC2();
+            }
+            else
+            {
+                wind.WindowState = WindowState.Normal;
+            }
 
             wind.Closing += Wind_Closing;
 
@@ -144,12 +157,13 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             }
 
-            if (window != null)
-            {
-                VisualStateManager.GoToElementState(window, LoginState, false);
-            }
+            
             if (string.IsNullOrEmpty(App.Settings.AutoLoginId))
             {
+                if (window != null)
+                {
+                    VisualStateManager.GoToElementState(window, LoginState, false);
+                }
                 if (wind.FindName("selfor") is ItemsControl isc)
                 {
                     for (global::System.Int32 i = 0; i < isc.ItemContainerGenerator.Items.Count; i++)
@@ -629,6 +643,8 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     var mainWindow = new MainWindow(true);
 
+                    
+
                     mainWindow.Show();
                 }
             }
@@ -790,6 +806,13 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (window is not null)
             {
+                bool foc = window.WindowState is WindowState.Normal;
+
+                if (!foc && !App.StartupArguments.Contains("--minimize"))
+                {
+                    foc = true;
+                }
+
                 window.Closing -= Wind_Closing;
                 window.Close();
 
@@ -807,6 +830,9 @@ namespace OpenFrp.Launcher.ViewModels
                 else if (App.Current.MainWindow is not MainWindow)
                 {
                     var mainWindow = new MainWindow(userInfo);
+
+                    mainWindow.WindowState = foc ? WindowState.Normal : WindowState.Minimized;
+                    mainWindow.Tag = foc;
 
                     mainWindow.Show();
                 }

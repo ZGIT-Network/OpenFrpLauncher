@@ -19,6 +19,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Data;
 using System.Diagnostics.Metrics;
 using System.Runtime.ConstrainedExecution;
+using static Google.Protobuf.WellKnownTypes.Field.Types;
 
 
 namespace OpenFrp.Launcher
@@ -58,25 +59,6 @@ namespace OpenFrp.Launcher
                     }
             };
 #endif
-            if (OSVersionHelper.IsWindows10OrGreater)
-            {
-                try
-                {
-                    Type? tp = typeof(Windows.UI.Notifications.ToastNotification);
-                    if (tp is not null)
-                    {
-                        var putMethod = tp.GetMethod("put_ExpiresOnReboot", new Type[1] { typeof(bool) });
-                        if (putMethod is not null)
-                        {
-                            Notification_UseExpiredReboot = true;
-                        }
-                    }
-                }
-                catch
-                {
-                    return;
-                }
-            }
         }
 
         internal static bool Notification_UseExpiredReboot = false;
@@ -176,6 +158,10 @@ namespace OpenFrp.Launcher
             }
         }
 
+        internal static string[] StartupArguments { get; private set; } =
+            /* Array.Empty<string>() */
+            new string[] {  };
+
         protected override void OnStartup(StartupEventArgs e)
         {
             // false is failed to delete config / read config
@@ -187,26 +173,39 @@ namespace OpenFrp.Launcher
 
                 return;
             }
-
-            if (e.Args.Contains("--no-effect"))
+            if (OSVersionHelper.IsWindows10OrGreater)
             {
-
+                try
+                {
+                    Type? tp = typeof(Windows.UI.Notifications.ToastNotification);
+                    if (tp is not null)
+                    {
+                        var putMethod = tp.GetMethod("put_ExpiresOnReboot", new Type[1] { typeof(bool) });
+                        if (putMethod is not null)
+                        {
+                            Notification_UseExpiredReboot = true;
+                        }
+                    }
+                }
+                catch
+                {
+                    return;
+                }
             }
-
-
+            else if (App.Settings.NotificationMode is Model.NotificationMode.ToastNotification)
+            {
+                App.Settings.NotificationMode = Model.NotificationMode.TaskbarNotify;
+            }
 
             string launcherFilePath = Path.Combine(AppContext.BaseDirectory, "OpenFrp.Launcher.exe");
             string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(AppContext.BaseDirectory);
 
             launcherMutex = new Mutex(false, $"openfrp.launcher.{appHash}", out var createdNewFlag);
 
-#if DEBUG
-            //MessageBox.Show("" +
-            //    $"AppContext.BaseDirectory: {AppContext.BaseDirectory}" + 
-            //    $"\nopenfrp.launcher.{appHash}" +
-            //    $"\ncreatedNewFlag : {createdNewFlag}" +
-            //    $"\nlauncherMutex.SafeWaitHandle.IsClosed: {launcherMutex.SafeWaitHandle.IsClosed}");
+#if !DEBUG
+            StartupArguments = e.Args;
 #endif
+
             if (!createdNewFlag && !launcherMutex.SafeWaitHandle.IsClosed)
             {
                 launcherMutex.Close();
@@ -323,11 +322,10 @@ namespace OpenFrp.Launcher
             {
                 TaskBarIcon.ForceCreate(false);
             }
-            if (e.Args.Contains("--minimize"))
-            {
 
-            }
             #endregion
+
+
             base.OnStartup(e);
         }
 
@@ -345,7 +343,7 @@ namespace OpenFrp.Launcher
 
         public static string FrpcVersionString { get; set; } = "Unknown";
 
-        public static string LauncherVersionString => "5.7.6 Preview";
+        public static string LauncherVersionString => "5.7.8 Preview";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 

@@ -21,6 +21,7 @@
     ink:TitleBar.Height="34"
     ink:WindowHelper.UseModernWindowStyle="True"
     RenderOptions.ClearTypeHint="Enabled"
+    WindowState="Minimized"
     mc:Ignorable="d">
     <d:FrameworkElement.DataContext>
         <vm:MainWindowViewModel />

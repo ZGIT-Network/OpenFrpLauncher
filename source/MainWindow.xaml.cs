@@ -73,6 +73,8 @@ namespace OpenFrp.Launcher
             });
             iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
 
+            WindowState = WindowState.Normal;
+
             hWnd = new WindowInteropHelper(this).EnsureHandle();
         }
 
