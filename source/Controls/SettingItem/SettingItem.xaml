@@ -160,6 +160,13 @@
                         </MultiTrigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
+                                <Condition Property="ExtendUI" Value="{x:Null}" />
+                                <Condition Property="Description" Value="" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="wp" Property="Visibility" Value="Collapsed" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
                                 <Condition Property="IsClickable" Value="True" />
                                 <Condition Property="IsPressed" Value="True" />
                             </MultiTrigger.Conditions>

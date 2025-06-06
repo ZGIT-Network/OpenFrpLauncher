@@ -26,5 +26,11 @@
     <Setting Name="NotificationMode" Type="OpenFrp.Launcher.Model.NotificationMode" Scope="User">
       <Value Profile="(Default)">ToastNotification</Value>
     </Setting>
+    <Setting Name="UseForceTls" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseDebug" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

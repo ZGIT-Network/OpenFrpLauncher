@@ -68,7 +68,7 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                         return;
                     }
-                    frame?.Navigate(tp);
+                    frame?.Dispatcher.Invoke(() => frame?.Navigate(tp));
                 }
             });
             WeakReferenceMessenger.Default.Register<Model.RouteMessage<MainWindowViewModel, string>>(nameof(MainWindowViewModel), (_, message) =>
@@ -653,7 +653,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        internal static void ShutdownApp(Process? bypassProc = default)
+        internal static async void ShutdownApp(Process? bypassProc = default)
         {
             App.TaskBarIcon?.CloseTrayPopup();
 
@@ -691,13 +691,17 @@ namespace OpenFrp.Launcher.ViewModels
                 App.ServiceProcess.EnableRaisingEvents = false;
                 try
                 {
-                    App.ServiceProcess.StandardInput.WriteLine("exitProc");
+                    await App.ServiceProcess.StandardInput.WriteLineAsync("exitProc");
 
                     Application.Current.Shutdown();
 
                     return;
                 }
                 catch (InvalidOperationException)
+                {
+
+                }
+                catch (System.IO.IOException)
                 {
 
                 }

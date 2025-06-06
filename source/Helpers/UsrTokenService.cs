@@ -108,7 +108,8 @@ namespace OpenFrp.Launcher.Helpers
 
         public static void RemoveUser(Model.PlatformUser user, bool saveNow = false)
         {
-            RemoveUser(user.Username, saveNow);
+            if (string.IsNullOrEmpty(user.Username)) return;
+            RemoveUser(user.Username!, saveNow);
         }
 
         public static void RemoveUser(string username, bool saveNow = false)

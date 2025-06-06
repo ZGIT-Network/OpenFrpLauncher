@@ -38,15 +38,15 @@
                                 </StackPanel>
                             </Grid>
                             <Grid>
+                                <Grid.Resources>
+                                    <ink:BindingProxy x:Key="IsStackTraceIsLength0" Value="{Binding Exception.StackTrace.Length, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                </Grid.Resources>
                                 <FrameworkElement.Visibility>
                                     <Binding
                                         Converter="{StaticResource BooleanToVisibilityConverter}"
                                         Mode="OneWay"
-                                        Path="Value">
-                                        <Binding.Source>
-                                            <ink:BindingProxy Value="{Binding Exception.StackTrace.Length, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
-                                        </Binding.Source>
-                                    </Binding>
+                                        Path="Value"
+                                        Source="{StaticResource IsStackTraceIsLength0}" />
                                 </FrameworkElement.Visibility>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />

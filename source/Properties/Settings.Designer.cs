@@ -117,5 +117,29 @@ namespace OpenFrp.Launcher.Properties {
                 this["NotificationMode"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseForceTls {
+            get {
+                return ((bool)(this["UseForceTls"]));
+            }
+            set {
+                this["UseForceTls"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseDebug {
+            get {
+                return ((bool)(this["UseDebug"]));
+            }
+            set {
+                this["UseDebug"] = value;
+            }
+        }
     }
 }

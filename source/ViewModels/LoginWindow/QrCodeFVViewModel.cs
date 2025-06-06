@@ -54,6 +54,16 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void @event_CallbackRequest()
+        {
+            event_RequestUpdateCommand.Cancel();
+            event_RefreshLinkCommand.Cancel();
+            conve_WaitForPollLoginCommand.Cancel();
+
+            page?.CallbackAction.Invoke(ViewModels.LoginWindowViewModel.LoginState);
+        }
+
         // 当 UI 重新调入时触发
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_RequestUpdate(CancellationToken cancellationToken)
@@ -258,6 +268,35 @@ namespace OpenFrp.Launcher.ViewModels
                 return; 
             } catch { NeedDisplayUrl = true; }
             
+        }
+
+        [RelayCommand]
+        private void @event_OpenHelpLinkInWeb()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = true,
+                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                    FileName = "cmd",
+                    Arguments = $"/c start https://docs.openfrp.net/use/desktop-launcher"
+                });
+                return;
+            }
+            catch { }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    UseShellExecute = true,
+                    FileName = "https://docs.openfrp.net/use/desktop-launcher"
+                });
+                return;
+            }
+            catch { }
         }
 
         private bool CanOpenLinkInWeb() => !IsFailed;

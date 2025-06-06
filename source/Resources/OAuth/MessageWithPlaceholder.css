@@ -1,0 +1,28 @@
+:root {
+    color-scheme: dark light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        background-color: rgb(28, 28, 28);
+    }
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    padding-top: 1vh;
+    font-weight: normal;
+    max-width: 60vw;
+    overflow-wrap: anywhere;
+}
+
+span {
+    color: rgb(158, 158, 158);
+    font-size: .9rem;
+}

@@ -331,6 +331,16 @@
                                 IsRightAlignedCompact="True" />
 
                         </ctrl:SettingItem>
+                        <ctrl:SettingItem Title="强制使用 TLS 加密" Description="缓解在一些网络环境下无法映射的问题；但是占用CPU。">
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon FontSize="24" Glyph="&#xED2F;" />
+                            </ctrl:SettingItem.Icon>
+                            <ink:ToggleSwitch
+                                MinWidth="0"
+                                IsOn="{Binding UseForceTls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsRightAlignedCompact="True" />
+
+                        </ctrl:SettingItem>
                         <TextBlock
                             Margin="0,24,0,0"
                             FontSize="18"
@@ -356,6 +366,16 @@
                                 MinWidth="0"
                                 IsOn="{Binding AutoLaunchWhenLogon, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                 IsRightAlignedCompact="True" />
+                        </ctrl:SettingItem>
+                        <ctrl:SettingItem Title="调试模式" Description="">
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon FontSize="24" Glyph="&#xEC7A;" />
+                            </ctrl:SettingItem.Icon>
+                            <ink:ToggleSwitch
+                                MinWidth="0"
+                                IsOn="{Binding UseDebug, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsRightAlignedCompact="True" />
+
                         </ctrl:SettingItem>
                     </xa:SimpleStackPanel>
                 </Border>

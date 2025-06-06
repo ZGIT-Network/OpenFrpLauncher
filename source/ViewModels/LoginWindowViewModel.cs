@@ -20,6 +20,7 @@ using OpenFrp.Launcher.Controls;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
+using Microsoft.Web.WebView2.Core;
 
 
 
@@ -33,6 +34,16 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 if (window != null)
                 {
+                    if (event_WebLogin2Command.IsRunning && state is LoginState)
+                    {
+                        event_WebLogin2Command.Cancel();
+                    }
+                    if (event_WebLoginCommand.IsRunning && state is LoginState)
+                    {
+                        event_WebLoginCommand.Cancel();
+                    }
+
+
                     VisualStateManager.GoToElementState(window, state, false);
                 }
             };
@@ -63,29 +74,38 @@ namespace OpenFrp.Launcher.ViewModels
                         }; break;
                 }
             });
-            Helpers.UsrTokenService.RefreshPlatformUsers();
+            WeakReferenceMessenger.Default.Register<Model.RouteMessage<LoginWindowViewModel, Yue3.Model.Result.HttpResponse>>(nameof(LoginWindowViewModel), (_, message) =>
+            {
+                if(message.Data is { } result)
+                {
+                    this.UpdateState(result);
+                }
+            });
+                Helpers.UsrTokenService.RefreshPlatformUsers();
             OnPropertyChanged(nameof(PlatformUsers));
         }
 
         internal const string LoadingState = "DisplayLoadingCtrl";
         internal const string QrCodeFVState = "DisplayQrCodeFvCtrl";
+        internal const string WebOAuthState = "DisplayWebOAuthCtrl";
         internal const string SettingState = "DisplaySettingCtrl";
         internal const string LoginState = "DisplayLoginCtrl";
+
+        internal const string CaptchaWebViewDisplayState = "DisplayCaptchaWebView";
+        internal const string CaptchaWebViewHiddenState = "HiddenCaptchaWebView";
 
         internal readonly Action<string> CallbackAction;
 
         private LoginWindow? window;
 
-        private OpenFrp.Service.Host.HttpServer? webLoginHttpServer;
-
         [ObservableProperty,NotifyCanExecuteChangedFor(nameof(event_CancelLoginCommand))]
         private bool canCancelLogin = true;
 
-        [ObservableProperty, NotifyCanExecuteChangedFor(nameof(event_LoginCommand))]
-        private string? username;
+        //[ObservableProperty, NotifyCanExecuteChangedFor(nameof(event_LoginCommand))]
+        //private string? username;
 
-        [ObservableProperty, NotifyCanExecuteChangedFor(nameof(event_LoginCommand))]
-        private string? password;
+        //[ObservableProperty, NotifyCanExecuteChangedFor(nameof(event_LoginCommand))]
+        //private string? password;
 
         [ObservableProperty,NotifyPropertyChangedFor(nameof(IsExceptionInfobarOpen),nameof(HttpResponseMessage))]
         private Model.ExecuteResult? executeResult;
@@ -117,6 +137,7 @@ namespace OpenFrp.Launcher.ViewModels
 
         private bool _loaded = false;
 
+
         [RelayCommand]
         private async Task @event_MainWindowLoaded(LoginWindow wind)
         {
@@ -126,11 +147,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (App.StartupArguments.Contains("--minimize") && window.Owner is not MainWindow)
             {
-                wind.HideByHwndCC2();
-            }
-            else
-            {
-                wind.WindowState = WindowState.Normal;
+                wind.HideByHwndCC();
             }
 
             wind.Closing += Wind_Closing;
@@ -208,6 +225,8 @@ namespace OpenFrp.Launcher.ViewModels
 
             UpdateImageOpacity(ThemeManager.GetActualTheme(wind));
 
+            //_ = event_DisplayCaptchaWebViewControlCommand.ExecuteAsync("False");
+
             wind.AddHandler(ThemeManager.ActualThemeChangedEvent, new RoutedEventHandler(delegate 
             {
                 UpdateImageOpacity(ThemeManager.GetActualTheme(wind));
@@ -234,10 +253,6 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 window.UserInfoCallback.TrySetCanceled();
                 mw.Activate();
-                if (webLoginHttpServer is not null)
-                {
-                    webLoginHttpServer.StopListen();
-                }
                 event_CancelLogin();
             }
             else
@@ -271,133 +286,164 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         [RelayCommand]
-        private void @event_DisplayLoadingControl(string xval)
+        private void @event_DisplayLoadingControl(string booleanStr)
         {
-            if (window is null || !bool.TryParse(xval,out var flag)) return;
+            if (window is null || !bool.TryParse(booleanStr, out var flag)) return;
 
             VisualStateManager.GoToElementState(window, flag ? LoadingState : LoginState, false);
         }
 
+        //[RelayCommand]
+        //private async Task @event_DisplayCaptchaWebViewControl(string booleanStr)
+        //{
+        //    if (window is null || !bool.TryParse(booleanStr, out var flag)) return;
+
+        //    if (window.FindName("captchaWebViewContainerBr") is not Border br) return;
+
+        //    if (flag && br.Child is null)
+        //    {
+        //        string pat = Service.Helpers.FileHelper.GetTemplateFolder($"ofl.edgeWebView2.{DateTimeOffset.Now.ToUnixTimeMilliseconds()}");
+        //        try
+        //        {
+        //            var ev = await CoreWebView2Environment.CreateAsync(userDataFolder: pat);
+        //            Microsoft.Web.WebView2.Wpf.WebView2 wv = new Microsoft.Web.WebView2.Wpf.WebView2
+        //            {
+        //                DefaultBackgroundColor = System.Drawing.Color.Transparent
+        //            };
+        //            br.Child = wv;
+
+        //            await wv.EnsureCoreWebView2Async(ev);
+
+        //            wv.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
+        //            wv.CoreWebView2.Settings.AreDevToolsEnabled = System.Diagnostics.Debugger.IsAttached;
+
+        //            wv.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
+        //            wv.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+        //            wv.CoreWebView2.Settings.IsPinchZoomEnabled = false;
+        //            wv.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
+        //            wv.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
+        //            wv.CoreWebView2.Settings.IsZoomControlEnabled = false;
+
+        //            wv.CoreWebView2.Settings.IsStatusBarEnabled = false;
+
+        //            wv.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = false;
+        //            wv.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
+        //            wv.CoreWebView2.Settings.AreDefaultContextMenusEnabled = System.Diagnostics.Debugger.IsAttached;
+
+        //            wv.CoreWebView2.Navigate("http://127.0.0.1:5500/index.html");
+        //            wv.CoreWebView2.DOMContentLoaded += delegate
+        //            {
+        //                SendUserAppearence(wv.CoreWebView2);
+        //            };
+
+        //        }
+        //        catch
+        //        {
+
+        //        }
+        //    }
+        //    else if (br.Child is Microsoft.Web.WebView2.Wpf.WebView2 wv)
+        //    {
+        //        if (flag)
+        //        {
+        //            SendUserAppearence(wv.CoreWebView2);
+        //            wv.CoreWebView2.PostWebMessageAsString("refreshCaptcha");
+        //        }
+        //        else
+        //        {
+        //            wv.CoreWebView2.PostWebMessageAsString(CaptchaWebViewHiddenState);
+        //        }
+        //    }
+            
+        //    VisualStateManager.GoToElementState(window, flag ? CaptchaWebViewDisplayState : CaptchaWebViewHiddenState, false);
+        //}
+        //private void SendUserAppearence(Microsoft.Web.WebView2.Core.CoreWebView2 wv)
+        //{
+        //    if (window is null) return;
+        //    wv.PostWebMessageAsString(CaptchaWebViewDisplayState);
+
+        //    var accentColor = window?.GetValue(ThemeManager.ActualAccentColorProperty);
+
+        //    if (accentColor != null && accentColor is System.Windows.Media.Color mc)
+        //    {
+        //        wv.PostWebMessageAsString($"accent^rgb({mc.R},{mc.G},{mc.B})");
+        //    }
+        //    wv.PostWebMessageAsString(App.Settings.ApplicationTheme.ToString());
+        //}
+
+        //private void CoreWebView2_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+        //{
+        //    if (sender is Microsoft.Web.WebView2.Core.CoreWebView2 wv)
+        //    {
+        //        string msg = e.TryGetWebMessageAsString();
+
+        //        switch (msg)
+        //        {
+        //            case "reloadPage":
+        //                {
+        //                    wv.Reload();
+        //                    SendUserAppearence(wv);
+        //                }
+        //                ;break;
+        //            case "closeDialog":
+        //                {
+        //                    _ = event_DisplayCaptchaWebViewControlCommand.ExecuteAsync("False");
+        //                };break;
+        //        }
+        //        if (msg.StartsWith("resp^"))
+        //        {
+
+        //        }
+        //    }
+        //}
+
+        /// <summary>
+        /// OAuth 网页授权登录
+        /// </summary>
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_WebLogin(CancellationToken cancellationToken)
         {
+            bool wentLoading = false;
+            if (window is null) return;
             try
             {
-                if (window is not null)
+                this.ClearExecuteResult();
+
+                window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+
+                if (window.FindName("defaultWebOAuthCtrl") is not Border br) return;
+
+                VisualStateManager.GoToElementState(window, WebOAuthState, false);
+
+                Views.LoginWindow.OAuthLoginView webOAuth;
+
+                if (br.Child is null)
                 {
-                    window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+                    br.Child = webOAuth = new Views.LoginWindow.OAuthLoginView(CallbackAction);
                 }
-
-                
-
-                string address = "";
-                string local_Address = "";
-                var task = new TaskCompletionSource<string>();
-
-                webLoginHttpServer = new OpenFrp.Service.Host.HttpServer();
-                webLoginHttpServer.ServiceAvailable += async (_, e) =>
+                else if (br.Child is Views.LoginWindow.OAuthLoginView { DataContext: ViewModels.OAuthLoginViewModel lvw } otk)
                 {
-                    var oauthUrl = await OpenFrpApi.GetAuthorizeUrl(e, cancellationToken);
-
-                    if (!this.UpdateState(oauthUrl))
-                    {
-                        webLoginHttpServer.StopListen();
-                        VisualStateManager.GoToElementState(window, LoginState, false);
-                        task.TrySetCanceled();
-                        return;
-                    }
-                    else
-                    {
-                        address = oauthUrl.Data!;
-                    }
-                    local_Address = $"http://localhost:{e}/oauth_callback";
-                    //address = $"http://launcher.openfrp.net:{e}/oauth_callback";
-
-                    try
-                    {
-                        _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = address,
-                            UseShellExecute = true,
-                            ErrorDialog = false
-                        });
-                    }
-                    catch (Exception)
-                    {
-
-                    }
-                };
-                webLoginHttpServer.AcceptConnection += async (_, e) =>
+                    webOAuth = otk;
+                    lvw.event_RefreshLinkCommand.Execute(null);
+                }
+                else
                 {
-                    if (e.Request is { Url.LocalPath: "/oauth_callback", QueryString: var qr })
-                    {
-                        string? frCode = qr.GetValues("code")?.FirstOrDefault();
-                        if (!string.IsNullOrEmpty(frCode))
-                        {
-                            task.TrySetResult(frCode!);
+                    return;
+                }
+                //if (webOAuth is not { DataContext: ViewModels.OAuthLoginViewModel { } otvm }) return;
 
-                            e.Response.Redirect("../app/index.html");
-                        }
-                        else if (!string.IsNullOrEmpty(address))
-                        {
-                            e.Response.Redirect(address);
-                        }
-                    }
-                    else if (e.Request is { Url.Segments.Length: 3, Url.Segments: var seg } && seg[0] is "/" && seg[1] is "app/")
-                    {
-                        if (seg[2] is "close")
-                        {
-                            e.Response.Abort();
-                            webLoginHttpServer?.StopListen();
-
-                            return;
-                        }
-                        try
-                        {
-                            var ctx = App.GetResourceStream(new Uri($"pack://application:,,,/Resources/OAuth/{seg[2]}"));
-
-                            if (ctx is null or { Stream: null })
-                            {
-                                e.Response.StatusCode = 404;
-                            }
-                            else
-                            {
-                                e.Response.ContentType = Service.Host.HttpServer.GetContentType(seg[2]);
-                                e.Response.ContentLength64 = ctx.Stream.Length;
-
-                                await ctx.Stream.CopyToAsync(e.Response.OutputStream);
-                                await ctx.Stream.FlushAsync();
-                            }
-                        }
-                        catch
-                        {
-                            e.Response.StatusCode = 404;
-                        }
-                    }
-                    e.Response.Close();
-                };
-                webLoginHttpServer.HandledException += (_, e) =>
-                {
-                    Exception ex = e.GetException();
-                    // todo
-                };
-                webLoginHttpServer.ServiceCloseed += delegate
-                {
-                    if (!task.Task.IsCompleted) return;
-                    task.TrySetCanceled();
-                };
-
-                webLoginHttpServer.StartListen(cancellationToken);
-
-                string? code = await task.WaitTaskCompletionSource(cancellationToken);
-
+                string? code = await webOAuth.WaitForFinish(cancellationToken);
                 if (string.IsNullOrEmpty(code)) return;
 
-                webLoginHttpServer.Dispose();
+                VisualStateManager.GoToElementState(window, LoadingState, false);
 
-                webLoginHttpServer = null;
+                wentLoading = true;
 
-                var oauthTp = await OpenFrp.Service.Net.OpenFrpApi.Login(code!, local_Address, cancellationToken);
+                string[] sp = code!.Split('^');
+
+                if (sp.Length != 2) return;
+
+                var oauthTp = await OpenFrp.Service.Net.OpenFrpApi.Login(sp[0], sp[1], cancellationToken);
 
                 if (!this.UpdateState(oauthTp)) return;
 
@@ -409,6 +455,10 @@ namespace OpenFrp.Launcher.ViewModels
             }
             finally
             {
+                if (wentLoading)
+                {
+                    VisualStateManager.GoToElementState(window, LoginState, false);
+                }
                 if (window is not null)
                 {
                     window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
@@ -416,15 +466,19 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        /// <summary>
+        /// 网页面板快速登录
+        /// </summary>
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_WebLogin2(CancellationToken cancellationToken)
         {
             if (window is null) return;
+
             bool wentLoading = false;
+
             try
             {
                 window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
-
 
                 if (window.FindName("defaultQrCodeFvCtrl") is not Border br) return;
                 
@@ -433,18 +487,7 @@ namespace OpenFrp.Launcher.ViewModels
                 Views.LoginWindow.QrCodeFV qrCodeFV;
                 if (br.Child is null)
                 {
-                    br.Child = qrCodeFV = new Views.LoginWindow.QrCodeFV((state) =>
-                    {
-                        if (br.Child is Views.LoginWindow.QrCodeFV { DataContext: ViewModels.QrCodeFVViewModel qrFvvm })
-                        {
-                            qrFvvm.event_RefreshLinkCommand.Cancel();
-                            qrFvvm.event_RequestUpdateCommand.Cancel();
-                            qrFvvm.conve_WaitForPollLoginCommand.Cancel();
-                        }
-                        event_WebLogin2Command.Cancel();
-
-                        CallbackAction.Invoke(state);
-                    });
+                    br.Child = qrCodeFV = new Views.LoginWindow.QrCodeFV(CallbackAction);
                 }
                 else if (br.Child is Views.LoginWindow.QrCodeFV { DataContext: ViewModels.QrCodeFVViewModel qrFvvm } _c)
                 {
@@ -488,10 +531,10 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanExecuteLogin),IncludeCancelCommand = true)]
-        private async Task @event_Login(CancellationToken cancellationToken)
-        {
-            await Task.CompletedTask;
+        //[RelayCommand(CanExecute = nameof(CanExecuteLogin),IncludeCancelCommand = true)]
+        //private async Task @event_Login(CancellationToken cancellationToken)
+        //{
+        //    await Task.CompletedTask;
             //try
             //{
             //    if (window is not null)
@@ -527,7 +570,7 @@ namespace OpenFrp.Launcher.ViewModels
             //        window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
             //    }
             //}
-        }
+        //}
 
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_FastLogin(Model.PlatformUser usr,CancellationToken cancellationToken)
@@ -571,7 +614,6 @@ namespace OpenFrp.Launcher.ViewModels
         {
             event_WebLoginCommand.Cancel();
             event_FastLoginCommand.Cancel();
-            event_LoginCommand.Cancel();
             event_WebLogin2Command.Cancel();
         }
 
@@ -632,10 +674,8 @@ namespace OpenFrp.Launcher.ViewModels
                     Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processOnline");
 
                     window.UserInfoCallback.TrySetCanceled();
-
+                    TryDisposeWebHost();
                     mw.Activate();
-
-                    webLoginHttpServer?.StopListen();
 
                     event_CancelLogin();
                 }
@@ -659,6 +699,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
 
                 };
+
                 dialog.SetValue(Controls.ErrorViewer.ExceptionProperty, ex);
                 await dialog.ShowAsync();
             }
@@ -823,7 +864,7 @@ namespace OpenFrp.Launcher.ViewModels
                 if (window.Owner is MainWindow mw)
                 {
                     Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processOnline");
-
+                    TryDisposeWebHost();
                     window.UserInfoCallback.TrySetResult(userInfo);
                     mw.Activate();
                 }
@@ -861,7 +902,17 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        private bool CanExecuteLogin() => Username is not null && Password is not null;
+        private void TryDisposeWebHost()
+        {
+            if (window is null) return;
+            if (window.FindName("defaultWebOAuthCtrl") is not Border br) return;
+            if (br.Child is Views.LoginWindow.OAuthLoginView { DataContext: ViewModels.OAuthLoginViewModel oavm })
+            {
+                oavm.DisposeWebHost();
+            }
+        }
+
+        //private bool CanExecuteLogin() => Username is not null && Password is not null;
         private bool CanExecuteCancelLogin() => CanCancelLogin;
 
 #if NET

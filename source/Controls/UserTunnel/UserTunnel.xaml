@@ -237,6 +237,11 @@
                                                     <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
                                                 </MenuItem.Icon>
                                             </MenuItem>
+                                            <MenuItem x:Name="openFolder" Header="打开配置文件夹">
+                                                <MenuItem.Icon>
+                                                    <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.OpenInNewWindow}" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
                                             <MenuItem x:Name="viewInfo" Header="详细">
                                                 <MenuItem.Icon>
                                                     <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Info}" />

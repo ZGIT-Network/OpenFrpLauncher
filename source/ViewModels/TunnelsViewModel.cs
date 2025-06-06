@@ -311,7 +311,9 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         Value = Google.Protobuf.ByteString.CopyFrom(tunnel.GetTunnelJsonBuffer())
                     }),
-                    AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor
+                    AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
+                    UseForceTls = App.FrpcFeature.UseForceTls,
+                    UseDebug = App.FrpcFeature.UseDebug
                 });
             }
         }

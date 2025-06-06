@@ -36,7 +36,10 @@ namespace OpenFrp.Launcher
 
             hWnd = new WindowInteropHelper(this).EnsureHandle();
 
-
+            if (!App.StartupArguments.Contains("--minimize"))
+            {
+                WindowState = WindowState.Normal;
+            }
         }
 
 
@@ -68,14 +71,6 @@ namespace OpenFrp.Launcher
         }
 
         public void HideByHwndCC()
-        {
-            if (hWnd != IntPtr.Zero)
-            {
-                Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_MINIMIZE);
-            }
-        }
-
-        public void HideByHwndCC2()
         {
             if (hWnd != IntPtr.Zero)
             {

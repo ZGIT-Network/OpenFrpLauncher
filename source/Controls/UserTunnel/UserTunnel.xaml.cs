@@ -89,6 +89,22 @@ namespace OpenFrp.Launcher.Controls
                         });
                     });
                 }
+                if (GetTemplateChild("openFolder") is MenuItem mf4)
+                {
+                    mf4.Command = new RelayCommand(() =>
+                    {
+                        var f = OpenFrp.Service.Helpers.FileHelper.GetFrpcWorkDictionary(Tunnel.Id.ToString());
+
+                        try
+                        {
+                            System.Diagnostics.Process.Start("explorer", f);
+                        }
+                        catch
+                        {
+
+                        }
+                    });
+                }
             }
          
             if (GetTemplateChild("switcher") is ToggleSwitch @switch)

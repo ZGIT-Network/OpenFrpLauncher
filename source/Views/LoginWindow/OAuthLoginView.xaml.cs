@@ -17,16 +17,16 @@ using OpenFrp.Service;
 namespace OpenFrp.Launcher.Views.LoginWindow
 {
     /// <summary>
-    /// QrCodeFV.xaml 的交互逻辑
+    /// OAuthLoginDisplay.xaml 的交互逻辑
     /// </summary>
-    public partial class QrCodeFV : UserControl
+    public partial class OAuthLoginView : UserControl
     {
-        public QrCodeFV() : this(delegate { })
+        public OAuthLoginView() : this(delegate { })
         {
-
+            InitializeComponent();
         }
 
-        public QrCodeFV(Action<string> callbackAction)
+        public OAuthLoginView(Action<string> callbackAction)
         {
             AuthorizationCodeWaiter = new TaskCompletionSource<string>();
 
@@ -35,13 +35,22 @@ namespace OpenFrp.Launcher.Views.LoginWindow
             InitializeComponent();
         }
 
-        internal readonly TaskCompletionSource<string> AuthorizationCodeWaiter;
+        internal TaskCompletionSource<string> AuthorizationCodeWaiter;
 
         internal readonly Action<string> CallbackAction = delegate { };
 
         public async Task<string?> WaitForFinish(CancellationToken cancellationToken = default)
         {
+            if (AuthorizationCodeWaiter.Task.IsCompleted)
+            {
+                ResetAuthorizationCodeWaiter();
+            }
             return await AuthorizationCodeWaiter.Task.WaitAsync(cancellationToken);
+        }
+
+        public void ResetAuthorizationCodeWaiter()
+        {
+            AuthorizationCodeWaiter = new TaskCompletionSource<string>();
         }
     }
 }

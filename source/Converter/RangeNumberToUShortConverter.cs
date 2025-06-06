@@ -14,7 +14,7 @@ namespace OpenFrp.Launcher.Converter
         {
             if (value is null)
             {
-                return null;
+                return null!;
             }
             if (value is int ivl)
             {
@@ -43,7 +43,7 @@ namespace OpenFrp.Launcher.Converter
         {
             if (value is ushort or int or double or null)
             {
-                return value;
+                return value!;
             }
             throw new NotImplementedException(value.GetType().ToString());
         }

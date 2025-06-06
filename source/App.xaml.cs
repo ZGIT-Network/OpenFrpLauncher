@@ -325,6 +325,9 @@ namespace OpenFrp.Launcher
 
             #endregion
 
+            //MainWindow = new LoginWindow();
+
+            //MainWindow.Show();
 
             base.OnStartup(e);
         }
@@ -341,9 +344,11 @@ namespace OpenFrp.Launcher
 
         internal static Model.FrpcFeatrue FrpcFeature { get; } = new Model.FrpcFeatrue();
 
+        public static iNKORE.UI.WPF.Modern.ElementTheme ApplicationTheme { get => Settings.ApplicationTheme; }
+
         public static string FrpcVersionString { get; set; } = "Unknown";
 
-        public static string LauncherVersionString => "5.7.8 Preview";
+        public static string LauncherVersionString => "5.8.0 Preview";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 

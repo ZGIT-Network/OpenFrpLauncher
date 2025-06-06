@@ -1,0 +1,141 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:PresentationOptions="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+    xmlns:app="clr-namespace:OpenFrp.Launcher"
+    xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
+    xmlns:local="clr-namespace:OpenFrp.Launcher.Controls">
+    <Style TargetType="local:Carousel">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="ink:ThemeShadowChrome.IsShadowEnabled" Value="True" />
+        <Setter Property="ink:ThemeShadowChrome.Depth" Value="40" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:Carousel">
+                    <Grid x:Name="carouselRoot">
+                        <ink:ThemeShadowChrome
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Depth="{Binding (ink:ThemeShadowChrome.Depth), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}"
+                            IsShadowEnabled="{Binding (ink:ThemeShadowChrome.IsShadowEnabled), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}" />
+
+                        <Canvas
+                            ink:ClipHelper.CornerRadius="{TemplateBinding CornerRadius}"
+                            ClipToBounds="True"
+                            RenderTransformOrigin=".5,.5">
+
+                            <ItemsPresenter x:Name="animateRoot" Focusable="False">
+                                <ItemsPresenter.RenderTransform>
+                                    <TranslateTransform PresentationOptions:Freeze="False" X="0" Y="0" />
+                                </ItemsPresenter.RenderTransform>
+                            </ItemsPresenter>
+                        </Canvas>
+
+                        <StackPanel
+                            Margin="0,0,24,24"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Orientation="Horizontal">
+                            <StackPanel.Resources>
+                                <Style BasedOn="{StaticResource DefaultButtonStyle}" TargetType="Button">
+                                    <Setter Property="Focusable" Value="False" />
+                                    <Setter Property="Margin" Value="4,0,0,0" />
+                                    <Setter Property="Padding" Value="6" />
+                                    <Setter Property="FontSize" Value="20" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Setter Property="ink:ThemeManager.RequestedTheme" Value="Dark" />
+                                </Style>
+                            </StackPanel.Resources>
+
+                            <Button x:Name="prevCav" AutomationProperties.Name="上一页">
+
+                                <Button.ToolTip>
+                                    <ToolTip ink:ThemeManager.RequestedTheme="{Binding Source={x:Static app:App.ApplicationTheme}, Mode=OneWay}" Content="上一页" />
+                                </Button.ToolTip>
+                                <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.ChevronLeft}" />
+                            </Button>
+                            <Button x:Name="nextCav" AutomationProperties.Name="下一页">
+                                <Button.ToolTip>
+                                    <ToolTip ink:ThemeManager.RequestedTheme="{Binding Source={x:Static app:App.ApplicationTheme}, Mode=OneWay}" Content="下一页" />
+                                </Button.ToolTip>
+                                <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.ChevronRight}" />
+                            </Button>
+
+                        </StackPanel>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsVisible" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="carouselRoot"
+                                            Storyboard.TargetProperty="Opacity"
+                                            From="0"
+                                            To="1"
+                                            Duration="0:0:.25">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Control.Width" Value="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}" />
+                    <Setter Property="Control.Height" Value="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}" />
+                    <Style.Triggers>
+                        <!--
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetProperty="Opacity"
+                                            From="0"
+                                            To="1"
+                                            Duration="0:0:.25">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>-->
+                        <!--<Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0"
+                                            Duration="0:0:.25">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseOut" />
+                                            </DoubleAnimation.EasingFunction>
+
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>-->
+
+                    </Style.Triggers>
+                </Style>
+            </Setter.Value>
+        </Setter>
+
+    </Style>
+</ResourceDictionary>

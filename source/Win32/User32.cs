@@ -11,31 +11,31 @@ namespace OpenFrp.Launcher.Win32
     {
 #if NETFRAMEWORK
         [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, SW_TYPE nCmdShow);
+        internal static extern bool ShowWindow(IntPtr hWnd, SW_TYPE nCmdShow);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr GetForegroundWindow();
+        internal static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
-	    public static extern bool SetForegroundWindow(IntPtr hWnd);
+	    internal static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
-        public static extern bool EnableWindow(IntPtr hWnd,bool bEnable);
+        internal static extern bool EnableWindow(IntPtr hWnd,bool bEnable);
 #elif NET
         [LibraryImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool ShowWindow(IntPtr hWnd, SW_TYPE nCmdShow);
+        internal static partial bool ShowWindow(IntPtr hWnd, SW_TYPE nCmdShow);
 
         [LibraryImport("user32.dll", EntryPoint = "GetForegroundWindow")]
-        public static partial IntPtr GetForegroundWindow();
+        internal static partial IntPtr GetForegroundWindow();
 
         [LibraryImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool SetForegroundWindow(IntPtr hWnd);
+        internal static partial bool SetForegroundWindow(IntPtr hWnd);
 
         [LibraryImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool EnableWindow(IntPtr hWnd, [MarshalAs(UnmanagedType.Bool)] bool bEnable);
+        internal static partial bool EnableWindow(IntPtr hWnd, [MarshalAs(UnmanagedType.Bool)] bool bEnable);
 #endif
 
         public enum SW_TYPE : int

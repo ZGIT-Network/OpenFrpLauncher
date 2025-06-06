@@ -146,6 +146,24 @@ namespace OpenFrp.Launcher.ViewModels
                 OnPropertyChanged(nameof(BypassProxy));
             }
         }
+        public bool UseForceTls
+        {
+            get => App.Settings.UseForceTls;
+            set
+            {
+                App.Settings.UseForceTls = value;
+                OnPropertyChanged(nameof(UseForceTls));
+            }
+        }
+        public bool UseDebug
+        {
+            get => App.Settings.UseDebug;
+            set
+            {
+                App.Settings.UseDebug = value;
+                OnPropertyChanged(nameof(UseDebug));
+            }
+        }
         public bool AutoLaunchWhenLogon
         {
             get

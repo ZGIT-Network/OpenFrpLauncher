@@ -78,15 +78,16 @@ namespace OpenFrp.Launcher.Controls
         {
             switch (App.Current.MainWindow)
             {
-                case MainWindow mw:
-                    {
-                        mw.ShowByHwndCC();
-                    };break;
                 case LoginWindow lw:
                     {
                         lw.ShowByHwndCC();
                     }
                     ; break;
+                case MainWindow mw:
+                    {
+                        mw.ShowByHwndCC();
+                    };break;
+
             }
             App.TaskBarIcon?.CloseTrayPopup();
         }

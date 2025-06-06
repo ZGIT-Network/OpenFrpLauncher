@@ -14,6 +14,7 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:wp="http://schemas.inkore.net/lib/ui/wpf"
+    xmlns:wv="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     Width="1090"
     Height="600"
     ink:ThemeManager.RequestedTheme="Default"
@@ -40,15 +41,14 @@
         <vm:LoginWindowViewModel />
     </Window.DataContext>
     <behavior:Interaction.Triggers>
-        <behavior:EventTrigger EventName="ContentRendered">
+        <behavior:EventTrigger EventName="Loaded">
             <behavior:InvokeCommandAction Command="{Binding event_MainWindowLoadedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}" />
         </behavior:EventTrigger>
         <behavior:DataTrigger Value="True">
             <behavior:DataTrigger.Binding>
                 <MultiBinding Converter="{StaticResource EitherConverter}" Mode="OneWay">
                     <Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />
-                    <Binding Mode="OneWay" Path="event_WebLoginCommand.IsRunning" />
-                    <!--<Binding Mode="OneWay" Path="event_WebLogin2Command.IsRunning" />-->
+                    <!--<Binding Mode="OneWay" Path="event_WebLoginCommand.IsRunning" />-->
                     <Binding Mode="OneWay" Path="event_FastLoginCommand.IsRunning" />
                 </MultiBinding>
             </behavior:DataTrigger.Binding>
@@ -58,8 +58,7 @@
             <behavior:DataTrigger.Binding>
                 <MultiBinding Converter="{StaticResource EitherConverter}" Mode="OneWay">
                     <Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />
-                    <Binding Mode="OneWay" Path="event_WebLoginCommand.IsRunning" />
-                    <!--<Binding Mode="OneWay" Path="event_WebLogin2Command.IsRunning" />-->
+                    <!--<Binding Mode="OneWay" Path="event_WebLoginCommand.IsRunning" />-->
                     <Binding Mode="OneWay" Path="event_FastLoginCommand.IsRunning" />
                 </MultiBinding>
             </behavior:DataTrigger.Binding>
@@ -102,19 +101,20 @@
             Visibility="Visible">
             <Rectangle
                 x:Name="titleBarDarkAcrylicFill"
-                Fill="#2f2f2f"
-                Opacity="0" />
-            <Rectangle
-                x:Name="titleBarLightAcrylicFill"
-                Fill="#ffffff"
+                Fill="#1f1f1f"
                 Opacity="0" />
             <ink:AcrylicPanel
                 x:Name="acrylicPanel2"
-                Amount="30"
+                Amount="10"
                 Focusable="False"
                 NoiseOpacity="0.01"
                 ScaleCanvasVal="1.2"
                 TintOpacity=".45" />
+
+            <Rectangle
+                x:Name="titleBarLightAcrylicFill"
+                Fill="#75ffffff"
+                Opacity="0" />
 
         </Grid>
         <Grid Grid.Column="0">
@@ -174,7 +174,7 @@
                         <Rectangle
                             x:Name="darkAcrylicFill"
                             ink:ClipHelper.CornerRadius="5.5"
-                            Fill="#2f2f2f"
+                            Fill="#1f1f1f"
                             Opacity="0" />
                         <ink:AcrylicPanel
                             x:Name="acrylicPanel"
@@ -188,6 +188,7 @@
                             ink:ClipHelper.CornerRadius="5.5"
                             Fill="#75ffffff"
                             Opacity="0" />
+
                     </Grid>
                 </Border>
                 <Grid ClipToBounds="True" TextOptions.TextHintingMode="Auto">
@@ -205,166 +206,166 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid Background="Transparent">
-                                <TabControl Margin="0,16,0,0" Style="{StaticResource CenterTabControlPivotStyle}">
-                                    <TabItem Header="快捷登录">
-                                        <ink:ScrollViewerEx Margin="-12,0,-12,0" PanningMode="VerticalOnly">
-                                            <wp:SimpleStackPanel Margin="24,16,24,16" Spacing="8">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <ink:FontIcon
-                                                        Margin="4,2.5,6,0"
-                                                        VerticalAlignment="Top"
-                                                        FontSize="20"
-                                                        Icon="{x:Static ink:SegoeFluentIcons.Family}" />
-                                                    <TextBlock FontSize="20">
-                                                        <Run Text="用户" />
-                                                    </TextBlock>
-                                                </StackPanel>
+                                <!--<TabControl Margin="0,16,0,0" Style="{StaticResource CenterTabControlPivotStyle}">
+                                    <TabItem Header="快捷登录">-->
+                                <ink:ScrollViewerEx Margin="0" PanningMode="VerticalOnly">
+                                    <wp:SimpleStackPanel Margin="24" Spacing="8">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ink:FontIcon
+                                                Margin="4,1,6,0"
+                                                VerticalAlignment="Center"
+                                                FontSize="24"
+                                                Icon="{x:Static ink:SegoeFluentIcons.Family}" />
+                                            <TextBlock VerticalAlignment="Center" FontSize="20">
+                                                <Run Text="登录" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <TextBlock
+                                            x:Name="cont"
+                                            Margin="0,0,0,0"
+                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            TextWrapping="Wrap">
+                                            <Run Text="选择该平台上已记录的账户，或登录新账号。" />
+                                            <LineBreak />
+                                            <Run Text="若需取消记录已登录的账户，在菜单中删除。" />
+                                        </TextBlock>
+                                        <ItemsControl
+                                            x:Name="selfor"
+                                            Margin="0,4,0,-8"
+                                            Focusable="False"
+                                            ItemsSource="{Binding PlatformUsers, Mode=OneWay}">
+
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button
+                                                        Margin="0,0,0,4"
+                                                        Padding="12,12,16,12"
+                                                        HorizontalAlignment="Stretch"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        BorderBrush="Transparent"
+                                                        Command="{Binding DataContext.event_FastLoginCommand, ElementName=selfor, Mode=OneWay}"
+                                                        CommandParameter="{Binding Mode=OneWay}">
+                                                        <Button.ContextMenu>
+                                                            <ContextMenu MinWidth="100">
+                                                                <MenuItem
+                                                                    Command="{Binding DataContext.event_RemoveUserRecordCommand, Source={x:Reference Name=cont}, Mode=OneWay}"
+                                                                    CommandParameter="{Binding Mode=OneWay}"
+                                                                    Header="取消记录">
+                                                                    <MenuItem.Icon>
+                                                                        <ink:FontIcon Glyph="&#xF69B;" />
+                                                                    </MenuItem.Icon>
+                                                                </MenuItem>
+                                                            </ContextMenu>
+                                                        </Button.ContextMenu>
+                                                        <AutomationProperties.Name>
+                                                            <MultiBinding StringFormat="{}账户 {0}(邮箱: {1})">
+                                                                <Binding Mode="OneWay" Path="Username" />
+                                                                <Binding Mode="OneWay" Path="EmailAddress" />
+                                                            </MultiBinding>
+                                                        </AutomationProperties.Name>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="38" />
+                                                                <ColumnDefinition />
+                                                            </Grid.ColumnDefinitions>
+                                                            <!--  ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
+                                                            <ink:PersonPicture
+                                                                x:Name="picpic"
+                                                                Grid.Column="0"
+                                                                Width="38"
+                                                                Height="38"
+                                                                ProfilePicture="pack://application:,,,/Resources/Images/weavatar.png"
+                                                                RenderOptions.BitmapScalingMode="HighQuality"
+                                                                UseLayoutRounding="True" />
+                                                            <TextBlock
+                                                                Grid.Column="1"
+                                                                Margin="8,0,0,0"
+                                                                VerticalAlignment="Center"
+                                                                FontFamily="{StaticResource SoraMedium}"
+                                                                FontSize="16">
+                                                                <Run Text="{Binding Username, Mode=OneWay}" />
+                                                                <LineBreak />
+                                                                <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding EmailAddress, Mode=OneWay}" />
+                                                            </TextBlock>
+                                                            <TextBlock
+                                                                Grid.Column="1"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Top"
+                                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                FontSize="12"
+                                                                Visibility="Collapsed">
+                                                                <Run>6 天前</Run>
+                                                            </TextBlock>
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <Button
+                                            Margin="0,0,0,0"
+                                            Padding="12,12,8,12"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Natayark ID 登录"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding event_WebLoginCommand}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="38" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <ink:FontIcon
+                                                    Grid.Column="0"
+                                                    Width="38"
+                                                    Height="38"
+                                                    FontSize="24"
+                                                    Icon="{x:Static ink:SegoeFluentIcons.PassiveAuthentication}" />
                                                 <TextBlock
-                                                    x:Name="cont"
-                                                    Margin="3,0,0,0"
-                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                    TextWrapping="Wrap">
-                                                    <Run Text="选择该平台上已记录的账户，或登录新账号。" />
-                                                    <LineBreak />
-                                                    <Run Text="若需取消记录已登录的账户，在菜单中删除。" />
+                                                    Grid.Column="1"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontFamily="{StaticResource SoraMediumMixYahei}">
+                                                    <Run FontSize="18" Text="Natayark ID 登录" />
+
                                                 </TextBlock>
-                                                <ItemsControl
-                                                    x:Name="selfor"
-                                                    Margin="0,4,0,-8"
-                                                    Focusable="False"
-                                                    ItemsSource="{Binding PlatformUsers, Mode=OneWay}">
+                                            </Grid>
+                                        </Button>
+                                        <Button
+                                            Margin="0,-4,0,0"
+                                            Padding="12,12,8,12"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="扫码登录或面板快速登录"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding event_WebLogin2Command}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="38" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <ink:FontIcon
+                                                    Grid.Column="0"
+                                                    Width="38"
+                                                    Height="38"
+                                                    FontSize="24"
+                                                    Icon="{x:Static ink:SegoeFluentIcons.QRCode}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="8,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                    <Run FontSize="18" Text="扫码登录 / 面板快速登录" />
 
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Button
-                                                                Margin="0,0,0,4"
-                                                                Padding="12,12,16,12"
-                                                                HorizontalAlignment="Stretch"
-                                                                HorizontalContentAlignment="Stretch"
-                                                                BorderBrush="Transparent"
-                                                                Command="{Binding DataContext.event_FastLoginCommand, ElementName=selfor, Mode=OneWay}"
-                                                                CommandParameter="{Binding Mode=OneWay}">
-                                                                <Button.ContextMenu>
-                                                                    <ContextMenu MinWidth="100">
-                                                                        <MenuItem
-                                                                            Command="{Binding DataContext.event_RemoveUserRecordCommand, Source={x:Reference Name=cont}, Mode=OneWay}"
-                                                                            CommandParameter="{Binding Mode=OneWay}"
-                                                                            Header="取消记录">
-                                                                            <MenuItem.Icon>
-                                                                                <ink:FontIcon Glyph="&#xF69B;" />
-                                                                            </MenuItem.Icon>
-                                                                        </MenuItem>
-                                                                    </ContextMenu>
-                                                                </Button.ContextMenu>
-                                                                <AutomationProperties.Name>
-                                                                    <MultiBinding StringFormat="{}账户 {0}(邮箱: {1})">
-                                                                        <Binding Mode="OneWay" Path="Username" />
-                                                                        <Binding Mode="OneWay" Path="EmailAddress" />
-                                                                    </MultiBinding>
-                                                                </AutomationProperties.Name>
-                                                                <Grid>
-                                                                    <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition Width="38" />
-                                                                        <ColumnDefinition />
-                                                                    </Grid.ColumnDefinitions>
-                                                                    <!--  ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
-                                                                    <ink:PersonPicture
-                                                                        x:Name="picpic"
-                                                                        Grid.Column="0"
-                                                                        Width="38"
-                                                                        Height="38"
-                                                                        ProfilePicture="pack://application:,,,/Resources/Images/weavatar.png"
-                                                                        RenderOptions.BitmapScalingMode="HighQuality"
-                                                                        UseLayoutRounding="True" />
-                                                                    <TextBlock
-                                                                        Grid.Column="1"
-                                                                        Margin="8,0,0,0"
-                                                                        VerticalAlignment="Center"
-                                                                        FontFamily="{StaticResource SoraMedium}"
-                                                                        FontSize="16">
-                                                                        <Run Text="{Binding Username, Mode=OneWay}" />
-                                                                        <LineBreak />
-                                                                        <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding EmailAddress, Mode=OneWay}" />
-                                                                    </TextBlock>
-                                                                    <TextBlock
-                                                                        Grid.Column="1"
-                                                                        HorizontalAlignment="Right"
-                                                                        VerticalAlignment="Top"
-                                                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                                                        FontSize="12"
-                                                                        Visibility="Collapsed">
-                                                                        <Run>6 天前</Run>
-                                                                    </TextBlock>
-                                                                </Grid>
-                                                            </Button>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                                <Button
-                                                    Margin="0,0,0,0"
-                                                    Padding="12,12,8,12"
-                                                    HorizontalAlignment="Stretch"
-                                                    HorizontalContentAlignment="Left"
-                                                    AutomationProperties.Name="Natayark ID 登录"
-                                                    BorderBrush="Transparent"
-                                                    Command="{Binding event_WebLoginCommand}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="38" />
-                                                            <ColumnDefinition />
-                                                        </Grid.ColumnDefinitions>
-                                                        <ink:FontIcon
-                                                            Grid.Column="0"
-                                                            Width="38"
-                                                            Height="38"
-                                                            FontSize="24"
-                                                            Icon="{x:Static ink:SegoeFluentIcons.PassiveAuthentication}" />
-                                                        <TextBlock
-                                                            Grid.Column="1"
-                                                            Margin="8,0,0,0"
-                                                            VerticalAlignment="Center"
-                                                            FontFamily="{StaticResource SoraMediumMixYahei}">
-                                                            <Run FontSize="18" Text="Natayark ID 登录" />
-
-                                                        </TextBlock>
-                                                    </Grid>
-                                                </Button>
-                                                <Button
-                                                    Margin="0,-4,0,0"
-                                                    Padding="12,12,8,12"
-                                                    HorizontalAlignment="Stretch"
-                                                    HorizontalContentAlignment="Left"
-                                                    AutomationProperties.Name="扫码登录或面板快速登录"
-                                                    BorderBrush="Transparent"
-                                                    Command="{Binding event_WebLogin2Command}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="38" />
-                                                            <ColumnDefinition />
-                                                        </Grid.ColumnDefinitions>
-                                                        <ink:FontIcon
-                                                            Grid.Column="0"
-                                                            Width="38"
-                                                            Height="38"
-                                                            FontSize="24"
-                                                            Icon="{x:Static ink:SegoeFluentIcons.QRCode}" />
-                                                        <TextBlock
-                                                            Grid.Column="1"
-                                                            Margin="8,0,0,0"
-                                                            VerticalAlignment="Center">
-                                                            <Run FontSize="18" Text="扫码登录 / 面板快速登录" />
-
-                                                        </TextBlock>
-                                                    </Grid>
-                                                </Button>
-                                                <Rectangle
-                                                    Height="{Binding ActualHeight, Source={x:Reference Name=gl_erBar}}"
-                                                    Margin="0,0,0,-20"
-                                                    Visibility="{Binding IsExceptionInfobarOpen, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
-                                            </wp:SimpleStackPanel>
-                                        </ink:ScrollViewerEx>
-                                    </TabItem>
-                                    <TabItem Header="账密登录" IsEnabled="False">
+                                                </TextBlock>
+                                            </Grid>
+                                        </Button>
+                                        <Rectangle
+                                            Height="{Binding ActualHeight, Source={x:Reference Name=gl_erBar}}"
+                                            Margin="0,0,0,-20"
+                                            Visibility="{Binding IsExceptionInfobarOpen, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                    </wp:SimpleStackPanel>
+                                </ink:ScrollViewerEx>
+                                <!--</TabItem>
+                                    <TabItem Header="账密登录" IsEnabled="True">
                                         <ink:ScrollViewerEx Margin="-12,0,-12,0" PanningMode="VerticalOnly">
                                             <wp:SimpleStackPanel Margin="24,16,24,16" Spacing="8">
                                                 <TextBox
@@ -376,7 +377,14 @@
                                                     ink:ControlHelper.Header="密码"
                                                     ofxhelper:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                     AutomationProperties.Name="密码" />
-                                                <CheckBox>记住密码</CheckBox>
+                                                <Button
+                                                    HorizontalAlignment="Stretch"
+                                                    AutomationProperties.Name="人机验证"
+                                                    Command="{Binding event_DisplayCaptchaWebViewControlCommand}"
+                                                    CommandParameter="True">
+                                                    <TextBlock Text="进行人机验证" />
+                                                </Button>
+
                                                 <Button
                                                     Padding="0,8"
                                                     HorizontalAlignment="Stretch"
@@ -391,7 +399,7 @@
                                             </wp:SimpleStackPanel>
                                         </ink:ScrollViewerEx>
                                     </TabItem>
-                                </TabControl>
+                                </TabControl>-->
                                 <ink:InfoBar
                                     x:Name="gl_erBar"
                                     Title="登录失败"
@@ -497,6 +505,17 @@
                         </FrameworkElement.RenderTransform>
 
                     </Border>
+                    <!--  WebOAuth Ctrl  -->
+                    <Border
+                        x:Name="defaultWebOAuthCtrl"
+                        d:Visibility="Collapsed"
+                        RenderTransformOrigin=".5,.5"
+                        Style="{StaticResource BorderFocusManagedStyle}">
+                        <FrameworkElement.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </FrameworkElement.RenderTransform>
+
+                    </Border>
                     <!--  Loading Ctrl  -->
                     <Border
                         x:Name="defaultLoadingCtrl"
@@ -510,10 +529,7 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="16">
-                            <ink:ProgressRing
-                                Width="80"
-                                Height="80"
-                                IsActive="{Binding IsHitTestVisible, ElementName=defaultLoadingCtrl, Mode=OneWay}" />
+                            <ink:ProgressRing Width="80" Height="80" />
                             <TextBlock
                                 FontSize="24"
                                 Text="加载中"
@@ -621,6 +637,37 @@
         <VisualStateGroup x:Name="StateCtrl">
             <VisualState x:Name="DisplayLoginCtrl">
                 <Storyboard>
+                    <!--  WebOAuth Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
                     <!--  Setting Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultSettingCtrl"
@@ -749,6 +796,37 @@
             </VisualState>
             <VisualState x:Name="DisplaySettingCtrl">
                 <Storyboard>
+                    <!--  WebOAuth Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
                     <!--  Login Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultLoginCtrl"
@@ -878,7 +956,38 @@
             </VisualState>
             <VisualState x:Name="DisplayQrCodeFvCtrl">
                 <Storyboard>
-                    <!--  Setting Ctrl  -->
+                    <!--  WebOAuth Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <!--  QrCodeFV Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultQrCodeFvCtrl"
                         Storyboard.TargetProperty="Visibility"
@@ -1004,6 +1113,166 @@
                         To="1.05"
                         Duration="0:0:.25" />
 
+                </Storyboard>
+            </VisualState>
+            <VisualState x:Name="DisplayWebOAuthCtrl">
+                <Storyboard>
+                    <!--  WebOAuth Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.40" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.40" />
+                    <!--  Loading ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <!--  Login Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.2" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.40" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.40" />
+                    <!--  Setting Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <!--  QrCodeFV Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
                 </Storyboard>
             </VisualState>
             <VisualState x:Name="DisplayLoadingCtrl">
@@ -1132,6 +1401,37 @@
                         Storyboard.TargetProperty="RenderTransform.ScaleY"
                         To="1"
                         Duration="0:0:.35" />
+                    <!--  WebOAuth Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
                 </Storyboard>
             </VisualState>
         </VisualStateGroup>
