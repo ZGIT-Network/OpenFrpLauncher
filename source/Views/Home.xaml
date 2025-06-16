@@ -2,6 +2,7 @@
     x:Class="OpenFrp.Launcher.Views.Home"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:app="clr-namespace:OpenFrp.Launcher"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:conv="clr-namespace:OpenFrp.Launcher.Converter"
     xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
@@ -62,10 +63,7 @@
                     <Grid TextOptions.TextHintingMode="Auto">
 
                         <xa:SimpleStackPanel>
-                            <Grid
-                                x:Name="cRoot"
-                                Margin="0,0,0,8"
-                                Visibility="Collapsed">
+                            <Grid x:Name="cRoot" Margin="0,0,0,8">
                                 <behavior:Interaction.Triggers>
                                     <behavior:DataTrigger
                                         Binding="{Binding ActualWidth, ElementName=cRoot, Mode=OneWay}"
@@ -86,9 +84,9 @@
                                     <RowDefinition />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="6*" />
+                                    <ColumnDefinition Width="5*" MaxWidth="850" />
                                     <ColumnDefinition Width="8" />
-                                    <ColumnDefinition MinWidth="225" />
+                                    <ColumnDefinition MinWidth="250" />
                                 </Grid.ColumnDefinitions>
                                 <Border
                                     x:Name="contentDat"
@@ -126,10 +124,16 @@
                                             IsActive="{Binding event_RefreshAdSenseCommand.IsRunning, Mode=OneWay}"
                                             Visibility="{Binding event_RefreshAdSenseCommand.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
 
+
                                         <ctrl:Carousel
+                                            AlternationCount="100"
                                             AutoPlay="True"
+                                            CornerRadius="4.45"
                                             IsHitTestVisible="{Binding Value, Source={StaticResource IsNotRunning}, Mode=OneWay}"
                                             ItemsSource="{Binding AdSences, Mode=OneWay}">
+                                            <ctrl:Carousel.Background>
+                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[www.pixiv.net]artworks,129041588.png" Stretch="UniformToFill" />
+                                            </ctrl:Carousel.Background>
                                             <ctrl:Carousel.Visibility>
                                                 <Binding
                                                     Mode="OneWay"
@@ -146,7 +150,7 @@
                                                         <Image
                                                             IsHitTestVisible="False"
                                                             RenderOptions.BitmapScalingMode="HighQuality"
-                                                            Source="{Binding Source, Mode=OneWay}"
+                                                            Source="{Binding ImageSource, Mode=OneWay}"
                                                             Stretch="UniformToFill" />
                                                         <Rectangle Fill="Black" IsHitTestVisible="False">
                                                             <Rectangle.OpacityMask>
@@ -161,17 +165,23 @@
                                                                 HorizontalAlignment="Stretch"
                                                                 HorizontalContentAlignment="Stretch"
                                                                 Focusable="False"
-                                                                NavigateUri="{Binding Link, Mode=OneWay}">
+                                                                NavigateUri="{Binding Url, Mode=OneWay}">
+                                                                <ink:HyperlinkButton.ToolTip>
+                                                                    <ToolTip ink:ThemeManager.RequestedTheme="{Binding Source={x:Static app:App.ApplicationTheme}, Mode=OneWay}" Content="{Binding Url, Mode=OneWay}" />
+                                                                </ink:HyperlinkButton.ToolTip>
                                                                 <xa:SimpleStackPanel Spacing="4">
                                                                     <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                                                                         <ink:InfoBadge
                                                                             Width="8"
                                                                             Height="8"
                                                                             Background="{DynamicResource SystemAccentColorLight3Brush}" />
-                                                                        <TextBlock
-                                                                            Padding="5,0,0,0"
-                                                                            Foreground="#8FFFFFFF"
-                                                                            Text="官方广告" />
+                                                                        <TextBlock Padding="5,0,0,0" Foreground="#8FFFFFFF">
+                                                                            <Run Text="官方广告 -" />
+                                                                            <Run
+                                                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                                Foreground="{DynamicResource AweAppGoldenColor}"
+                                                                                Text="{Binding Company, Mode=OneWay}" />
+                                                                        </TextBlock>
                                                                     </StackPanel>
                                                                     <TextBlock TextWrapping="Wrap">
                                                                         <Run
@@ -180,9 +190,11 @@
                                                                             Text="{Binding Title, Mode=OneWay}" />
                                                                         <LineBreak />
                                                                         <Run
+                                                                            FontFamily="{StaticResource SoraMediumMixYahei}"
                                                                             FontSize="18"
                                                                             Foreground="#8FFFFFFF"
-                                                                            Text="{Binding Content, Mode=OneWay}" />
+                                                                            Text="{Binding Description, Mode=OneWay}" />
+                                                                        <Run Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}" />
                                                                     </TextBlock>
                                                                 </xa:SimpleStackPanel>
                                                             </ink:HyperlinkButton>
@@ -191,6 +203,7 @@
                                                 </DataTemplate>
                                             </ctrl:Carousel.ItemTemplate>
                                         </ctrl:Carousel>
+                                        <Button Content="Focus Helper" Style="{StaticResource AccentButtonStyle}" />
                                     </Grid>
 
                                     <!--<Grid>
@@ -237,12 +250,26 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <Grid>
+                                    <Grid x:Name="userInfoViewer">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
-                                        <StackPanel Margin="20,20,20,6" Orientation="Horizontal">
+                                        <behavior:Interaction.Triggers>
+                                            <behavior:DataTrigger
+                                                Binding="{Binding ActualWidth, ElementName=cRoot, Mode=OneWay}"
+                                                Comparison="GreaterThanOrEqual"
+                                                Value="740">
+                                                <behavior:ChangePropertyAction PropertyName="Tag" Value="{x:Null}" />
+                                            </behavior:DataTrigger>
+                                            <behavior:DataTrigger
+                                                Binding="{Binding ActualWidth, ElementName=cRoot, Mode=OneWay}"
+                                                Comparison="LessThan"
+                                                Value="740">
+                                                <behavior:ChangePropertyAction PropertyName="Tag" Value="small" />
+                                            </behavior:DataTrigger>
+                                        </behavior:Interaction.Triggers>
+                                        <StackPanel Margin="16,18,16,5" Orientation="Horizontal">
                                             <ink:FontIcon
                                                 VerticalAlignment="Top"
                                                 FontSize="20"
@@ -253,9 +280,13 @@
                                                 FontSize="18"
                                                 Text="用户信息" />
                                         </StackPanel>
-                                        <xa:SimpleStackPanel Grid.Row="1">
-                                            <TextBlock Text="Content" />
-                                        </xa:SimpleStackPanel>
+                                        <Grid Grid.Row="1">
+                                            <ctrl:AdaptScrollViewer>
+                                                <Grid Height="800" Margin="16,0,16,16">
+                                                    <TextBlock Text="{Binding Tag, ElementName=userInfoViewer, Mode=OneWay}" />
+                                                </Grid>
+                                            </ctrl:AdaptScrollViewer>
+                                        </Grid>
                                     </Grid>
                                 </Border>
                             </Grid>

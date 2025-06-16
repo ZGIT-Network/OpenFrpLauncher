@@ -17,24 +17,60 @@
                             CornerRadius="{TemplateBinding CornerRadius}"
                             Depth="{Binding (ink:ThemeShadowChrome.Depth), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}"
                             IsShadowEnabled="{Binding (ink:ThemeShadowChrome.IsShadowEnabled), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}" />
-
+                        <Rectangle
+                            Margin="0.5"
+                            ink:ClipHelper.CornerRadius="{TemplateBinding CornerRadius}"
+                            Fill="{TemplateBinding Background}" />
                         <Canvas
                             ink:ClipHelper.CornerRadius="{TemplateBinding CornerRadius}"
                             ClipToBounds="True"
                             RenderTransformOrigin=".5,.5">
-
-                            <ItemsPresenter x:Name="animateRoot" Focusable="False">
-                                <ItemsPresenter.RenderTransform>
+                            <!--<Grid
+                                x:Name="rightCopyRoot"
+                                Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                Background="Transparent">
+                                <Grid.RenderTransform>
                                     <TranslateTransform PresentationOptions:Freeze="False" X="0" Y="0" />
-                                </ItemsPresenter.RenderTransform>
-                            </ItemsPresenter>
+                                </Grid.RenderTransform>
+                            -->
+                            <!--  Visual End  -->
+                            <!--
+                                <Rectangle>
+                                    <Rectangle.Fill>
+                                        <VisualBrush x:Name="rightCliper" />
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                            </Grid>-->
+                            <StackPanel x:Name="animateRoot" Orientation="Horizontal">
+                                <FrameworkElement.RenderTransform>
+                                    <TranslateTransform PresentationOptions:Freeze="False" X="0" Y="0" />
+                                </FrameworkElement.RenderTransform>
+                                <Rectangle Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+                                    <Rectangle.Fill>
+                                        <VisualBrush x:Name="lFakeFill" Stretch="UniformToFill" />
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <ItemsPresenter Focusable="False">
+                                    <ItemsPresenter.RenderTransform>
+                                        <TranslateTransform PresentationOptions:Freeze="False" X="0" Y="0" />
+                                    </ItemsPresenter.RenderTransform>
+                                </ItemsPresenter>
+                                <Rectangle Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" Height="{Binding ActualHeight, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+                                    <Rectangle.Fill>
+                                        <VisualBrush x:Name="rFakeFill" Stretch="UniformToFill" />
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                            </StackPanel>
                         </Canvas>
 
                         <StackPanel
+                            x:Name="controller"
                             Margin="0,0,24,24"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"
-                            Orientation="Horizontal">
+                            Orientation="Horizontal"
+                            Visibility="Collapsed">
                             <StackPanel.Resources>
                                 <Style BasedOn="{StaticResource DefaultButtonStyle}" TargetType="Button">
                                     <Setter Property="Focusable" Value="False" />

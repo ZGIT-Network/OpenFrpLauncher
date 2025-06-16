@@ -370,6 +370,7 @@ namespace OpenFrp.Launcher
         {
             if (_daemon_ProcessEventWaitHandle is null) return;
 
+            
             _daemon_ProcessEventWaitHandle.Close();
 
             _daemon_ProcessEventWaitHandle = null;
@@ -581,6 +582,8 @@ namespace OpenFrp.Launcher
 
         private static void DaemonProcessExited(Process process,string stdErrData)
         {
+            try { ResetDaemonWaitHandle(); } catch { }
+
             int exitCode = -1;
             Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");
             Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processExit");
@@ -604,6 +607,7 @@ namespace OpenFrp.Launcher
 
                 return;
             }
+            
             string msg =
                 "(聚焦该窗口，按下Ctrl+C 复制内容) Deamon 异常退出" +
                 $"\nExitCode: {exitCode}";

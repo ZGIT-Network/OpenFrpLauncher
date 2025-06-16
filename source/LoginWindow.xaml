@@ -47,7 +47,7 @@
         <behavior:DataTrigger Value="True">
             <behavior:DataTrigger.Binding>
                 <MultiBinding Converter="{StaticResource EitherConverter}" Mode="OneWay">
-                    <Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />
+                    <!--<Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />-->
                     <!--<Binding Mode="OneWay" Path="event_WebLoginCommand.IsRunning" />-->
                     <Binding Mode="OneWay" Path="event_FastLoginCommand.IsRunning" />
                 </MultiBinding>
@@ -57,7 +57,7 @@
         <behavior:DataTrigger Value="False">
             <behavior:DataTrigger.Binding>
                 <MultiBinding Converter="{StaticResource EitherConverter}" Mode="OneWay">
-                    <Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />
+                    <!--<Binding Mode="OneWay" Path="event_LoginCommand.IsRunning" />-->
                     <!--<Binding Mode="OneWay" Path="event_WebLoginCommand.IsRunning" />-->
                     <Binding Mode="OneWay" Path="event_FastLoginCommand.IsRunning" />
                 </MultiBinding>
@@ -88,7 +88,8 @@
                 </Viewbox.CacheMode>-->
                 <!--  "pack://application:,,,/Resources/Images/v2-bg.jpg"  -->
                 <!--  "pack://application:,,,/Resources/Images/pexels-xieyun-15415001.jpg"  -->
-                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="pack://application:,,,/Resources/Images/funx.png" />
+                <!--  pack://application:,,,/Resources/Images/funx.png  -->
+                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="pack://application:,,,/Resources/Images/[www.pixiv.net]artworks,129041588.png" />
             </Viewbox>
 
         </Grid>
@@ -141,7 +142,6 @@
                     FontFamily="{StaticResource SoraMedium}"
                     FontSize="24"
                     FontWeight="Medium"
-                    Foreground="White"
                     Text="OpenFRP" />
             </StackPanel>
             <Grid Grid.Row="2" Margin="36,0,0,40">
@@ -209,7 +209,7 @@
                                 <!--<TabControl Margin="0,16,0,0" Style="{StaticResource CenterTabControlPivotStyle}">
                                     <TabItem Header="快捷登录">-->
                                 <ink:ScrollViewerEx Margin="0" PanningMode="VerticalOnly">
-                                    <wp:SimpleStackPanel Margin="24" Spacing="8">
+                                    <wp:SimpleStackPanel Margin="24,28,24,24" Spacing="8">
                                         <StackPanel Orientation="Horizontal">
                                             <ink:FontIcon
                                                 Margin="4,1,6,0"

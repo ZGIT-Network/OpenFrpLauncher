@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,26 +13,51 @@ namespace OpenFrp.Launcher.Model
 {
     internal partial class AdSenseItem : ObservableObject
     {
+        public AdSenseItem()
+        {
+
+        }
+
+        public AdSenseItem(Yue3.Model.OpenFrp.Response.Data.AdSense adSenseSource)
+        {
+            Title = adSenseSource.Title ?? "";
+            Description = adSenseSource.Description ?? "";
+            Tag = adSenseSource.Tag ?? "未知";
+            Company = adSenseSource.Company ?? "未知";
+            ImageSource = adSenseSource.ImageUrl;
+            Url = adSenseSource.Link;
+        }
+
         [ObservableProperty]
         private string title = "";
 
         [ObservableProperty]
-        private string content = "";
+        private string description = "";
 
         [ObservableProperty]
-        private string? link = "";
+        private string? url = "";
+
+        [ObservableProperty]
+        private string tag = "";
+
+        [ObservableProperty]
+        private string company = "";
 
         public string? ImageSource { get; set; }
+
+        private ImageSource? source;
+
+        public void SetImageSource(ImageSource imageSource) => this.source = imageSource;
 
         public ImageSource Source
         {
             get
             {
-                if (ImageSource is null || !Uri.TryCreate(ImageSource,UriKind.RelativeOrAbsolute,out Uri? ur) || ur is null)
-                { 
-                    ur = new Uri("pack://application:,,,/Resources/Images/funx.png");
+                if (source is null)
+                {
+                    return new System.Windows.Media.Imaging.BitmapImage();
                 }
-                return new BitmapImage(ur);
+                return source;
             }
         }
     }

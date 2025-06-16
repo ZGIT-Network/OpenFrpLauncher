@@ -69,7 +69,7 @@ namespace OpenFrp.Launcher.Rpc
                         }
                     case "MessageWithPlaceholder.css":
                         {
-                            await request.ResponseWithStringAsync(messagePlaceholdHtmlCss, "text/css;charset=utf-8");
+                            await request.RespondWithStringAsync(messagePlaceholdHtmlCss, "text/css;charset=utf-8");
                             return;
                         }
                 }   
@@ -104,7 +104,7 @@ namespace OpenFrp.Launcher.Rpc
 
                 }
             }
-            await request.ResponseWithStringAsync(string.Format(messagePlaceholdHtml, message), "text/html;charset=utf-8");
+            await request.RespondWithStringAsync(string.Format(messagePlaceholdHtml, message), "text/html;charset=utf-8");
         }
 
         public override void HandleException(Exception ex)

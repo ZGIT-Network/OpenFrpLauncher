@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using iNKORE.UI.WPF.Modern.Controls;
@@ -14,24 +16,145 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public HomeViewModel()
         {
+            if (Application.Current.MainWindow is { DataContext: MainWindowViewModel mv })
+            {
+                _mainWindowViewModel = mv;
+            }
         }
+
+        private iNKORE.UI.WPF.Modern.Controls.Page? page;
 
         [RelayCommand]
         private void @event_PageLoaded(RoutedEventArgs e)
         {
             if (e.Source is Page page)
             {
-                //event_RefreshAdSenseCommand.Execute(null);
+                this.page = page;
+                page.Unloaded += delegate
+                {
+                    event_RefreshAdSenseCommand.Cancel();
+                };
+                event_RefreshAdSenseCommand.Execute(null);
             }
         }
+
+        private readonly MainWindowViewModel? _mainWindowViewModel;
 
         [ObservableProperty]
         private Model.AdSenseItem[] adSences = Array.Empty<Model.AdSenseItem>();
 
+        public Model.UserInfo UserInfo
+        {
+            get
+            {
+                if (_mainWindowViewModel is not null)
+                {
+                    return _mainWindowViewModel.UserInfo;
+                }
+                return SettingsViewModel.__userInfo_Defualt;
+            }
+        }
+
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_RefreshAdSense(CancellationToken cancellationToken)
         {
-            await Task.Delay(1500);
+            await Task.Delay(1500,cancellationToken);
+
+            var resp = await Service.Net.OpenFrpApi.GetLauncherAdSense(cancellationToken);
+
+            if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { Length: > 0 })
+            {
+                var v = new AdSenseItem[resp.Data.Length];
+
+                for (int i = 0; i < resp.Data.Length; i++)
+                {
+                    if (cancellationToken.IsCancellationRequested) return;
+
+                    var ve = resp.Data[i];
+
+                    if (!string.IsNullOrEmpty(ve.ImageUrl))
+                    {
+                        string hash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(ve.ImageUrl!);
+
+                        string pathF = System.IO.Path.Combine(System.IO.Path.GetTempPath(), hash);
+
+                        _ = page?.Dispatcher.BeginInvoke(async (object c) =>
+                        {
+                            try
+                            {
+                                if (!System.IO.File.Exists(pathF))
+                                {
+                                    var resp = await Service.Net.HttpClient.DefualtInstance.GetStreamAsync(ve.ImageUrl!, cancellationToken);
+
+                                    if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { Length: > 0 } st)
+                                    {
+                                        using var fs = System.IO.File.Open(pathF, FileMode.OpenOrCreate);
+
+                                        st.Seek(0, SeekOrigin.Begin);
+
+                                        await st.CopyToAsync(fs);
+                                        await fs.FlushAsync(cancellationToken);
+
+                                        fs.Close();
+                                        st.Close();
+                                    }
+                                    else
+                                    {
+                                        return;
+                                    }
+                                }
+                                if (!Uri.TryCreate(pathF, UriKind.RelativeOrAbsolute, out var uri))
+                                {
+                                    return;
+                                }
+                                if (cancellationToken.IsCancellationRequested) return;
+                                try
+                                {
+                                    var bm = new BitmapImage();
+
+                                    bm.BeginInit();
+                                    bm.UriSource = uri;
+                                    bm.EndInit();
+                                    bm.Freeze();
+
+                                    v[(int)c].SetImageSource(bm);
+                                }
+                                catch
+                                {
+
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+                        }, priority: System.Windows.Threading.DispatcherPriority.Background, i);
+                  
+                    }
+                    try
+                    {
+                        v[i] = new AdSenseItem(ve);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+                AdSences = v;
+            }
+            else
+            {
+                AdSences = new Model.AdSenseItem[1]
+                {
+                    new AdSenseItem
+                    {
+                        Description = "你的赞助是前进的第一动力，\n本项已从2023年开始成项，到2025年为开发的第四个版本，开发不易。\n欢迎赞助启动器作者 (越越)。",
+                        Title = "东风袅袅泛崇光，香雾空蒙月转廊",
+                        Url = "https://console.openfrp.net",
+                        Company = "默认"
+                    },
+                };
+            }
 
             //AdSences = new Model.AdSenseItem[]
             //{
@@ -57,5 +180,6 @@ namespace OpenFrp.Launcher.ViewModels
             //    }
             //};
         }
+
     }
 }

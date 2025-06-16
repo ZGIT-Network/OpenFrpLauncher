@@ -134,6 +134,7 @@ namespace OpenFrp.Launcher.ViewModels
             set
             {
                 App.Settings.NotificationMode = (Model.NotificationMode)value;
+                OnPropertyChanged(nameof(NotificationMode));
             }
         }
 

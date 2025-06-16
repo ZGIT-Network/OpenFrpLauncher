@@ -8,8 +8,8 @@
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     ShutdownMode="OnExplicitShutdown">
     <Application.StartupUri>
-        LoginWindow.xaml
-        <!--  MainWindow.xaml  -->
+        <!--  LoginWindow.xaml  -->
+        MainWindow.xaml
     </Application.StartupUri>
     <Application.Resources>
         <ResourceDictionary>
@@ -56,9 +56,9 @@
                 <ink:XamlControlsResources />
 
                 <!--#region Design Resource-->
-                <!--<ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/DesignTime/SystemColors.xaml" />
+                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/DesignTime/SystemColors.xaml" />
                 <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/Schemes/Light.xaml" />
-                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/ControlsResources.xaml" />-->
+                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/ControlsResources.xaml" />
                 <!--#endregion-->
 
                 <ResourceDictionary Source="./Controls/CenterTab/CenterTab.xaml" />

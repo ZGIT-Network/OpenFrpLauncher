@@ -25,44 +25,23 @@ namespace OpenFrp.Launcher
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow() : this(0)
         {
             this.DataContext = new ViewModels.MainWindowViewModel();
-
-            InitializeComponent();
-
-            this.SetBinding(iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty, new Binding
-            {
-                Source = App.Settings,
-                Path = new PropertyPath(nameof(App.Settings.ApplicationTheme)),
-                Mode = BindingMode.OneWay
-            });
-            iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this,App.Settings.BackdropType);
-
-            hWnd = new WindowInteropHelper(this).EnsureHandle();
         }
 
-        public MainWindow(Yue3.Model.OpenFrp.Response.Data.UserInfoData userInfo)
+        public MainWindow(Yue3.Model.OpenFrp.Response.Data.UserInfoData userInfo) : this(0)
         {
             this.DataContext = new ViewModels.MainWindowViewModel(userInfo);
-
-            InitializeComponent();
-
-            this.SetBinding(iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty, new Binding
-            {
-                Source = App.Settings,
-                Path = new PropertyPath(nameof(App.Settings.ApplicationTheme)),
-                Mode = BindingMode.OneWay
-            });
-            iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
-
-            hWnd = new WindowInteropHelper(this).EnsureHandle();
         }
 
-        public MainWindow(bool daemonState)
+        public MainWindow(bool daemonState) : this(0)
         {
             this.DataContext = new ViewModels.MainWindowViewModel(daemonState);
+        }
 
+        private MainWindow(byte _)
+        {
             InitializeComponent();
 
             this.SetBinding(iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty, new Binding
@@ -76,6 +55,11 @@ namespace OpenFrp.Launcher
             WindowState = WindowState.Normal;
 
             hWnd = new WindowInteropHelper(this).EnsureHandle();
+
+            if (!App.StartupArguments.Contains("--minimize"))
+            {
+                WindowState = WindowState.Normal;
+            }
         }
 
         private readonly IntPtr hWnd;

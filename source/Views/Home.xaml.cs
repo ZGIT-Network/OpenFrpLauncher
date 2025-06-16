@@ -24,5 +24,6 @@ namespace OpenFrp.Launcher.Views
         {
             InitializeComponent();
         }
+
     }
 }
