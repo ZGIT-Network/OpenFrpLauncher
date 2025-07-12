@@ -20,6 +20,10 @@ using System.Windows.Data;
 using System.Diagnostics.Metrics;
 using System.Runtime.ConstrainedExecution;
 using static Google.Protobuf.WellKnownTypes.Field.Types;
+using System.Text;
+using System.Security.Principal;
+using OpenFrp.Launcher.Win32;
+using System.ComponentModel;
 
 
 namespace OpenFrp.Launcher
@@ -61,7 +65,9 @@ namespace OpenFrp.Launcher
 #endif
         }
 
-        internal static bool Notification_UseExpiredReboot = false;
+        internal static bool Notification_UseExpiredReboot { get; private set; } = false;
+
+        internal static string LauncherMainModulePath { get; } = Path.Combine(AppContext.BaseDirectory, "OpenFrp.Launcher.exe");
 
         private void Dispatcher_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
@@ -86,7 +92,7 @@ namespace OpenFrp.Launcher
         {
             // RequestCatch set true => avoid crash app!;
 
-            if (e.Exception is TaskCanceledException or Grpc.Core.RpcException { StatusCode: Grpc.Core.StatusCode.Cancelled })
+            if (e.Exception is TaskCanceledException or Grpc.Core.RpcException { StatusCode: Grpc.Core.StatusCode.Cancelled or Grpc.Core.StatusCode.Unavailable })
             {
                 var flag = new StackTrace(e.Exception).GetFrames().Any(x =>
                 {
@@ -158,13 +164,12 @@ namespace OpenFrp.Launcher
             }
         }
 
-        internal static string[] StartupArguments { get; private set; } =
-            /* Array.Empty<string>() */
-            new string[] {  };
+        internal static HashSet<string> StartupArguments { get; private set; } =
+            /* Array.Empty<string>() "--minimize" */ 
+            new HashSet<string> { };
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            // false is failed to delete config / read config
             if (!Settings_TryReadConfiguration())
             {
                 Environment.Exit(-1);
@@ -173,58 +178,107 @@ namespace OpenFrp.Launcher
 
                 return;
             }
-            if (OSVersionHelper.IsWindows10OrGreater)
-            {
-                try
-                {
-                    Type? tp = typeof(Windows.UI.Notifications.ToastNotification);
-                    if (tp is not null)
-                    {
-                        var putMethod = tp.GetMethod("put_ExpiresOnReboot", new Type[1] { typeof(bool) });
-                        if (putMethod is not null)
-                        {
-                            Notification_UseExpiredReboot = true;
-                        }
-                    }
-                }
-                catch
-                {
-                    return;
-                }
-            }
-            else if (App.Settings.NotificationMode is Model.NotificationMode.ToastNotification)
-            {
-                App.Settings.NotificationMode = Model.NotificationMode.TaskbarNotify;
-            }
 
-            string launcherFilePath = Path.Combine(AppContext.BaseDirectory, "OpenFrp.Launcher.exe");
+            
             string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(AppContext.BaseDirectory);
 
             launcherMutex = new Mutex(false, $"openfrp.launcher.{appHash}", out var createdNewFlag);
 
-#if !DEBUG
-            StartupArguments = e.Args;
-#endif
+            if (!Debugger.IsAttached)
+            {
+                StartupArguments = new HashSet<string>(e.Args);
+            }
+
 
             if (!createdNewFlag && !launcherMutex.SafeWaitHandle.IsClosed)
             {
                 launcherMutex.Close();
 
+#if NET
+                var currentId = Environment.ProcessId;
+#else
                 var currentId = Process.GetCurrentProcess().Id;
+#endif
 
                 foreach (var proc in Process.GetProcessesByName("OpenFrp.Launcher"))
                 {
                     try
                     {
                         if (proc.Id == currentId) continue;
-                        if (proc.MainModule is { } && proc.MainModule.FileName == launcherFilePath)
+
+                        try
                         {
-                            if (proc.MainWindowHandle != IntPtr.Zero)
+                            if (proc.MainModule is not { } || proc.MainModule.FileName != LauncherMainModulePath)
                             {
-                                Win32.User32.ShowWindow(proc.MainWindowHandle, Win32.User32.SW_TYPE.SW_RESTORE);
-                                Win32.User32.SetForegroundWindow(proc.MainWindowHandle);
-                                break;
+                                continue;
                             }
+                        }
+                        catch (Win32Exception)
+                        {
+
+                        }
+                        if (proc.MainWindowHandle != IntPtr.Zero)
+                        {
+                            byte[] callFromLauncherPath = Encoding.UTF8.GetBytes(LauncherMainModulePath);
+                            byte[] oappPath = Array.Empty<byte>();
+
+                            if (StartupArguments.Count > 0 && StartupArguments.Where(x => x.StartsWith("openfrp://")) is { } c && c.Count() is 1)
+                            {
+                                oappPath = Encoding.UTF8.GetBytes(StartupArguments.First());
+                            }
+
+                            SendWindowCopyDataStruct(proc.MainWindowHandle,0x00);
+
+                            SendWindowCopyDataStruct(proc.MainWindowHandle, 0x01, callFromLauncherPath);
+
+                            if (oappPath is { Length: > 0 })
+                            {
+                                SendWindowCopyDataStruct(proc.MainWindowHandle, 0x02, oappPath);
+                            }
+
+
+                            static int SendWindowCopyDataStruct(IntPtr hWnd, int id, byte[]? buffer = null,bool waitForFinish = true)
+                            {
+                                var cd = new User32.COPYDATASTRUCT
+                                {
+                                    dwData = (IntPtr)id,
+                                    cbData = (buffer != null) ? buffer.Length : 0
+                                };
+                                if (buffer != null)
+                                {
+                                    IntPtr pt2 = Marshal.AllocHGlobal(buffer.Length);
+
+                                    try
+                                    {
+                                        cd.lpData = pt2;
+
+                                        Marshal.Copy(buffer, 0, pt2, buffer.Length);
+                                    }
+                                    finally
+                                    {
+                                        Marshal.FreeHGlobal(pt2);
+                                    }
+                                }
+                                try
+                                {
+                                    if (waitForFinish)
+                                    {
+                                        return User32.SendMessage(hWnd, 0x4A, IntPtr.Zero, cd);
+                                    }
+                                    else
+                                    {
+                                        _ = User32.SendMessage(hWnd, 0x4A, IntPtr.Zero, cd);
+                                    }
+                                }
+                                catch
+                                {
+                                    return Marshal.GetHRForLastWin32Error();
+                                }
+                                return 0;
+                            }
+
+                            Environment.Exit(0);
+                            return;
                         }
                     }
                     catch
@@ -232,6 +286,8 @@ namespace OpenFrp.Launcher
 
                     }
                 }
+
+                Service.Helpers.MessageBoxHelper.MessageBox(IntPtr.Zero, "已有相同实例已开启。\n请在系统托盘中找到 OpenFrp 标志，单击或在菜单中点击显示窗口。", "OpenFrp Launcher Preview", (uint)(Service.Helpers.MessageBoxHelper.MessageMode.Confirm | Service.Helpers.MessageBoxHelper.MessageMode.Warning) );
 
                 Environment.Exit(0);
 
@@ -255,9 +311,66 @@ namespace OpenFrp.Launcher
                     }
                 }
             };
-            #region Prepare for window
+
+            ConfigureNotification();
+
+            CreateNotifyIcon(appHash);
+
+            base.OnStartup(e);
+        }
+
+        private Mutex? launcherMutex;
+
+        internal static H.NotifyIcon.TaskbarIcon? TaskBarIcon;
+
+        internal static Properties.Settings Settings { get => OpenFrp.Launcher.Properties.Settings.Default; }
+
+        internal static Rpc.DaemonManager DaemonManager { get; set; } = new DaemonManager { };
+
+        internal static Rpc.RpcManager? RpcManager { get; set; }
+
+        internal static Model.FrpcFeatrue FrpcFeature { get; } = new Model.FrpcFeatrue();
+
+        public static iNKORE.UI.WPF.Modern.ElementTheme ApplicationTheme { get => Settings.ApplicationTheme; }
+
+        public static string FrpcVersionString { get; set; } = "Unknown";
+
+        public static string LauncherVersionString => "5.8.2 Preview";
+
+        public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
+
+
+
+        internal static bool IsAdministrator()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+
+        internal static void ConfigureNotification()
+        {
             if (OSVersionHelper.IsWindows10OrGreater)
             {
+            
+                try
+                {
+                    Type? tp = typeof(Windows.UI.Notifications.ToastNotification);
+                    if (tp is not null)
+                    {
+                        var putMethod = tp.GetMethod("put_ExpiresOnReboot", new Type[1] { typeof(bool) });
+                        if (putMethod is not null)
+                        {
+                            Notification_UseExpiredReboot = true;
+                        }
+                    }
+                }
+                catch
+                {
+                  
+                }
+              
                 try
                 {
                     Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.OnActivated += (e) =>
@@ -280,8 +393,15 @@ namespace OpenFrp.Launcher
                 }
                 catch { }
             }
+            else if (App.Settings.NotificationMode is Model.NotificationMode.ToastNotification)
+            {
+                App.Settings.NotificationMode = Model.NotificationMode.TaskbarNotify;
+            }
+        }
 
-            if (!Uri.TryCreate("pack://application:,,,/Resources/Images/desktop.ico",UriKind.RelativeOrAbsolute,out var result)) return;
+        internal static void CreateNotifyIcon(string appHash)
+        {
+            if (!Uri.TryCreate("pack://application:,,,/Resources/Images/desktop.ico", UriKind.RelativeOrAbsolute, out var result)) return;
 
             TaskBarIcon = new H.NotifyIcon.TaskbarIcon()
             {
@@ -292,7 +412,7 @@ namespace OpenFrp.Launcher
                 TrayPopup = new Controls.AppPopup { },
                 PopupActivation = H.NotifyIcon.Core.PopupActivationMode.RightClick,
                 NoLeftClickDelay = true
-                
+
             };
             if (TaskBarIcon.TrayPopupResolved is not null)
             {
@@ -302,12 +422,14 @@ namespace OpenFrp.Launcher
                     {
                         case LoginWindow lw:
                             {
-                                lw.ShowByHwndCC();
-                            };break;
+                                lw.ShowByHANDLE();
+                            }
+                            ; break;
                         case MainWindow mw:
                             {
-                                mw.ShowByHwndCC();  
-                            };break;
+                                mw.ShowByHANDLE();
+                            }
+                            ; break;
                     }
                 });
                 TaskBarIcon.TrayPopupResolved.PopupAnimation = System.Windows.Controls.Primitives.PopupAnimation.Fade;
@@ -322,332 +444,11 @@ namespace OpenFrp.Launcher
             {
                 TaskBarIcon.ForceCreate(false);
             }
-
-            #endregion
-
-            //MainWindow = new LoginWindow();
-
-            //MainWindow.Show();
-
-            base.OnStartup(e);
         }
-
-        private Mutex? launcherMutex;
-
-        internal static H.NotifyIcon.TaskbarIcon? TaskBarIcon;
-
-        internal static Properties.Settings Settings { get => OpenFrp.Launcher.Properties.Settings.Default; }
-
-        internal static Process? ServiceProcess { get; set; }
-
-        internal static Rpc.RpcManager? RpcManager { get; set; }
-
-        internal static Model.FrpcFeatrue FrpcFeature { get; } = new Model.FrpcFeatrue();
-
-        public static iNKORE.UI.WPF.Modern.ElementTheme ApplicationTheme { get => Settings.ApplicationTheme; }
-
-        public static string FrpcVersionString { get; set; } = "Unknown";
-
-        public static string LauncherVersionString => "5.8.0 Preview";
-
-        public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
-
-        private static Task? prevListenDaemonTask;
-
-        private static EventWaitHandle? _daemon_ProcessEventWaitHandle;
-
-        internal static async Task WaitForProcessLaunch(CancellationToken cancellationToken = default)
-        {
-            if (_daemon_ProcessEventWaitHandle is not null)
-            {
-                await Task.Run(_daemon_ProcessEventWaitHandle.WaitOne, cancellationToken);
-
-                ResetDaemonWaitHandle();
-            }
-        }
-
-        internal static void ResetDaemonWaitHandle()
-        {
-            if (_daemon_ProcessEventWaitHandle is null) return;
-
-            
-            _daemon_ProcessEventWaitHandle.Close();
-
-            _daemon_ProcessEventWaitHandle = null;
-        }
-
-        internal static void LaunchRpcProcess(out Rpc.RpcManager manager)
-        {
-            LaunchRpcProcess();
-
-            if (RpcManager is null)
-            {
-                throw new NullReferenceException();
-            }
-            manager = RpcManager;
-        }
-
-        internal static void LaunchRpcProcess()
-        {
-            RpcManager ??= new RpcManager();
-
-            if (ServiceProcess is { HasExited: false })
-            {
-                return;
-            }
-            ServiceProcess = default;
-
-            var mutex = new Mutex(true, $"service.{RpcManager.PipeName}", out var createdNewFlag);
+       
 
 
-            if (!createdNewFlag && !mutex.SafeWaitHandle.IsClosed)
-            {
-                // 已经创建了一个相同命名的进程，在此监听，等到其结束。
-                prevListenDaemonTask ??= Task.Run(() => ListenDaemonProcessExit(ref mutex));
 
-                return;
-            }
-            else
-            {
-                mutex.Close();
-            }
-
-            var fileName = typeof(Daemon).Assembly.Location;
-            try
-            {
-                var pro = new Process()
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
-                        Arguments = "--daemon",
-                        CreateNoWindow = true,
-                        ErrorDialog = false,
-                        UseShellExecute = false,
-                        RedirectStandardInput = true,
-                        RedirectStandardError = true,
-                        RedirectStandardOutput = true,
-                        StandardErrorEncoding = System.Text.Encoding.Default,
-                        StandardOutputEncoding = System.Text.Encoding.Default,
-                        //WindowStyle = ProcessWindowStyle.Hidden,
-                    },
-                    EnableRaisingEvents = true
-                };
-                pro.OutputDataReceived += DaemonProcessOutputDataReceived;
-                pro.ErrorDataReceived += DaemonProcessOutputDataReceived;
-                pro.Exited += DaemonProcessExited;
-
-                if ((!pro.Start() && pro.HasExited) || pro.HasExited)
-                {
-                    var code = pro.ExitCode;
-                }
-                else
-                {
-                    pro.BeginOutputReadLine();
-                    pro.BeginErrorReadLine();
-
-                    _daemon_ProcessEventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-
-                    ServiceProcess = pro;
-                }
-            }
-            catch (FileNotFoundException)
-            {
-
-            }
-            catch (Exception ex)
-            {
-                _ = ex;
-            }
-        }
-
-        private static void DaemonProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (e.Data is string { Length: > 0 } msg)
-            {
-                Debug.WriteLine($"[OF Daemon] {msg}");
-                switch (msg)
-                {
-                    case "dbug: OpenFrp.Service.Daemon.Daemon[0] service launched!":
-                        {
-                            _daemon_ProcessEventWaitHandle?.Set();
-                        }; break;
-                    default:
-                        {
-                            if (msg.StartsWith("fail"))
-                            {
-                                if (App.ServiceProcess is not {  } || !App.ServiceProcess.WaitForExit(1000)) return;
-
-                                App.ServiceProcess.Exited -= DaemonProcessExited;
-
-                                DaemonProcessExited(process: App.ServiceProcess, msg);
-                            }
-                        }; break;
-                }
-            }
-        }
-
-        // 当 Daemon 并非子进程时，监听其退出。
-        private static void ListenDaemonProcessExit(ref Mutex mutex)
-        {
-            try
-            {
-                var processes = Process.GetProcessesByName("OpenFrp.Service");
-
-                string asm = typeof(Daemon).Assembly.Location;
-
-                asm = asm.Remove(asm.Length - 4);
-
-                if (processes.Length > 0)
-                {
-                    foreach (var proc in processes)
-                    {
-                        if (proc.MainModule is { FileName: string fv } && asm == fv.Remove(fv.Length - 4))
-                        {
-                            ServiceProcess = proc;
-                            break;
-                        }
-                    }
-
-                    mutex.Close();
-
-                    ServiceProcess?.WaitForExit();
-
-                    // TODO: notice here //
-                    
-                    prevListenDaemonTask = null;
-
-                    DaemonProcessExited(ServiceProcess, EventArgs.Empty);
-                    return;
-                }
-
-            }
-            catch
-            {
-
-            }
-            try
-            {
-                var flag = mutex.WaitOne(Timeout.Infinite);
-                if (flag)
-                {
-                    mutex.Dispose();
-                }
-            }
-            catch (AbandonedMutexException)
-            {
-                mutex.Close();
-                // nothing happend;
-            }
-            catch (ObjectDisposedException)
-            {
-                // nothing happend;
-            }
-            catch (Exception ex)
-            {
-                _ = ex;
-
-                return;
-            }
-            prevListenDaemonTask = null;
-
-            DaemonProcessExited(mutex, default);
-        }
-
-        private static void DaemonProcessExited(object? sender, EventArgs? e)
-        {
-            if (App.TaskBarIcon is { IsDisposed: true }) return;
-            if (sender is Process process)
-            {
-                if (e != EventArgs.Empty)
-                {
-                    string err = process.StandardError.ReadToEnd().Trim();
-                    if (err.Length > 0)
-                    {
-                        DaemonProcessExited(process, err);
-                    }
-                }
-                else
-                {
-                    DaemonProcessExited(process, string.Empty);
-                }
-            }
-            else if (sender is Mutex)
-            {
-                Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");
-
-                Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-            }
-        }
-
-        private static void DaemonProcessExited(Process process,string stdErrData)
-        {
-            try { ResetDaemonWaitHandle(); } catch { }
-
-            int exitCode = -1;
-            Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");
-            Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processExit");
-
-            try
-            {
-                exitCode = process.ExitCode;
-            }
-            catch
-            {
-
-            }
-
-            if (exitCode is 0 or 768 && !stdErrData.StartsWith("fail"))
-            {
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-                    Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
-                });
-
-                return;
-            }
-            
-            string msg =
-                "(聚焦该窗口，按下Ctrl+C 复制内容) Deamon 异常退出" +
-                $"\nExitCode: {exitCode}";
-
-            if (!string.IsNullOrWhiteSpace(stdErrData) && stdErrData.Length > 0)
-            {
-                msg += $"\n\n错误内容:\n{stdErrData}\n";
-            }
-            msg += "\n\"重试\" - 将尝试重新启动守护进程；\n\"取消\" - 退出启动器。";
-
-            try
-            {
-                Current.Dispatcher.Invoke(() =>
-                {
-                    Current.MainWindow.WindowState = WindowState.Normal;
-                    Current.MainWindow.Activate();
-                });
-            }
-            catch { }
-
-            var resp = Current.Dispatcher.Invoke(() => Extend.SendMessage(Current.MainWindow, "OpenFrp Launcher", msg, OpenFrp.Service.Helpers.MessageBoxHelper.MessageMode.Error | OpenFrp.Service.Helpers.MessageBoxHelper.MessageMode.RetryCancel));
-            if (resp is OpenFrp.Service.Helpers.MessageBoxHelper.MessageResult.Cancel)
-            {
-                Current.Dispatcher.Invoke(Current.Shutdown);
-            }
-            else if (resp is OpenFrp.Service.Helpers.MessageBoxHelper.MessageResult.Retry)
-            {
-                Current.Dispatcher.Invoke(() =>
-                {
-                    if (App.Current.MainWindow is MainWindow)
-                    {
-                        Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-                    }
-                    else
-                    {
-                        Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
-                    }
-                });
-            }
-        }
     }
 
     public static class Extend
@@ -694,7 +495,7 @@ namespace OpenFrp.Launcher
             {
                 if (response is { Message: null or "" })
                 {
-                    response.Message = "发生了错误";
+                    response.Message = response.Exception?.InnerException?.Message ?? "发生了错误";
                 }
                 property.SetValue(hr, new Model.ExecuteResult(response));
                 

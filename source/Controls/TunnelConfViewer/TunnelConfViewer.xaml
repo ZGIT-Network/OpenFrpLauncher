@@ -15,7 +15,12 @@
                         MinHeight="{TemplateBinding MinHeight}"
                         Margin="{TemplateBinding Padding}"
                         DataContext="{TemplateBinding Tunnel}">
-                        <WrapPanel Orientation="Horizontal">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0">
                             <StackPanel Margin="0,0,4,8" HorizontalAlignment="Stretch">
                                 <!--  如果使外围容器设置 MinWidth，则内容会被裁剪(包括FocusVisualStyle)  -->
                                 <TextBlock
@@ -61,6 +66,10 @@
                                 </ItemsControl>
 
                             </StackPanel>
+                        </StackPanel>
+                        <WrapPanel Grid.Row="1" Orientation="Horizontal">
+
+
                             <StackPanel Margin="0,0,8,8" HorizontalAlignment="Left">
                                 <TextBlock
                                     Margin="0,0,0,2"
@@ -75,7 +84,10 @@
                                     Text="{Binding Id, Mode=OneWay}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
-                            <StackPanel Margin="0,0,8,8" HorizontalAlignment="Left">
+                            <StackPanel
+                                Margin="0,0,8,8"
+                                HorizontalAlignment="Left"
+                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -90,7 +102,10 @@
                                     <Run Text="{Binding NodeName, Mode=OneWay}" />
                                 </ctrl:SelectableTextBlock>
                             </StackPanel>
-                            <StackPanel Margin="0,0,8,8" HorizontalAlignment="Left">
+                            <StackPanel
+                                Margin="0,0,8,8"
+                                HorizontalAlignment="Left"
+                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -162,7 +177,12 @@
                                 </ctrl:SelectableTextBlock>
                             </StackPanel>
                         </WrapPanel>
-
+                        <StackPanel Grid.Row="2">
+                            <TextBlock
+                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                Text="*通过快速启动显示的信息不完全准确，具体请以网页版为主。"
+                                Visibility="{Binding IsFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                        </StackPanel>
                     </Grid>
                 </ControlTemplate>
 

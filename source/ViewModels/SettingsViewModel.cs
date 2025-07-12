@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.CommandLine;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -234,6 +236,28 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        public bool IsUrlSchemeRegistered
+        {
+            get
+            {
+                if (_mainWindowViewModel is null) return Microsoft.Win32.Registry.ClassesRoot.GetSubKeyNames().Contains("openfrp");
+
+                try
+                {
+                    if (Microsoft.Win32.Registry.ClassesRoot.GetSubKeyNames().Contains("openfrp"))
+                    {
+                        return _mainWindowViewModel.IsUrlSchemeRegistered = true;
+                    }
+                }
+                catch
+                {
+
+                }
+
+                return _mainWindowViewModel.IsUrlSchemeRegistered = false;
+            }
+        }
+
 
         [ObservableProperty]
         private ObservableCollection<FontDisplay>? fontDisplays;
@@ -321,6 +345,48 @@ namespace OpenFrp.Launcher.ViewModels
 
         //}
 
+        [RelayCommand]
+        private void @event_UrlSchemeToggleSwitchLoaded(RoutedEventArgs e)
+        {
+            if (e.Source is iNKORE.UI.WPF.Modern.Controls.ToggleSwitch tg)
+            {
+                tg.Toggled += async (sender, args) =>
+                {
+                    if (!tg.IsEnabled) return;
+
+                    tg.IsEnabled = false;
+                    //args.Handled = true;
+
+                    var cpc = new ProcessStartInfo
+                    {
+                        FileName = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
+                        Arguments = "--inst -type reg " + tg.IsOn,
+                        ErrorDialog = false,
+                        UseShellExecute = true,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                    };
+                    if (!App.IsAdministrator())
+                    {
+                        cpc.Verb = "runas";
+                    }
+                    try
+                    {
+                        Process.Start(cpc);
+
+                        await Task.Delay(500);
+                    }
+                    catch
+                    {
+
+                    }
+                    finally
+                    {
+                        OnPropertyChanged(nameof(IsUrlSchemeRegistered));
+                        tg.IsEnabled = true;
+                    }
+                };
+            }
+        }
 
         [RelayCommand]
         private void @event_FontNumberOrFamilySelector(RoutedEventArgs e)

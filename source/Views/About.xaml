@@ -54,7 +54,7 @@
                                 <Run FontSize="24" Text="{x:Static app:App.UiLauncherVersionString}" />
                                 <LineBreak />
                                 <Run Text="版权所有 ZGIT Network" />
-                                <LineBreak/>
+                                <LineBreak />
                                 <Run Text="本软件按 GPL v3 协议开源，二次开发时请注意。" />
                                 <LineBreak />
                                 <Run Text="星空目而不可及......赞助继续助力！" />
@@ -65,19 +65,42 @@
                                 FontSize="18"
                                 Text="https://github.com/ZGIT-Network/OpenFrpLauncher"
                                 TextWrapping="Wrap" />
-                            <Grid
+                            <Border
                                 MaxWidth="318"
-                                Margin="0,0,16,16"
+                                Margin="0,0,8,16"
                                 HorizontalAlignment="Left"
-                                RenderOptions.BitmapScalingMode="HighQuality">
-                                <Image ink:ClipHelper.CornerRadius="6">
-                                    <Image.Style>
-                                        <Style TargetType="Image">
-                                            <Setter Property="Source" Value="../Resources/Images/hsccode_v2.jpg" />
-                                        </Style>
-                                    </Image.Style>
-                                </Image>
-                            </Grid>
+                                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                BorderThickness="1"
+                                ClipToBounds="True"
+                                CornerRadius="6">
+                                <Grid>
+                                    <Image ink:ClipHelper.CornerRadius="6" RenderOptions.BitmapScalingMode="HighQuality">
+                                        <Image.Style>
+                                            <Style TargetType="Image">
+                                                <Setter Property="Source" Value="../Resources/Images/mm_reward_qrcode_light.png" />
+                                                <Style.Triggers>
+                                                    <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
+                                                        <Setter Property="Source" Value="../Resources/Images/mm_reward_qrcode_dark.png" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Image.Style>
+                                    </Image>
+
+                                    <TextBlock
+                                        Margin="0,16,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Top"
+                                        FontSize="12"
+                                        Foreground="#afafaf"
+                                        IsHitTestVisible="False"
+                                        TextAlignment="Center">
+                                        <Run Text="请注意:要进入赞助列表请勿匿名赞助" />
+                                        <LineBreak />
+                                        <Run Text="微信 (这不是购买 VIP 的码)" />
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
                         </xa:SimpleStackPanel>
                     </Grid>
                 </Border>

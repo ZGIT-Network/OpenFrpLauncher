@@ -17,10 +17,13 @@
 		<LangVersion>10</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="Resources\Images\alipay.jpg" />
 	  <None Remove="Resources\Images\desktop.ico" />
 	  <None Remove="Resources\Images\desktop_64w.png" />
 	  <None Remove="Resources\Images\funx.png" />
 	  <None Remove="Resources\Images\hsccode_v2.jpg" />
+	  <None Remove="Resources\Images\mm_reward_qrcode_dark.png" />
+	  <None Remove="Resources\Images\mm_reward_qrcode_light.png" />
 	  <None Remove="Resources\Images\v2-bg.jpg" />
 	  <None Remove="Resources\Images\weavatar.png" />
 	  <None Remove="Resources\Images\[www.pixiv.net]artworks,129041588.png" />
@@ -32,9 +35,11 @@
 	  <EmbeddedResource Include="Resources\OAuth\MessageWithPlaceholder.html" />
 	</ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\Images\alipay.jpg" />
     <Resource Include="Resources\Images\desktop.ico" />
     <Resource Include="Resources\Images\desktop_64w.png" />
-    <Resource Include="Resources\Images\hsccode_v2.jpg" />
+    <Resource Include="Resources\Images\mm_reward_qrcode_dark.png" />
+    <Resource Include="Resources\Images\mm_reward_qrcode_light.png" />
     <Resource Include="Resources\Images\weavatar.png" />
     <Resource Include="Resources\Images\[www.pixiv.net]artworks,129041588.png" />
     <Resource Include="Resources\Sora-Medium.ttf" />

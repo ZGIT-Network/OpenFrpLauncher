@@ -43,14 +43,14 @@ namespace OpenFrp.Launcher.Controls
                     {
                         iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
 
-                        mw.HideByHwndCC();
+                        mw.HideByHANDLE();
                     }
                      ; break;
                 case LoginWindow lw:
                     {
                         iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
 
-                        lw.HideByHwndCC();
+                        lw.HideByHANDLE();
                         //CloseLauncher_Click(sender, e);
                         //lw.ShowByHwndCC();
 
@@ -80,12 +80,12 @@ namespace OpenFrp.Launcher.Controls
             {
                 case LoginWindow lw:
                     {
-                        lw.ShowByHwndCC();
+                        lw.ShowByHANDLE();
                     }
                     ; break;
                 case MainWindow mw:
                     {
-                        mw.ShowByHwndCC();
+                        mw.ShowByHANDLE();
                     };break;
 
             }

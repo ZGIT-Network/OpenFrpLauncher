@@ -32,7 +32,6 @@ namespace OpenFrp.Launcher.Controls
                 Duration = TimeSpan.FromMilliseconds(250),
                 EasingFunction = cubic
             };
-            opacityAnimationProc.Freeze();
         }
         public UserTunnel()
         {
@@ -63,6 +62,10 @@ namespace OpenFrp.Launcher.Controls
                 {
                     mf2.Command = new RelayCommand(() =>
                     {
+                        if (App.Current is { MainWindow: var mw} && ContentDialog.GetOpenDialog(mw) is not null)
+                        {
+                            return;
+                        }
                         var dialog = new Dialogs.TunnelEditDialog
                         {
 
@@ -78,6 +81,10 @@ namespace OpenFrp.Launcher.Controls
                 {
                     mf3.Command = new RelayCommand(() =>
                     {
+                        if (App.Current is { MainWindow: var mw } && ContentDialog.GetOpenDialog(mw) is not null)
+                        {
+                            return;
+                        }
                         var dialog = new Dialogs.TunnelViewerDialog()
                         {
 
@@ -218,7 +225,6 @@ namespace OpenFrp.Launcher.Controls
         public static readonly DependencyProperty DeleteCommandBindingProperty =
             DependencyProperty.Register("DeleteCommandBinding", typeof(IAsyncRelayCommand), typeof(UserTunnel), new PropertyMetadata());
         #endregion
-
         #region RefreshCommandBinding
 
 
@@ -234,7 +240,6 @@ namespace OpenFrp.Launcher.Controls
 
 
         #endregion
-
         #region ToggledCommandBinding
         public IAsyncRelayCommand ToggledCommandBinding
         {
@@ -246,6 +251,53 @@ namespace OpenFrp.Launcher.Controls
         public static readonly DependencyProperty ToggledCommandBindingProperty =
             DependencyProperty.Register("ToggledCommandBinding", typeof(IAsyncRelayCommand), typeof(UserTunnel), new PropertyMetadata());
         #endregion
+
+        public void RemoveWithAnimate(Action callback)
+        {
+            if (GetTemplateChild("subfr") is not Border br) return;
+
+            Storyboard stb = new Storyboard { };
+
+            var toffHitAnimation = new BooleanAnimationUsingKeyFrames();
+            {
+                toffHitAnimation.KeyFrames.Add(new DiscreteBooleanKeyFrame()
+                {
+                    KeyTime = KeyTime.FromTimeSpan(TimeSpan.Zero),
+                    Value = false,
+                });
+            };
+            var opacityDoubleAnimation = new DoubleAnimation()
+            {
+                From = 1,
+                To = 0
+            };
+            var doubleXAnimation = new DoubleAnimation()
+            {
+                To = 0.95
+            };
+            var doubleYAnimation = new DoubleAnimation()
+            {
+                To = 0.95
+            };
+
+            Storyboard.SetTargetProperty(opacityDoubleAnimation, new PropertyPath(UIElement.OpacityProperty));
+            Storyboard.SetTargetProperty(toffHitAnimation, new PropertyPath(UIElement.IsHitTestVisibleProperty));
+            Storyboard.SetTargetProperty(doubleXAnimation, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+            Storyboard.SetTargetProperty(doubleYAnimation, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+
+            opacityDoubleAnimation.Duration = doubleXAnimation.Duration = doubleYAnimation.Duration = new Duration(TimeSpan.FromMilliseconds(250));
+
+            opacityDoubleAnimation.EasingFunction = doubleXAnimation.EasingFunction = doubleYAnimation.EasingFunction = new CubicEase() { EasingMode = EasingMode.EaseOut };
+
+            stb.Children.Add(opacityDoubleAnimation);
+            stb.Children.Add(doubleXAnimation);
+            stb.Children.Add(doubleYAnimation);
+            stb.Children.Add(toffHitAnimation);
+
+            stb.Completed += delegate { callback.Invoke(); };
+
+            br.BeginStoryboard(stb);
+        }
 
         protected override AutomationPeer OnCreateAutomationPeer()
         {

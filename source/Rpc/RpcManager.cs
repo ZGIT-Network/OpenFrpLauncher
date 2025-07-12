@@ -175,7 +175,7 @@ namespace OpenFrp.Launcher.Rpc
         }
 
         public async Task<IDisposable> TunnelStream(
-            string userTokenAccess,
+            string? userTokenAccess,
             Action<IClientStreamWriter<Service.Proto.Request.TunnelStreamRequest>> writerCallback,
             Action<Service.Proto.Response.TunnelStreamResponse> readerCallback,
             CancellationToken cancellationToken = default)
@@ -184,7 +184,8 @@ namespace OpenFrp.Launcher.Rpc
             {
                 throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
             }
-            if (GlobalHeader is null || GlobalHeader.Count < 1)
+            // GlobalHeader is null || GlobalHeader.Count < 1
+            if (false)
             {
                 throw new ArgumentNullException(nameof(GlobalHeader));
             }
@@ -202,7 +203,7 @@ namespace OpenFrp.Launcher.Rpc
                 State = Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.Prepare,
                 Data = Any.Pack(new StringValue
                 {
-                    Value = userTokenAccess
+                    Value = userTokenAccess ?? ""
                 }) 
             });
 
@@ -218,6 +219,10 @@ namespace OpenFrp.Launcher.Rpc
             }
             catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Cancelled) {  }
             catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Unavailable && e.Status.Detail.Equals("failed to connect to all addresses"))
+            {
+
+            }
+            catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Unavailable && e.Status.Detail.Equals("Exception was thrown by handler."))
             {
 
             }
@@ -248,6 +253,10 @@ namespace OpenFrp.Launcher.Rpc
                 }
             }
             catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Cancelled) {  }
+            catch (Grpc.Core.RpcException e) when (e.StatusCode is StatusCode.Unavailable && e.Status.Detail.Equals("failed to connect to all addresses"))
+            {
+
+            }
 
             return duplex;
         }

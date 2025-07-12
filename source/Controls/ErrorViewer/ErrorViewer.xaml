@@ -67,7 +67,7 @@
                                         FontFamily="{StaticResource SoraMediumMixYahei}"
                                         FontSize="14"
                                         Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Text="{Binding Exception.StackTrace, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                        Text="{Binding StackTrace, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>

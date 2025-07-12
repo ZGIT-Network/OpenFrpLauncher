@@ -14,10 +14,11 @@ namespace OpenFrp.Launcher.Converter
         {
             if (value is long trf)
             {
-                double d1 = System.Convert.ToDouble(trf) / 1024d;
+                double d = System.Convert.ToDouble(trf);
+                double d1 = d / 1024d;
                 if (d1 < 1)
                 {
-                    return $"{trf} Mib";
+                    return $"{Math.Round(d,2)} Mib";
                 }
                 double d2 = d1 / 1024d;
                 if (d2 < 1)

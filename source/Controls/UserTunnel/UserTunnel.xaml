@@ -25,6 +25,7 @@
                         <CubicEase x:Key="__ApCubicEase" />
                         <conv:EitherConverter x:Key="ReflagdEitherConverter" ReflagValue="True" />
 
+
                     </ControlTemplate.Resources>
                     <Border
                         x:Name="subfr"
@@ -34,8 +35,13 @@
                         BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="4"
-                        DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+                        DataContext="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                        RenderTransformOrigin=".5,.5">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </Border.RenderTransform>
                         <Grid DataContext="{Binding Tunnel, Mode=OneWay}">
+
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -61,15 +67,26 @@
                                 Margin="20,22,0,0"
                                 Orientation="Vertical"
                                 Spacing="2">
-
-                                <TextBlock FontFamily="{StaticResource SoraMedium}">
-                                    <Run FontSize="20" Text="{Binding Name, Mode=OneWay}" />
-                                    <Run
-                                        FontSize="16"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
-                                </TextBlock>
-                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border
+                                        Margin="0,-2,4,0"
+                                        Padding="12,4,10,4"
+                                        VerticalAlignment="Center"
+                                        Background="#9f4096ff"
+                                        CornerRadius="12"
+                                        ToolTip="通过网页版快速启动。"
+                                        Visibility="{Binding IsFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                        <TextBlock FontSize="13" Text="快捷启动" />
+                                    </Border>
+                                    <TextBlock FontFamily="{StaticResource SoraMedium}">
+                                        <Run FontSize="20" Text="{Binding Name, Mode=OneWay}" />
+                                        <Run
+                                            FontSize="16"
+                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
+                                    </TextBlock>
+                                </StackPanel>
+                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
                                     <Run
                                         FontFamily="{StaticResource SoraMedium}"
                                         FontSize="18"
@@ -92,11 +109,13 @@
                             </xa:SimpleStackPanel>
                             <!--  Tag  -->
                             <xa:SimpleStackPanel
+                                x:Name="tagViewer"
                                 Grid.Row="2"
                                 Grid.Column="0"
                                 Margin="20,0,0,18"
                                 Orientation="Vertical"
-                                Spacing="2">
+                                Spacing="2"
+                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     FontFamily="{StaticResource SoraMedium}"
                                     FontSize="16"
@@ -248,6 +267,22 @@
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             <MenuItem x:Name="editTunnel" Header="编辑">
+                                                <MenuItem.IsEnabled>
+                                                    <MultiBinding Converter="{StaticResource BothConverter}">
+                                                        <Binding
+                                                            Converter="{StaticResource EqualConverter}"
+                                                            ConverterParameter="False"
+                                                            Mode="OneWay"
+                                                            Path="DataContext.IsFastLaunch"
+                                                            Source="{x:Reference Name=switcher}" />
+                                                        <Binding
+                                                            Converter="{StaticResource EqualConverter}"
+                                                            ConverterParameter="False"
+                                                            Mode="OneWay"
+                                                            Path="IsOn"
+                                                            Source="{x:Reference Name=switcher}" />
+                                                    </MultiBinding>
+                                                </MenuItem.IsEnabled>
                                                 <MenuItem.Icon>
                                                     <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Edit}" />
                                                 </MenuItem.Icon>
@@ -258,6 +293,12 @@
                                                 </MenuItem.Icon>
                                                 <MenuItem.IsEnabled>
                                                     <MultiBinding Converter="{StaticResource BothConverter}">
+                                                        <Binding
+                                                            Converter="{StaticResource EqualConverter}"
+                                                            ConverterParameter="False"
+                                                            Mode="OneWay"
+                                                            Path="DataContext.IsFastLaunch"
+                                                            Source="{x:Reference Name=switcher}" />
                                                         <Binding
                                                             Converter="{StaticResource EqualConverter}"
                                                             ConverterParameter="False"
@@ -275,18 +316,18 @@
                                             </MenuItem>
                                         </ink:MenuFlyout>
                                     </ink:FlyoutService.Flyout>
-                                    <ink:HyperlinkButton.IsEnabled>
+                                    <!--<ink:HyperlinkButton.IsEnabled>
                                         <MultiBinding Converter="{StaticResource ReflagdEitherConverter}">
                                             <Binding
                                                 Mode="OneWay"
                                                 Path="IsOn"
                                                 Source="{x:Reference Name=switcher}" />
-                                            <!--<Binding
+                                            <Binding
                                                 Mode="OneWay"
                                                 Path="event_DefaultUserContextMenuActionCommand.IsRunning"
-                                                RelativeSource="{RelativeSource Mode=TemplatedParent}" />-->
+                                                RelativeSource="{RelativeSource Mode=TemplatedParent}" />
                                         </MultiBinding>
-                                    </ink:HyperlinkButton.IsEnabled>
+                                    </ink:HyperlinkButton.IsEnabled>-->
                                     <ink:FontIcon
                                         Margin="6"
                                         FontSize="24"

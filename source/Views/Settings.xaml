@@ -367,6 +367,40 @@
                                 IsOn="{Binding AutoLaunchWhenLogon, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                 IsRightAlignedCompact="True" />
                         </ctrl:SettingItem>
+                        <ctrl:SettingItem Title="允许通过链接启动隧道" IsEnabled="True">
+                            <ctrl:SettingItem.ExtendUI>
+                                <xa:SimpleStackPanel>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                        TextWrapping="Wrap">
+                                        <Run Text="开启后将在系统注册一个 Url Scheme，无论您有没有登录账户，所启动的隧道属不属于您，均能通过网页版的&quot;一键启动&quot;来打开一个隧道" />
+
+                                    </TextBlock>
+                                    <ctrl:HyperlinkTp1
+                                        Padding="0"
+                                        Content="查看帮助"
+                                        Focusable="False"
+                                        FontSize="13"
+                                        NavigateUri="https://docs.openfrp.net/use/desktop-launcher"
+                                        ToolTip="查看&quot;通过链接启动隧道&quot;的相关帮助" />
+                                </xa:SimpleStackPanel>
+                            </ctrl:SettingItem.ExtendUI>
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon FontSize="24" Glyph="&#xE753;" />
+                            </ctrl:SettingItem.Icon>
+                            <ink:ToggleSwitch
+                                MinWidth="0"
+                                IsOn="{Binding IsUrlSchemeRegistered, Mode=OneWay}"
+                                IsRightAlignedCompact="True">
+                                <behavior:Interaction.Triggers>
+                                    <behavior:EventTrigger EventName="Loaded">
+                                        <behavior:InvokeCommandAction Command="{Binding event_UrlSchemeToggleSwitchLoadedCommand}" PassEventArgsToCommand="True" />
+                                    </behavior:EventTrigger>
+                                </behavior:Interaction.Triggers>
+                            </ink:ToggleSwitch>
+
+                        </ctrl:SettingItem>
                         <ctrl:SettingItem Title="调试模式" Description="">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon FontSize="24" Glyph="&#xEC7A;" />
@@ -377,6 +411,7 @@
                                 IsRightAlignedCompact="True" />
 
                         </ctrl:SettingItem>
+
                     </xa:SimpleStackPanel>
                 </Border>
             </ink:ScrollViewerEx>

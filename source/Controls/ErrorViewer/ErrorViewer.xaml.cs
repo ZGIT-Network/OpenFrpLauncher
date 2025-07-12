@@ -17,26 +17,38 @@ namespace OpenFrp.Launcher.Controls
             set { SetValue(ExceptionProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Exception.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ExceptionProperty =
-            DependencyProperty.Register("Exception", typeof(Exception), typeof(ErrorViewer), new PropertyMetadata());
+            DependencyProperty.Register("Exception", typeof(Exception), typeof(ErrorViewer), new PropertyMetadata(OnExceptionChanged));
 
-        //public override void OnApplyTemplate()
-        //{
-        //    this.PrimaryButtonClick += (_, e) =>
-        //    {
-        //        try
-        //        {
-        //            Clipboard.SetText(Exception.ToString());
-        //            Clipboard.Flush();
-        //        }
-        //        catch
-        //        {
+        private static readonly string[] EnterChar = new string[] { "\r\n" };
 
-        //        }
-        //    };
+        public static void OnExceptionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is Exception ex && !string.IsNullOrEmpty(ex.StackTrace)) 
+            {
+                string[] pattens = ex.StackTrace.Split(EnterChar, StringSplitOptions.None);
 
-        //    base.OnApplyTemplate();
-        //}
+                d.SetValue(StackTracePropertyKey, string.Concat(pattens.Select(x => x.Trim() + "\r\n")));
+            }
+            else
+            {
+                d.ClearValue(StackTracePropertyKey);
+            }
+        }
+
+
+        public string StackTrace
+        {
+            get { return (string)GetValue(StackTraceProperty); }
+        }
+
+
+        public static DependencyProperty StackTraceProperty { get => StackTracePropertyKey.DependencyProperty; }
+
+
+        public static readonly DependencyPropertyKey StackTracePropertyKey =
+            DependencyProperty.RegisterAttachedReadOnly("StackTrace", typeof(string), typeof(ErrorViewer), new PropertyMetadata());
+
+
     }
 }

@@ -76,7 +76,7 @@ namespace OpenFrp.Launcher.Model
         /// 用户 Token
         /// </summary>
         [DebuggerHidden()]
-        public string UserToken { get => UserInfomation?.UserToken ?? throw new NullReferenceException(nameof(UserToken)); }
+        public string UserToken { get => UserInfomation?.UserToken ?? ""; }
 
         /// <summary>
         /// 是否已实名

@@ -23,6 +23,7 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public MainWindowViewModel()
         {
+
             WeakReferenceMessenger.Default.UnregisterAll(nameof(MainWindowViewModel));
 
             WeakReferenceMessenger.Default.Register<Model.RouteMessage<MainWindowViewModel, Yue3.Model.OpenFrp.Response.Data.UserInfoData>>(nameof(MainWindowViewModel), (_, message) =>
@@ -63,10 +64,21 @@ namespace OpenFrp.Launcher.ViewModels
                             case Views.Tunnels {DataContext: ViewModels.TunnelsViewModel vtv }:
                                 {
                                     vtv.event_RefreshUserTunnelCommand.Execute(null);
+                                    if (this.IsUrlSchemeRegistered && App.StartupArguments.LastOrDefault() is { Length: > 0 } pt && pt.StartsWith("openfrp://"))
+                                    {
+                                        vtv.LaunchWithFastLink(pt);
+                                    }
                                 }
                                 ;break;
                         }
                         return;
+                    }
+                    if (tp.Equals(typeof(Views.Tunnels)))
+                    {
+                        if (frame is { Content : FrameworkElement { DataContext: ViewModels.SettingsViewModel svm} })
+                        {
+                            svm.event_CallUpLoginWindowCommand.Cancel();
+                        }
                     }
                     frame?.Dispatcher.Invoke(() => frame?.Navigate(tp));
                 }
@@ -97,16 +109,10 @@ namespace OpenFrp.Launcher.ViewModels
                         };
                     case "processLfec":
                         {
-                            //if (SettingsViewModel.__userInfo_Defualt.Equals(UserInfo))
-                            //{
-                            //    return;
-                            //}
                             conve_RetryConnectRpcCommand.Execute(default);
                         };break;
                     case "processOnline":
                         {
-                            //WeakReferenceMessenger.Default.Send(Model.RouteMessage<TunnelsViewModel>.Create("processOnline"));
-
                             IsDaemonConnected = true;
                         };break;
                     case "processOffline":
@@ -117,6 +123,18 @@ namespace OpenFrp.Launcher.ViewModels
                         }; break;
                 }
             });
+
+            try
+            {
+                if (Microsoft.Win32.Registry.ClassesRoot.GetSubKeyNames().Contains("openfrp"))
+                {
+                    IsUrlSchemeRegistered = true;
+                }
+            }
+            catch
+            {
+
+            }
         }
 
         internal MainWindowViewModel(bool daemonState) : this()
@@ -151,14 +169,11 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private Model.SoftwareConfig? softwareConfig;
 
-        [ObservableProperty]
+        [ObservableProperty,NotifyPropertyChangedFor(nameof(IsAllowToUseTunnel))]
         private bool isDaemonConnected;
 
         [ObservableProperty]
         private bool hasUpdate;
-
-        //[ObservableProperty]
-        //private IProgress<Service.Net.HttpClient.HttpDownloadProgress>? downloadProgress;
 
         [ObservableProperty]
         private Uri? userAvatorSource;
@@ -171,17 +186,34 @@ namespace OpenFrp.Launcher.ViewModels
                 if (!value)
                 {
                     UserInfo = SettingsViewModel.__userInfo_Defualt;
+                    
+                    OnPropertyChanged(nameof(IsAllowToUseTunnel));
                 }
             }
         }
 
-        [ObservableProperty,NotifyPropertyChangedFor(nameof(IsUserLogon))]
+
+        public bool IsAllowToUseTunnel
+        {
+            get
+            {
+                return IsDaemonConnected && (IsUserLogon || IsUrlSchemeRegistered);
+            }
+        }
+
+        public bool IsUrlSchemeRegistered = false;
+
+
+
+        [ObservableProperty,NotifyPropertyChangedFor(nameof(IsUserLogon),nameof(IsAllowToUseTunnel))]
         private Model.UserInfo userInfo = SettingsViewModel.__userInfo_Defualt;
 
         [ObservableProperty]
         private ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogContainer>? logsCache;
 
         public Google.Protobuf.Collections.MapField<int, int> KnownLogIndexMapping { get; set; } = new Google.Protobuf.Collections.MapField<int, int> { };
+
+
 
         [RelayCommand]
         private void @event_NavigationViewLoaded(RoutedEventArgs arg)
@@ -193,19 +225,19 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     if (frame is null) return;
                     
-                    //if (frame.Content is Views.UpdateComment { DataContext: ViewModels.UpdateCommentViewModel ucvm })
-                    //{
-                        
-                    //    if (ucvm.event_InstallUpdateCommand is IAsyncRelayCommand { IsRunning: true })
-                    //    {
-                            
-                    //        return;
-                    //    }
-                    //}
-
                     if (e.IsSettingsInvoked || e.InvokedItemContainer is NavigationViewItem { Tag: "usrInfo" })
                     {
-                        if (frame.Content is not Views.Settings) frame.Navigate(typeof(Views.Settings));
+                        if (frame.Content is not Views.Settings)
+                        {
+                            Views.Settings pageObj = new Views.Settings { };
+                            pageObj.Dispatcher.BeginInvoke(() =>
+                            {
+                                pageObj.BeginInit();
+                                pageObj.EndInit();
+
+                                frame.Navigate(pageObj);
+                            }, priority: System.Windows.Threading.DispatcherPriority.Background, null);
+                        }
 
                         return;
                     }
@@ -215,7 +247,19 @@ namespace OpenFrp.Launcher.ViewModels
 
                         if (page.Namespace.StartsWith("OpenFrp.Launcher.Views"))
                         {
-                            frame.Navigate(page, "byInvoked");
+                            System.Windows.Controls.Page? pageObj = Activator.CreateInstance(page) as System.Windows.Controls.Page;
+
+                            if (pageObj != null) 
+                            {
+                                pageObj.Dispatcher.BeginInvoke(() =>
+                                {
+                                    pageObj.BeginInit();
+                                    pageObj.EndInit();
+
+                                    frame.Navigate(pageObj, "byInvoked");
+                                }, priority: System.Windows.Threading.DispatcherPriority.Background, null);
+                                
+                            }
                         }
                         else
                         {
@@ -245,7 +289,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 this.frame = frame;
 
-                frame.Navigate(typeof(Views.Home));
+
                 frame.Navigating += (_, e) =>
                 {
                     if (e.NavigationMode is System.Windows.Navigation.NavigationMode.Forward or System.Windows.Navigation.NavigationMode.Back)
@@ -294,6 +338,14 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                     }
                 };
+                if (IsUrlSchemeRegistered && App.StartupArguments.Count > 0 && App.StartupArguments.Any(x => x.StartsWith("openfrp://")))
+                {
+                    frame.Navigate(typeof(Views.Tunnels));
+                }
+                else
+                {
+                    frame.Navigate(typeof(Views.Home));
+                }
             }
         }
 
@@ -305,14 +357,14 @@ namespace OpenFrp.Launcher.ViewModels
 
                 if (App.StartupArguments.Contains("--minimize") && mw.Tag is false)
                 {
-                    mw.HideByHwndCC();
+                    mw.HideByHANDLE();
                 }
                 ShowAlertAction = mw.ShowAlert;
 
                 mw.Closing += (_, e) =>
                 {
                     e.Cancel = true;
-                    mw.HideByHwndCC();
+                    mw.HideByHANDLE();
                 };
             }
         }
@@ -441,18 +493,24 @@ namespace OpenFrp.Launcher.ViewModels
             if (App.Current.MainWindow is not MainWindow mw) return;
 
             mw.IsEnabled = false;
-            mw.SetCCWindowState(false);
+            mw.SetWindowEnableState(false);
+            
             
             try
             {
-                Process.Start(new ProcessStartInfo
+                var pcp = new ProcessStartInfo
                 {
                     FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
                     Arguments = "--inst " + argument,
-                    Verb = "runas",
                     ErrorDialog = false,
                     UseShellExecute = true,
-                });
+                };
+                if (!App.IsAdministrator())
+                {
+                    pcp.Verb = "runas";
+                }
+
+                Process.Start(pcp);
             }
             catch(System.ComponentModel.Win32Exception ex)
             {
@@ -467,7 +525,7 @@ namespace OpenFrp.Launcher.ViewModels
             finally
             {
                 mw.IsEnabled = true;
-                mw.SetCCWindowState(true);
+                mw.SetWindowEnableState(true);
             }
             ShutdownApp();
         }
@@ -475,9 +533,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_RetryConnectRpc(CancellationToken cancellationToken)
         {
-            App.LaunchRpcProcess(out var manager);
+            App.DaemonManager.LaunchRpcProcess(out var manager);
 
-            await App.WaitForProcessLaunch(cancellationToken);
+            await App.DaemonManager.WaitForProcessLaunch(cancellationToken);
 
             OpenFrp.Service.Proto.RpcResponse<Service.Proto.Response.SyncResponse>? r1_resp = default;
 
@@ -537,10 +595,11 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_CreateNotificationStream(CancellationToken cancellationToken)
         {
-            App.LaunchRpcProcess(out var rpcManager);
+            App.DaemonManager.LaunchRpcProcess(out var rpcManager);
 
             await rpcManager.NotificationStream(NotificationReader, cancellationToken);
         }
+
         private void NotificationReader(Service.Proto.Response.NotificationStreamResponse response)
         {
             switch (response.State)
@@ -662,13 +721,13 @@ namespace OpenFrp.Launcher.ViewModels
                 case MainWindow mw:
                     {
                         iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
-                        mw.HideByHwndCC();
+                        mw.HideByHANDLE();
                     }
                     ; break;
                 case LoginWindow lw:
                     {
                         iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
-                        lw.HideByHwndCC();
+                        lw.HideByHANDLE();
                     }
                     ; break;
             }
@@ -686,12 +745,12 @@ namespace OpenFrp.Launcher.ViewModels
 
             App.TaskBarIcon?.Dispose();
 
-            if (App.ServiceProcess is not null)
+            if (App.DaemonManager.ServiceProcess is not null)
             {
-                App.ServiceProcess.EnableRaisingEvents = false;
+                App.DaemonManager.ServiceProcess.EnableRaisingEvents = false;
                 try
                 {
-                    await App.ServiceProcess.StandardInput.WriteLineAsync("exitProc");
+                    await App.DaemonManager.ServiceProcess.StandardInput.WriteLineAsync("exitProc");
 
                     Application.Current.Shutdown();
 

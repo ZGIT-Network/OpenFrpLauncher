@@ -25,6 +25,7 @@
             PresentationOptions:Freeze="True"
             EasingMode="EaseOut" />
         <conv:EitherConverter x:Key="ReflagdEitherConverter" ReflagValue="True" />
+        <ink:BindingProxy x:Key="IsNotUrlSchemeMode" Value="{Binding IsUrlSchemeMode, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}" />
     </FrameworkElement.Resources>
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
@@ -118,165 +119,25 @@
 
                         </Border>
                         <Border
-                            x:Name="defaultErrorCtrl"
-                            Opacity="0"
-                            RenderTransformOrigin=".5,.5"
-                            Style="{StaticResource BorderFocusManagedStyle}">
-                            <FrameworkElement.RenderTransform>
-                                <ScaleTransform ScaleX="1" ScaleY="1" />
-                            </FrameworkElement.RenderTransform>
-                            <Border
-                                MaxWidth="650"
-                                MaxHeight="350"
-                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{DynamicResource CardStrokeColorDefaultSolidBrush}"
-                                BorderThickness="1"
-                                CornerRadius="4">
-                                <xa:SimpleStackPanel
-                                    Margin="36,16"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Spacing="16">
-                                    <ink:FontIcon
-                                        HorizontalAlignment="Left"
-                                        FontSize="64"
-                                        Icon="{x:Static ink:SegoeFluentIcons.ThoughtBubble}" />
-                                    <TextBlock FontSize="24">
-                                        <Run Text="{Binding ExecuteResult.Message, Mode=OneWay}" />
-                                    </TextBlock>
-                                    <WrapPanel>
-                                        <Button
-                                            Margin="0,0,8,8"
-                                            Padding="14,9"
-                                            AutomationProperties.Name="刷新"
-                                            Command="{Binding event_RefreshUserTunnelCommand}"
-                                            Style="{StaticResource AccentButtonStyle}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
-                                                <TextBlock Padding="12,0,0,0" Text="刷新" />
-                                            </StackPanel>
-                                        </Button>
-                                        <Button
-                                            Margin="0,0,8,8"
-                                            Padding="14,9"
-                                            AutomationProperties.Name="查看错误"
-                                            Command="{Binding event_DisplayExceptionCommand}"
-                                            Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ink:FontIcon FontSize="18" Icon="{x:Static ink:SegoeFluentIcons.Error}" />
-                                                <TextBlock Padding="8,0,0,0" Text="查看错误" />
-                                            </StackPanel>
-                                        </Button>
-                                    </WrapPanel>
-                                </xa:SimpleStackPanel>
-                            </Border>
-                        </Border>
-                        <Border
-                            x:Name="defaultEmptyCtrl"
-                            Opacity="0"
-                            RenderTransformOrigin=".5,.5"
-                            Style="{StaticResource BorderFocusManagedStyle}">
-                            <FrameworkElement.RenderTransform>
-                                <ScaleTransform ScaleX="1" ScaleY="1" />
-                            </FrameworkElement.RenderTransform>
-                            <Border
-                                MaxWidth="650"
-                                MaxHeight="350"
-                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{DynamicResource CardStrokeColorDefaultSolidBrush}"
-                                BorderThickness="1"
-                                CornerRadius="4">
-                                <xa:SimpleStackPanel
-                                    Margin="36,16"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Center"
-                                    Spacing="16">
-                                    <ink:FontIcon
-                                        HorizontalAlignment="Left"
-                                        FontSize="64"
-                                        Icon="{x:Static ink:SegoeFluentIcons.InteractiveDashboard}" />
-                                    <TextBlock TextWrapping="Wrap">
-                                        <Run FontSize="24" Text="你还没有隧道呢" />
-                                        <LineBreak />
-                                        <Run
-                                            FontSize="18"
-                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                            Text="点击下方&quot;创建隧道&quot;创建新隧道,或者刷新看看？" />
-                                        <Run
-                                            FontSize="18"
-                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                            Text="*创建隧道暂未开发" />
-                                    </TextBlock>
-                                    <WrapPanel>
-                                        <Button
-                                            Margin="0,0,8,8"
-                                            Padding="14,9"
-                                            AutomationProperties.Name="创建隧道"
-                                            Command="{Binding event_GotoCreateTunnelPageCommand}"
-                                            IsEnabled="False"
-                                            Style="{StaticResource AccentButtonStyle}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Add}" />
-                                                <TextBlock Padding="12,0,0,0" Text="创建隧道" />
-                                            </StackPanel>
-                                        </Button>
-                                        <Button
-                                            Margin="0,0,8,8"
-                                            Padding="14,9"
-                                            AutomationProperties.Name="刷新"
-                                            Command="{Binding event_RefreshUserTunnelCommand}">
-                                            <StackPanel Orientation="Horizontal">
-                                                <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
-                                                <TextBlock Padding="12,0,0,0" Text="刷新" />
-                                            </StackPanel>
-                                        </Button>
-
-                                    </WrapPanel>
-                                </xa:SimpleStackPanel>
-                            </Border>
-                        </Border>
-                        <Border
-                            x:Name="defaultContainerCtrl"
-                            d:Opacity="1"
+                            x:Name="defaultRootContainerCtrl"
                             Opacity="0"
                             RenderTransformOrigin=".5,.5"
                             Style="{StaticResource BorderFocusManagedStyle}">
                             <FrameworkElement.RenderTransform>
                                 <TranslateTransform X="0" Y="0" />
                             </FrameworkElement.RenderTransform>
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <Grid Grid.Row="0">
-                                    <xa:SimpleStackPanel
-                                        Margin="0,0,0,8"
-                                        Orientation="Horizontal"
-                                        Spacing="8">
+                            <StackPanel>
+                                <StackPanel>
+                                    <TextBlock Margin="0,0,0,8" FontSize="20">
+                                        <Run Text="其他用户" />
+                                        <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="(不属于您的隧道，通过快速启动)" />
+                                    </TextBlock>
 
-                                        <!--<CheckBox Style="{StaticResource }"/>-->
-                                    </xa:SimpleStackPanel>
-                                </Grid>
-                                <Grid Grid.Row="1">
                                     <ItemsControl
-                                        x:Name="itemsController"
+                                        x:Name="remoteItemsController"
                                         d:ItemsSource="{d:SampleData ItemCount=10}"
                                         Focusable="False"
-                                        ItemsSource="{Binding UserTunnels, Mode=OneWay, IsAsync=True}">
-                                        <ItemsControl.IsEnabled>
-                                            <MultiBinding Converter="{StaticResource ReflagdEitherConverter}" Mode="OneWay">
-                                                <Binding Mode="OneWay" Path="event_DeleteUserTunnelCommand.IsRunning" />
-
-                                                <Binding
-                                                    Converter="{StaticResource EqualConverter}"
-                                                    ConverterParameter="False"
-                                                    Mode="OneWay"
-                                                    Path="IsDaemonConnected" />
-                                                <!--<Binding Mode="OneWay" Path="event_UserContextMenuInvokedCommand.IsRunning" />-->
-                                                <!--<Binding Mode="OneWay" Path="event_TunnelSwitchInvokedCommand.IsRunning" />-->
-                                            </MultiBinding>
-                                        </ItemsControl.IsEnabled>
+                                        ItemsSource="{Binding AppRemoteTunnels, Mode=OneWay, IsAsync=True}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel />
@@ -301,10 +162,191 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                    <!--  Container Pro  -->
+                                </StackPanel>
+                                <TextBlock
+                                    Margin="0,4,0,8"
+                                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                                    FontSize="20"
+                                    Visibility="{Binding IsUserLogin, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                    <Run Text="{Binding UserInfo.UserName, StringFormat='{}{0} 的隧道', Mode=OneWay}" />
+                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserTunnels.Count, StringFormat='({0}', Mode=OneWay}" />
+                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="/" />
+                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserInfo.MaxProxies, StringFormat='{}{0})', Mode=OneWay}" />
+                                </TextBlock>
+                                <Grid Visibility="{Binding IsUserLogin, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                    <Border
+                                        x:Name="defaultErrorCtrl"
+                                        d:Opacity="1"
+                                        Opacity="0"
+                                        RenderTransformOrigin=".5,.5"
+                                        Style="{StaticResource BorderFocusManagedStyle}">
+                                        <FrameworkElement.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                                        </FrameworkElement.RenderTransform>
+                                        <Border
+                                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                            BorderBrush="{DynamicResource CardStrokeColorDefaultSolidBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                            <xa:SimpleStackPanel
+                                                Margin="36,64"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                Spacing="16">
+                                                <ink:FontIcon
+                                                    HorizontalAlignment="Left"
+                                                    FontSize="64"
+                                                    Icon="{x:Static ink:SegoeFluentIcons.ThoughtBubble}" />
+                                                <TextBlock FontSize="24">
+                                                    <Run Text="{Binding ExecuteResult.Message, Mode=OneWay}" />
+                                                </TextBlock>
+                                                <WrapPanel>
+                                                    <Button
+                                                        Margin="0,0,8,8"
+                                                        Padding="14,9"
+                                                        AutomationProperties.Name="刷新"
+                                                        Command="{Binding event_RefreshUserTunnelCommand}"
+                                                        Style="{StaticResource AccentButtonStyle}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
+                                                            <TextBlock Padding="12,0,0,0" Text="刷新" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button
+                                                        Margin="0,0,8,8"
+                                                        Padding="14,9"
+                                                        AutomationProperties.Name="查看错误"
+                                                        Command="{Binding event_DisplayExceptionCommand}"
+                                                        Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <ink:FontIcon FontSize="18" Icon="{x:Static ink:SegoeFluentIcons.Error}" />
+                                                            <TextBlock Padding="8,0,0,0" Text="查看错误" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </WrapPanel>
+                                            </xa:SimpleStackPanel>
+                                        </Border>
+                                    </Border>
+                                    <Border
+                                        x:Name="defaultEmptyCtrl"
+                                        d:Opacity="1"
+                                        Opacity="0"
+                                        RenderTransformOrigin=".5,.5"
+                                        Style="{StaticResource BorderFocusManagedStyle}">
+                                        <FrameworkElement.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                                        </FrameworkElement.RenderTransform>
+                                        <Border
+                                            MinHeight="300"
+                                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                            BorderBrush="{DynamicResource CardStrokeColorDefaultSolidBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                            <Grid>
+                                                <xa:SimpleStackPanel
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Spacing="16">
+                                                    <ink:FontIcon
+                                                        Margin="36,0"
+                                                        HorizontalAlignment="Left"
+                                                        FontSize="64"
+                                                        Icon="{x:Static ink:SegoeFluentIcons.InteractiveDashboard}" />
+                                                    <TextBlock Margin="36,0" TextWrapping="Wrap">
+                                                        <Run FontSize="24" Text="你还没有隧道呢" />
+                                                        <LineBreak />
+                                                        <Run
+                                                            FontSize="18"
+                                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                            Text="点击下方&quot;创建隧道&quot;创建新隧道,或者刷新看看？" />
+
+                                                    </TextBlock>
+                                                    <WrapPanel Margin="36,0">
+                                                        <Button
+                                                            Margin="0,0,8,8"
+                                                            Padding="14,9"
+                                                            AutomationProperties.Name="创建隧道"
+                                                            Command="{Binding event_GotoCreateTunnelPageCommand}"
+                                                            Style="{StaticResource AccentButtonStyle}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Add}" />
+                                                                <TextBlock Padding="12,0,0,0" Text="创建隧道" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                        <Button
+                                                            Margin="0,0,8,8"
+                                                            Padding="14,9"
+                                                            AutomationProperties.Name="刷新"
+                                                            Command="{Binding event_RefreshUserTunnelCommand}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
+                                                                <TextBlock Padding="12,0,0,0" Text="刷新" />
+                                                            </StackPanel>
+                                                        </Button>
+
+                                                    </WrapPanel>
+
+                                                </xa:SimpleStackPanel>
+                                            </Grid>
+
+                                        </Border>
+                                    </Border>
+                                    <Border
+                                        x:Name="defaultContainerCtrl"
+                                        d:Opacity="1"
+                                        Opacity="0"
+                                        RenderTransformOrigin=".5,.5"
+                                        Style="{StaticResource BorderFocusManagedStyle}">
+                                        <FrameworkElement.RenderTransform>
+                                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                                        </FrameworkElement.RenderTransform>
+                                        <ItemsControl
+                                            x:Name="itemsController"
+                                            d:ItemsSource="{d:SampleData ItemCount=10}"
+                                            Focusable="False"
+                                            ItemsSource="{Binding UserTunnels, Mode=OneWay, IsAsync=True}">
+                                            <ItemsControl.IsEnabled>
+                                                <MultiBinding Converter="{StaticResource ReflagdEitherConverter}" Mode="OneWay">
+                                                    <Binding Mode="OneWay" Path="event_DeleteUserTunnelCommand.IsRunning" />
+
+                                                    <Binding
+                                                        Converter="{StaticResource EqualConverter}"
+                                                        ConverterParameter="False"
+                                                        Mode="OneWay"
+                                                        Path="IsDaemonConnected" />
+                                                    <!--<Binding Mode="OneWay" Path="event_UserContextMenuInvokedCommand.IsRunning" />-->
+                                                    <!--<Binding Mode="OneWay" Path="event_TunnelSwitchInvokedCommand.IsRunning" />-->
+                                                </MultiBinding>
+                                            </ItemsControl.IsEnabled>
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <ctrl:UserTunnel
+                                                        x:Name="userTunnel"
+                                                        Margin="0,0,8,8"
+                                                        BeginWithOpacityAnimation="True"
+                                                        DeleteCommandBinding="{Binding DataContext.event_DeleteUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                        RefreshCommandBinding="{Binding DataContext.event_RefreshUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                        ToggledCommandBinding="{Binding DataContext.event_TunnelSwitchInvokedCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                        Tunnel="{Binding Mode=OneWay}">
+                                                        <behavior:Interaction.Triggers>
+                                                            <behavior:EventTrigger EventName="Error">
+                                                                <behavior:InvokeCommandAction Command="{Binding DataContext.event_HandleTunnelCtrlExceptionCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}" PassEventArgsToCommand="True" />
+                                                            </behavior:EventTrigger>
+                                                        </behavior:Interaction.Triggers>
+                                                    </ctrl:UserTunnel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Border>
                                 </Grid>
-                            </Grid>
+                            </StackPanel>
                         </Border>
+
                     </Grid>
                 </Border>
             </ink:ScrollViewerEx>
@@ -345,316 +387,22 @@
                         Storyboard.TargetProperty="RenderTransform.ScaleY"
                         To="1"
                         Duration="0:0:.35" />
-                    <!--  Error Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <!--  Empty Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="0.95"
-                        Duration="0:0:.35" />
                     <!--  Container Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetName="defaultRootContainerCtrl"
                         Storyboard.TargetProperty="Visibility"
                         Duration="0:0:0.35">
                         <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
                     </ObjectAnimationUsingKeyFrames>
                     <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetName="defaultRootContainerCtrl"
                         Storyboard.TargetProperty="IsHitTestVisible"
                         Duration="0">
                         <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
                     </BooleanAnimationUsingKeyFrames>
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                </Storyboard>
-            </VisualState>
-            <VisualState Name="DisplayErrorCtrl">
-                <Storyboard>
-                    <!--  Loading Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <!--  Error Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0:0:.25">
-                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="1"
-                        Duration="0:0:.25" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="1"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="1"
-                        Duration="0:0:.35" />
-                    <!--  Empty Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <!--  Container Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                </Storyboard>
-            </VisualState>
-            <VisualState Name="DisplayEmptyCtrl">
-                <Storyboard>
-                    <!--  Loading Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultLoadingCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <!--  Error Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultErrorCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="0.95"
-                        Duration="0:0:.35" />
-                    <!--  Empty Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0:0:.25">
-                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="1"
-                        Duration="0:0:.25" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="1"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultEmptyCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="1"
-                        Duration="0:0:.35" />
-                    <!--  Container Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0">
-                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetName="defaultRootContainerCtrl"
                         Storyboard.TargetProperty="Opacity"
                         To="0"
                         Duration="0:0:.15" />
@@ -693,7 +441,234 @@
                         Storyboard.TargetProperty="RenderTransform.ScaleY"
                         To="0.95"
                         Duration="0:0:.35" />
+                    <!--  Container Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultRootContainerCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultRootContainerCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultRootContainerCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        FillBehavior="Stop"
+                        Storyboard.TargetName="defaultRootContainerCtrl"
+                        Storyboard.TargetProperty="RenderTransform.Y"
+                        From="10"
+                        To="0"
+                        Duration="0:0:.35" />
+                </Storyboard>
+            </VisualState>
+        </VisualStateGroup>
+        <VisualStateGroup Name="StateInContainerA">
+            <VisualState Name="UserDisplayEmpty">
+                <Storyboard>
+                    <!--  Empty Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.35" />
+                    <!--  defaultErrorCtrl Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <!--  Container Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:0">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To=".95"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To=".95"
+                        Duration="0:0:.35" />
+                </Storyboard>
+            </VisualState>
+            <VisualState Name="UserDisplayError">
+                <Storyboard>
                     <!--  Error Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultErrorCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.35" />
+                    <!--  Container Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:0">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To=".95"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultContainerCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To=".95"
+                        Duration="0:0:.35" />
+                    <!--  Empty Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultEmptyCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                </Storyboard>
+            </VisualState>
+            <VisualState Name="UserDisplayNoraml">
+                <Storyboard>
+                    <!--  defaultErrorCtrl Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultErrorCtrl"
                         Storyboard.TargetProperty="Visibility"
@@ -759,43 +734,37 @@
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultContainerCtrl"
                         Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:0">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                        Duration="0">
+                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}" />
                     </ObjectAnimationUsingKeyFrames>
                     <BooleanAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultContainerCtrl"
                         Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0:0:.25">
-                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                        Duration="0:0:.35">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.35" Value="True" />
                     </BooleanAnimationUsingKeyFrames>
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="defaultContainerCtrl"
                         Storyboard.TargetProperty="Opacity"
                         To="1"
-                        Duration="0:0:.25" />
+                        Duration="0:0:.15" />
                     <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="1"
-                        Duration="0:0:.25" />
-                    <!--<DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="defaultContainerCtrl"
                         Storyboard.TargetProperty="RenderTransform.ScaleX"
                         To="1"
-                        Duration="0:0:.35" />-->
+                        Duration="0:0:.35" />
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
-                        FillBehavior="Stop"
                         Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="RenderTransform.Y"
-                        From="10"
-                        To="0"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
                         Duration="0:0:.35" />
                 </Storyboard>
             </VisualState>
+
         </VisualStateGroup>
+
     </VisualStateManager.VisualStateGroups>
 </ink:Page>

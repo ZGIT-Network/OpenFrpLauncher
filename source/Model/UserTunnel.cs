@@ -53,6 +53,16 @@ namespace OpenFrp.Launcher.Model
             };
         }
 
+        public UserTunnel(OpenFrp.Service.Proto.Response.TunnelStreamResponse.Types.AnonymousTunnelResponse.Types.AnonymousTunnelData an) : this(tunnel: new Yue3.Model.OpenFrp.Response.Data.UserTunnel
+        {
+            Name = an.Name,
+            Id = an.TunnelId,
+            ConnectAddress = an.ConnectAddresses,
+            IsEnabled = true
+        })
+        {
+            IsFastLaunch = true;
+        }
 
 
         public UserTunnel(Yue3.Model.OpenFrp.Response.Data.UserTunnel tunnel) => Tunnel = tunnel;
@@ -83,33 +93,42 @@ namespace OpenFrp.Launcher.Model
 
         public bool FirstState { get; internal set; }
 
+        [ObservableProperty,NotifyPropertyChangedFor(nameof(IsNotFastLaunch))]
+        private bool isFastLaunch;
+
+        public bool IsNotFastLaunch { get => !IsFastLaunch; }
+
         public string Name { get => Tunnel?.Name ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public string Type { get => Tunnel?.Type ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public string Type { get => IsFastLaunch ? "" : Tunnel?.Type ?? throw new NullReferenceException(nameof(Tunnel)); }
         public int Id { get => Tunnel?.Id ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public string Host { get => Tunnel?.Host ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public int Port { get => Tunnel?.Port ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public int RemotePort { get => Tunnel?.RemotePort ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public string Host { get => IsFastLaunch ? "" : Tunnel?.Host ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public int Port { get => IsFastLaunch ? -1 : Tunnel?.Port ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public int RemotePort { get => IsFastLaunch ? -1 : Tunnel?.RemotePort ?? throw new NullReferenceException(nameof(Tunnel)); }
 
-        public bool IsHasRemotePort { get => (Tunnel?.RemotePort ?? throw new NullReferenceException(nameof(Tunnel))) is not 0; }
-        public bool IsHttpService { get => (Tunnel?.Type ?? throw new NullReferenceException(nameof(Tunnel))).Contains("HTTP") || !IsHasRemotePort; }
+        public bool IsHasRemotePort { get => IsFastLaunch ? false : (Tunnel?.RemotePort ?? throw new NullReferenceException(nameof(Tunnel))) is not 0; }
+        public bool IsHttpService { get => IsFastLaunch ? false : (Tunnel?.Type ?? throw new NullReferenceException(nameof(Tunnel))).Contains("HTTP") || !IsHasRemotePort; }
 
-        public string NodeName { get => Tunnel?.NodeName ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public int NodeId { get => Tunnel?.NodeId ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public string NodeName { get => IsFastLaunch ? "" : Tunnel?.NodeName ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public int NodeId { get => IsFastLaunch ? -1 : Tunnel?.NodeId ?? throw new NullReferenceException(nameof(Tunnel)); }
 
-        public bool IsEnable { get => Tunnel?.IsEnabled ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public bool UseEncryption { get => Tunnel?.UseEncryption ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public bool UseCompression { get => Tunnel?.UseCompression ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public bool ProxyProtocolVersion2 { get => Tunnel?.ProxyProtocolVersion2 ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public bool IsEnable { get => IsFastLaunch || (Tunnel?.IsEnabled ?? throw new NullReferenceException(nameof(Tunnel))); }
+        public bool UseEncryption { get => !IsFastLaunch && (Tunnel?.UseEncryption ?? throw new NullReferenceException(nameof(Tunnel))); }
+        public bool UseCompression { get => !IsFastLaunch && (Tunnel?.UseCompression ?? throw new NullReferenceException(nameof(Tunnel))); }
+        public bool ProxyProtocolVersion2 { get => !IsFastLaunch && (Tunnel?.ProxyProtocolVersion2 ?? throw new NullReferenceException(nameof(Tunnel))); }
 
         public string ConnectAddress
         {
             get
             {
+                if (IsFastLaunch && Tunnel is { ConnectAddress: not null })
+                {
+                    return Tunnel.ConnectAddress;
+                }
                 if (Tunnel is not { ConnectAddress: not null,Type: not null })
                 {
                     throw new NullReferenceException(nameof(Tunnel));
                 }
-                if (Tunnel.Type.Contains("HTTP") || Tunnel.Type.Contains("http"))
+                if ((Tunnel.Type.Contains("HTTP") || Tunnel.Type.Contains("http")) && !IsFastLaunch)
                 {
                     StringBuilder sb = new StringBuilder();
                     foreach (var dom in Tunnel.Domains)
@@ -127,8 +146,8 @@ namespace OpenFrp.Launcher.Model
                 }
             }
         }
-        public string[] ExtraConnectAddress { get => Tunnel?.ExtraConnectAddress ?? throw new NullReferenceException(nameof(Tunnel)); }
-        public string[] Domains { get => Tunnel?.Domains.ToArray() ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public string[] ExtraConnectAddress { get => IsFastLaunch ? Array.Empty<string>() : Tunnel?.ExtraConnectAddress ?? throw new NullReferenceException(nameof(Tunnel)); }
+        public string[] Domains { get => IsFastLaunch ? Array.Empty<string>() : Tunnel?.Domains.ToArray() ?? throw new NullReferenceException(nameof(Tunnel)); }
 
         public bool HasExtraConnectAddress { get => Tunnel?.ExtraConnectAddress.Length > 0; }
 

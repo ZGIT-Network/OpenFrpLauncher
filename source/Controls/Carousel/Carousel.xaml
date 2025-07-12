@@ -18,7 +18,7 @@
                             Depth="{Binding (ink:ThemeShadowChrome.Depth), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}"
                             IsShadowEnabled="{Binding (ink:ThemeShadowChrome.IsShadowEnabled), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}" />
                         <Rectangle
-                            Margin="0.5"
+                            Margin="1"
                             ink:ClipHelper.CornerRadius="{TemplateBinding CornerRadius}"
                             Fill="{TemplateBinding Background}" />
                         <Canvas

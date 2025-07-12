@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,7 +15,9 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using CommunityToolkit.Mvvm.Messaging;
 using iNKORE.UI.WPF.Modern.Controls;
+using OpenFrp.Launcher.ViewModels;
 
 
 
@@ -23,7 +26,7 @@ namespace OpenFrp.Launcher
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : AppWindow
     {
         public MainWindow() : this(0)
         {
@@ -40,21 +43,9 @@ namespace OpenFrp.Launcher
             this.DataContext = new ViewModels.MainWindowViewModel(daemonState);
         }
 
-        private MainWindow(byte _)
+        private MainWindow(byte _) : base()
         {
             InitializeComponent();
-
-            this.SetBinding(iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty, new Binding
-            {
-                Source = App.Settings,
-                Path = new PropertyPath(nameof(App.Settings.ApplicationTheme)),
-                Mode = BindingMode.OneWay
-            });
-            iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
-
-            WindowState = WindowState.Normal;
-
-            hWnd = new WindowInteropHelper(this).EnsureHandle();
 
             if (!App.StartupArguments.Contains("--minimize"))
             {
@@ -62,47 +53,39 @@ namespace OpenFrp.Launcher
             }
         }
 
-        private readonly IntPtr hWnd;
-
-        public void ShowByHwndCC()
+        protected override void AcceptWindowCopyData(nint type, byte[]? buffer)
         {
-            if (hWnd != IntPtr.Zero)
+            switch (type)
             {
-                Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_SHOW);
+                // processed by filter
+                //case 0x01:
+                //    {
+                //        ShowByHANDLE();
+                //    };break;
+                case 0x02 when buffer is not null:
+                    {
+                        string p = Encoding.UTF8.GetString(buffer);
 
-                if (WindowState is WindowState.Minimized)
-                {
-                    WindowState = WindowState.Normal;
-                }
-                if (Win32.User32.GetForegroundWindow() != hWnd)
-                {
-                    Win32.User32.SetForegroundWindow(hWnd);
-                }
+                        if (Uri.TryCreate(p, UriKind.RelativeOrAbsolute, out Uri? t) && t != null)
+                        {
+                            if (t.Scheme != "openfrp")
+                            {
+                                return;
+                            }
+                            switch (t.Host)
+                            {
+                                case "start_proxy":
+                                    {
+                                        App.StartupArguments.Add(p);
+                                        Model.RouteMessage<MainWindowViewModel>.Send(typeof(Views.Tunnels));
+                                    };break;
+                                default: return;
+                            }
+                        }
+                    }
+                    ;break;
             }
         }
-
-        public void HideByHwndCC()
-        {
-            if (hWnd != IntPtr.Zero)
-            {
-                Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_HIDE);
-            }
-        }
-
-        public void SetCCWindowState(bool flag)
-        {
-            if (hWnd != IntPtr.Zero)
-            {
-                Win32.User32.EnableWindow(hWnd, flag);
-            }
-        }
-
-        //protected override void OnClosing(CancelEventArgs e)
-        //{
-
-
-        //    Application.Current.Shutdown();
-        //}
 
         internal async void ShowAlert(string title,string message,InfoBarSeverity severity)
         {
@@ -141,13 +124,13 @@ namespace OpenFrp.Launcher
                     toffHitAnimation.KeyFrames.Add(new DiscreteBooleanKeyFrame()
                     {
                         KeyTime = KeyTime.FromTimeSpan(TimeSpan.Zero),
-                        Value = true,
-                    });
-                    toffHitAnimation.KeyFrames.Add(new DiscreteBooleanKeyFrame()
-                    {
-                        KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(250)),
                         Value = false,
                     });
+                    //toffHitAnimation.KeyFrames.Add(new DiscreteBooleanKeyFrame()
+                    //{
+                    //    KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(250)),
+                    //    Value = false,
+                    //});
                 }
 
                 Storyboard.SetTargetProperty(opacityDoubleAnimation, new PropertyPath(UIElement.OpacityProperty));
@@ -171,15 +154,16 @@ namespace OpenFrp.Launcher
                     Storyboard.SetTarget(doubleAnimation, ifce);
                     Storyboard.SetTarget(toffHitAnimation, ifce);
 
-                    ifce.BeginStoryboard(storyboard);
-
-                    await Task.Delay(150);
-
-                    if (cr.Count >= 1 && cr.Contains(ifce))
+                    storyboard.Completed += delegate
                     {
-                        cr.Remove(ifce);
-                        storyboard.Children.Clear();
-                    }
+                        if (cr.Count >= 1 && cr.Contains(ifce))
+                        {
+                            cr.Remove(ifce);
+                            storyboard.Children.Clear();
+                        }
+                    };
+
+                    ifce.BeginStoryboard(storyboard);
                 }
 
                 storyboard.Children.Add(opacityDoubleAnimation);
@@ -206,6 +190,7 @@ namespace OpenFrp.Launcher
                 doubleAnimation.To = 0;
 
                 infoBar.BeginStoryboard(storyboard);
+
                 infoBar.Closed += delegate
                 {
                     if (cr.Count >= 1 && cr.Contains(infoBar))
@@ -218,7 +203,7 @@ namespace OpenFrp.Launcher
                         cr.Remove(infoBar);
                     }
                 };
-
+                
                 await Task.Delay(5000);
 
                 if (cr.Contains(infoBar))
@@ -229,27 +214,21 @@ namespace OpenFrp.Launcher
                     doubleAnimation.From = 0;
                     doubleAnimation.To = 10;
 
+                    storyboard.Completed += delegate
+                    {
+                        if (cr.Count >= 1 && cr.Contains(infoBar))
+                        {
+                            cr.Remove(infoBar);
+
+                            opacityDoubleAnimation.Freeze();
+                            doubleAnimation.Freeze();
+                            hitAnimation.Freeze();
+                            toffHitAnimation.Freeze();
+                        }
+                    };
                     infoBar.BeginStoryboard(storyboard);
-                    await Task.Delay(350);
-
-                    cr.Remove(infoBar);
-
-                    opacityDoubleAnimation.Freeze();
-                    doubleAnimation.Freeze();
-                    hitAnimation.Freeze();
-                    toffHitAnimation.Freeze();
                 }
             
-            }
-        }
-
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            base.OnClosing(e);
-
-            if (!e.Cancel)
-            {
-                BindingOperations.ClearBinding(this, iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty);
             }
         }
 

@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
 using Microsoft.Web.WebView2.Core;
+using iNKORE.UI.WPF.Modern.Controls;
 
 
 
@@ -62,7 +63,7 @@ namespace OpenFrp.Launcher.ViewModels
                         };break;
                     case "processLfec":
                         {
-                            App.LaunchRpcProcess();
+                            App.DaemonManager.LaunchRpcProcess();
 
                             if (event_FastLoginCommand.IsRunning || event_WebLogin2Command.IsRunning || event_WebLoginCommand.IsRunning)
                             {
@@ -147,7 +148,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (App.StartupArguments.Contains("--minimize") && window.Owner is not MainWindow)
             {
-                wind.HideByHwndCC();
+                wind.HideByHANDLE();
             }
 
             wind.Closing += Wind_Closing;
@@ -158,6 +159,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (wind.FindName("acrylicPanel") is iNKORE.UI.WPF.Modern.Controls.AcrylicPanel panel &&
                 wind.FindName("acrylicPanel2") is iNKORE.UI.WPF.Modern.Controls.AcrylicPanel panel2 &&
+                wind.FindName("acrylicPanel3") is iNKORE.UI.WPF.Modern.Controls.AcrylicPanel panel3 &&
                 wind.FindName("background") is FrameworkElement fe &&
                 !window.UserInfoCallback.Task.IsCanceled)
             {
@@ -165,6 +167,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     panel.Target = fe;
                     panel2.Target = fe;
+                    panel3.Target = fe;
                 }
                 catch
                 {
@@ -247,7 +250,7 @@ namespace OpenFrp.Launcher.ViewModels
 
         private void Wind_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
-            App.ResetDaemonWaitHandle();
+            App.DaemonManager.ResetDaemonWaitHandle();
 
             if (window is { Owner: MainWindow mw })
             {
@@ -259,7 +262,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 e.Cancel = true;
 
-                window?.HideByHwndCC();
+                window?.HideByHANDLE();
             }
         }
 
@@ -636,9 +639,9 @@ namespace OpenFrp.Launcher.ViewModels
                 return;
             }
 
-            App.LaunchRpcProcess(out var manager);
+            App.DaemonManager.LaunchRpcProcess(out var manager);
 
-            await App.WaitForProcessLaunch();
+            await App.DaemonManager.WaitForProcessLaunch();
 
             OpenFrp.Service.Proto.RpcResponse<SyncResponse>? r1_resp = default;
 
@@ -681,9 +684,8 @@ namespace OpenFrp.Launcher.ViewModels
                 }
                 else if (App.Current.MainWindow is not MainWindow)
                 {
-                    var mainWindow = new MainWindow(true);
-
-                    
+                    // MainWindow mainWindow = string.IsNullOrEmpty(launchArg) ? new MainWindow(true) : new MainWindow(launchArg);
+                    MainWindow mainWindow = new MainWindow(true);
 
                     mainWindow.Show();
                 }
@@ -695,6 +697,10 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (ExecuteResult is { HasException: true,Exception: not null and Exception ex })
             {
+                if (App.Current is { MainWindow: var mw } && ContentDialog.GetOpenDialog(mw) is ContentDialog da)
+                {
+                    da?.Hide();
+                }
                 var dialog = new Dialogs.ErrorContentDialog
                 {
 
@@ -793,7 +799,7 @@ namespace OpenFrp.Launcher.ViewModels
         {
             CanCancelLogin = false;
 
-            App.LaunchRpcProcess(out var manager);
+            App.DaemonManager.LaunchRpcProcess(out var manager);
 
             var rrfe = await TryGetFrpcVersionString();
             
@@ -806,7 +812,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
             // try to get frpc version
 
-            await App.WaitForProcessLaunch(cancellationToken);
+            await App.DaemonManager.WaitForProcessLaunch(cancellationToken);
 
             if (cancellationToken.IsCancellationRequested) return;
 
@@ -879,6 +885,13 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             }
         }
+
+        //internal void LaunchWithUrlSchemeArg(string arg)
+        //{
+        //    launchArg = arg;
+
+        //    event_GotoMainWindowCommand.Execute(null);
+        //}
 
         /// <summary>
         /// Note: 在主题改变的时候，同时改变图片的透明度以适应 Mica / Acrylic 主题背景

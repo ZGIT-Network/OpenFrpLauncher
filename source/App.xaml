@@ -8,8 +8,8 @@
     xmlns:local="clr-namespace:OpenFrp.Launcher"
     ShutdownMode="OnExplicitShutdown">
     <Application.StartupUri>
-        <!--  LoginWindow.xaml  -->
-        MainWindow.xaml
+        LoginWindow.xaml
+        <!--  MainWindow.xaml  -->
     </Application.StartupUri>
     <Application.Resources>
         <ResourceDictionary>

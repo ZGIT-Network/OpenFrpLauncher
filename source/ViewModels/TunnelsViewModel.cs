@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -68,15 +71,18 @@ namespace OpenFrp.Launcher.ViewModels
         }
 
         internal const string LoadingState = "DisplayLoadingCtrl";
-        internal const string ErrorState = "DisplayErrorCtrl";
-        internal const string EmptyState = "DisplayEmptyCtrl";
         internal const string NormalState = "DisplayContainerCtrl";
+
+        internal const string UserDisplayNoraml = "UserDisplayNoraml";
+        internal const string UserDisplayError = "UserDisplayError";
+        internal const string UserDisplayEmpty = "UserDisplayEmpty";
 
 
 
         private IClientStreamWriter<Service.Proto.Request.TunnelStreamRequest>? _writer;
         private FrameworkElement? container;
         private ItemsControl? itemsController;
+        private ItemsControl? remoteItemsController;
         private readonly MainWindowViewModel? _mainWindowViewModel;
         private readonly Action<string, string, InfoBarSeverity> ShowAlertAction = delegate { };
 
@@ -98,7 +104,22 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        private TaskCompletionSource<int[]>? firstStateWaiter = new TaskCompletionSource<int[]>();
+        public bool IsUrlSchemeMode
+        {
+            get => _mainWindowViewModel?.IsUrlSchemeRegistered ?? false;
+        }
+        public bool IsUserLogin
+        {
+            get => !UserInfo.Equals(SettingsViewModel.__userInfo_Defualt);
+        }
+
+
+        private TaskCompletionSource<Google.Protobuf.Collections.RepeatedField<OpenFrp.Service.Proto.Response.TunnelStreamResponse.Types.AnonymousTunnelResponse.Types.AnonymousTunnelData>>? remoteAppWaiter;
+
+        private TaskCompletionSource<int[]>? firstStateWaiter;
+
+        private readonly EventWaitHandle fastLaunchWaitHandle = new EventWaitHandle(false,mode: EventResetMode.ManualReset) { };
+        
 
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_CreateStream(CancellationToken cancellationToken)
@@ -129,8 +150,23 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         if (resp.Data.TryUnpack<Service.Proto.Response.BaseResponse>(out var bp))
                         {
-                            ShowAlertAction("无法创建隧道流(请尝试重新加载页面)", bp.Message, InfoBarSeverity.Error);
-                            //_ = bp.Message;
+                            if (bp.Flag)
+                            {
+                                switch(bp.Message)
+                                {
+                                    case "W&!AskForUrlScheme":
+                                        {
+                                            if (IsUrlSchemeMode && App.StartupArguments.LastOrDefault() is { Length: > 0} pt && pt.StartsWith("openfrp://"))
+                                            {
+                                                LaunchWithFastLink(pt);
+                                            }
+                                        };break;
+                                }
+                            }
+                            else
+                            {
+                                ShowAlertAction("无法创建隧道流(请尝试重新加载页面)", bp.Message, InfoBarSeverity.Error);
+                            }
                         }
                         else if (resp.Data.TryUnpack<Service.Proto.Response.TunnelStreamResponse.Types.TunnelControlFailed>(out var cfl))
                         {
@@ -162,50 +198,101 @@ namespace OpenFrp.Launcher.ViewModels
                     };break;
                 case Service.Proto.Response.TunnelStreamResponse.Types.TunnelStreamResponseState.UpdateTunnel:
                     {
+                        if (IsUrlSchemeMode)
+                        {
+                            // ?proxy= (id)
+                            // &user= (token)
+                            // &name= (name)
+                            // &remote= (address)
+                           
+                            if (resp.Data.Is(Empty.Descriptor) && container is not null)
+                            {
+                                if (!IsUserLogin)
+                                {
+                                    //VisualStateManager.GoToElementState(container, EmptyState, false);
+                                }
+                            }
+                            else if (resp.Data.TryUnpack(out Service.Proto.Response.TunnelStreamResponse.Types.AnonymousTunnelResponse _atr) && _atr.Datas is { } dl)
+                            {
+                                if (_atr.IsNewCreate && dl.Count > 0)
+                                {
+                                    if (_atr.Datas.FirstOrDefault() is var t && t is not null)
+                                    {
+                                        AppRemoteTunnels.Add(new Model.UserTunnel(t) { FirstState = true });
+                                    }
+                                    break;
+                                }
+                                remoteAppWaiter?.TrySetResult(dl);
+                            }
+                        }
+
                         if (resp.Data.TryUnpack(out Int32Value _v) && _v is { Value: var tunnelId } && itemsController != null)
                         {
+                            
                             ToggleSwitchWithId(tunnelId);
                         }
                         else if (resp.Data.TryUnpack(out ListValue _l))
                         {
                             firstStateWaiter?.TrySetResult(_l.Values.Select(x => (int)x.NumberValue).ToArray());
                         }
-                    };break;
+                        
+                    }
+                    ;break;
             }
         }
 
         private void ToggleSwitchWithId(params int[] tunnelId)
         {
-            if (itemsController is null || UserTunnels is null) return;
+            remoteItemsController?.Dispatcher.Invoke(delegate
+            {
+                foreach (var rt in AppRemoteTunnels)
+                {
+                    var vi = remoteItemsController.ItemContainerGenerator.ContainerFromItem(rt);
 
-            itemsController.Dispatcher.Invoke(delegate
+                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
+                    {
+                        if (tunnelId.Contains(-rt.Id))
+                        {
+                            userTunnel.RemoveWithAnimate(() => AppRemoteTunnels.Remove(rt));
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        if (iNKORE.UI.WPF.Helpers.OSVersionHelper.IsWindows10OrGreater)
+                        {
+                            try
+                            {
+                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(rt.Name);
+                            }
+                            catch { }
+                        }
+                        break;
+                    }
+                }
+            });
+            itemsController?.Dispatcher.Invoke(delegate
             {
                 foreach (var tunnel in UserTunnels)
                 {
-                    bool? flag = default;
-                    if (tunnelId.Contains(tunnel.Id)) flag = true;
-                    if (tunnelId.Contains(-tunnel.Id)) flag = false;
-                    if (flag is null) continue;
-                    { 
-                        var vi = itemsController.ItemContainerGenerator.ContainerFromItem(tunnel);
-                        if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
+                    var vi = itemsController.ItemContainerGenerator.ContainerFromItem(tunnel);
+
+                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
+                    {
+                        userTunnel.ToggleStateTo(tunnelId.Contains(tunnel.Id), force: true);
+
+                        if (iNKORE.UI.WPF.Helpers.OSVersionHelper.IsWindows10OrGreater)
                         {
-                            userTunnel.ToggleStateTo(flag.Value,force:true);
-
-
-
-                            if (iNKORE.UI.WPF.Helpers.OSVersionHelper.IsWindows10OrGreater)
+                            try
                             {
-                                try
-                                {
-                                    Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
-                                }
-                                catch { }
+                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(tunnel.Name);
                             }
-                            break;
+                            catch { }
                         }
-                        continue;
+                        break;
                     }
+                    continue;
                 }
             });
         }
@@ -220,6 +307,10 @@ namespace OpenFrp.Launcher.ViewModels
                 if (page.FindName("itemsController") is ItemsControl ic) 
                 {
                     itemsController = ic;
+                }
+                if (page.FindName("remoteItemsController") is ItemsControl ric)
+                {
+                    remoteItemsController = ric;
                 }
 
                 VisualStateManager.GoToElementState(container, LoadingState, false);
@@ -240,6 +331,11 @@ namespace OpenFrp.Launcher.ViewModels
                     conve_CreateStreamCommand.Cancel();
 
                     disposableStream?.Dispose();
+
+                    _writer = null;
+
+                    fastLaunchWaitHandle.Dispose();
+                    fastLaunchWaitHandle.Close();
                 };
             }
         }
@@ -253,11 +349,18 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private ObservableCollection<Model.UserTunnel> userTunnels = new ObservableCollection<Model.UserTunnel> { };
 
+        [ObservableProperty]
+        private ObservableCollection<Model.UserTunnel> appRemoteTunnels = new ObservableCollection<Model.UserTunnel> { };
+
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_DisplayException(CancellationToken cancellationToken)
         {
             if (ExecuteResult is { HasException: true, Exception: not null and Exception ex })
             {
+                if (App.Current is { MainWindow: var mw } && ContentDialog.GetOpenDialog(mw) is ContentDialog da)
+                {
+                    da?.Hide();
+                }
                 var dialog = new Dialogs.ErrorContentDialog
                 {
 
@@ -279,7 +382,7 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_GotoCreateTunnelPage()
         {
-
+            Model.RouteMessage<MainWindowViewModel>.Send(typeof(Views.CreateTunnel));
         }
 
         [RelayCommand]
@@ -288,6 +391,21 @@ namespace OpenFrp.Launcher.ViewModels
             var resp = await Service.Net.OpenFrpApi.RemoveTunnel(tunnel.Id);
             if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { Flag: true })
             {
+                if (UserTunnels.Count is 1)
+                {
+                    VisualStateManager.GoToElementState(container, NormalState, false);
+                    VisualStateManager.GoToElementState(container, UserDisplayEmpty, false);
+                }
+                if (itemsController is not null)
+                {
+                    var vi = itemsController.ItemContainerGenerator.ContainerFromItem(tunnel);
+                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
+                    {
+                        userTunnel.RemoveWithAnimate(() => UserTunnels.Remove(tunnel));
+
+                        return;
+                    }
+                }
                 UserTunnels.Remove(tunnel);
             }
             else
@@ -307,13 +425,16 @@ namespace OpenFrp.Launcher.ViewModels
                     State = @switch.IsOn ?
                      Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.LaunchTunnel :
                      Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.CloseTunnel,
-                    Data = Any.Pack(new BytesValue()
+                    Data = Any.Pack(new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchReq
                     {
-                        Value = Google.Protobuf.ByteString.CopyFrom(tunnel.GetTunnelJsonBuffer())
+                        OriginalJsonBuffer = Google.Protobuf.ByteString.CopyFrom(tunnel.GetTunnelJsonBuffer()),
+                        Config = @switch.IsOn ? new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
+                        {
+                            AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
+                            UseForceTls = App.FrpcFeature.UseForceTls,
+                            UseDebug = App.FrpcFeature.UseDebug
+                        } : default
                     }),
-                    AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
-                    UseForceTls = App.FrpcFeature.UseForceTls,
-                    UseDebug = App.FrpcFeature.UseDebug
                 });
             }
         }
@@ -321,9 +442,114 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_RefreshUserTunnel(CancellationToken cancellationToken)
         {
-            if (firstStateWaiter is null)
+            VisualStateManager.GoToElementState(container, LoadingState, false);
+
+            if (!IsUserLogin)
             {
-                firstStateWaiter = new TaskCompletionSource<int[]>();
+
+                if (IsUrlSchemeMode)
+                {
+                    await Task.Delay(1000, cancellationToken);
+
+                    await RequestForOnlineTunnelAndRemoteTunnel();
+
+                    VisualStateManager.GoToElementState(container, NormalState, false);
+
+                    CreateLoadForAppRemote(cancellationToken);
+                    
+                   
+
+                    return;
+                }
+            }
+
+            CreatePreloadSkeleton();
+
+            await Task.Delay(1000, cancellationToken);
+
+
+
+
+            await RequestForOnlineTunnelAndRemoteTunnel();
+
+
+            await Task.Delay(1000,cancellationToken);
+
+            var resp = await Service.Net.OpenFrpApi.GetUserTunnels(cancellationToken);
+
+            try
+            {
+                if (!this.UpdateState(resp, () => resp.Data is { List: not null }))
+                {
+                    VisualStateManager.GoToElementState(container, NormalState, false);
+                    VisualStateManager.GoToElementState(container, UserDisplayError, false);
+                }
+                else if (resp.Data!.Total is 0)
+                {
+                    VisualStateManager.GoToElementState(container, NormalState, false);
+                    VisualStateManager.GoToElementState(container, UserDisplayEmpty, false);
+                }
+                else
+                {
+                    var onlineTunnels = await firstStateWaiter!.Task.WaitAsync(cancellationToken);
+                
+                    if (onlineTunnels is null || cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    UserTunnels = new ObservableCollection<Model.UserTunnel>();
+
+                    VisualStateManager.GoToElementState(container, NormalState, false);
+                    VisualStateManager.GoToElementState(container, UserDisplayNoraml, false);
+
+                    _ = container?.Dispatcher.Invoke(async () =>
+                    {
+                        try
+                        {
+                            foreach (var tunnel in resp.Data.List!)
+                            {
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    return;
+                                }
+                                var v = new Model.UserTunnel(tunnel);
+                                if (onlineTunnels.Contains(tunnel.Id))
+                                {
+                                    v.FirstState = true;
+                                }
+                                UserTunnels.Add(v);
+
+                                await Task.Delay(75, cancellationToken);
+                            }
+                        }
+                        finally
+                        {
+                            //firstStateWaiter = null;
+                        }
+                    });
+                }
+            }
+            finally 
+            {
+                CreateLoadForAppRemote(cancellationToken);
+            }
+        }
+
+        private async Task RequestForOnlineTunnelAndRemoteTunnel()
+        {
+            if (firstStateWaiter is null || firstStateWaiter.Task.IsCompleted || remoteAppWaiter is null || remoteAppWaiter.Task.IsCompleted)
+            {
+                if (firstStateWaiter is null || firstStateWaiter.Task.IsCompleted)
+                {
+                    firstStateWaiter = new TaskCompletionSource<int[]>();
+                }
+
+                if (remoteAppWaiter is null || remoteAppWaiter.Task.IsCompleted)
+                {
+                    remoteAppWaiter = new TaskCompletionSource<Google.Protobuf.Collections.RepeatedField<Service.Proto.Response.TunnelStreamResponse.Types.AnonymousTunnelResponse.Types.AnonymousTunnelData>> { };
+                }
+
                 if (_writer is not null)
                 {
                     await _writer.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
@@ -332,52 +558,91 @@ namespace OpenFrp.Launcher.ViewModels
                     });
                 }
             }
+        }
+
+        private void CreateLoadForAppRemote(CancellationToken cancellationToken = default)
+        {
+            if (IsUrlSchemeMode && remoteAppWaiter is not null)
+            {
+                _ = container?.Dispatcher.Invoke(async () =>
+                {
+                    try
+                    {
+                        var v2 = await remoteAppWaiter.Task.WaitAsync(cancellationToken);
+
+                        if (v2 is not { Count: > 0 }) { return; }
+
+                        AppRemoteTunnels ??= new ObservableCollection<Model.UserTunnel> { };
+
+                        if (AppRemoteTunnels.Count > 0)
+                        {
+                            AppRemoteTunnels.Clear();
+                        }
+
+                        foreach (var d in v2)
+                        {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                return;
+                            }
+
+                            AppRemoteTunnels.Add(new Model.UserTunnel(d) { FirstState = true });
+
+                            await Task.Delay(75, cancellationToken);
+                        }
+                    }
+                    finally
+                    {
+                        fastLaunchWaitHandle.Set();
+
+                        fastLaunchWaitHandle.Reset();
+                    }
+                });
+            }
+        }
+
+        internal async void LaunchWithFastLink(string link)
+        {
+            try { App.StartupArguments.Remove(link); } catch { }
+
             
+            await Task.Run(fastLaunchWaitHandle.WaitOne);
 
-            VisualStateManager.GoToElementState(container, LoadingState, false);
+            if (firstStateWaiter is null || _writer is null) return;
 
-            CreatePreloadSkeleton();
-
-            await Task.Delay(1000,cancellationToken);
-
-            var resp = await Service.Net.OpenFrpApi.GetUserTunnels(cancellationToken);
-
-            if (!this.UpdateState(resp, () => resp.Data is { List: not null }))
+            if (App.Current is { MainWindow: var mw } && ContentDialog.GetOpenDialog(mw) is var di)
             {
-                VisualStateManager.GoToElementState(container, ErrorState, false);
+                di?.Hide();
             }
-            else if (resp.Data!.Total is 0)
+            var onlineTunnels = await firstStateWaiter.Task;
+
+            if (onlineTunnels is null) return;
+
+            var solveLink = OpenFrp.Service.Net.HttpClient.ParseQueryString(link);
+
+            if (solveLink.TryGetValue("proxy",out string? tidString) && int.TryParse(tidString,out int tid) && onlineTunnels.Contains(tid))
             {
-                VisualStateManager.GoToElementState(container, EmptyState, false);
+                return;
             }
-            else
+
+            var dialog = new Dialogs.RequestForFastLaunchDialog(solveLink) { };
+
+            if (await dialog.ShowAsync() is ContentDialogResult.Primary)
             {
-                var onlineTunnels = await firstStateWaiter.Task.WaitAsync(cancellationToken);
-
-                if (onlineTunnels is null || cancellationToken.IsCancellationRequested)
+                await _writer.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
                 {
-                    return;
-                }
-
-                UserTunnels = new ObservableCollection<Model.UserTunnel>();
-
-                VisualStateManager.GoToElementState(container, NormalState, false);
-
-                foreach (var tunnel in resp.Data.List!)
-                {
-                    if (cancellationToken.IsCancellationRequested)
+                    State = Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.LaunchTunnel,
+                    Data = Any.Pack(new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchReq
                     {
-                        return;
-                    }
-                    var v = new Model.UserTunnel(tunnel);
-                    if (onlineTunnels.Contains(tunnel.Id))
-                    {
-                        v.FirstState = true;
-                    }
-                    UserTunnels.Add(v);
-
-                    await Task.Delay(75, cancellationToken);
-                }
+                        OriginalFastLaunchCall = link,
+                        Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
+                        {
+                            AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
+                            UseForceTls = App.FrpcFeature.UseForceTls,
+                            UseDebug = App.FrpcFeature.UseDebug
+                        } 
+                    }),
+                });
             }
         }
 

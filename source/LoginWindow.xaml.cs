@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,30 +12,20 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using OpenFrp.Service;
-using static Google.Protobuf.WellKnownTypes.Field.Types;
+
 
 namespace OpenFrp.Launcher
 {
     /// <summary>
     /// Interaction logic for LoginWindow.xaml
     /// </summary>
-    public partial class LoginWindow : Window
+    public partial class LoginWindow : AppWindow
     {
         internal readonly TaskCompletionSource<Yue3.Model.OpenFrp.Response.Data.UserInfoData?> UserInfoCallback = new TaskCompletionSource<Yue3.Model.OpenFrp.Response.Data.UserInfoData?>();
 
-        public LoginWindow()
+        public LoginWindow() : base()
         {
-            InitializeComponent();
-
-            SetBinding(iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty, new Binding
-            {
-                Source = App.Settings,
-                Path = new PropertyPath(nameof(App.Settings.ApplicationTheme)),
-                Mode = BindingMode.OneWay
-            });
-            iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
-
-            hWnd = new WindowInteropHelper(this).EnsureHandle();
+            this.InitializeComponent();
 
             if (!App.StartupArguments.Contains("--minimize"))
             {
@@ -42,41 +33,60 @@ namespace OpenFrp.Launcher
             }
         }
 
-
         public LoginWindow(Window parent) : this()
         {
             Owner = parent;
         }
 
-        private readonly IntPtr hWnd;
-
-        public void ShowByHwndCC()
+        protected override void AcceptWindowCopyData(nint type, byte[]? buffer)
         {
-            if (hWnd != IntPtr.Zero)
+            switch (type)
             {
-                ShowInTaskbar = true;
+                // processed by filter
+                //case 0x01:
+                //    {
+                //        ShowByHANDLE();
+                //    };break;
+                case 0x02 when buffer is not null:
+                    {
+                        string callPath = Encoding.UTF8.GetString(buffer);
 
-                Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_SHOW);
+                        if (!callPath.StartsWith("openfrp://"))
+                        {
+                            return;
+                        }
 
-                if (WindowState is WindowState.Minimized)
-                {
-                    WindowState = WindowState.Normal;
-                }
 
-                if (Win32.User32.GetForegroundWindow() != hWnd)
-                {
-                    Win32.User32.SetForegroundWindow(hWnd);
-                }
+                        Dispatcher.BeginInvoke(async () =>
+                        {
+                            var contentDialog = new iNKORE.UI.WPF.Modern.Controls.ContentDialog
+                            {
+                                Title = "一键启动",
+                                Content = new TextBlock()
+                                {
+                                    Text = "\"一键启动\"需要在启动器主页面进行，是否直接进入主页面且启动相关隧道？",
+                                    TextWrapping = TextWrapping.Wrap
+                                },
+                                PrimaryButtonText = "确定",
+                                CloseButtonText = "取消",
+                                DefaultButton = iNKORE.UI.WPF.Modern.Controls.ContentDialogButton.Primary
+                            };
+                            if (await contentDialog.ShowAsync() is iNKORE.UI.WPF.Modern.Controls.ContentDialogResult.Primary)
+                            {
+                                App.StartupArguments.Add(callPath);
+
+                                if(DataContext is ViewModels.LoginWindowViewModel lvvm)
+                                {
+                                    lvvm.event_GotoMainWindowCommand.Execute(null);
+                                }
+                            }
+                        }, priority: System.Windows.Threading.DispatcherPriority.Background);
+                    };break;
             }
         }
 
-        public void HideByHwndCC()
-        {
-            if (hWnd != IntPtr.Zero)
-            {
-                Win32.User32.ShowWindow(hWnd, Win32.User32.SW_TYPE.SW_HIDE);
-            }
-        }
+
+
 
         public Task<Yue3.Model.OpenFrp.Response.Data.UserInfoData?> LoginWndProcAsync(CancellationToken cancellationToken = default)
         {
@@ -94,16 +104,6 @@ namespace OpenFrp.Launcher
             }));
 
             return UserInfoCallback.Task.ContinueWith((t) => { a.Dispose(); return t.Result; }).WaitAsync(cancellationToken);
-        }
-
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            base.OnClosing(e);
-
-            if (!e.Cancel)
-            {
-                BindingOperations.ClearBinding(this, iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty);
-            }
         }
     }
 }

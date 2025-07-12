@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,8 +34,10 @@ namespace OpenFrp.Launcher.ViewModels
                 page.Unloaded += delegate
                 {
                     event_RefreshAdSenseCommand.Cancel();
+                    event_RefreshUserInfoCommand.Cancel();
                 };
                 event_RefreshAdSenseCommand.Execute(null);
+                event_RefreshUserInfoCommand.Execute(null);
             }
         }
 
@@ -42,6 +45,9 @@ namespace OpenFrp.Launcher.ViewModels
 
         [ObservableProperty]
         private Model.AdSenseItem[] adSences = Array.Empty<Model.AdSenseItem>();
+
+        [ObservableProperty]
+        private Model.HomeUserInfoVex2[] userInfoVex2 = Array.Empty<Model.HomeUserInfoVex2>();
 
         public Model.UserInfo UserInfo
         {
@@ -181,5 +187,72 @@ namespace OpenFrp.Launcher.ViewModels
             //};
         }
 
+        [RelayCommand(IncludeCancelCommand = true)]
+        private async Task @event_RefreshUserInfo(CancellationToken cancellationToken)
+        {
+            await Task.CompletedTask;
+
+            @conve_ConfigureUserInfoVex2();
+        }
+
+        private void @conve_ConfigureUserInfoVex2()
+        {
+            if (UserInfo.Equals(SettingsViewModel.__userInfo_Defualt)) return;
+
+            UserInfoVex2 = new Model.HomeUserInfoVex2[]
+            {
+                new HomeUserInfoVex2("\uE77B","用户组",UserInfo.GroupCName),
+                new HomeUserInfoVex2("\uE779","实名状态",UserInfo.IsRealname ? "已实名" : "未实名"),
+                new HomeUserInfoVex2("\uE7E3","隧道数",$"{UserInfo.UsedProxies} / {UserInfo.MaxProxies}"),
+                new HomeUserInfoVex2("\uE88A","速率 (上/下)",$"{Math.Round(UserInfo.InputLimit / 128d,2)} Mbps / {Math.Round(UserInfo.OutputLimit / 128d,2)} Mbps"),
+                new HomeUserInfoVex2("\uED2A","可用流量",TranlateTrafficString(UserInfo.Traffic)),
+            };
+
+            string TranlateTrafficString(long trf)
+            {
+                double d = System.Convert.ToDouble(trf);
+                double d1 = d / 1024d;
+                if (d1 < 1)
+                {
+                    return $"{Math.Round(d, 2)} Mib";
+                }
+                double d2 = d1 / 1024d;
+                if (d2 < 1)
+                {
+                    return $"{d1} Gib";
+                }
+                return $"{Math.Round(d2 / 1024d, 2)} Tib";
+            }
+        }
+
+        [RelayCommand]
+        private void @event_OpenOpenFrpNet()
+        {
+            string? auth = Service.Net.OpenFrpApi.GetAuthorization();
+
+            if (string.IsNullOrEmpty(auth))
+            {
+                try { Process.Start("http://console.openfrp.net/"); return; } catch { }
+                try { Process.Start("start", "http://console.openfrp.net/"); } catch { }
+            }
+            else
+            {
+                try { System.Diagnostics.Process.Start($"https://console.openfrp.net/fastlogin?auth={auth}"); return; } catch { }
+                try { System.Diagnostics.Process.Start("start",$"https://console.openfrp.net/fastlogin?auth={auth}");  } catch { }
+            }
+        }
+
+        [RelayCommand]
+        private void @event_OpenPaymentApp()
+        {
+            try { Process.Start("https://r.zyghit.cn/app/index.html#/donate"); return; } catch { }
+            try { Process.Start("start", "https://r.zyghit.cn/app/index.html#/donate"); } catch { }
+        }
+
+        [RelayCommand]
+        private void @event_GotoSettingPage()
+        {
+            Model.RouteMessage<ViewModels.MainWindowViewModel>.Send(typeof(Views.Settings));
+        }
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using iNKORE.UI.WPF.Helpers;
+using iNKORE.UI.WPF.Modern.Controls;
 using OpenFrp.Launcher.Model;
 
 namespace OpenFrp.Launcher.ViewModels
@@ -109,6 +110,10 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (ExecuteResult is { HasException: true, Exception: not null and Exception ex })
             {
+                if (App.Current is { MainWindow: var mw } && ContentDialog.GetOpenDialog(mw) is ContentDialog da)
+                {
+                    da?.Hide();
+                }
                 var dialog = new Dialogs.ErrorContentDialog
                 {
 
