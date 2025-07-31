@@ -64,14 +64,14 @@
                             Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                             Text="{Binding Comments, Mode=OneWay}"
                             TextWrapping="Wrap"
-                            Visibility="{Binding HasComments, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                            Visibility="{Binding HasComments, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                         <WrapPanel Margin="0,4,0,0">
                             <xa:SimpleStackPanel
                                 Margin="0,0,6,4"
                                 Orientation="Horizontal"
                                 Spacing="2"
                                 TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
-                                Visibility="{Binding ProtocolSupport.UDP, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding ProtocolSupport.UDP, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
                                 <TextBlock
                                     Padding="0,1,0,0"
@@ -85,7 +85,7 @@
                                 Orientation="Horizontal"
                                 Spacing="2"
                                 TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
-                                Visibility="{Binding IsHttpSupportOnly, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsHttpSupportOnly, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
                                 <TextBlock
                                     Padding="0,1,0,0"
@@ -99,7 +99,7 @@
                                 Orientation="Horizontal"
                                 Spacing="2"
                                 TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
-                                Visibility="{Binding IsHttpsSupportOnly, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsHttpsSupportOnly, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
                                 <TextBlock
                                     Padding="0,1,0,0"
@@ -113,7 +113,7 @@
                                 Orientation="Horizontal"
                                 Spacing="2"
                                 TextElement.Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
-                                Visibility="{Binding IsHttpOrHttpsSupport, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsHttpOrHttpsSupport, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ink:FontIcon FontSize="18" Glyph="&#xE73E;" />
                                 <TextBlock
                                     Padding="0,1,0,0"
@@ -127,7 +127,7 @@
                                 Orientation="Horizontal"
                                 Spacing="2"
                                 TextElement.Foreground="{DynamicResource AweAppGoldenColor}"
-                                Visibility="{Binding NeedRealname, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding NeedRealname, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ink:FontIcon FontSize="18" Glyph="&#xEB95;" />
                                 <TextBlock
                                     Padding="2,1,0,0"
@@ -153,7 +153,7 @@
                                 Orientation="Horizontal"
                                 Spacing="2"
                                 TextElement.Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
-                                Visibility="{Binding NotAvaliable, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding NotAvaliable, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ink:FontIcon FontSize="18" Glyph="&#xE7BA;" />
                                 <TextBlock
                                     Padding="0,1,0,0"
@@ -166,7 +166,7 @@
                                 Orientation="Horizontal"
                                 Spacing="2"
                                 TextElement.Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
-                                Visibility="{Binding IsFullyLoaded, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsFullyLoaded, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ink:FontIcon FontSize="18" Glyph="&#xE9CA;" />
                                 <TextBlock
                                     Padding="0,1,0,0"
@@ -288,7 +288,7 @@
                                             Padding="14,9"
                                             AutomationProperties.Name="查看错误"
                                             Command="{Binding event_DisplayExceptionCommand}"
-                                            Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                            Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                             <StackPanel Orientation="Horizontal">
                                                 <ink:FontIcon FontSize="18" Icon="{x:Static ink:SegoeFluentIcons.Error}" />
                                                 <TextBlock Padding="8,0,0,0" Text="查看错误" />

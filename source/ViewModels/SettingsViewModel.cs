@@ -39,6 +39,8 @@ namespace OpenFrp.Launcher.ViewModels
 
                 mv.PropertyChanged += (_, e) =>
                 {
+                    if (e.PropertyName is "IsUrlSchemeRegistered") return;
+
                     OnPropertyChanged(e.PropertyName);
 
                     if (e.PropertyName is "UserInfo")
@@ -158,6 +160,24 @@ namespace OpenFrp.Launcher.ViewModels
                 OnPropertyChanged(nameof(UseForceTls));
             }
         }
+        public bool UseConfigLaunch
+        {
+            get => App.Settings.UseConfigLaunch;
+            set
+            {
+                App.Settings.UseConfigLaunch = value;
+                OnPropertyChanged(nameof(UseConfigLaunch));
+            }
+        }
+        public bool ShowTitlebarBackground
+        {
+            get => App.Settings.ShowTitlebarBackground;
+            set
+            {
+                App.Settings.ShowTitlebarBackground = value;
+                OnPropertyChanged(nameof(ShowTitlebarBackground));
+            }
+        }
         public bool UseDebug
         {
             get => App.Settings.UseDebug;
@@ -165,6 +185,24 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 App.Settings.UseDebug = value;
                 OnPropertyChanged(nameof(UseDebug));
+            }
+        }
+        public bool DoNotNoticeErrorMsg
+        {
+            get => App.Settings.DoNotNoticeErrorMsg;
+            set
+            {
+                App.Settings.DoNotNoticeErrorMsg = value;
+                OnPropertyChanged(nameof(DoNotNoticeErrorMsg));
+            }
+        }
+        public bool DoNotNoticeAutoLaunchTunnelMsg
+        {
+            get => App.Settings.DoNotNoticeAutoLaunchTunnelMsg;
+            set
+            {
+                App.Settings.DoNotNoticeAutoLaunchTunnelMsg = value;
+                OnPropertyChanged(nameof(DoNotNoticeAutoLaunchTunnelMsg));
             }
         }
         public bool AutoLaunchWhenLogon
@@ -356,24 +394,34 @@ namespace OpenFrp.Launcher.ViewModels
 
                     tg.IsEnabled = false;
                     //args.Handled = true;
+                    
 
-                    var cpc = new ProcessStartInfo
-                    {
-                        FileName = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
-                        Arguments = "--inst -type reg " + tg.IsOn,
-                        ErrorDialog = false,
-                        UseShellExecute = true,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                    };
-                    if (!App.IsAdministrator())
-                    {
-                        cpc.Verb = "runas";
-                    }
+                    
                     try
                     {
+                        
+
+                        var cpc = new ProcessStartInfo
+                        {
+                            FileName = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
+                            Arguments = "--inst -type=reg " + tg.IsOn,
+                            ErrorDialog = false,
+                            UseShellExecute = true,
+                            WindowStyle = ProcessWindowStyle.Hidden,
+                        };
+                        if (!App.IsAdministrator())
+                        {
+                            cpc.Verb = "runas";
+                        }
+
                         Process.Start(cpc);
 
                         await Task.Delay(500);
+
+                        if (tg.IsOn)
+                        {
+                            App.Settings.DoNotAskMeForUrlSchemeTools = true;
+                        }
                     }
                     catch
                     {

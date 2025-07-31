@@ -97,7 +97,7 @@
                                     MaxHeight="400"
                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                    BorderThickness="1"
+                                    BorderThickness="0"
                                     CornerRadius="4.75">
                                     <Border.Style>
                                         <Style>
@@ -124,7 +124,7 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             IsActive="{Binding event_RefreshAdSenseCommand.IsRunning, Mode=OneWay}"
-                                            Visibility="{Binding event_RefreshAdSenseCommand.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                            Visibility="{Binding event_RefreshAdSenseCommand.IsRunning, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                                         <ctrl:Carousel
                                             AlternationCount="100"
                                             AutoPlay="True"
@@ -132,7 +132,7 @@
                                             IsHitTestVisible="{Binding Value, Source={StaticResource IsNotRunning}, Mode=OneWay}"
                                             ItemsSource="{Binding AdSences, Mode=OneWay}">
                                             <ctrl:Carousel.Background>
-                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[www.pixiv.net]artworks,129041588.png" Stretch="UniformToFill" />
+                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no035,card_after_training.png" Stretch="UniformToFill" />
                                             </ctrl:Carousel.Background>
                                             <ctrl:Carousel.Visibility>
                                                 <Binding
@@ -140,7 +140,7 @@
                                                     Path="Value"
                                                     Source="{StaticResource IsNotRunning}">
                                                     <Binding.Converter>
-                                                        <conv:BooleanToVisibilityConverter IsCollapsed="False" />
+                                                        <conv:AweBooleanToVisibilityConverter IsCollapsed="False" />
                                                     </Binding.Converter>
                                                 </Binding>
                                             </ctrl:Carousel.Visibility>
@@ -229,7 +229,7 @@
                                         </Style>
                                     </Border.Style>
                                     <Grid>
-                                        <Grid x:Name="userInfoViewer" Visibility="{Binding Value, Source={StaticResource IsUserLogin}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                        <Grid x:Name="userInfoViewer" Visibility="{Binding Value, Source={StaticResource IsUserLogin}, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
@@ -380,7 +380,7 @@
                                                 </xa:SimpleStackPanel>
                                             </Grid>
                                         </Grid>
-                                        <Grid Visibility="{Binding Value, Source={StaticResource IsNotUserLogin}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                        <Grid Visibility="{Binding Value, Source={StaticResource IsNotUserLogin}, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                             <Grid.Style>
                                                 <Style>
                                                     <Style.Triggers>

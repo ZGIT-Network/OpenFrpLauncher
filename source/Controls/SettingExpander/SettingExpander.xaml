@@ -27,6 +27,7 @@
                         SnapsToDevicePixels="True">
                         <Border.Resources>
                             <QuarticEase x:Key="EasyEasing" EasingMode="EaseOut" />
+                            <ui:BindingProxy x:Key="HasDescriptionCotnent" Value="{Binding Description, Converter={StaticResource NotEqualConverter}, ConverterParameter='', RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
                         </Border.Resources>
                         <FrameworkElement.Style>
                             <Style TargetType="Border">
@@ -37,6 +38,7 @@
                         <Grid Margin="20,0,0,0" VerticalAlignment="Center">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <!--<ui:ContentPresenterEx
@@ -60,7 +62,10 @@
                                     VerticalAlignment="Center"
                                     Content="{TemplateBinding Icon}"
                                     Focusable="False" />
-                                <StackPanel Grid.Column="2" Orientation="Vertical">
+                                <StackPanel
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    Orientation="Vertical">
                                     <TextBlock
                                         x:Name="title"
                                         FontSize="13.5"
@@ -71,12 +76,14 @@
                                         FontSize="13"
                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                         Text="{TemplateBinding Description}"
-                                        TextWrapping="Wrap" />
+                                        TextWrapping="Wrap"
+                                        Visibility="{Binding Value, Converter={StaticResource AweBooleanToVisibilityConverter}, Source={StaticResource HasDescriptionCotnent}, Mode=OneWay}" />
                                 </StackPanel>
                             </Grid>
+                            <ContentPresenter Grid.Column="1" Focusable="False" />
                             <Border
                                 x:Name="ExpandCollapseChevronBorder"
-                                Grid.Column="1"
+                                Grid.Column="2"
                                 Width="{DynamicResource ExpanderChevronButtonSize}"
                                 Height="{DynamicResource ExpanderChevronButtonSize}"
                                 Margin="{DynamicResource ExpanderChevronHorizontalMargin}"
@@ -171,6 +178,7 @@
                             Title="{TemplateBinding Title}"
                             HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Header}"
                             Description="{TemplateBinding Description}"
                             Icon="{TemplateBinding Icon}"
                             IsChecked="{Binding Path=IsExpanded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}}"

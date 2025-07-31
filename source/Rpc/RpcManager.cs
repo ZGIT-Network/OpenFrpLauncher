@@ -67,6 +67,36 @@ namespace OpenFrp.Launcher.Rpc
             return Service.Proto.RpcResponse<Service.Proto.Response.SyncResponse>.FailedResponse;
         }
 
+        public async Task<OpenFrp.Service.Proto.RpcResponse> SyncWithLaunch(Service.Proto.Request.SyncWithLaunchRequest request,CancellationToken cancellationToken = default)
+        {
+            if (OpenFrpDeamonRpcClient is null)
+            {
+                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+            }
+            try
+            {
+                var resp = await Task.Run(async () => await OpenFrpDeamonRpcClient.SyncWithLaunchAsync(
+                    /* deadline: Deadline, */
+                    request,
+                    headers: GlobalHeader,
+                    cancellationToken: cancellationToken));
+
+                if (resp is not null)
+                {
+                    return resp;
+                }
+            }
+            catch (RpcException rpcEx)
+            {
+                return rpcEx;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+            return Service.Proto.RpcResponse<Service.Proto.Response.BaseResponse>.FailedResponse;
+        }
+
         public async Task<OpenFrp.Service.Proto.RpcResponse> Login(Service.Proto.Request.LoginRequest request,CancellationToken cancellationToken = default)
         {
             if (OpenFrpDeamonRpcClient is null)

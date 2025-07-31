@@ -2,6 +2,7 @@
     x:Class="OpenFrp.Launcher.Views.Settings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:app="clr-namespace:OpenFrp.Launcher"
     xmlns:behavior="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:conv="clr-namespace:OpenFrp.Launcher.Converter"
     xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
@@ -12,8 +13,8 @@
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
     Title="Settings"
-    d:DesignHeight="895"
-    d:DesignWidth="525"
+    d:DesignHeight="980"
+    d:DesignWidth="825"
     mc:Ignorable="d">
     <FrameworkElement.Resources>
 
@@ -72,7 +73,7 @@
                                 BorderThickness="1"
                                 ClipToBounds="True"
                                 CornerRadius="6"
-                                Visibility="{Binding Value, Source={StaticResource IsUserLogin}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding Value, Source={StaticResource IsUserLogin}, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition />
@@ -99,6 +100,10 @@
                                         </ink:PersonPicture>
                                         <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" TextWrapping="Wrap">
                                             <Run FontSize="24" Text="{Binding UserInfo.UserName, Mode=OneWay}" />
+                                            <Run
+                                                FontSize="16"
+                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                Text="{Binding UserInfo.UserID, StringFormat='#{0}', Mode=OneWay}" />
                                             <Run
                                                 FontSize="16"
                                                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
@@ -181,7 +186,7 @@
                                         VerticalAlignment="Bottom"
                                         IsHitTestVisible="False"
                                         IsIndeterminate="{Binding event_RefreshUserInfoCommand.IsRunning, Mode=OneWay}"
-                                        Visibility="{Binding event_RefreshUserInfoCommand.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                        Visibility="{Binding event_RefreshUserInfoCommand.IsRunning, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                                     <Grid Grid.Row="1">
                                         <Separator VerticalAlignment="Top" Background="{DynamicResource SystemControlForegroundBaseLowBrush}" />
                                         <xa:SimpleStackPanel Margin="0">
@@ -207,7 +212,7 @@
                                 AutomationProperties.Name="登录账户"
                                 Command="{Binding event_CallUpLoginWindowCommand}"
                                 IsClickable="True"
-                                Visibility="{Binding Value, Source={StaticResource IsNotUserLogin}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding Value, Source={StaticResource IsNotUserLogin}, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <ctrl:SettingItem.ExtendUI>
                                     <FrameworkElement Visibility="Collapsed" />
                                 </ctrl:SettingItem.ExtendUI>
@@ -345,7 +350,8 @@
                             Margin="0,24,0,0"
                             FontSize="18"
                             Text="高级选项" />
-                        <ctrl:SettingItem Title="通知模式" Description="该项适用于登录后在桌面环境自动启动启动器(不显示窗口">
+                        <!--
+                        <ctrl:SettingItem Title="通知模式" Description="">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Message}" />
                             </ctrl:SettingItem.Icon>
@@ -357,17 +363,92 @@
                                 <ComboBoxItem Content="任务栏 (旧版通知)" />
                                 <ComboBoxItem Content="不通知" />
                             </ComboBox>
-                        </ctrl:SettingItem>
+                        </ctrl:SettingItem>-->
+                        <ctrl:SettingExpander Title="通知模式">
+                            <ctrl:SettingExpander.Header>
+                                <ComboBox
+                                    MinWidth="150"
+                                    Margin="0,0,-12,0"
+                                    AutomationProperties.Name="通知模式"
+                                    SelectedIndex="{Binding NotificationMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                    <ComboBoxItem Content="Toast 通知" IsEnabled="{x:Static xa:OSVersionHelper.IsWindows10OrGreater}" />
+                                    <ComboBoxItem Content="任务栏 (旧版通知)" />
+                                    <ComboBoxItem Content="不通知" />
+                                </ComboBox>
+                            </ctrl:SettingExpander.Header>
+                            <ctrl:SettingExpander.Icon>
+                                <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Message}" />
+                            </ctrl:SettingExpander.Icon>
+                            <xa:SimpleStackPanel
+                                Margin="-16"
+                                Spacing="8"
+                                TextElement.Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Margin="56,18,0,18"
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Text="不要提示自启动隧道" />
+                                    <ink:ToggleSwitch
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        MinWidth="75"
+                                        Margin="0,0,38,0"
+                                        IsOn="{Binding DoNotNoticeAutoLaunchTunnelMsg, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                    <Rectangle
+                                        Grid.Row="1"
+                                        Grid.ColumnSpan="2"
+                                        Height="1"
+                                        Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+                                    <TextBlock
+                                        Grid.Row="2"
+                                        Grid.Column="0"
+                                        Margin="56,18,0,18"
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Text="不要提示错误消息" />
+                                    <ink:ToggleSwitch
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        MinWidth="75"
+                                        Margin="0,0,38,0"
+                                        IsOn="{Binding DoNotNoticeErrorMsg, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                </Grid>
+                            </xa:SimpleStackPanel>
+                        </ctrl:SettingExpander>
                         <ctrl:SettingItem Title="开机静默启动" Description="该项适用于登录后在桌面环境自动启动启动器(不显示窗口)">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Play}" />
                             </ctrl:SettingItem.Icon>
                             <ink:ToggleSwitch
                                 MinWidth="0"
-                                IsOn="{Binding AutoLaunchWhenLogon, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                IsOn="{Binding AutoLaunchWhenLogon, IsAsync=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                 IsRightAlignedCompact="True" />
                         </ctrl:SettingItem>
-                        <ctrl:SettingItem Title="允许通过链接启动隧道" IsEnabled="True">
+                        <ctrl:SettingItem
+                            Title="使用配置文件启动"
+                            Description="针对旧版本系统无法使用命令行快速启动的问题。"
+                            IsEnabled="{x:Static xa:OSVersionHelper.IsWindows10OrGreater}">
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.MultimediaPMP}" />
+                            </ctrl:SettingItem.Icon>
+                            <ink:ToggleSwitch
+                                MinWidth="0"
+                                IsOn="{Binding UseConfigLaunch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsRightAlignedCompact="True" />
+                        </ctrl:SettingItem>
+                        <ctrl:SettingItem Title="允许通过链接启动隧道" IsEnabled="{x:Static xa:OSVersionHelper.IsWindows10OrGreater}">
                             <ctrl:SettingItem.ExtendUI>
                                 <xa:SimpleStackPanel>
                                     <TextBlock
@@ -411,7 +492,78 @@
                                 IsRightAlignedCompact="True" />
 
                         </ctrl:SettingItem>
+                        <TextBlock
+                            Margin="0,24,0,0"
+                            FontSize="18"
+                            Text="关于" />
+                        <ctrl:SettingExpander
+                            Title="OpenFrp Launcher"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            Description="{Binding StringFormat='v{0}', Source={x:Static app:App.LauncherVersionString}, Mode=OneWay}"
+                            ExpandDirection="Down"
+                            FontFamily="{StaticResource SoraMediumMixYahei}"
+                            Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}">
+                            <ctrl:SettingExpander.Icon>
+                                <ink:ImageIcon
+                                    Width="30"
+                                    Height="30"
+                                    ink:ClipHelper.CornerRadius="2"
+                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                    Source="pack://application:,,,/Resources/Images/desktop_64w.png" />
+                            </ctrl:SettingExpander.Icon>
+                            <xa:SimpleStackPanel Margin="8" Spacing="4">
 
+                                <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" FontSize="18">
+
+                                    <Run Text="版权所有 ZGIT Network" />
+                                    <LineBreak />
+                                    <Run Text="本软件按 GPL v3 协议开源，二次开发时请注意。" />
+
+                                </TextBlock>
+                                <ink:HyperlinkButton
+                                    Padding="16,8"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    NavigateUri="https://github.com/ZGIT-Network/OpenFrpLauncher">
+                                    Github
+                                </ink:HyperlinkButton>
+                                <ink:HyperlinkButton
+                                    Padding="16,8"
+                                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                                    NavigateUri="https://console.openfrp.net/">
+                                    OpenFrp 官网
+                                </ink:HyperlinkButton>
+                                <ink:HyperlinkButton
+                                    Padding="16,8"
+                                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                                    NavigateUri="https://yue3.pages.dev/#/donate">
+                                    赞助者列表
+                                </ink:HyperlinkButton>
+                                <Border
+                                    MaxWidth="318"
+                                    Margin="0,0,8,16"
+                                    HorizontalAlignment="Left"
+                                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                    BorderThickness="1"
+                                    ClipToBounds="True"
+                                    CornerRadius="6">
+                                    <Grid>
+                                        <Image ink:ClipHelper.CornerRadius="6" RenderOptions.BitmapScalingMode="HighQuality">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Setter Property="Source" Value="../Resources/Images/mm_reward_qrcode_light.png" />
+                                                    <Style.Triggers>
+                                                        <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
+                                                            <Setter Property="Source" Value="../Resources/Images/mm_reward_qrcode_dark.png" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                    </Grid>
+                                </Border>
+                            </xa:SimpleStackPanel>
+                        </ctrl:SettingExpander>
                     </xa:SimpleStackPanel>
                 </Border>
             </ink:ScrollViewerEx>

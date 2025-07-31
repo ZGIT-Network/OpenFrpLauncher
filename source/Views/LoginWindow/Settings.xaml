@@ -82,6 +82,16 @@
 
                         </ComboBox>
                     </ctrl:SettingItem>
+                    <ctrl:SettingItem Title="显示标题栏背景" >
+                        <ctrl:SettingItem.Icon>
+                            <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.NewWindow}" />
+                        </ctrl:SettingItem.Icon>
+                        <ink:ToggleSwitch
+                            MinWidth="0"
+                            IsOn="{Binding ShowTitlebarBackground, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            IsRightAlignedCompact="True" />
+
+                    </ctrl:SettingItem>
                     <TextBlock
                         Margin="0,24,0,0"
                         FontSize="18"

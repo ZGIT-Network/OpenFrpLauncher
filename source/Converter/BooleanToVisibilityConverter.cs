@@ -9,7 +9,7 @@ using System.Windows.Data;
 
 namespace OpenFrp.Launcher.Converter;
 
-public class BooleanToVisibilityConverter : IValueConverter
+public class AweBooleanToVisibilityConverter : IValueConverter
 {
     public bool IsCollapsed { get; set; } = true;
 
@@ -17,6 +17,8 @@ public class BooleanToVisibilityConverter : IValueConverter
     {
         if (value is bool bl)
         {
+            bl = parameter is "Reflag" ? !bl : bl;
+            
             if (bl)
             {
                 return Visibility.Visible;
@@ -26,11 +28,9 @@ public class BooleanToVisibilityConverter : IValueConverter
                 return IsCollapsed ? Visibility.Collapsed : Visibility.Hidden;
             }
         }
-        if (value is null)
-        {
-            return Visibility.Collapsed;
-        }
-        throw new NotSupportedException();
+        return (value is null && parameter is not "Reflag") || (value is not null && parameter is "Reflag")
+            ? Visibility.Collapsed
+            : Visibility.Visible;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

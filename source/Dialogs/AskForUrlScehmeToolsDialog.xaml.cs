@@ -12,15 +12,16 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using iNKORE.UI.WPF.Modern.Controls;
 
-namespace OpenFrp.Launcher.Views
+namespace OpenFrp.Launcher.Dialogs
 {
     /// <summary>
-    /// About.xaml 的交互逻辑
+    /// AskForUrlScehmeToolsDialog.xaml 的交互逻辑
     /// </summary>
-    public partial class About
+    public partial class AskForUrlScehmeToolsDialog : ContentDialog
     {
-        public About()
+        public AskForUrlScehmeToolsDialog()
         {
             InitializeComponent();
         }

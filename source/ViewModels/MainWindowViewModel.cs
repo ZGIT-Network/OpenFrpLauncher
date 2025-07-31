@@ -15,6 +15,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using iNKORE.UI.WPF.Helpers;
 using iNKORE.UI.WPF.Modern.Controls;
+using Microsoft.Extensions.Logging;
 using OpenFrp.Launcher.Model;
 
 namespace OpenFrp.Launcher.ViewModels
@@ -50,6 +51,7 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         UserAvatorSource = null;
                         event_LoadUserAvatorCommand.Cancel();
+                        conve_TryAutoLaunchTunnelCommand.Cancel();
                     }
                 }
             });
@@ -156,13 +158,18 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     event_LoadUserAvatorCommand.Execute(default);
                 }
+                conve_TryAutoLaunchTunnelCommand.Execute(default);
             }
+
+            
         }
 
         private Action<string,string,InfoBarSeverity> ShowAlertAction = delegate { };
 
         private iNKORE.UI.WPF.Modern.Controls.Frame? frame;
         private iNKORE.UI.WPF.Modern.Controls.NavigationView? navigationView;
+
+        private static ILogger<MainWindowViewModel> Logger { get; } = App.loggerFactory.CreateLogger<MainWindowViewModel>();
 
         internal void OnViewModelPropertyChanged(string name) => OnPropertyChanged(name);
 
@@ -192,7 +199,6 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-
         public bool IsAllowToUseTunnel
         {
             get
@@ -201,9 +207,17 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        public bool IsUrlSchemeRegistered = false;
-
-
+        private bool isUrlSchemeRegistered;
+        public bool IsUrlSchemeRegistered
+        {
+            get => isUrlSchemeRegistered;
+            set
+            {
+                isUrlSchemeRegistered = value;
+                OnPropertyChanged(nameof(IsUrlSchemeRegistered));
+                OnPropertyChanged(nameof(IsAllowToUseTunnel));
+            }
+        }
 
         [ObservableProperty,NotifyPropertyChangedFor(nameof(IsUserLogon),nameof(IsAllowToUseTunnel))]
         private Model.UserInfo userInfo = SettingsViewModel.__userInfo_Defualt;
@@ -212,8 +226,6 @@ namespace OpenFrp.Launcher.ViewModels
         private ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogContainer>? logsCache;
 
         public Google.Protobuf.Collections.MapField<int, int> KnownLogIndexMapping { get; set; } = new Google.Protobuf.Collections.MapField<int, int> { };
-
-
 
         [RelayCommand]
         private void @event_NavigationViewLoaded(RoutedEventArgs arg)
@@ -470,64 +482,80 @@ namespace OpenFrp.Launcher.ViewModels
                     };
                 case UpdateType.Frpc:
                     {
-                        string targetVersion = software.Latest!;
-                        if (!OSVersionHelper.IsWindows10OrGreater)
+                        ShutdownApp();
+#if NET
+                        try
                         {
-                            targetVersion = "OpenFRP_0.54.0_835276e2_20240205";
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = Environment.ProcessPath,
+                                Arguments = "--updateFrpClient"
+                            });
                         }
-                        StringBuilder sb = new StringBuilder();
-                        foreach (var source in software.DownloadSources)
+                        catch
                         {
-                            string url = $"{source.BaseUrl}/{targetVersion}/frpc_windows_{Service.Helpers.FileHelper.UserPlatform}.zip";
-
-                            sb.Append(url);
-                            sb.Append(';');
+                            return;
                         }
-                        sb.Remove(sb.Length - 1, 1);
+#else
+                        try
+                        {
+                            var self = Process.GetCurrentProcess().MainModule.FileName;
 
-                        argument += " -urls " + sb.ToString();
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = self,
+                                Arguments = "--updateFrpClient"
+                            });
+                        }
+                        catch
+                        {
+                            return;
+                        }
+#endif
+
+                        
                     }
                     ; break;
             }
 
-            if (App.Current.MainWindow is not MainWindow mw) return;
+            //if (App.Current.MainWindow is not MainWindow mw) return;
 
-            mw.IsEnabled = false;
-            mw.SetWindowEnableState(false);
+            //mw.IsEnabled = false;
+            //mw.SetWindowEnableState(false);
             
             
-            try
-            {
-                var pcp = new ProcessStartInfo
-                {
-                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
-                    Arguments = "--inst " + argument,
-                    ErrorDialog = false,
-                    UseShellExecute = true,
-                };
-                if (!App.IsAdministrator())
-                {
-                    pcp.Verb = "runas";
-                }
+            //try
+            //{
+            //    var pcp = new ProcessStartInfo
+            //    {
+            //        FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
+            //        Arguments = "--inst " + argument,
+            //        ErrorDialog = false,
+            //        UseShellExecute = true,
+            //    };
+            //    if (!App.IsAdministrator())
+            //    {
+            //        pcp.Verb = "runas";
+            //    }
 
-                Process.Start(pcp);
-            }
-            catch(System.ComponentModel.Win32Exception ex)
-            {
-                _ = ex;
-                return;
-            }
-            catch (Exception ex2)
-            {
-                _ = ex2;
-                return;
-            }
-            finally
-            {
-                mw.IsEnabled = true;
-                mw.SetWindowEnableState(true);
-            }
-            ShutdownApp();
+            //    Process.Start(pcp);
+            //}
+            //catch(System.ComponentModel.Win32Exception ex)
+            //{
+            //    _ = ex;
+            //    return;
+            //}
+            //catch (Exception ex2)
+            //{
+            //    _ = ex2;
+            //    return;
+            //}
+            //finally
+            //{
+            //    mw.IsEnabled = true;
+            //    mw.SetWindowEnableState(true);
+            //}
+            //ShutdownApp();
         }
 
         [RelayCommand(IncludeCancelCommand = true)]
@@ -600,6 +628,125 @@ namespace OpenFrp.Launcher.ViewModels
             await rpcManager.NotificationStream(NotificationReader, cancellationToken);
         }
 
+        /// <summary>
+        /// 应用 - 自启动隧道
+        /// </summary>
+        [RelayCommand(IncludeCancelCommand = true)]
+        private async Task @conve_TryAutoLaunchTunnel(CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(App.Settings.AutoLaunchTunnel) && System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int[]>>(App.Settings.AutoLaunchTunnel) is { Count: > 0 } ap)
+                {
+                    Logger.LogDebug("[@conve_TryAutoLaunchTunnel] 正在尝试自动隧道启动，Prompt: {prompt}", App.Settings.AutoLaunchTunnel);
+
+                    if (!ap.TryGetValue(UserInfo.UserID.ToString(), out var l) || l is not int[] { Length: > 0 } attr)
+                    {
+                        return;
+                    }
+
+                    App.DaemonManager.LaunchRpcProcess(out var rpcManager);
+
+                    var sync1 = await rpcManager.Sync(cancellationToken);
+
+                    if (sync1.Data is null || sync1.Data.Onlines is not { } online)
+                    {
+                        return;
+                    }
+
+                    ///int[] realOnline = sync1.Data.Onlines.ToArray();
+
+                    if (attr.Except(online) is { } t && !t.Any())
+                    {
+                        return;
+                    }
+
+                    var conf = await OpenFrp.Service.Net.OpenFrpApi.GetUserTunnels(cancellationToken);
+
+                    Logger.LogDebug("[@conve_TryAutoLaunchTunnel] Request UserTunnels: Status: {code} , Data： {data}", conf.StatusCode,conf.Data);
+
+                    if (conf.StatusCode is not System.Net.HttpStatusCode.OK || conf.Data is null || conf.Data.Total is 0 || conf.Data.List is null)
+                    {
+                        ShowAlert("在自动启动隧道时发生了错误", conf.Message ?? conf.Exception?.Message ?? "未知错误", InfoBarSeverity.Warning);
+
+                        return;
+                    }
+
+                    using var mem = new MemoryStream();
+
+                    Service.Proto.RpcResponse? rpcResponse;
+
+                    if (App.Settings.UseConfigLaunch)
+                    {
+                        List<Yue3.Model.OpenFrp.Response.Data.UserTunnel> requestTunnels = new List<Yue3.Model.OpenFrp.Response.Data.UserTunnel> { };
+
+                        foreach (var tun in conf.Data.List)
+                        {
+                            if (attr.Contains(tun.Id) && !online.Contains(tun.Id))
+                            {
+                                //　バカラ　// かみ　しろ　るい　//　神代類
+                                requestTunnels.Add(tun);
+                            }
+                        }
+
+                        await System.Text.Json.JsonSerializer.SerializeAsync(mem, requestTunnels, cancellationToken: cancellationToken);
+
+                        mem.Seek(0, SeekOrigin.Begin);
+
+                        var bfStr = await Google.Protobuf.ByteString.FromStreamAsync(mem, cancellationToken).ConfigureAwait(false);
+
+                        await Task.Delay(500, cancellationToken);
+
+                        rpcResponse = await rpcManager.SyncWithLaunch(new Service.Proto.Request.SyncWithLaunchRequest
+                        {
+                            Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
+                            {
+                                AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
+                                UseForceTls = App.FrpcFeature.UseForceTls,
+                                UseDebug = App.FrpcFeature.UseDebug,
+                            },
+                            UserToken = UserInfo.UserToken,
+                            RequireUserTunnels = bfStr
+                        }, cancellationToken);
+
+ 
+                    }
+                    else
+                    {
+                        rpcResponse = await rpcManager.SyncWithLaunch(new Service.Proto.Request.SyncWithLaunchRequest
+                        {
+                            Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
+                            {
+                                AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
+                                UseForceTls = App.FrpcFeature.UseForceTls,
+                                UseDebug = App.FrpcFeature.UseDebug,
+                            },
+                            UserToken = UserInfo.UserToken,
+                            RequireUserTunnelsWithTomlConfig = new Service.Proto.Request.SyncWithLaunchRequest.Types.UserTunnelsWithTomlConfigMode
+                            {
+                                
+                            }
+                        }, cancellationToken);
+                    }
+
+                    if (rpcResponse is { Flag: false })
+                    {
+                        ShowAlert("自启动失败", rpcResponse.Message ?? rpcResponse.Status?.Message ?? "未知原因", InfoBarSeverity.Warning);
+                    }
+#if NET
+                    await mem.DisposeAsync();
+#else
+                    mem.Dispose();
+
+#endif
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
         private void NotificationReader(Service.Proto.Response.NotificationStreamResponse response)
         {
             switch (response.State)
@@ -607,6 +754,12 @@ namespace OpenFrp.Launcher.ViewModels
                 case Service.Proto.Response.NotificationStreamResponse.Types.NotificationStreamResponseState.LaunchSuccess:
                     {
                         if (!response.Data.TryUnpack<Service.Proto.Response.NotificationStreamResponse.Types.LaunchSuccessMsg>(out var msg)) return;
+
+
+                        if (msg.IsAutoLaunch && App.Settings.DoNotNoticeAutoLaunchTunnelMsg)
+                        {
+                            return;
+                        }
 
                         string[] addresses = msg.ConnectAddresses.ToArray();
 
@@ -627,11 +780,27 @@ namespace OpenFrp.Launcher.ViewModels
                                     {
                                         try
                                         {
+                                            string adres;
+
+                                            if (msg.TunnelType.Contains("HTTP"))
+                                            {
+                                                adres = sb.ToString().Remove(sb.Length - 1);
+                                            }
+                                            else
+                                            {
+                                                adres = addresses.First();
+                                            }
+                                            if (msg.TunnelType.Contains("HTTP"))
+                                            {
+                                                adres += "\n注: 请先将该上列域名解析到对应节点的地址。";
+                                            }
+                                            string attributionText = msg.IsFastLaunch ? "" : $"{msg.TunnelType.ToUpperInvariant()} {msg.Host}:{msg.Port}";
+
                                             new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
-                                                            .AddText($"隧道 {msg.TunnelName} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                            .AddText($"{(msg.IsFastLaunch ? "快启动" : string.Empty)}隧道 {msg.TunnelName} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
                                                             .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
-                                                            .AddText($"可用地址: {(msg.TunnelType.Contains("HTTP") ? sb.ToString().Remove(sb.Length - 1) : addresses.First())}" + ("HTTP".Contains(msg.TunnelType) ? "\n注: 请先将该上列域名解析到对应节点的地址。" : ""))
-                                                            .AddAttributionText($"{msg.TunnelType.ToUpper()} {msg.Host}:{msg.Port}")
+                                                            .AddText($"可用地址: {adres}" )
+                                                            .AddAttributionText(attributionText)
                                                             .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {(msg.HasExtraConnectAddress ? msg.ExtraConnectAddress : addresses.First())}")
                                                             .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
                                                             .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
@@ -682,6 +851,17 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             ShowAlert(warning.Title, warning.Data, InfoBarSeverity.Warning);
                         }
+                        else if (response.Data.TryUnpack<Service.Proto.Response.TunnelStreamResponse.Types.TunnelControlFailed>(out var tcf))
+                        {
+                            string details = "未知原因....";
+
+                            if (tcf.DebugInfo.TryUnpack<Google.Rpc.DebugInfo>(out var dbgInfo))
+                            {
+                                details = dbgInfo.Detail;
+                            }
+
+                            ShowAlert($"自启动隧道 #{tcf.TunnelId} {tcf.TunnelName} 时发生了错误", dbgInfo.Detail,InfoBarSeverity.Error);
+                        }
                     };break;
             }
         }
@@ -702,6 +882,10 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     if (software.Latest != App.FrpcVersionString)
                     {
+                        if (!OSVersionHelper.IsWindows8OrGreater && App.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
+                        {
+                            return;
+                        }
                         HasUpdate = true;
                     }
                 }
@@ -716,21 +900,28 @@ namespace OpenFrp.Launcher.ViewModels
         {
             App.TaskBarIcon?.CloseTrayPopup();
 
-            switch (App.Current.MainWindow)
+            if (App.Current.MainWindow is AppWindow ap)
             {
-                case MainWindow mw:
-                    {
-                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
-                        mw.HideByHANDLE();
-                    }
-                    ; break;
-                case LoginWindow lw:
-                    {
-                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
-                        lw.HideByHANDLE();
-                    }
-                    ; break;
+                iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(ap)?.Hide();
+
+                ap.HideByHANDLE();
+                ap.CancelControl();
             }
+            //switch (App.Current.MainWindow)
+            //{
+            //    case MainWindow mw:
+            //        {
+            //            iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
+            //            mw.HideByHANDLE();
+            //        }
+            //        ; break;
+            //    case LoginWindow lw:
+            //        {
+            //            iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
+            //            lw.HideByHANDLE();
+            //        }
+            //        ; break;
+            //}
 
             try
             {
@@ -743,28 +934,20 @@ namespace OpenFrp.Launcher.ViewModels
             Helpers.UsrTokenService.WriteConfig();
             App.Settings.Save();
 
-            App.TaskBarIcon?.Dispose();
-
-            if (App.DaemonManager.ServiceProcess is not null)
+            if (OSVersionHelper.IsWindows10OrGreater)
             {
-                App.DaemonManager.ServiceProcess.EnableRaisingEvents = false;
                 try
                 {
-                    await App.DaemonManager.ServiceProcess.StandardInput.WriteLineAsync("exitProc");
-
-                    Application.Current.Shutdown();
-
-                    return;
+                    Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.Uninstall();
+                    //ToastNotificationManagerCompat.History.Clear();
                 }
-                catch (InvalidOperationException)
-                {
-
-                }
-                catch (System.IO.IOException)
-                {
-
-                }
+                catch { }
             }
+
+            App.TaskBarIcon?.Dispose();
+
+            await App.DaemonManager.InputToExitProc();
+
             var dBase = Path.Combine(Directory.GetCurrentDirectory(), "OpenFrp.Service.exe");
             foreach (var proc in Process.GetProcessesByName("OpenFrp.Service"))
             {
@@ -787,7 +970,12 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (OpenFrp.Service.Helpers.FileHelper.TryGetFRPClient(out string path))
             {
-                foreach (var proc in Process.GetProcessesByName($"frpc_windows_{OpenFrp.Service.Helpers.FileHelper.UserPlatform}"))
+                string prefix = "";
+                if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater)
+                {
+                    prefix = "legacy_";
+                }
+                foreach (var proc in Process.GetProcessesByName($"{prefix}frpc_windows_{OpenFrp.Service.Helpers.FileHelper.UserPlatform}"))
                 {
                     try
                     {

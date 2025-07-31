@@ -47,9 +47,8 @@
                             <Grid.Resources>
                                 <converter:NotEqualConverter x:Key="NotEqualConverter" />
                                 <converter:EqualConverter x:Key="EqualConverter" />
-                                <converter:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-                                <ui:BindingProxy x:Key="EqMode" Value="{Binding ExtendUI, Converter={StaticResource EqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
-                                <ui:BindingProxy x:Key="NotEqMode" Value="{Binding ExtendUI, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                                <converter:AweBooleanToVisibilityConverter x:Key="AweBooleanToVisibilityConverter" />
+
                             </Grid.Resources>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="24" />
@@ -96,12 +95,12 @@
                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                         Text="{TemplateBinding Description}"
                                         TextWrapping="NoWrap"
-                                        Visibility="{Binding Value, Source={StaticResource EqMode}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                        Visibility="{Binding ExtendUI, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
                                     <ContentPresenter
                                         VerticalAlignment="Bottom"
                                         Content="{TemplateBinding ExtendUI}"
                                         Focusable="False"
-                                        Visibility="{Binding Value, Source={StaticResource NotEqMode}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                        Visibility="{Binding ExtendUI, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
                                 </WrapPanel>
                             </Grid>
                             <Grid

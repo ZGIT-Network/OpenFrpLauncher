@@ -72,7 +72,7 @@ namespace OpenFrp.Launcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("12")]
+        [global::System.Configuration.DefaultSettingValueAttribute("16")]
         public double LogFontSize {
             get {
                 return ((double)(this["LogFontSize"]));
@@ -139,6 +139,78 @@ namespace OpenFrp.Launcher.Properties {
             }
             set {
                 this["UseDebug"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DoNotAskMeForUrlSchemeTools {
+            get {
+                return ((bool)(this["DoNotAskMeForUrlSchemeTools"]));
+            }
+            set {
+                this["DoNotAskMeForUrlSchemeTools"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseConfigLaunch {
+            get {
+                return ((bool)(this["UseConfigLaunch"]));
+            }
+            set {
+                this["UseConfigLaunch"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AutoLaunchTunnel {
+            get {
+                return ((string)(this["AutoLaunchTunnel"]));
+            }
+            set {
+                this["AutoLaunchTunnel"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DoNotNoticeAutoLaunchTunnelMsg {
+            get {
+                return ((bool)(this["DoNotNoticeAutoLaunchTunnelMsg"]));
+            }
+            set {
+                this["DoNotNoticeAutoLaunchTunnelMsg"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DoNotNoticeErrorMsg {
+            get {
+                return ((bool)(this["DoNotNoticeErrorMsg"]));
+            }
+            set {
+                this["DoNotNoticeErrorMsg"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowTitlebarBackground {
+            get {
+                return ((bool)(this["ShowTitlebarBackground"]));
+            }
+            set {
+                this["ShowTitlebarBackground"] = value;
             }
         }
     }

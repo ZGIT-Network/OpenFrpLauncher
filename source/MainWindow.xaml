@@ -11,7 +11,7 @@
     xmlns:views="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
-    Title="OPENFRP LAUNCHER"
+    Title="OpenFRP 启动器"
     Width="1120"
     Height="585"
     MinWidth="550"
@@ -134,11 +134,7 @@
                         </ink:ImageIcon>
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
-                <ink:NavigationViewItem Content="关于" Tag="{x:Type views:About}">
-                    <ink:NavigationViewItem.Icon>
-                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Info}" />
-                    </ink:NavigationViewItem.Icon>
-                </ink:NavigationViewItem>
+
                 <ink:NavigationViewItemSeparator />
                 <ink:NavigationViewItem Content="更新" Tag="{x:Type views:UpdateComment}">
                     <ink:NavigationViewItem.Icon>
@@ -183,7 +179,7 @@
                     <Style TargetType="Grid">
                         <Setter Property="Grid.Column" Value="1" />
                         <Setter Property="Grid.ColumnSpan" Value="2" />
-                        <Setter Property="Margin" Value="0,1,0,0" />
+                        <Setter Property="Margin" Value="0,-1,0,0" />
                         <Setter Property="TextElement.FontSize" Value="15" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding DisplayMode, ElementName=viewer, Mode=OneWay}" Value="{x:Static ink:NavigationViewDisplayMode.Minimal}">
@@ -202,7 +198,12 @@
                     <Run
                         FontFamily="{StaticResource SoraMediumMixYahei}"
                         FontWeight="Medium"
-                        Text="{x:Static local:App.UiLauncherVersionString}" />
+                        Text="OpenFRP" />
+                    <Run
+                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                        FontWeight="Medium"
+                        Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        Text="{x:Static local:App.LauncherVersionString}" />
                     <!--<Run Text="LAUNCHER" />-->
 
                 </TextBlock>

@@ -12,6 +12,8 @@ namespace OpenFrp.Launcher.Rpc
     {
         internal Process? ServiceProcess { get; set; }
 
+        private TaskCompletionSource<string>? onlineInstanceWaiter { get; set; }
+
         private Task? prevListenDaemonTask;
 
         private EventWaitHandle? _daemon_ProcessEventWaitHandle;
@@ -143,8 +145,52 @@ namespace OpenFrp.Launcher.Rpc
 
                                 DaemonProcessExited(process: ServiceProcess, msg);
                             }
+                            else if (msg.StartsWith("jsonValue!of+="))
+                            {
+                                onlineInstanceWaiter?.TrySetResult(msg.Substring("jsonValue!of+=".Length));
+                            }
                         }
                         ; break;
+                }
+            }
+        }
+
+        public async Task InputToExitProc()
+        {
+
+            if (App.DaemonManager.ServiceProcess is not null)
+            {
+                App.DaemonManager.ServiceProcess.EnableRaisingEvents = false;
+
+                onlineInstanceWaiter = new TaskCompletionSource<string> { };
+
+                try
+                {
+                    await App.DaemonManager.ServiceProcess.StandardInput.WriteLineAsync("exitProc");
+
+
+
+                    var delay = Task.Run(() => App.DaemonManager.ServiceProcess.WaitForExit(3000));
+
+                    if (await Task.WhenAny(onlineInstanceWaiter.Task, delay) != delay && onlineInstanceWaiter.Task.Status is TaskStatus.RanToCompletion)
+                    {
+                        App.Settings.AutoLaunchTunnel = onlineInstanceWaiter.Task.Result;
+                    }
+
+
+                    App.Settings.Save();
+
+                    Application.Current.Shutdown();
+
+                    return;
+                }
+                catch (InvalidOperationException)
+                {
+
+                }
+                catch (System.IO.IOException)
+                {
+
                 }
             }
         }

@@ -1,0 +1,137 @@
+﻿<UserControl
+    x:Class="OpenFrp.Launcher.Views.LoginWindow.UpdateCtrl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
+    xmlns:local="clr-namespace:OpenFrp.Launcher.Views.LoginWindow"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
+    xmlns:wp="http://schemas.inkore.net/lib/ui/wpf"
+    d:DesignHeight="490"
+    d:DesignWidth="375"
+    mc:Ignorable="d">
+    <d:FrameworkElement.DataContext>
+        <vm:LoginWindowViewModel />
+    </d:FrameworkElement.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <wp:SimpleStackPanel
+            Margin="4,4,0,0"
+            Orientation="Horizontal"
+            Spacing="12">
+            <Button
+                x:Name="callback"
+                Width="40"
+                Height="40"
+                Padding="0"
+                AutomationProperties.Name="返回"
+                Background="Transparent"
+                BorderThickness="0"
+                ToolTip="返回会取消更新操作">
+                <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.Back}" />
+            </Button>
+            <TextBlock
+                Margin="-4,0,0,0"
+                Padding="0,0,0,0"
+                VerticalAlignment="Center"
+                FontSize="16"
+                Text="更新"
+                UseLayoutRounding="True" />
+        </wp:SimpleStackPanel>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <Grid Width="100" Height="100">
+                    <ink:ProgressRing
+                        Width="100"
+                        Height="100"
+                        IsIndeterminate="{Binding DownloadProcess.IsIndeterminate, Mode=OneWay}"
+                        Maximum="100"
+                        Visibility="{Binding DownloadProcess.ProgressBarShowError, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}"
+                        Value="{Binding DownloadProcess.ProgressValue, Mode=OneWay}" />
+                    <ink:FontIcon
+                        FontSize="48"
+                        Foreground="#FF0000"
+                        Icon="{x:Static ink:SegoeFluentIcons.Error}"
+                        Visibility="{Binding DownloadProcess.ProgressBarShowError, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+
+                </Grid>
+                <TextBlock
+                    Margin="0,16,0,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                    FontSize="20"
+                    Text="正在更新 FRPC" />
+                <TextBlock
+                    Padding="64,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                    FontSize="16"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTip="Template">
+                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding DownloadProcess.DownloadFileUrl}" />
+                    <LineBreak />
+                </TextBlock>
+                <TextBlock
+                    Padding="64,0"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                    FontSize="16"
+                    TextWrapping="Wrap"
+                    ToolTip="Template">
+                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="下载完成后将会返回到登录界面。" />
+                </TextBlock>
+            </StackPanel>
+            <Grid Grid.Row="1" Background="Transparent">
+                <Grid.Resources>
+                    <Style BasedOn="{StaticResource ButtonStyledHyperlinkButton}" TargetType="ink:HyperlinkButton">
+                        <Setter Property="Margin" Value="0,4,0,16" />
+                        <Setter Property="Padding" Value="12" />
+                        <Setter Property="Cursor" Value="Arrow" />
+                        <Setter Property="RaiseHyperlinkClicks" Value="False" />
+
+                    </Style>
+                </Grid.Resources>
+                <wp:SimpleStackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <ink:HyperlinkButton
+                        x:Name="bk2"
+                        Padding="13.5"
+                        AutomationProperties.Name="返回"
+                        ToolTip="返回">
+                        <StackPanel Orientation="Horizontal">
+                            <ink:FontIcon FontSize="18" Icon="{x:Static ink:SegoeFluentIcons.Back}" />
+                        </StackPanel>
+                    </ink:HyperlinkButton>
+                    <ink:HyperlinkButton
+                        AutomationProperties.Name="重新进行下载操作"
+                        Command="{Binding event_TryLaunchBackgroundServiceCommand}"
+                        ToolTip="重新进行下载操作"
+                        Visibility="{Binding event_TryLaunchBackgroundServiceCommand.IsRunning, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
+                        </StackPanel>
+                    </ink:HyperlinkButton>
+                    <ink:HyperlinkButton
+                        AutomationProperties.Name="查看帮助"
+                        Command="{Binding event_OpenHelpLinkInWebCommand}"
+                        ToolTip="查看帮助">
+                        <StackPanel Orientation="Horizontal">
+                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Help}" />
+                        </StackPanel>
+                    </ink:HyperlinkButton>
+                </wp:SimpleStackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+
+</UserControl>

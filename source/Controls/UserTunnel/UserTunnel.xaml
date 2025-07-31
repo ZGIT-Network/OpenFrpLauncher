@@ -75,7 +75,7 @@
                                         Background="#9f4096ff"
                                         CornerRadius="12"
                                         ToolTip="通过网页版快速启动。"
-                                        Visibility="{Binding IsFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                        Visibility="{Binding IsFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                         <TextBlock FontSize="13" Text="快捷启动" />
                                     </Border>
                                     <TextBlock FontFamily="{StaticResource SoraMedium}">
@@ -86,7 +86,7 @@
                                             Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
                                     </TextBlock>
                                 </StackPanel>
-                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                     <Run
                                         FontFamily="{StaticResource SoraMedium}"
                                         FontSize="18"
@@ -115,7 +115,7 @@
                                 Margin="20,0,0,18"
                                 Orientation="Vertical"
                                 Spacing="2"
-                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     FontFamily="{StaticResource SoraMedium}"
                                     FontSize="16"
@@ -136,7 +136,7 @@
                                         <Run Text="→" />
                                         <Run Text="" />
                                     </TextBlock>
-                                    <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsHttpService, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                    <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsHttpService, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                         <Run
                                             FontFamily="{StaticResource SourceCodePro}"
                                             FontSize="16"
@@ -147,7 +147,7 @@
                                         FontFamily="{StaticResource SoraMedium}"
                                         FontSize="16"
                                         Text="{Binding RemotePort, Mode=OneWay}"
-                                        Visibility="{Binding IsHasRemotePort, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                        Visibility="{Binding IsHasRemotePort, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                                 </StackPanel>
                             </xa:SimpleStackPanel>
                             <!--  Controller  -->
@@ -251,7 +251,7 @@
                                             <MenuItem
                                                 CommandParameter="copy-extra-address"
                                                 Header="复制扩展地址"
-                                                Visibility="{Binding HasExtraConnectAddress, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                                Visibility="{Binding HasExtraConnectAddress, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                                 <MenuItem.Icon>
                                                     <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
                                                 </MenuItem.Icon>

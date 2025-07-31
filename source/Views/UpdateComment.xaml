@@ -174,7 +174,7 @@ TextWrapping="Wrap">
                                                     Padding="14,9"
                                                     AutomationProperties.Name="查看错误"
                                                     Command="{Binding event_DisplayExceptionCommand}"
-                                                    Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                                    Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                                     <StackPanel Orientation="Horizontal">
                                                         <ink:FontIcon FontSize="18" Icon="{x:Static ink:SegoeFluentIcons.Error}" />
                                                         <TextBlock Padding="8,0,0,0" Text="查看错误" />

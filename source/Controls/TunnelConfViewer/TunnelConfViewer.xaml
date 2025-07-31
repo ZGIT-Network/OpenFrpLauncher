@@ -40,7 +40,7 @@
                             <StackPanel
                                 Margin="0,0,4,8"
                                 HorizontalAlignment="Stretch"
-                                Visibility="{Binding HasExtraConnectAddress, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding HasExtraConnectAddress, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <StackPanel MinWidth="460" Orientation="Horizontal">
                                     <TextBlock
                                         Margin="0,0,4,2"
@@ -87,7 +87,7 @@
                             <StackPanel
                                 Margin="0,0,8,8"
                                 HorizontalAlignment="Left"
-                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -105,7 +105,7 @@
                             <StackPanel
                                 Margin="0,0,8,8"
                                 HorizontalAlignment="Left"
-                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -128,7 +128,7 @@
                             <StackPanel
                                 Margin="0,0,8,8"
                                 HorizontalAlignment="Left"
-                                Visibility="{Binding UseEncryption, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding UseEncryption, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -145,7 +145,7 @@
                             <StackPanel
                                 Margin="0,0,8,8"
                                 HorizontalAlignment="Left"
-                                Visibility="{Binding UseCompression, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding UseCompression, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -162,7 +162,7 @@
                             <StackPanel
                                 Margin="0,0,8,8"
                                 HorizontalAlignment="Left"
-                                Visibility="{Binding ProxyProtocolVersion2, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding ProxyProtocolVersion2, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -181,7 +181,7 @@
                             <TextBlock
                                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                 Text="*通过快速启动显示的信息不完全准确，具体请以网页版为主。"
-                                Visibility="{Binding IsFastLaunch, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                Visibility="{Binding IsFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                         </StackPanel>
                     </Grid>
                 </ControlTemplate>

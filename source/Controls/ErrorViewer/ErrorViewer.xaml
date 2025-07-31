@@ -43,7 +43,7 @@
                                 </Grid.Resources>
                                 <FrameworkElement.Visibility>
                                     <Binding
-                                        Converter="{StaticResource BooleanToVisibilityConverter}"
+                                        Converter="{StaticResource AweBooleanToVisibilityConverter}"
                                         Mode="OneWay"
                                         Path="Value"
                                         Source="{StaticResource IsStackTraceIsLength0}" />

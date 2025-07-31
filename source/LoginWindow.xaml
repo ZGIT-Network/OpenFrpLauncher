@@ -36,7 +36,7 @@
             x:Key="_DefaultCubicEase"
             PresentationOptions:Freeze="True"
             EasingMode="EaseOut" />
-        <ink:BindingProxy x:Key="ExceptionIsNull" Value="{Binding ExecuteResult.Exception, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}" />
+        <!--<ink:BindingProxy x:Key="ExceptionIsNull" Value="{Binding ExecuteResult.Exception, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}" />-->
     </local:AppWindow.Resources>
     <local:AppWindow.DataContext>
         <vm:LoginWindowViewModel />
@@ -90,7 +90,11 @@
                 <!--  "pack://application:,,,/Resources/Images/v2-bg.jpg"  -->
                 <!--  "pack://application:,,,/Resources/Images/pexels-xieyun-15415001.jpg"  -->
                 <!--  pack://application:,,,/Resources/Images/funx.png  -->
-                <Image RenderOptions.BitmapScalingMode="HighQuality" Source="pack://application:,,,/Resources/Images/[www.pixiv.net]artworks,129041588.png" />
+                <Image
+                    x:Name="bgImagePlacement"
+                    RenderOptions.BitmapScalingMode="HighQuality"
+                    Source="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no035,card_after_training.png"
+                    Visibility="Visible" />
             </Viewbox>
 
         </Grid>
@@ -100,7 +104,7 @@
             Height="{Binding (ink:TitleBar.Height), RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
-            Visibility="Visible">
+            Visibility="{Binding ShowTitlebarBackground, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
             <Rectangle
                 x:Name="titleBarDarkAcrylicFill"
                 Fill="#1f1f1f"
@@ -119,6 +123,7 @@
                 Opacity="0" />
 
         </Grid>
+        <!--  左上角图标 + 文字  -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -138,25 +143,256 @@
                     RenderOptions.BitmapScalingMode="LowQuality"
                     Source="pack://application:,,,/Resources/Images/desktop_64w.png" />
                 <TextBlock
+                    x:Name="titelRender"
                     Padding="0,0,0,0"
                     VerticalAlignment="Center"
                     FontFamily="{StaticResource SoraMedium}"
                     FontSize="24"
                     FontWeight="Medium"
-                    Text="OpenFRP" />
+                    Text="OpenFRP">
+                    <FrameworkElement.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground">
+                                <Setter.Value>
+                                    <LinearGradientBrush>
+                                        <GradientStop Offset="0" Color="#9BF8F9" />
+                                        <GradientStop Offset="1" Color="#B3DDF1" />
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
+                                    <Setter Property="Foreground">
+                                        <Setter.Value>
+                                            <LinearGradientBrush>
+                                                <GradientStop Offset="0" Color="#55CBF2" />
+                                                <GradientStop Offset="1" Color="#B3DDF1" />
+                                            </LinearGradientBrush>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </FrameworkElement.Style>
+                </TextBlock>
             </StackPanel>
             <Grid Grid.Row="2" Margin="36,0,36,40">
                 <StackPanel Orientation="Vertical">
+                    <Grid Margin="0,0,0,4">
+                        <Border
+                            x:Name="downloadingInfobar"
+                            d:Opacity="1"
+                            d:Visibility="Visible"
+                            Opacity="0"
+                            RenderTransformOrigin=".5,.5"
+                            Style="{StaticResource BorderFocusManagedStyle}"
+                            Visibility="Collapsed">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
+                            <Grid>
+                                <ink:ThemeShadowChrome
+                                    Margin="4"
+                                    CornerRadius="6"
+                                    Depth="80" />
+                                <Rectangle
+                                    Margin="1"
+                                    ink:ClipHelper.CornerRadius="5.5"
+                                    Fill="#1f1f1f">
+                                    <FrameworkElement.Style>
+                                        <Style TargetType="Rectangle">
+                                            <Setter Property="Visibility" Value="Hidden" />
+                                            <Style.Triggers>
+                                                <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </FrameworkElement.Style>
+                                </Rectangle>
+                                <ink:AcrylicPanel
+                                    x:Name="acrylicPanel4"
+                                    Margin="1"
+                                    Amount="10"
+                                    CornerRadius="4"
+                                    Focusable="False"
+                                    NoiseOpacity="0.01"
+                                    ScaleCanvasVal="1.2"
+                                    TintOpacity=".45" />
+                                <Border
+                                    Background="{DynamicResource InfoBarInformationalSeverityBackgroundBrush}"
+                                    BorderBrush="{DynamicResource InfoBarBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{DynamicResource ControlCornerRadius}">
+                                    <Grid Margin="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition />
+                                            <RowDefinition />
+                                        </Grid.RowDefinitions>
+                                        <ink:FontIcon
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            Margin="0,0,11,0"
+                                            FontSize="20"
+                                            Icon="{x:Static ink:SegoeFluentIcons.CloudDownload}" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            Grid.ColumnSpan="2"
+                                            Padding="0,0,0,10"
+                                            FontFamily="{StaticResource SoraMediumMixYahei}">
+                                            <Run Text="正在下载 FRPC" />
+                                            <Run Text="{Binding DownloadProcess.ProgressValue, StringFormat='({0}%)', Mode=OneWay}" />
+                                            <LineBreak />
+                                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="等待下载完成后登录进程才会继续。" />
+                                        </TextBlock>
+                                        <StackPanel Grid.Row="2" Grid.Column="1">
+                                            <TextBlock
+                                                MaxWidth="375"
+                                                Margin="0,0,0,4"
+                                                HorizontalAlignment="Left"
+                                                FontFamily="{StaticResource SourceCodeProMixYahei}"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                Text="{Binding DownloadProcess.DownloadFileUrl, Mode=OneWay}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <ink:ProgressBar
+                                                IsIndeterminate="{Binding DownloadProcess.IsIndeterminate, Mode=OneWay}"
+                                                Maximum="100"
+                                                ShowError="{Binding DownloadProcess.ProgressBarShowError, Mode=OneWay}"
+                                                Value="{Binding DownloadProcess.ProgressValue, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            Margin="0,-6,-6,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Orientation="Horizontal">
+                                            <Button
+                                                Margin="0,0,4,0"
+                                                Padding="8"
+                                                AutomationProperties.Name="重试"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Command="{Binding event_TryLaunchBackgroundServiceCommand}"
+                                                ToolTip="重新进行下载操作"
+                                                Visibility="{Binding event_TryLaunchBackgroundServiceCommand.IsRunning, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                                <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
+                                            </Button>
+                                            <Button
+                                                Padding="9"
+                                                AutomationProperties.Name="取消下载进程"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Command="{Binding conve_TryDetectFrpcCancelCommand}"
+                                                ToolTip="取消下载进程,同时取消登录操作。">
+                                                <ink:FontIcon FontSize="14" Icon="{x:Static ink:SegoeFluentIcons.ChromeClose}" />
+                                            </Button>
+                                        </StackPanel>
+
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <Border
+                            x:Name="executeErrorInfobar"
+                            d:Opacity="1"
+                            d:Visibility="Visible"
+                            Opacity="0"
+                            RenderTransformOrigin=".5,.5"
+                            Style="{StaticResource BorderFocusManagedStyle}"
+                            Visibility="Collapsed">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
+                            <Grid>
+                                <ink:ThemeShadowChrome
+                                    Margin="4"
+                                    CornerRadius="6"
+                                    Depth="80" />
+                                <ink:InfoBar
+                                    Title="FRPC 功能异常"
+                                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                                    IsClosable="False"
+                                    IsOpen="True"
+                                    Message="可能是杀软对启动操作进行了拦截，以及对 FRPC 可执行文件进行了隔离、删除。若不确认原因的 (比如不知道)，请点击下方&quot;查看&quot;,查看解决方案。"
+                                    Severity="Error">
+                                    <ink:InfoBar.ActionButton>
+                                        <Button Command="{Binding event_GotoDesktopLauncherHelpPageCommand}" Content="查看帮助" />
+                                    </ink:InfoBar.ActionButton>
+                                </ink:InfoBar>
+                            </Grid>
+                        </Border>
+                        <Border
+                            x:Name="newUpdateInfobar"
+                            d:Opacity="1"
+                            d:Visibility="Visible"
+                            Opacity="0"
+                            RenderTransformOrigin=".5,.5"
+                            Style="{StaticResource BorderFocusManagedStyle}"
+                            Visibility="Collapsed">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                            </Border.RenderTransform>
+                            <Grid>
+                                <ink:ThemeShadowChrome
+                                    Margin="4"
+                                    CornerRadius="6"
+                                    Depth="80" />
+                                <ink:InfoBar
+                                    Title="有更新可用"
+                                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                                    IsClosable="False"
+                                    IsOpen="True"
+                                    Message="{Binding UpdateLog, Mode=OneWay}"
+                                    Severity="Success">
+                                    <ink:InfoBar.ActionButton>
+                                        <Button
+                                            Margin="0,1,0,0"
+                                            Command="{Binding event_InstallFrpcUpdateCommand}"
+                                            Content="安装更新" />
+                                    </ink:InfoBar.ActionButton>
+                                </ink:InfoBar>
+                            </Grid>
+                        </Border>
+                    </Grid>
                     <Grid>
-                        <ink:AcrylicPanel
-                            x:Name="acrylicPanel3"
-                            Margin="1"
-                            Amount="10"
-                            CornerRadius="4"
-                            Focusable="False"
-                            NoiseOpacity="0.01"
-                            ScaleCanvasVal="1.2"
-                            TintOpacity=".45" />
+                        <ink:ThemeShadowChrome
+                            Margin="4"
+                            CornerRadius="6"
+                            Depth="80"
+                            IsHitTestVisible="False"
+                            Visibility="{Binding Visibility, Source={x:Reference Name=bgImagePlacement}, Mode=OneWay}" />
+                        <Grid IsHitTestVisible="False" Visibility="{Binding Visibility, Source={x:Reference Name=bgImagePlacement}, Mode=OneWay}">
+                            <Rectangle
+                                Margin="1"
+                                ink:ClipHelper.CornerRadius="5.5"
+                                Fill="#1f1f1f">
+                                <FrameworkElement.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Setter Property="Visibility" Value="Hidden" />
+                                        <Style.Triggers>
+                                            <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </FrameworkElement.Style>
+                            </Rectangle>
+                            <ink:AcrylicPanel
+                                x:Name="acrylicPanel3"
+                                Margin="1"
+                                Amount="10"
+                                CornerRadius="4"
+                                Focusable="False"
+                                NoiseOpacity="0.01"
+                                ScaleCanvasVal="1.2"
+                                TintOpacity=".45" />
+                        </Grid>
                         <ink:InfoBar
                             Title="预览版提示"
                             FontFamily="{StaticResource SoraMediumMixYahei}"
@@ -167,16 +403,18 @@
                     </Grid>
                     <TextBlock
                         Margin="0,8,0,0"
-                        FontSize="18"
+                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                        FontSize="16"
                         Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                         Visibility="Visible">
-                        <!--<Run Text="本界面为预览界面，请以实际为准。" />
-                        <LineBreak />-->
-                        <Run FontFamily="{StaticResource SoraMediumMixYahei}" Text="湘ICP备2021009274号-3" />
+                        <Run Text="版权所有 ZGIT Network &amp; Yue-cn 2025" />
+                        <LineBreak />
+                        <Run Text="湘ICP备2021009274号-3" />
                     </TextBlock>
                 </StackPanel>
             </Grid>
         </Grid>
+        <!--  主要内容  -->
         <Grid
             Grid.Column="1"
             MinWidth="400"
@@ -185,306 +423,278 @@
                 Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
                 MaxWidth="375"
                 HorizontalAlignment="Right">
-                <ink:ThemeShadowChrome Margin="8,-4,8,8" Depth="80" />
+                <ink:ThemeShadowChrome
+                    Margin="4"
+                    CornerRadius="6"
+                    Depth="80"
+                    IsHitTestVisible="False"
+                    Visibility="{Binding Visibility, Source={x:Reference Name=bgImagePlacement}, Mode=OneWay}" />
                 <Border
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1,1,1,1"
+                    BorderThickness="0"
                     ClipToBounds="True"
                     CornerRadius="6">
-                    <Grid IsHitTestVisible="False">
-                        <Rectangle
-                            x:Name="darkAcrylicFill"
-                            ink:ClipHelper.CornerRadius="5.5"
-                            Fill="#1f1f1f"
-                            Opacity="0" />
-                        <ink:AcrylicPanel
-                            x:Name="acrylicPanel"
-                            Amount="70"
-                            CornerRadius="5.5"
-                            Focusable="False"
-                            NoiseOpacity="0.01"
-                            TintOpacity=".45" />
-                        <Rectangle
-                            x:Name="lightAcrylicFill"
-                            ink:ClipHelper.CornerRadius="5.5"
-                            Fill="#75ffffff"
-                            Opacity="0" />
+                    <Grid>
+                        <Grid IsHitTestVisible="False" Visibility="{Binding Visibility, Source={x:Reference Name=bgImagePlacement}, Mode=OneWay}">
+                            <Rectangle
+                                x:Name="darkAcrylicFill"
+                                ink:ClipHelper.CornerRadius="5.5"
+                                Fill="#1f1f1f"
+                                Opacity="0" />
+                            <ink:AcrylicPanel
+                                x:Name="acrylicPanel"
+                                Amount="70"
+                                CornerRadius="5.5"
+                                Focusable="False"
+                                NoiseOpacity="0.01"
+                                TintOpacity=".45" />
+                            <Rectangle
+                                x:Name="lightAcrylicFill"
+                                ink:ClipHelper.CornerRadius="5.5"
+                                Fill="#75ffffff"
+                                Opacity="0" />
 
-                    </Grid>
-                </Border>
-                <Grid ClipToBounds="True" TextOptions.TextHintingMode="Auto">
-                    <!--  Login Ctrl  -->
-                    <Border
-                        x:Name="defaultLoginCtrl"
-                        RenderTransformOrigin=".5,.5"
-                        Style="{StaticResource BorderFocusManagedStyle}">
-                        <FrameworkElement.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1" />
-                        </FrameworkElement.RenderTransform>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid Background="Transparent">
-                                <!--<TabControl Margin="0,16,0,0" Style="{StaticResource CenterTabControlPivotStyle}">
+                        </Grid>
+
+                        <Grid ClipToBounds="True" TextOptions.TextHintingMode="Auto">
+                            <!--  Login Ctrl  -->
+                            <Border
+                                x:Name="defaultLoginCtrl"
+                                RenderTransformOrigin=".5,.5"
+                                Style="{StaticResource BorderFocusManagedStyle}">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                </FrameworkElement.RenderTransform>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Background="Transparent">
+                                        <!--<TabControl Margin="0,16,0,0" Style="{StaticResource CenterTabControlPivotStyle}">
                                     <TabItem Header="快捷登录">-->
-                                <ink:ScrollViewerEx Margin="0" PanningMode="VerticalOnly">
-                                    <wp:SimpleStackPanel Margin="24,28,24,24" Spacing="8">
-                                        <StackPanel Orientation="Horizontal">
-                                            <ink:FontIcon
-                                                Margin="4,1,6,0"
-                                                VerticalAlignment="Center"
-                                                FontSize="24"
-                                                Icon="{x:Static ink:SegoeFluentIcons.Family}" />
-                                            <TextBlock VerticalAlignment="Center" FontSize="20">
-                                                <Run Text="登录" />
-                                            </TextBlock>
-                                        </StackPanel>
-                                        <TextBlock
-                                            x:Name="cont"
-                                            Margin="0,0,0,0"
-                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                            TextWrapping="Wrap">
-                                            <Run Text="选择该平台上已记录的账户，或登录新账号。" />
-                                            <LineBreak />
-                                            <Run Text="若需取消记录已登录的账户，在菜单中删除。" />
-                                        </TextBlock>
-                                        <ItemsControl
-                                            x:Name="selfor"
-                                            Margin="0,4,0,-8"
-                                            Focusable="False"
-                                            ItemsSource="{Binding PlatformUsers, Mode=OneWay}">
+                                        <ink:ScrollViewerEx Margin="0" PanningMode="VerticalOnly">
+                                            <wp:SimpleStackPanel Margin="24,28,24,24" Spacing="8">
+                                                <StackPanel Orientation="Horizontal">
 
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Button
-                                                        Margin="0,0,0,4"
-                                                        Padding="12,12,16,12"
-                                                        HorizontalAlignment="Stretch"
-                                                        HorizontalContentAlignment="Stretch"
-                                                        BorderBrush="Transparent"
-                                                        Command="{Binding DataContext.event_FastLoginCommand, ElementName=selfor, Mode=OneWay}"
-                                                        CommandParameter="{Binding Mode=OneWay}">
-                                                        <Button.ContextMenu>
-                                                            <ContextMenu MinWidth="100">
-                                                                <MenuItem
-                                                                    Command="{Binding DataContext.event_RemoveUserRecordCommand, Source={x:Reference Name=cont}, Mode=OneWay}"
-                                                                    CommandParameter="{Binding Mode=OneWay}"
-                                                                    Header="取消记录">
-                                                                    <MenuItem.Icon>
-                                                                        <ink:FontIcon Glyph="&#xF69B;" />
-                                                                    </MenuItem.Icon>
-                                                                </MenuItem>
-                                                            </ContextMenu>
-                                                        </Button.ContextMenu>
-                                                        <AutomationProperties.Name>
-                                                            <MultiBinding StringFormat="{}账户 {0}(邮箱: {1})">
-                                                                <Binding Mode="OneWay" Path="Username" />
-                                                                <Binding Mode="OneWay" Path="EmailAddress" />
-                                                            </MultiBinding>
-                                                        </AutomationProperties.Name>
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="38" />
-                                                                <ColumnDefinition />
-                                                            </Grid.ColumnDefinitions>
-                                                            <!--  ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
-                                                            <ink:PersonPicture
-                                                                x:Name="picpic"
-                                                                Grid.Column="0"
-                                                                Width="38"
-                                                                Height="38"
-                                                                ProfilePicture="pack://application:,,,/Resources/Images/weavatar.png"
-                                                                RenderOptions.BitmapScalingMode="HighQuality"
-                                                                UseLayoutRounding="True" />
-                                                            <TextBlock
-                                                                Grid.Column="1"
-                                                                Margin="8,0,0,0"
-                                                                VerticalAlignment="Center"
-                                                                FontFamily="{StaticResource SoraMedium}"
-                                                                FontSize="16">
-                                                                <Run Text="{Binding Username, Mode=OneWay}" />
-                                                                <LineBreak />
-                                                                <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding EmailAddress, Mode=OneWay}" />
-                                                            </TextBlock>
-                                                            <TextBlock
-                                                                Grid.Column="1"
-                                                                HorizontalAlignment="Right"
-                                                                VerticalAlignment="Top"
-                                                                FontFamily="{StaticResource SoraMediumMixYahei}"
-                                                                FontSize="12"
-                                                                Visibility="Collapsed">
-                                                                <Run>6 天前</Run>
-                                                            </TextBlock>
-                                                        </Grid>
-                                                    </Button>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <Button
-                                            Margin="0,0,0,0"
-                                            Padding="12,12,8,12"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            AutomationProperties.Name="Natayark ID 登录"
-                                            BorderBrush="Transparent"
-                                            Command="{Binding event_WebLoginCommand}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="38" />
-                                                    <ColumnDefinition />
-                                                </Grid.ColumnDefinitions>
-                                                <ink:FontIcon
-                                                    Grid.Column="0"
-                                                    Width="38"
-                                                    Height="38"
-                                                    FontSize="24"
-                                                    Icon="{x:Static ink:SegoeFluentIcons.PassiveAuthentication}" />
+                                                    <TextBlock VerticalAlignment="Center" FontSize="20">
+                                                        <Run Text="登录" />
+                                                    </TextBlock>
+                                                </StackPanel>
                                                 <TextBlock
-                                                    Grid.Column="1"
-                                                    Margin="8,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    FontFamily="{StaticResource SoraMediumMixYahei}">
-                                                    <Run FontSize="18" Text="Natayark ID 登录" />
-
+                                                    x:Name="cont"
+                                                    Margin="0,0,0,0"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                    TextWrapping="Wrap">
+                                                    <Run Text="选择该平台上已记录的账户，或登录新账号。" />
+                                                    <LineBreak />
+                                                    <Run Text="若需取消记录已登录的账户，在菜单中删除。" />
                                                 </TextBlock>
-                                            </Grid>
-                                        </Button>
-                                        <Button
-                                            Margin="0,-4,0,0"
-                                            Padding="12,12,8,12"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            AutomationProperties.Name="扫码登录或面板快速登录"
-                                            BorderBrush="Transparent"
-                                            Command="{Binding event_WebLogin2Command}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="38" />
-                                                    <ColumnDefinition />
-                                                </Grid.ColumnDefinitions>
-                                                <ink:FontIcon
-                                                    Grid.Column="0"
-                                                    Width="38"
-                                                    Height="38"
-                                                    FontSize="24"
-                                                    Icon="{x:Static ink:SegoeFluentIcons.QRCode}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    Margin="8,0,0,0"
-                                                    VerticalAlignment="Center">
-                                                    <Run FontSize="18" Text="扫码登录 / 面板快速登录" />
+                                                <ItemsControl
+                                                    x:Name="selfor"
+                                                    Margin="0,4,0,-8"
+                                                    Focusable="False"
+                                                    ItemsSource="{Binding PlatformUsers, Mode=OneWay}">
 
-                                                </TextBlock>
-                                            </Grid>
-                                        </Button>
-                                        <Rectangle
-                                            Height="{Binding ActualHeight, Source={x:Reference Name=gl_erBar}}"
-                                            Margin="0,0,0,-20"
-                                            Visibility="{Binding IsExceptionInfobarOpen, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
-                                    </wp:SimpleStackPanel>
-                                </ink:ScrollViewerEx>
-                                <!--</TabItem>
-                                    <TabItem Header="账密登录" IsEnabled="True">
-                                        <ink:ScrollViewerEx Margin="-12,0,-12,0" PanningMode="VerticalOnly">
-                                            <wp:SimpleStackPanel Margin="24,16,24,16" Spacing="8">
-                                                <TextBox
-                                                    ink:ControlHelper.Header="账户 / 用户名"
-                                                    AutomationProperties.Name="账户"
-                                                    Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
-                                                <PasswordBox
-                                                    Margin="0,4,0,0"
-                                                    ink:ControlHelper.Header="密码"
-                                                    ofxhelper:TextBoxHelper.PasswordBinding="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    AutomationProperties.Name="密码" />
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Button
+                                                                Margin="0,0,0,4"
+                                                                Padding="12,12,16,12"
+                                                                HorizontalAlignment="Stretch"
+                                                                HorizontalContentAlignment="Stretch"
+                                                                BorderBrush="Transparent"
+                                                                Command="{Binding DataContext.event_FastLoginCommand, ElementName=selfor, Mode=OneWay}"
+                                                                CommandParameter="{Binding Mode=OneWay}">
+                                                                <Button.ContextMenu>
+                                                                    <ContextMenu MinWidth="100">
+                                                                        <MenuItem
+                                                                            Command="{Binding DataContext.event_RemoveUserRecordCommand, Source={x:Reference Name=cont}, Mode=OneWay}"
+                                                                            CommandParameter="{Binding Mode=OneWay}"
+                                                                            Header="取消记录">
+                                                                            <MenuItem.Icon>
+                                                                                <ink:FontIcon Glyph="&#xF69B;" />
+                                                                            </MenuItem.Icon>
+                                                                        </MenuItem>
+                                                                    </ContextMenu>
+                                                                </Button.ContextMenu>
+                                                                <AutomationProperties.Name>
+                                                                    <MultiBinding StringFormat="{}账户 {0}(邮箱: {1})">
+                                                                        <Binding Mode="OneWay" Path="Username" />
+                                                                        <Binding Mode="OneWay" Path="EmailAddress" />
+                                                                    </MultiBinding>
+                                                                </AutomationProperties.Name>
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="38" />
+                                                                        <ColumnDefinition />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <!--  ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
+                                                                    <ink:PersonPicture
+                                                                        x:Name="picpic"
+                                                                        Grid.Column="0"
+                                                                        Width="38"
+                                                                        Height="38"
+                                                                        ProfilePicture="pack://application:,,,/Resources/Images/weavatar.png"
+                                                                        RenderOptions.BitmapScalingMode="HighQuality"
+                                                                        UseLayoutRounding="True" />
+                                                                    <TextBlock
+                                                                        Grid.Column="1"
+                                                                        Margin="8,0,0,0"
+                                                                        VerticalAlignment="Center"
+                                                                        FontFamily="{StaticResource SoraMedium}"
+                                                                        FontSize="16">
+                                                                        <Run Text="{Binding Username, Mode=OneWay}" />
+                                                                        <LineBreak />
+                                                                        <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding EmailAddress, Mode=OneWay}" />
+                                                                    </TextBlock>
+                                                                    <TextBlock
+                                                                        Grid.Column="1"
+                                                                        HorizontalAlignment="Right"
+                                                                        VerticalAlignment="Top"
+                                                                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                        FontSize="12"
+                                                                        Visibility="Collapsed">
+                                                                        <Run>6 天前</Run>
+                                                                    </TextBlock>
+                                                                </Grid>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                                 <Button
+                                                    Margin="0,0,0,0"
+                                                    Padding="12,12,8,12"
                                                     HorizontalAlignment="Stretch"
-                                                    AutomationProperties.Name="人机验证"
-                                                    Command="{Binding event_DisplayCaptchaWebViewControlCommand}"
-                                                    CommandParameter="True">
-                                                    <TextBlock Text="进行人机验证" />
+                                                    HorizontalContentAlignment="Left"
+                                                    AutomationProperties.Name="Natayark ID 登录"
+                                                    BorderBrush="Transparent"
+                                                    Command="{Binding event_WebLoginCommand}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="38" />
+                                                            <ColumnDefinition />
+                                                        </Grid.ColumnDefinitions>
+                                                        <ink:FontIcon
+                                                            Grid.Column="0"
+                                                            Width="38"
+                                                            Height="38"
+                                                            FontSize="24"
+                                                            Icon="{x:Static ink:SegoeFluentIcons.PassiveAuthentication}" />
+                                                        <TextBlock
+                                                            Grid.Column="1"
+                                                            Margin="8,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            FontFamily="{StaticResource SoraMediumMixYahei}">
+                                                            <Run FontSize="18" Text="Natayark ID 登录" />
+
+                                                        </TextBlock>
+                                                    </Grid>
                                                 </Button>
-
                                                 <Button
-                                                    Padding="0,8"
+                                                    Margin="0,-4,0,0"
+                                                    Padding="12,12,8,12"
                                                     HorizontalAlignment="Stretch"
-                                                    Command="{Binding event_LoginCommand}"
-                                                    Content="登录"
-                                                    FontSize="16"
-                                                    Style="{StaticResource AccentButtonStyle}" />
+                                                    HorizontalContentAlignment="Left"
+                                                    AutomationProperties.Name="扫码登录或面板快速登录"
+                                                    BorderBrush="Transparent"
+                                                    Command="{Binding event_WebLogin2Command}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="38" />
+                                                            <ColumnDefinition />
+                                                        </Grid.ColumnDefinitions>
+                                                        <ink:FontIcon
+                                                            Grid.Column="0"
+                                                            Width="38"
+                                                            Height="38"
+                                                            FontSize="24"
+                                                            Icon="{x:Static ink:SegoeFluentIcons.QRCode}" />
+                                                        <StackPanel
+                                                            Grid.Column="1"
+                                                            Margin="8,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                            <TextBlock FontSize="18" Text="扫码登录 / 面板快速登录" />
+                                                            <TextBlock
+                                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                                Text="安全，更快的登录方式，若不行再尝试 Natayark ID 登录"
+                                                                TextWrapping="Wrap" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
                                                 <Rectangle
                                                     Height="{Binding ActualHeight, Source={x:Reference Name=gl_erBar}}"
                                                     Margin="0,0,0,-20"
-                                                    Visibility="{Binding IsExceptionInfobarOpen, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                                    Visibility="{Binding IsExceptionInfobarOpen, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                                             </wp:SimpleStackPanel>
                                         </ink:ScrollViewerEx>
-                                    </TabItem>
-                                </TabControl>-->
-                                <ink:InfoBar
-                                    x:Name="gl_erBar"
-                                    Title="登录失败"
-                                    Margin="24,0,24,-1"
-                                    VerticalAlignment="Bottom"
-                                    IsOpen="{Binding IsExceptionInfobarOpen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Message="{Binding ExecuteResult.Message, Mode=OneWay}"
-                                    Severity="Error">
-                                    <ink:InfoBar.ActionButton>
-                                        <Button
-                                            Margin="-1,2.75,0,0"
-                                            HorizontalAlignment="Left"
-                                            VerticalAlignment="Stretch"
-                                            VerticalContentAlignment="Center"
-                                            AutomationProperties.Name="显示错误"
-                                            Command="{Binding event_DisplayExceptionCommand}"
-                                            Content="显示错误"
-                                            Visibility="{Binding Value, Source={StaticResource ExceptionIsNull}, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
-                                    </ink:InfoBar.ActionButton>
-                                </ink:InfoBar>
-                            </Grid>
-                            <Grid Grid.Row="1" Background="Transparent">
-                                <StackPanel
-                                    Margin="0,4,0,0"
-                                    HorizontalAlignment="Center"
-                                    Orientation="Horizontal">
-                                    <StackPanel.Resources>
-                                        <Style BasedOn="{StaticResource ButtonStyledHyperlinkButton}" TargetType="ink:HyperlinkButton">
-                                            <Setter Property="Margin" Value="0,4,0,16" />
-                                            <Setter Property="Padding" Value="12" />
-                                            <Setter Property="Cursor" Value="Arrow" />
-                                        </Style>
-                                    </StackPanel.Resources>
-                                    <ink:HyperlinkButton
-                                        AutomationProperties.Name="跳过"
-                                        Command="{Binding event_GotoMainWindowCommand}"
-                                        ToolTip="跳过">
-                                        <StackPanel Orientation="Horizontal">
-                                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Go}" />
-                                            <TextBlock
-                                                Padding="6,0,0,0"
-                                                VerticalAlignment="Center"
-                                                FontSize="16"
-                                                Text="跳过"
-                                                Visibility="Collapsed" />
-                                        </StackPanel>
-                                    </ink:HyperlinkButton>
-                                    <ink:HyperlinkButton
-                                        AutomationProperties.Name="设置"
-                                        Command="{Binding event_DisplaySettingControlCommand}"
-                                        ToolTip="设置">
-                                        <StackPanel Orientation="Horizontal">
-                                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Settings}" />
-                                            <TextBlock
-                                                Padding="6,0,0,0"
-                                                VerticalAlignment="Center"
-                                                Cursor=""
-                                                FontSize="16"
-                                                Text="设置"
-                                                Visibility="Collapsed" />
-                                        </StackPanel>
-                                    </ink:HyperlinkButton>
-                                    <!--<ctrl:HyperlinkTp1
+
+                                        <ink:InfoBar
+                                            x:Name="gl_erBar"
+                                            Title="登录失败"
+                                            Margin="24,0,24,-1"
+                                            VerticalAlignment="Bottom"
+                                            IsOpen="{Binding IsExceptionInfobarOpen, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            Message="{Binding ExecuteResult.Message, Mode=OneWay}"
+                                            Severity="Error">
+                                            <ink:InfoBar.ActionButton>
+                                                <Button
+                                                    Margin="-1,2.75,0,0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Stretch"
+                                                    VerticalContentAlignment="Center"
+                                                    AutomationProperties.Name="显示错误"
+                                                    Command="{Binding event_DisplayExceptionCommand}"
+                                                    Content="显示错误"
+                                                    Visibility="{Binding ExecuteResult.Exception, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                                            </ink:InfoBar.ActionButton>
+                                        </ink:InfoBar>
+                                    </Grid>
+                                    <Grid Grid.Row="1" Background="Transparent">
+                                        <StackPanel
+                                            Margin="0,4,0,0"
+                                            HorizontalAlignment="Center"
+                                            Orientation="Horizontal">
+                                            <StackPanel.Resources>
+                                                <Style BasedOn="{StaticResource ButtonStyledHyperlinkButton}" TargetType="ink:HyperlinkButton">
+                                                    <Setter Property="Margin" Value="0,4,0,16" />
+                                                    <Setter Property="Padding" Value="12" />
+                                                    <Setter Property="Cursor" Value="Arrow" />
+                                                    <Setter Property="RaiseHyperlinkClicks" Value="False" />
+                                                </Style>
+                                            </StackPanel.Resources>
+                                            <ink:HyperlinkButton
+                                                AutomationProperties.Name="跳过"
+                                                Command="{Binding event_GotoMainWindowCommand}"
+                                                ToolTip="跳过">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Go}" />
+                                                    <TextBlock
+                                                        Padding="6,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="16"
+                                                        Text="跳过"
+                                                        Visibility="Collapsed" />
+                                                </StackPanel>
+                                            </ink:HyperlinkButton>
+                                            <ink:HyperlinkButton
+                                                AutomationProperties.Name="设置"
+                                                Command="{Binding event_DisplaySettingControlCommand}"
+                                                ToolTip="设置">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Settings}" />
+                                                    <TextBlock
+                                                        Padding="6,0,0,0"
+                                                        VerticalAlignment="Center"
+                                                        Cursor=""
+                                                        FontSize="16"
+                                                        Text="设置"
+                                                        Visibility="Collapsed" />
+                                                </StackPanel>
+                                            </ink:HyperlinkButton>
+                                            <!--<ctrl:HyperlinkTp1
                                         AutomationProperties.Name="跳过"
                                         Command="{Binding event_GotoMainWindowCommand}"
                                         Content="跳过"
@@ -502,73 +712,85 @@
                                         FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                         Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                         PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />-->
-                                </StackPanel>
-                            </Grid>
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                            <!--  Setting Ctrl  -->
+                            <Border
+                                x:Name="defaultSettingCtrl"
+                                d:Visibility="Collapsed"
+                                RenderTransformOrigin=".5,.5"
+                                Style="{StaticResource BorderFocusManagedStyle}">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                </FrameworkElement.RenderTransform>
+                            </Border>
+                            <!--  QrCodeFv Ctrl  -->
+                            <Border
+                                x:Name="defaultQrCodeFvCtrl"
+                                d:Visibility="Collapsed"
+                                RenderTransformOrigin=".5,.5"
+                                Style="{StaticResource BorderFocusManagedStyle}">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                </FrameworkElement.RenderTransform>
+
+                            </Border>
+                            <!--  WebOAuth Ctrl  -->
+                            <Border
+                                x:Name="defaultWebOAuthCtrl"
+                                d:Visibility="Collapsed"
+                                RenderTransformOrigin=".5,.5"
+                                Style="{StaticResource BorderFocusManagedStyle}">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                </FrameworkElement.RenderTransform>
+
+                            </Border>
+                            <!--  Loading Ctrl  -->
+                            <Border
+                                x:Name="defaultLoadingCtrl"
+                                d:Visibility="Collapsed"
+                                RenderTransformOrigin=".5,.5"
+                                Style="{StaticResource BorderFocusManagedStyle}">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                </FrameworkElement.RenderTransform>
+                                <wp:SimpleStackPanel
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="16">
+                                    <ink:ProgressRing Width="80" Height="80" />
+                                    <TextBlock
+                                        FontSize="24"
+                                        Text="加载中"
+                                        TextAlignment="Center" />
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <!--  Placeholder  -->
+                                        <ctrl:HyperlinkTp1
+                                            AutomationProperties.Name="取消"
+                                            Command="{Binding event_CancelLoginCommand}"
+                                            Content="取消"
+                                            FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                    </StackPanel>
+                                </wp:SimpleStackPanel>
+                            </Border>
+                            <Border
+                                x:Name="defaultUpdateCtrl"
+                                d:Visibility="Visible"
+                                RenderTransformOrigin=".5,.5"
+                                Style="{StaticResource BorderFocusManagedStyle}">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                                </FrameworkElement.RenderTransform>
+                                <!--<Grid Background="Red" />-->
+                            </Border>
                         </Grid>
-                    </Border>
-                    <!--  Setting Ctrl  -->
-                    <Border
-                        x:Name="defaultSettingCtrl"
-                        d:Visibility="Collapsed"
-                        RenderTransformOrigin=".5,.5"
-                        Style="{StaticResource BorderFocusManagedStyle}">
-                        <FrameworkElement.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1" />
-                        </FrameworkElement.RenderTransform>
-                    </Border>
-                    <!--  QrCodeFv Ctrl  -->
-                    <Border
-                        x:Name="defaultQrCodeFvCtrl"
-                        d:Visibility="Collapsed"
-                        RenderTransformOrigin=".5,.5"
-                        Style="{StaticResource BorderFocusManagedStyle}">
-                        <FrameworkElement.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1" />
-                        </FrameworkElement.RenderTransform>
-
-                    </Border>
-                    <!--  WebOAuth Ctrl  -->
-                    <Border
-                        x:Name="defaultWebOAuthCtrl"
-                        d:Visibility="Collapsed"
-                        RenderTransformOrigin=".5,.5"
-                        Style="{StaticResource BorderFocusManagedStyle}">
-                        <FrameworkElement.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1" />
-                        </FrameworkElement.RenderTransform>
-
-                    </Border>
-                    <!--  Loading Ctrl  -->
-                    <Border
-                        x:Name="defaultLoadingCtrl"
-                        d:Visibility="Collapsed"
-                        RenderTransformOrigin=".5,.5"
-                        Style="{StaticResource BorderFocusManagedStyle}">
-                        <FrameworkElement.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1" />
-                        </FrameworkElement.RenderTransform>
-                        <wp:SimpleStackPanel
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Spacing="16">
-                            <ink:ProgressRing Width="80" Height="80" />
-                            <TextBlock
-                                FontSize="24"
-                                Text="加载中"
-                                TextAlignment="Center" />
-                            <StackPanel HorizontalAlignment="Center">
-                                <!--  Placeholder  -->
-                                <ctrl:HyperlinkTp1
-                                    AutomationProperties.Name="取消"
-                                    Command="{Binding event_CancelLoginCommand}"
-                                    Content="取消"
-                                    FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                    PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                            </StackPanel>
-                        </wp:SimpleStackPanel>
-                    </Border>
-                </Grid>
+                    </Grid>
+                </Border>
             </Grid>
         </Grid>
     </Grid>
@@ -659,6 +881,37 @@
         <VisualStateGroup x:Name="StateCtrl">
             <VisualState x:Name="DisplayLoginCtrl">
                 <Storyboard>
+                    <!--  defaultUpdateCtrl Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.35" />
                     <!--  WebOAuth Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultWebOAuthCtrl"
@@ -818,6 +1071,37 @@
             </VisualState>
             <VisualState x:Name="DisplaySettingCtrl">
                 <Storyboard>
+                    <!--  defaultUpdateCtrl Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.35" />
                     <!--  WebOAuth Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultWebOAuthCtrl"
@@ -978,6 +1262,37 @@
             </VisualState>
             <VisualState x:Name="DisplayQrCodeFvCtrl">
                 <Storyboard>
+                    <!--  defaultUpdateCtrl Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.35" />
                     <!--  WebOAuth Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultWebOAuthCtrl"
@@ -1139,6 +1454,37 @@
             </VisualState>
             <VisualState x:Name="DisplayWebOAuthCtrl">
                 <Storyboard>
+                    <!--  defaultUpdateCtrl Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.35" />
                     <!--  WebOAuth Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultWebOAuthCtrl"
@@ -1299,6 +1645,37 @@
             </VisualState>
             <VisualState x:Name="DisplayLoadingCtrl">
                 <Storyboard>
+                    <!--  defaultUpdateCtrl Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.35" />
                     <!--  Login Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultLoginCtrl"
@@ -1453,6 +1830,587 @@
                         Storyboard.TargetName="defaultWebOAuthCtrl"
                         Storyboard.TargetProperty="RenderTransform.ScaleY"
                         To="1.05"
+                        Duration="0:0:.25" />
+                </Storyboard>
+            </VisualState>
+            <VisualState x:Name="DisplayUpdateCtrl">
+                <Storyboard>
+                    <!--  Loading ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.35" />
+                    <!--  Login Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultLoginCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <!--  Setting Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.0" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultSettingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <!--  QrCodeFV Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultQrCodeFvCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <!--  defaultUpdateCtrl Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultUpdateCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.35" />
+                    <!--  WebOAuth Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Hidden}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultWebOAuthCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1.05"
+                        Duration="0:0:.25" />
+                </Storyboard>
+            </VisualState>
+        </VisualStateGroup>
+        <VisualStateGroup x:Name="FrpcCtrlState">
+            <VisualState Name="DisplayErrorInfobar">
+                <Storyboard>
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.40" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.40" />
+                </Storyboard>
+            </VisualState>
+            <VisualState Name="DisplayDownloadingInfobar">
+                <Storyboard>
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.40" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.40" />
+                </Storyboard>
+            </VisualState>
+            <VisualState Name="DisplayNewUpdateInfobar">
+                <Storyboard>
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.40" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.40" />
+                </Storyboard>
+            </VisualState>
+            <VisualState Name="HiddenFrpcCtrl">
+                <Storyboard>
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="newUpdateInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="downloadingInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.25" />
+
+
+
+
+
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="executeErrorInfobar"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
                         Duration="0:0:.25" />
                 </Storyboard>
             </VisualState>

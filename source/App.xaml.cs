@@ -18,12 +18,13 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Data;
 using System.Diagnostics.Metrics;
-using System.Runtime.ConstrainedExecution;
-using static Google.Protobuf.WellKnownTypes.Field.Types;
+
 using System.Text;
 using System.Security.Principal;
 using OpenFrp.Launcher.Win32;
 using System.ComponentModel;
+using Microsoft.Extensions.Logging;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 
 namespace OpenFrp.Launcher
@@ -33,6 +34,14 @@ namespace OpenFrp.Launcher
     /// </summary>
     public partial class App : Application
     {
+        internal static ILoggerFactory loggerFactory = LoggerFactory.Create((c) =>
+        {
+            c.AddDebug();
+            c.SetMinimumLevel(LogLevel.Debug);
+        });
+
+        public static ILogger<App> Logger { get; } = loggerFactory.CreateLogger<App>();
+
         public App()
         {
             AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.EnablePointerSupport", true);
@@ -165,29 +174,35 @@ namespace OpenFrp.Launcher
         }
 
         internal static HashSet<string> StartupArguments { get; private set; } =
-            /* Array.Empty<string>() "--minimize" */ 
-            new HashSet<string> { };
+            /* Array.Empty<string>() "--minimize" "--updateFrpClient" */
+            new HashSet<string> {  };
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            if (!Settings_TryReadConfiguration())
+            if ((OSVersionHelper.IsWindows10OrGreater && Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.WasCurrentProcessToastActivated())
+                || !Settings_TryReadConfiguration())
             {
-                Environment.Exit(-1);
+       
+                Environment.Exit(0);
 
-                App.Current.Shutdown(-1);
+                App.Current.Shutdown(0);
 
                 return;
             }
 
-            
+
+
+
             string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(AppContext.BaseDirectory);
 
             launcherMutex = new Mutex(false, $"openfrp.launcher.{appHash}", out var createdNewFlag);
 
-            if (!Debugger.IsAttached)
+            if (!Debugger.IsAttached || (true && e.Args.Length > 0))
             {
                 StartupArguments = new HashSet<string>(e.Args);
             }
+
+            Logger.LogDebug("[OF LAUN] AppHash: {hash}", appHash);
 
 
             if (!createdNewFlag && !launcherMutex.SafeWaitHandle.IsClosed)
@@ -300,17 +315,41 @@ namespace OpenFrp.Launcher
             {
                 if (e.SettingClass is "OpenFrp.Launcher.Properties.Settings")
                 {
-                    switch (e.SettingName)
-                    {
-                        case "UseProxy" when e.NewValue is bool nv1:
-                            {
-                                Service.Net.HttpClient.DefualtInstance.SetUseProxy(nv1);
-                            }
-                            ; break;
-                        default: return;
-                    }
+                    
                 }
             };
+            App.Settings.PropertyChanged += (_, e) =>
+            {
+                switch (e.PropertyName)
+                {
+                    case "UseProxy":
+                        {
+                            Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
+                        }
+                            ; break;
+                    case "ShowTitlebarBackground":
+                        {
+                            if (App.Current is { MainWindow: LoginWindow { DataContext: ViewModels.LoginWindowViewModel op } })
+                            {
+                                op.OnShowTitlebarBackgroundChanged();
+                            }
+                        }
+                        ; break;
+                    default: return;
+                }
+            };
+
+            Logger.LogDebug("[OF LAUN] Setting - AutoLaunchTunnels: {tunnels}", Settings.AutoLaunchTunnel);
+            Logger.LogDebug("[OF LAUN] Setting - AutoLoginUserId: {id}", Settings.AutoLoginId);
+            Logger.LogDebug("[OF LAUN] Setting - DoNotAskMeForUrlSchemeTools: {flag}", Settings.DoNotAskMeForUrlSchemeTools);
+            Logger.LogDebug("[OF LAUN] Setting - LogFontSize: {size}", Settings.LogFontSize);
+            Logger.LogDebug("[OF LAUN] Setting - LogFontFamily: {font}", Settings.LogFontFamily);
+            Logger.LogDebug("[OF LAUN] Setting - UsrTokenSet: {set}", Settings.Token);
+
+            if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater)
+            {
+                App.Settings.UseConfigLaunch = true;
+            }
 
             ConfigureNotification();
 
@@ -335,11 +374,9 @@ namespace OpenFrp.Launcher
 
         public static string FrpcVersionString { get; set; } = "Unknown";
 
-        public static string LauncherVersionString => "5.8.2 Preview";
+        public static string LauncherVersionString => "5.8.5 Preview";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
-
-
 
         internal static bool IsAdministrator()
         {
@@ -348,7 +385,6 @@ namespace OpenFrp.Launcher
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
-
         internal static void ConfigureNotification()
         {
             if (OSVersionHelper.IsWindows10OrGreater)
@@ -356,7 +392,8 @@ namespace OpenFrp.Launcher
             
                 try
                 {
-                    Type? tp = typeof(Windows.UI.Notifications.ToastNotification);
+                    Type? tp = Type.GetType("Windows.UI.Notifications.ToastNotification", false);
+                    
                     if (tp is not null)
                     {
                         var putMethod = tp.GetMethod("put_ExpiresOnReboot", new Type[1] { typeof(bool) });
@@ -445,10 +482,6 @@ namespace OpenFrp.Launcher
                 TaskBarIcon.ForceCreate(false);
             }
         }
-       
-
-
-
     }
 
     public static class Extend

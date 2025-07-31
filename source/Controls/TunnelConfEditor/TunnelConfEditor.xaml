@@ -73,7 +73,7 @@
                                             PlaceholderText="不填则随机"
                                             SpinButtonPlacementMode="Inline"
                                             ValidationMode="InvalidInputOverwritten"
-                                            Visibility="{Binding EditorTemplate.IsNormalService, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+                                            Visibility="{Binding EditorTemplate.IsNormalService, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
 
                                             <ink:NumberBox.Suffix>
                                                 <Button
@@ -90,7 +90,7 @@
                                             ink:ControlHelper.PlaceholderText="多个之间用逗号隔开"
                                             FontFamily="{StaticResource SoraMediumMixYahei}"
                                             Text="{Binding EditorTemplate.DomainString, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}"
-                                            Visibility="{Binding EditorTemplate.IsWebService, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                            Visibility="{Binding EditorTemplate.IsWebService, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
                                     </Grid>
                                     <ink:ToggleSwitch Header="数据压缩" IsOn="{Binding EditorTemplate.DataCompress, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
                                 </xa:SimpleStackPanel>

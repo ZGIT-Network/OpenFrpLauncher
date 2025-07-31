@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using iNKORE.UI.WPF.Helpers;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace OpenFrp.Launcher.Controls
 {
@@ -30,6 +32,8 @@ namespace OpenFrp.Launcher.Controls
 
         private void CloseAll_Click(object sender, RoutedEventArgs e)
         {
+            App.TaskBarIcon?.CloseTrayPopup();
+
             ViewModels.MainWindowViewModel.ShutdownApp();
         }
 
@@ -37,26 +41,33 @@ namespace OpenFrp.Launcher.Controls
         {
             App.TaskBarIcon?.CloseTrayPopup();
 
-            switch (App.Current.MainWindow)
+            if (App.Current.MainWindow is AppWindow ap)
             {
-                case MainWindow mw:
-                    {
-                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
+                iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(ap)?.Hide();
 
-                        mw.HideByHANDLE();
-                    }
-                     ; break;
-                case LoginWindow lw:
-                    {
-                        iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
-
-                        lw.HideByHANDLE();
-                        //CloseLauncher_Click(sender, e);
-                        //lw.ShowByHwndCC();
-
-                    }
-                     ; break;
+                ap.HideByHANDLE();
+                ap.CancelControl();
             }
+            //switch (App.Current.MainWindow)
+            //{
+            //    case MainWindow mw:
+            //        {
+            //            iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
+
+            //            mw.HideByHANDLE();
+            //        }
+            //         ; break;
+            //    case LoginWindow lw:
+            //        {
+            //            iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
+
+            //            lw.HideByHANDLE();
+            //            //CloseLauncher_Click(sender, e);
+            //            //lw.ShowByHwndCC();
+
+            //        }
+            //         ; break;
+            //}
             try
             {
                 BindingOperations.ClearBinding(App.Current.MainWindow, iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty);
@@ -69,6 +80,15 @@ namespace OpenFrp.Launcher.Controls
             Helpers.UsrTokenService.WriteConfig();
             App.Settings.Save();
 
+            if (OSVersionHelper.IsWindows10OrGreater)
+            {
+                try
+                {
+                    Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.Uninstall();
+                    //ToastNotificationManagerCompat.History.Clear();
+                }
+                catch { }
+            }
             App.TaskBarIcon?.Dispose();
 
             App.Current.Shutdown(0);

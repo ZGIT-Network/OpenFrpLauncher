@@ -53,15 +53,15 @@ namespace OpenFrp.Launcher
             }
         }
 
+        public override void CancelControl()
+        {
+            
+        }
+
         protected override void AcceptWindowCopyData(nint type, byte[]? buffer)
         {
             switch (type)
             {
-                // processed by filter
-                //case 0x01:
-                //    {
-                //        ShowByHANDLE();
-                //    };break;
                 case 0x02 when buffer is not null:
                     {
                         string p = Encoding.UTF8.GetString(buffer);

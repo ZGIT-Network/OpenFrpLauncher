@@ -128,9 +128,13 @@
                             </FrameworkElement.RenderTransform>
                             <StackPanel>
                                 <StackPanel>
-                                    <TextBlock Margin="0,0,0,8" FontSize="20">
-                                        <Run Text="其他用户" />
-                                        <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="(不属于您的隧道，通过快速启动)" />
+                                    <TextBlock
+                                        Margin="0,0,0,8"
+                                        FontSize="20"
+                                        Visibility="{Binding IsUrlSchemeMode, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                        <Run Text="快启动隧道" />
+                                        <!--<Run Text="其他用户" />-->
+                                        <!--<Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="(不属于您的隧道，通过快速启动)" />-->
                                     </TextBlock>
 
                                     <ItemsControl
@@ -167,13 +171,13 @@
                                     Margin="0,4,0,8"
                                     FontFamily="{StaticResource SoraMediumMixYahei}"
                                     FontSize="20"
-                                    Visibility="{Binding IsUserLogin, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                    Visibility="{Binding IsUserLogin, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                     <Run Text="{Binding UserInfo.UserName, StringFormat='{}{0} 的隧道', Mode=OneWay}" />
                                     <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserTunnels.Count, StringFormat='({0}', Mode=OneWay}" />
                                     <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="/" />
                                     <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserInfo.MaxProxies, StringFormat='{}{0})', Mode=OneWay}" />
                                 </TextBlock>
-                                <Grid Visibility="{Binding IsUserLogin, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                <Grid>
                                     <Border
                                         x:Name="defaultErrorCtrl"
                                         d:Opacity="1"
@@ -217,7 +221,7 @@
                                                         Padding="14,9"
                                                         AutomationProperties.Name="查看错误"
                                                         Command="{Binding event_DisplayExceptionCommand}"
-                                                        Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                                                        Visibility="{Binding ExecuteResult.HasException, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                                         <StackPanel Orientation="Horizontal">
                                                             <ink:FontIcon FontSize="18" Icon="{x:Static ink:SegoeFluentIcons.Error}" />
                                                             <TextBlock Padding="8,0,0,0" Text="查看错误" />
@@ -267,6 +271,7 @@
                                                             Padding="14,9"
                                                             AutomationProperties.Name="创建隧道"
                                                             Command="{Binding event_GotoCreateTunnelPageCommand}"
+                                                            IsEnabled="{Binding IsUserLogin, Mode=OneWay}"
                                                             Style="{StaticResource AccentButtonStyle}">
                                                             <StackPanel Orientation="Horizontal">
                                                                 <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Add}" />

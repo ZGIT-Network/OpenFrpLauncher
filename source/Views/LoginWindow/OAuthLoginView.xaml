@@ -71,14 +71,14 @@
                         Text="{Binding Port, StringFormat='http://127.0.0.1:{0}/callUpOAuthService', Mode=OneWay}"
                         TextAlignment="Center"
                         TextWrapping="Wrap"
-                        Visibility="{Binding NeedDisplayUrl, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                        Visibility="{Binding NeedDisplayUrl, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                 </wp:SimpleStackPanel>
             </Grid>
             <Grid Grid.Row="1" Background="Transparent">
                 <Grid.Resources>
 
                     <Style BasedOn="{StaticResource ButtonStyledHyperlinkButton}" TargetType="ink:HyperlinkButton">
-
+                        <Setter Property="RaiseHyperlinkClicks" Value="False" />
                         <Setter Property="Margin" Value="0,4,0,16" />
                         <Setter Property="Padding" Value="12" />
                         <Setter Property="Cursor" Value="Arrow" />
@@ -108,9 +108,9 @@
                             <TextBlock
                                 Padding="6,0,0,0"
                                 VerticalAlignment="Center"
-                                FontSize="16"
+                                FontSize="14"
                                 Text="在浏览器中授权"
-                                Visibility="Collapsed" />
+                                Visibility="Visible" />
                         </StackPanel>
                     </ink:HyperlinkButton>
 

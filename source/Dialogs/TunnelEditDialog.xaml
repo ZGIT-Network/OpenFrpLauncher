@@ -46,13 +46,13 @@
                         x:Name="infoBar"
                         Title="操作失败"
                         Severity="Error"
-                        Visibility="{Binding IsOpen, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}">
+                        Visibility="{Binding IsOpen, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}">
                         <ink:InfoBar.ActionButton>
                             <Button
                                 Margin="0,2.5,0,0"
                                 Click="DisplayExceptionButton_Click"
                                 Content="显示错误"
-                                Visibility="{Binding Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                                Visibility="{Binding Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                         </ink:InfoBar.ActionButton>
                     </ink:InfoBar>
                     <control:TunnelConfEditor

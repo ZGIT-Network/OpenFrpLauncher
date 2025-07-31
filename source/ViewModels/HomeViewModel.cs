@@ -245,8 +245,8 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private void @event_OpenPaymentApp()
         {
-            try { Process.Start("https://r.zyghit.cn/app/index.html#/donate"); return; } catch { }
-            try { Process.Start("start", "https://r.zyghit.cn/app/index.html#/donate"); } catch { }
+            try { Process.Start("https://yue3.pages.dev/#/donate"); return; } catch { }
+            try { Process.Start("start", "https://yue3.pages.dev/#/donate"); } catch { }
         }
 
         [RelayCommand]

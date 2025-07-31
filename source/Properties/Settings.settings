@@ -15,7 +15,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="LogFontSize" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">12</Value>
+      <Value Profile="(Default)">16</Value>
     </Setting>
     <Setting Name="LogFontFamily" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
@@ -30,6 +30,24 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="UseDebug" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DoNotAskMeForUrlSchemeTools" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UseConfigLaunch" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AutoLaunchTunnel" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DoNotNoticeAutoLaunchTunnelMsg" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DoNotNoticeErrorMsg" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowTitlebarBackground" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>

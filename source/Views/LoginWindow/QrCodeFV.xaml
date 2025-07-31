@@ -71,7 +71,7 @@
                         FontSize="48"
                         Foreground="#FF0000"
                         Icon="{x:Static ink:SegoeFluentIcons.Error}"
-                        Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                        Visibility="{Binding IsFailed, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                 </Grid>
                 <StackPanel HorizontalAlignment="Center">
                     <Grid>
@@ -80,7 +80,7 @@
                             FontSize="18"
                             TextAlignment="Center"
                             TextWrapping="Wrap"
-                            Visibility="{Binding Value, Converter={StaticResource BooleanToVisibilityConverter}, Source={StaticResource IsSuccess}, Mode=OneWay}">
+                            Visibility="{Binding Value, Converter={StaticResource AweBooleanToVisibilityConverter}, Source={StaticResource IsSuccess}, Mode=OneWay}">
                             <Run Text="使用移动设备的相机扫描" />
                             <Run FontFamily="{StaticResource SoraMedium}" Text="QR Code" />
                             <LineBreak />
@@ -98,7 +98,7 @@
                             FontSize="18"
                             TextAlignment="Center"
                             TextWrapping="Wrap"
-                            Visibility="{Binding IsFailed, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+                            Visibility="{Binding IsFailed, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                             <Run Text="{Binding ExecuteResult.Message, Mode=OneWay}" />
                             <LineBreak />
                             <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="点击刷新重试" />
@@ -110,7 +110,7 @@
                         Text="{Binding User_AuthorizationUrl, Mode=OneWay}"
                         TextAlignment="Center"
                         TextWrapping="Wrap"
-                        Visibility="{Binding NeedDisplayUrl, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+                        Visibility="{Binding NeedDisplayUrl, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                 </StackPanel>
 
             </wp:SimpleStackPanel>
@@ -120,6 +120,7 @@
                         <Setter Property="Margin" Value="0,4,0,16" />
                         <Setter Property="Padding" Value="12" />
                         <Setter Property="Cursor" Value="Arrow" />
+                        <Setter Property="RaiseHyperlinkClicks" Value="False" />
                     </Style>
                 </Grid.Resources>
                 <wp:SimpleStackPanel
@@ -145,9 +146,9 @@
                             <TextBlock
                                 Padding="6,0,0,0"
                                 VerticalAlignment="Center"
-                                FontSize="16"
+                                FontSize="14"
                                 Text="在浏览器中授权"
-                                Visibility="Collapsed" />
+                                Visibility="Visible" />
                         </StackPanel>
                     </ink:HyperlinkButton>
                     <!--  Todo: Help Page  -->

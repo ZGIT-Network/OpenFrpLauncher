@@ -18,6 +18,7 @@ using Google.Rpc;
 using Grpc.Core;
 using Grpc.Core.Utils;
 using iNKORE.UI.WPF.Modern.Controls;
+using OpenFrp.Launcher.Model;
 using OpenFrp.Service;
 
 
@@ -200,35 +201,35 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         if (IsUrlSchemeMode)
                         {
-                            // ?proxy= (id)
-                            // &user= (token)
-                            // &name= (name)
-                            // &remote= (address)
-                           
-                            if (resp.Data.Is(Empty.Descriptor) && container is not null)
-                            {
-                                if (!IsUserLogin)
-                                {
-                                    //VisualStateManager.GoToElementState(container, EmptyState, false);
-                                }
-                            }
-                            else if (resp.Data.TryUnpack(out Service.Proto.Response.TunnelStreamResponse.Types.AnonymousTunnelResponse _atr) && _atr.Datas is { } dl)
+                           if (resp.Data.TryUnpack(out Service.Proto.Response.TunnelStreamResponse.Types.AnonymousTunnelResponse _atr) && _atr.Datas is { } dl)
                             {
                                 if (_atr.IsNewCreate && dl.Count > 0)
                                 {
                                     if (_atr.Datas.FirstOrDefault() is var t && t is not null)
                                     {
+                                        if (!IsUserLogin && AppRemoteTunnels.Count is 0)
+                                        {
+                                            VisualStateManager.GoToElementState(container, UserDisplayNoraml, false);
+                                        }
                                         AppRemoteTunnels.Add(new Model.UserTunnel(t) { FirstState = true });
+                                        
                                     }
                                     break;
+                                }
+                                else if (dl.Count is 0)
+                                {
+                                    if (!IsUserLogin)
+                                    {
+                                        VisualStateManager.GoToElementState(container, NormalState, false);
+                                        VisualStateManager.GoToElementState(container, UserDisplayEmpty, false);
+                                    }
                                 }
                                 remoteAppWaiter?.TrySetResult(dl);
                             }
                         }
 
-                        if (resp.Data.TryUnpack(out Int32Value _v) && _v is { Value: var tunnelId } && itemsController != null)
+                        if (resp.Data.TryUnpack(out Int32Value _v) && _v is { Value: var tunnelId })
                         {
-                            
                             ToggleSwitchWithId(tunnelId);
                         }
                         else if (resp.Data.TryUnpack(out ListValue _l))
@@ -253,6 +254,11 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         if (tunnelId.Contains(-rt.Id))
                         {
+                            if (!IsUserLogin && AppRemoteTunnels.Count is 1)
+                            {
+                                VisualStateManager.GoToElementState(container, NormalState, false);
+                                VisualStateManager.GoToElementState(container, UserDisplayEmpty, false);
+                            }
                             userTunnel.RemoveWithAnimate(() => AppRemoteTunnels.Remove(rt));
                         }
                         else
@@ -278,9 +284,15 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     var vi = itemsController.ItemContainerGenerator.ContainerFromItem(tunnel);
 
+                    bool? flag = default;
+                    if (tunnelId.Contains(tunnel.Id)) flag = true;
+                    if (tunnelId.Contains(-tunnel.Id)) flag = false;
+
+                    if (!flag.HasValue) continue;
+
                     if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
                     {
-                        userTunnel.ToggleStateTo(tunnelId.Contains(tunnel.Id), force: true);
+                        userTunnel.ToggleStateTo(flag.Value, force: true);
 
                         if (iNKORE.UI.WPF.Helpers.OSVersionHelper.IsWindows10OrGreater)
                         {
@@ -418,16 +430,34 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(AllowConcurrentExecutions = true)]
         private async Task @event_TunnelSwitchInvoked(ToggleSwitch @switch)
         {
-            if (@switch.DataContext is Model.UserTunnel tunnel && _writer != null)
+            if (@switch.DataContext is Model.UserTunnel { Tunnel: not null } tunnel && _writer != null)
             {
+                string? tomlConfStr = default; 
+
+                if (App.Settings.UseConfigLaunch)
+                {
+                    try
+                    {
+                        tomlConfStr = await GetTomlConfigPre(tunnel.Tunnel);
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowAlertAction($"隧道 #{tunnel.Id} {tunnel.Name}", ex.Message ?? "请检查网络状态后尝试重新启动隧道。", InfoBarSeverity.Error);
+                        ToggleSwitchWithId(-tunnel.Id);
+
+                        return;
+                    }
+                }
+
                 await _writer.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
                 {
                     State = @switch.IsOn ?
-                     Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.LaunchTunnel :
-                     Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.CloseTunnel,
+                    Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.LaunchTunnel :
+                    Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.CloseTunnel,
                     Data = Any.Pack(new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchReq
                     {
                         OriginalJsonBuffer = Google.Protobuf.ByteString.CopyFrom(tunnel.GetTunnelJsonBuffer()),
+                        OriginalTomlConfig = tomlConfStr ?? "",
                         Config = @switch.IsOn ? new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
                         {
                             AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
@@ -436,7 +466,58 @@ namespace OpenFrp.Launcher.ViewModels
                         } : default
                     }),
                 });
+                  
+
             }
+        }
+
+        /// <summary>
+        /// 获取配置
+        /// </summary>
+        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        internal static async Task<string> GetTomlConfigPre(Yue3.Model.OpenFrp.Response.Data.UserTunnel tunnel)
+        {
+            string? tomlConfStr = "";
+            var config = await OpenFrp.Service.Net.OpenFrpApi.GetNodeConfig(tunnel.NodeId);
+
+            
+            if (config.StatusCode is System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(config.Data))
+            {
+                if (Tomlyn.Toml.ToModel(config.Data!) is { Count: > 0 } table && table.TryGetValue("proxies", out var proxiesValue) && proxiesValue is Tomlyn.Model.TomlTableArray { Count: > 0 } proxies)
+                {
+
+                    for (int i = proxies.Count - 1; i >= 0; i--)
+                    {
+                        if (!proxies[i].TryGetValue("name", out var nameValue) || !nameValue.Equals(tunnel.Name))
+                        {
+                            proxies.RemoveAt(i);
+                        }
+                    }
+                    if (Tomlyn.Toml.TryFromModel(table, out tomlConfStr, out var diagnostics))
+                    {
+                        if (string.IsNullOrEmpty(tomlConfStr))
+                        {
+                            throw new NullReferenceException("无法将对象转换成 Toml 等效字符串。");
+                        }
+                        return tomlConfStr;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException(string.Join(",", diagnostics.Select(x => x.Message)));
+                    }
+                }
+                else throw new InvalidOperationException($"未能在节点 #{tunnel.NodeId} {tunnel.NodeName} 获取到有效隧道配置。");
+            }
+            else if (config.Exception is not null)
+            {
+                throw config.Exception;
+            }
+            else
+            {
+                throw new InvalidOperationException(config.Message ?? "未能成功启动");
+            }
+           
         }
 
         [RelayCommand(IncludeCancelCommand = true)]
@@ -610,25 +691,30 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (firstStateWaiter is null || _writer is null) return;
 
+            var solveLink = OpenFrp.Service.Net.HttpClient.ParseQueryString(link);
+
+            if (!solveLink.TryGetValue("proxy", out string? tidString) || !int.TryParse(tidString, out int tid))
+            {
+                return;
+            }
+
             if (App.Current is { MainWindow: var mw } && ContentDialog.GetOpenDialog(mw) is var di)
             {
+                if (di is Dialogs.RequestForFastLaunchDialog dt)
+                {
+                    if (dt.TunnelId == tid) return;
+                }
                 di?.Hide();
             }
             var onlineTunnels = await firstStateWaiter.Task;
 
-            if (onlineTunnels is null) return;
-
-            var solveLink = OpenFrp.Service.Net.HttpClient.ParseQueryString(link);
-
-            if (solveLink.TryGetValue("proxy",out string? tidString) && int.TryParse(tidString,out int tid) && onlineTunnels.Contains(tid))
-            {
-                return;
-            }
+            if (onlineTunnels is null || onlineTunnels.Contains(tid)) return;
 
             var dialog = new Dialogs.RequestForFastLaunchDialog(solveLink) { };
 
             if (await dialog.ShowAsync() is ContentDialogResult.Primary)
             {
+                
                 await _writer.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
                 {
                     State = Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.LaunchTunnel,

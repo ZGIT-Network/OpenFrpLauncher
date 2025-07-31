@@ -17,7 +17,7 @@
                 <ResourceDictionary>
                     <conv:EqualConverter x:Key="EqualConverter" />
                     <conv:NotEqualConverter x:Key="NotEqualConverter" />
-                    <conv:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+                    <conv:AweBooleanToVisibilityConverter x:Key="AweBooleanToVisibilityConverter" />
                     <!--  For MultiBinding  -->
                     <conv:BothConverter x:Key="BothConverter" />
                     <conv:EitherConverter x:Key="EitherConverter" />
@@ -108,7 +108,9 @@
                     <Style TargetType="ink:ProgressRing">
                         <Setter Property="IsActive" Value="{Binding IsVisible, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
                     </Style>
-
+                    <!--<Style TargetType="ink:ProgressBar">
+                        <Setter Property="IsIndeterminate" Value="{Binding IsVisible, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
+                    </Style>-->
                 </Style.Resources>
                 <Style.Triggers>
                     <Trigger Property="IsHitTestVisible" Value="False">

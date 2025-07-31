@@ -121,6 +121,8 @@ namespace OpenFrp.Launcher
 
         protected abstract void AcceptWindowCopyData(nint type, byte[]? buffer = null);
 
+        public abstract void CancelControl();
+
         public void ShowByHANDLE()
         {
             if (hWnd != IntPtr.Zero)

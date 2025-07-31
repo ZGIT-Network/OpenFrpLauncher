@@ -85,6 +85,8 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             if (App.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
                             {
+                                VisualStateManager.GoToElementState(container, EmptyState, false);
+                                mv.HasUpdate = false;
                                 return;
                             }
                         }
@@ -182,7 +184,7 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         if (software.Latest != App.LauncherVersionString)
                         {
-                            if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows10OrGreater)
+                            if (!OSVersionHelper.IsWindows8OrGreater)
                             {
                                 if (App.LauncherVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
                                 {
@@ -191,11 +193,11 @@ namespace OpenFrp.Launcher.ViewModels
                             }
                             Title = "FRPC 更新";
                             Message =
-                                    (OSVersionHelper.IsWindows10OrGreater ? "" : "Windows 10 以下版本 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
+                                    (OSVersionHelper.IsWindows8OrGreater ? "" : "Windows 7 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
                                     software.FrpcUpdateLog +
-                                    (OSVersionHelper.IsWindows10OrGreater ? $"\nUpdate: {App.FrpcVersionString} => {software.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
+                                    (OSVersionHelper.IsWindows8OrGreater ? $"\nUpdate: {App.FrpcVersionString} => {software.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
                                     $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！";
-                            //mv.HasUpdate = true;
+
                             UpdateType = UpdateType.Frpc;
                         }
                     }
