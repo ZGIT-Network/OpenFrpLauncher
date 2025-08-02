@@ -418,10 +418,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                         await Task.Delay(500);
 
-                        if (tg.IsOn)
-                        {
-                            App.Settings.DoNotAskMeForUrlSchemeTools = true;
-                        }
+                        App.Settings.DoNotAskMeForUrlSchemeTools = tg.IsOn;
                     }
                     catch
                     {
@@ -530,6 +527,7 @@ namespace OpenFrp.Launcher.ViewModels
             Service.Net.OpenFrpApi.Logout();
 
             App.Settings.AutoLoginId = "";
+            App.Settings.AutoLaunchTunnel = "";
 
             //try
             //{

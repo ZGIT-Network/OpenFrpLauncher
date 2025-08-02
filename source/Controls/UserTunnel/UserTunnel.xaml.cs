@@ -166,6 +166,18 @@ namespace OpenFrp.Launcher.Controls
                     }
                 });
             }
+            if (GetTemplateChild("usedByOtherClient") is TextBlock tb1)
+            {
+                if (Tunnel.IsEnable && !Tunnel.FirstState && Tunnel.Tunnel!.IsOnline )
+                {
+                    this.IsEnabled = false;
+                    tb1.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    tb1.Visibility = Visibility.Collapsed;
+                }
+            }
         }
 
 

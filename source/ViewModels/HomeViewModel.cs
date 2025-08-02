@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using iNKORE.UI.WPF.Modern.Controls;
 using OpenFrp.Launcher.Model;
+using OpenFrp.Service.Net;
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -35,19 +37,24 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     event_RefreshAdSenseCommand.Cancel();
                     event_RefreshUserInfoCommand.Cancel();
+                    event_RefreshBroadCastCommand.Cancel();
                 };
                 event_RefreshAdSenseCommand.Execute(null);
                 event_RefreshUserInfoCommand.Execute(null);
+                event_RefreshBroadCastCommand.Execute(null);
             }
         }
 
         private readonly MainWindowViewModel? _mainWindowViewModel;
 
         [ObservableProperty]
-        private Model.AdSenseItem[] adSences = Array.Empty<Model.AdSenseItem>();
+        private Model.AdSenseItem[]? adSences;
 
         [ObservableProperty]
         private Model.HomeUserInfoVex2[] userInfoVex2 = Array.Empty<Model.HomeUserInfoVex2>();
+
+        [ObservableProperty]
+        private Model.HomeAlertMessage[]? homeAlerts;
 
         public Model.UserInfo UserInfo
         {
@@ -64,7 +71,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_RefreshAdSense(CancellationToken cancellationToken)
         {
-            await Task.Delay(1500,cancellationToken);
+            AdSences = null;
+
+            //await Task.Delay(500,cancellationToken);
 
             var resp = await Service.Net.OpenFrpApi.GetLauncherAdSense(cancellationToken);
 
@@ -161,30 +170,6 @@ namespace OpenFrp.Launcher.ViewModels
                     },
                 };
             }
-
-            //AdSences = new Model.AdSenseItem[]
-            //{
-            //    new AdSenseItem
-            //    {
-            //        Content = "hahahaapodwa154141414214214124124124oidawd",
-            //        Title = "aduiawuiadhawiudha",
-            //        Link = "https://console.openfrp.net"
-            //    },
-            //    new AdSenseItem
-            //    {
-            //        Content = "hahahaapodwaoidawdawdawdwdawdawdawd",
-            //        Title = "aduiawuiadhawiudha",
-            //        Link = "https://baidu.cn",
-            //        ImageSource = @"E:\Desktop\Photo\5dc2031f4d77e71c84ee167c08e26c3ff7aeed0d.jpg"
-            //    },
-            //    new AdSenseItem
-            //    {
-            //        Content = "149aw4d98wa4d98aw4d98aw4d98aw4d9aw4d98waq4daw49daw489d4aw98d4aw9d4aw9d4aw9d489awd",
-            //        Title = "中文中文中文中文中文中文中文中文",
-            //        Link = "https://baidu2.cn",
-            //        ImageSource = @"E:\Desktop\Photo\wallhaven_587f90e1-1583-42cc-af54-67fc365db17b.png"
-            //    }
-            //};
         }
 
         [RelayCommand(IncludeCancelCommand = true)]
@@ -253,6 +238,28 @@ namespace OpenFrp.Launcher.ViewModels
         private void @event_GotoSettingPage()
         {
             Model.RouteMessage<ViewModels.MainWindowViewModel>.Send(typeof(Views.Settings));
+        }
+
+        [RelayCommand(IncludeCancelCommand = true)]
+        private async Task @event_RefreshBroadCast(CancellationToken cancellationToken)
+        {
+            HomeAlerts = default;
+
+            var resp = await OpenFrpApi.CommonQueryGet<Yue3.Model.OpenFrp.Response.Data.BroadcastData>("broadcast",cancellationToken);
+
+            if (resp.Data is null || resp.StatusCode is not System.Net.HttpStatusCode.OK)
+            {
+                return;
+            }
+            HomeAlerts = resp.Data.Alerts.Where(static x =>
+            {
+                if (x is null)
+                {
+                    return false;
+                }
+
+                return (x.MaximumVersion == App.LauncherVersionNumber && x.MinimalVersion == App.LauncherVersionNumber) || (App.LauncherVersionNumber >= x.MinimalVersion && (App.LauncherVersionNumber <= x.MaximumVersion || x.MaximumVersion.Equals(-1)));
+            }).Select(x => new Model.HomeAlertMessage(x.Title,x.Type,x.Data)).ToArray();
         }
     }
 }

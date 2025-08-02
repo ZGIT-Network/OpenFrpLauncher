@@ -407,7 +407,7 @@
                         FontSize="16"
                         Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                         Visibility="Visible">
-                        <Run Text="版权所有 ZGIT Network &amp; Yue-cn 2025" />
+                        <Run Text="版权所有 ZGIT Network" />
                         <LineBreak />
                         <Run Text="湘ICP备2021009274号-3" />
                     </TextBlock>

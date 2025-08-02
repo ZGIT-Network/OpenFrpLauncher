@@ -8,11 +8,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Interop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Google.Rpc.Context;
 using iNKORE.UI.WPF.Helpers;
 using iNKORE.UI.WPF.Modern.Controls;
 using Microsoft.Extensions.Logging;
@@ -255,7 +257,24 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                     if (e.InvokedItemContainer is NavigationViewItem { Tag: Type { Namespace: not null or "" } page })
                     {
-                        if (frame.Content?.GetType() == page) return;
+                        if (frame.Content?.GetType() == page)
+                        {
+                            switch (frame.Content)
+                            {
+                                case Views.Tunnels { DataContext: ViewModels.TunnelsViewModel tvm }:
+                                    {
+                                        tvm.event_RefreshUserTunnelCommand.Execute(default);
+                                    };break;
+                                case Views.Home { DataContext: ViewModels.HomeViewModel hvm }:
+                                    {
+                                        hvm.event_RefreshBroadCastCommand.Execute(default);
+                                        hvm.event_RefreshUserInfoCommand.Execute(default);
+                                        hvm.event_RefreshAdSenseCommand.Execute(default);
+                                    };break;
+                            }
+                            
+                            return;
+                        }
 
                         if (page.Namespace.StartsWith("OpenFrp.Launcher.Views"))
                         {
@@ -675,59 +694,98 @@ namespace OpenFrp.Launcher.ViewModels
                     using var mem = new MemoryStream();
 
                     Service.Proto.RpcResponse? rpcResponse;
+                    List<Yue3.Model.OpenFrp.Response.Data.UserTunnel> requestTunnels = new List<Yue3.Model.OpenFrp.Response.Data.UserTunnel> { };
+                    Dictionary<string, string>? tomlConfigMapping = new Dictionary<string, string> { };
+
+                    foreach (var tun in conf.Data.List)
+                    {
+                        if (attr.Contains(tun.Id) && !online.Contains(tun.Id))
+                        {
+                            //　バカラ　// かみ　しろ　るい　//　神代類
+                            requestTunnels.Add(tun);
+                        }
+                    }
 
                     if (App.Settings.UseConfigLaunch)
                     {
-                        List<Yue3.Model.OpenFrp.Response.Data.UserTunnel> requestTunnels = new List<Yue3.Model.OpenFrp.Response.Data.UserTunnel> { };
-
-                        foreach (var tun in conf.Data.List)
+                        foreach (var nid in requestTunnels.Select(x => x.NodeId).Distinct())
                         {
-                            if (attr.Contains(tun.Id) && !online.Contains(tun.Id))
+                            var nodeConf = await OpenFrp.Service.Net.OpenFrpApi.GetNodeConfig(nid, cancellationToken);
+
+                            if (nodeConf.StatusCode is not System.Net.HttpStatusCode.OK || string.IsNullOrEmpty(nodeConf.Data))
                             {
-                                //　バカラ　// かみ　しろ　るい　//　神代類
-                                requestTunnels.Add(tun);
+                                continue;
                             }
+
+                            try
+                            {
+                                var table = Tomlyn.Toml.ToModel(nodeConf.Data!);
+
+                                Tomlyn.Model.TomlTable[] sourceArray;
+
+                                if (table.TryGetValue("proxies", out var val) && val is Tomlyn.Model.TomlTableArray proxies)
+                                {
+                                    sourceArray = new Tomlyn.Model.TomlTable[proxies.Count];
+
+                                    proxies.CopyTo(sourceArray, 0);
+                                }
+                                else
+                                {
+                                    continue;
+                                }
+
+                                if (sourceArray.Length is 0) continue;
+
+                                IEnumerable<string> namePool = (IEnumerable<string>)requestTunnels.Select(x => x.Name).Where(x => !string.IsNullOrEmpty(x));
+
+                                table.Remove("proxies");
+
+                                foreach (var tun in sourceArray)
+                                {
+                                    if (tun.TryGetValue("name",out var name) && name is not null or "" && namePool.Contains(name))
+                                    {
+                                        table.Add("proxies", new Tomlyn.Model.TomlTable[1] {tun});
+
+                                        tomlConfigMapping?.Add(name.ToString()!, Tomlyn.Toml.FromModel(table));
+                                    }
+                                    table.Remove("proxies");
+                                }
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+
+                            
                         }
-
-                        await System.Text.Json.JsonSerializer.SerializeAsync(mem, requestTunnels, cancellationToken: cancellationToken);
-
-                        mem.Seek(0, SeekOrigin.Begin);
-
-                        var bfStr = await Google.Protobuf.ByteString.FromStreamAsync(mem, cancellationToken).ConfigureAwait(false);
-
-                        await Task.Delay(500, cancellationToken);
-
-                        rpcResponse = await rpcManager.SyncWithLaunch(new Service.Proto.Request.SyncWithLaunchRequest
-                        {
-                            Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
-                            {
-                                AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
-                                UseForceTls = App.FrpcFeature.UseForceTls,
-                                UseDebug = App.FrpcFeature.UseDebug,
-                            },
-                            UserToken = UserInfo.UserToken,
-                            RequireUserTunnels = bfStr
-                        }, cancellationToken);
-
- 
                     }
-                    else
+
+                    await System.Text.Json.JsonSerializer.SerializeAsync(mem, requestTunnels, cancellationToken: cancellationToken);
+
+                    mem.Seek(0, SeekOrigin.Begin);
+
+                    var bfStr = await Google.Protobuf.ByteString.FromStreamAsync(mem, cancellationToken).ConfigureAwait(false);
+
+                    await Task.Delay(500, cancellationToken);
+
+                    rpcResponse = await rpcManager.SyncWithLaunch(new Service.Proto.Request.SyncWithLaunchRequest
                     {
-                        rpcResponse = await rpcManager.SyncWithLaunch(new Service.Proto.Request.SyncWithLaunchRequest
+                        Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
                         {
-                            Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
-                            {
-                                AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
-                                UseForceTls = App.FrpcFeature.UseForceTls,
-                                UseDebug = App.FrpcFeature.UseDebug,
-                            },
-                            UserToken = UserInfo.UserToken,
-                            RequireUserTunnelsWithTomlConfig = new Service.Proto.Request.SyncWithLaunchRequest.Types.UserTunnelsWithTomlConfigMode
-                            {
-                                
-                            }
-                        }, cancellationToken);
-                    }
+                            AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
+                            UseForceTls = App.FrpcFeature.UseForceTls,
+                            UseDebug = App.FrpcFeature.UseDebug,
+                        },
+                        UserToken = UserInfo.UserToken,
+                        RequireUserTunnels = bfStr,
+                        TomlConfigMap =
+                        {
+                            tomlConfigMapping
+                        }
+                    }, cancellationToken);
+
+
+
 
                     if (rpcResponse is { Flag: false })
                     {
@@ -844,6 +902,62 @@ namespace OpenFrp.Launcher.ViewModels
                                 ;break;
                         }
                         
+                    };break;
+                case Service.Proto.Response.NotificationStreamResponse.Types.NotificationStreamResponseState.LaunchFailed when !App.Settings.DoNotNoticeErrorMsg:
+                    {
+                        if (!response.Data.TryUnpack<Service.Proto.Response.NotificationStreamResponse.Types.LaunchFailedMsg>(out var msg)) return;
+
+                        switch (App.Settings.NotificationMode)
+                        {
+                            case NotificationMode.ToastNotification:
+                                {
+                                    if (OSVersionHelper.IsWindows10OrGreater)
+                                    {
+                                        try
+                                        {
+                                            new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                          .AddText($"隧道 {msg.TunnelName} 启动失败", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                          .AddText(msg.Content)
+                                                          .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                          .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
+                                                          .Show(toast =>
+                                                          {
+                                                              toast.Tag = msg.TunnelName;
+                                                              if (App.Notification_UseExpiredReboot)
+                                                              {
+                                                                  toast.ExpiresOnReboot = true;
+                                                              }
+                                                              toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                                          });
+                                            return;
+                                        }
+                                        catch
+                                        {
+                                            goto case NotificationMode.TaskbarNotify;
+                                        }
+                                    }
+                                };break;
+                            case NotificationMode.TaskbarNotify:
+                                {
+                                    if (App.TaskBarIcon is null)
+                                    {
+                                        return;
+                                    }
+                                    try
+                                    {
+                                        App.TaskBarIcon.ShowNotification(
+                                            title: $"隧道 {msg.TunnelName} 启动失败",
+                                            message: msg.Content,
+                                            icon: H.NotifyIcon.Core.NotificationIcon.Error);
+                                    }
+                                    catch
+                                    {
+
+                                    }
+                                }
+                                ;break;
+                            
+                        }
                     };break;
                 case Service.Proto.Response.NotificationStreamResponse.Types.NotificationStreamResponseState.Messaging:
                     {

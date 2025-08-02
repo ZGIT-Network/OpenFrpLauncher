@@ -64,12 +64,17 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         event_FastLoginCommand.Cancel();
                     }
-                    if (conve_TryDetectFrpcCommand.IsRunning && state is LoginState)
+                    if (window.FindName("defaultUpdateCtrl") is Border { IsVisible: true })
                     {
-                        conve_TryDetectFrpcCommand.Cancel();
+                        if (conve_TryDetectFrpcCommand.IsRunning && state is LoginState)
+                        {
+                            conve_TryDetectFrpcCommand.Cancel();
 
 
-                        App.StartupArguments.Remove("--updateFrpClient");
+                            App.StartupArguments.Remove("--updateFrpClient");
+
+                        }
+                        window.Title = "OpenFRP 启动器 - 登录";
                     }
 
                     VisualStateManager.GoToElementState(window, state, false);
@@ -773,6 +778,10 @@ namespace OpenFrp.Launcher.ViewModels
 
         private async Task AskForUrlSchemeToolsAsync(CancellationToken cancellationToken = default)
         {
+            if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater)
+            {
+                return;
+            }
             if (string.IsNullOrEmpty(App.Settings.AutoLoginId) && !App.Settings.DoNotAskMeForUrlSchemeTools)
             {
                 if (Microsoft.Win32.Registry.ClassesRoot.GetSubKeyNames().Contains("openfrp"))
@@ -788,7 +797,7 @@ namespace OpenFrp.Launcher.ViewModels
                     var cpc = new ProcessStartInfo
                     {
                         FileName = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
-                        Arguments = "--inst -type reg True",
+                        Arguments = "--inst -type=reg True",
                         ErrorDialog = false,
                         UseShellExecute = true,
                         WindowStyle = ProcessWindowStyle.Hidden,
@@ -798,7 +807,14 @@ namespace OpenFrp.Launcher.ViewModels
                         cpc.Verb = "runas";
                     }
 
-                    await Task.Run(() => Process.Start(cpc));
+                    try
+                    {
+                        await Task.Run(() => Process.Start(cpc));
+                    }
+                    catch
+                    {
+
+                    }
 
                     await Task.Delay(500);
                 }

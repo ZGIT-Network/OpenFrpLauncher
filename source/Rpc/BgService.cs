@@ -93,6 +93,7 @@ namespace OpenFrp.Launcher.Rpc
                     UseShellExecute = true,
                     ErrorDialogParentHandle = IntPtr.Zero,
                     Verb = "runas",
+                    WindowStyle = ProcessWindowStyle.Hidden
                 });
             });
 

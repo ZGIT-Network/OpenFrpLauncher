@@ -349,6 +349,7 @@ namespace OpenFrp.Launcher
             if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater)
             {
                 App.Settings.UseConfigLaunch = true;
+                App.Settings.DoNotAskMeForUrlSchemeTools = true;
             }
 
             ConfigureNotification();
@@ -374,9 +375,11 @@ namespace OpenFrp.Launcher
 
         public static string FrpcVersionString { get; set; } = "Unknown";
 
-        public static string LauncherVersionString => "5.8.5 Preview";
+        public static string LauncherVersionString => "5.8.67 Preview";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
+
+        public static int LauncherVersionNumber => 5867;
 
         internal static bool IsAdministrator()
         {

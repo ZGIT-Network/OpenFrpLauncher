@@ -96,16 +96,17 @@
                                         Text="{Binding NodeName, Mode=OneWay}"
                                         TextOptions.TextFormattingMode="Display" />
                                 </TextBlock>
-                                <!--<TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
-                                    <Run
-                                        FontFamily="{StaticResource SoraMedium}"
-                                        FontSize="18"
-                                        Text="{Binding Tunnel.NodeId, RelativeSource={RelativeSource Mode=TemplatedParent}, StringFormat='#{0}', Mode=OneWay}" />
-                                    <Run
-                                        FontSize="16"
-                                        Text="{Binding NodeName, Mode=OneWay}"
-                                        TextOptions.TextFormattingMode="Display" />
-                                </TextBlock>-->
+                                <TextBlock
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                    Text="隧道已禁用"
+                                    Visibility="{Binding IsEnable, Converter={StaticResource AweBooleanToVisibilityConverter}, ConverterParameter='Reflag', Mode=OneWay}" />
+                                <TextBlock
+                                    x:Name="usedByOtherClient"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                    Text="隧道已在其他地方启动"
+                                    Visibility="Collapsed" />
                             </xa:SimpleStackPanel>
                             <!--  Tag  -->
                             <xa:SimpleStackPanel

@@ -64,9 +64,30 @@
                     Padding="36,4,36,32"
                     HorizontalAlignment="Center">
                     <Grid TextOptions.TextHintingMode="Auto">
+                        <xa:SimpleStackPanel Spacing="8">
+                            <!--  Alert parts  -->
+                            <xa:SimpleStackPanel>
+                                <ItemsControl d:ItemsSource="{d:SampleData ItemCount=10}" ItemsSource="{Binding HomeAlerts, Mode=OneWay}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <xa:SimpleStackPanel Spacing="8" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ink:InfoBar
+                                                Title="{Binding Title, Mode=OneWay}"
+                                                ForceVerticalWhenMessageWraped="False"
+                                                IsClosable="True"
+                                                IsOpen="True"
+                                                Message="{Binding Message, Mode=OneWay}"
+                                                Severity="{Binding Type, Mode=OneWay}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
 
-                        <xa:SimpleStackPanel>
-                            <Grid x:Name="cRoot" Margin="0,0,0,8">
+                                </ItemsControl>
+                            </xa:SimpleStackPanel>
+                            <Grid x:Name="cRoot">
                                 <behavior:Interaction.Triggers>
                                     <behavior:DataTrigger
                                         Binding="{Binding ActualWidth, ElementName=cRoot, Mode=OneWay}"
@@ -117,6 +138,7 @@
                                     <Border.Resources>
                                         <ink:BindingProxy x:Key="IsNotRunning" Value="{Binding event_RefreshAdSenseCommand.IsRunning, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}" />
                                     </Border.Resources>
+
                                     <Grid>
                                         <ink:ProgressRing
                                             Width="50"
@@ -155,7 +177,8 @@
                                                         <Rectangle Fill="Black" IsHitTestVisible="False">
                                                             <Rectangle.OpacityMask>
                                                                 <LinearGradientBrush StartPoint=".5,.4" EndPoint=".5,1">
-                                                                    <GradientStop Color="#6A000000" />
+                                                                    <GradientStop Color="#5A000000" />
+                                                                    <GradientStop Offset=".5" Color="#4A000000" />
                                                                     <GradientStop Offset="1" Color="Transparent" />
                                                                 </LinearGradientBrush>
                                                             </Rectangle.OpacityMask>
@@ -361,7 +384,8 @@
                                                         Padding="0"
                                                         AutomationProperties.Name="打开官网"
                                                         Command="{Binding event_OpenOpenFrpNetCommand}"
-                                                        Cursor="Hand">
+                                                        Cursor="Hand"
+                                                        RaiseHyperlinkClicks="False">
                                                         <xa:SimpleStackPanel Orientation="Horizontal" Spacing="4">
                                                             <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.OpenInNewWindow}" />
                                                             <TextBlock FontSize="16" Text="打开官网" />
@@ -371,7 +395,8 @@
                                                         Padding="0"
                                                         AutomationProperties.Name="赞助者列表"
                                                         Command="{Binding event_OpenPaymentAppCommand}"
-                                                        Cursor="Hand">
+                                                        Cursor="Hand"
+                                                        RaiseHyperlinkClicks="False">
                                                         <xa:SimpleStackPanel Orientation="Horizontal" Spacing="4">
                                                             <ink:FontIcon FontSize="17" Icon="{x:Static ink:SegoeFluentIcons.GiftboxOpen}" />
                                                             <TextBlock FontSize="16" Text="赞助者列表" />
