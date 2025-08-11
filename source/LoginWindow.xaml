@@ -17,10 +17,9 @@
     xmlns:wv="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     Width="1090"
     Height="600"
-    ink:ThemeManager.RequestedTheme="Default"
+    ink:ThemeManager.IsThemeAware="True"
     ink:TitleBar.ExtendViewIntoTitleBar="True"
     ink:TitleBar.Height="34"
-    ink:WindowHelper.SystemBackdropType="Tabbed"
     ink:WindowHelper.UseModernWindowStyle="True"
     IsHitTestVisible="False"
     RenderOptions.ClearTypeHint="Enabled"
@@ -28,9 +27,9 @@
     ShowActivated="True"
     WindowState="Minimized"
     mc:Ignorable="d">
-    <local:AppWindow.TaskbarItemInfo>
+    <!--<local:AppWindow.TaskbarItemInfo>
         <TaskbarItemInfo Description="OpenFrp 启动器 - 登录" />
-    </local:AppWindow.TaskbarItemInfo>
+    </local:AppWindow.TaskbarItemInfo>-->
     <local:AppWindow.Resources>
         <CubicEase
             x:Key="_DefaultCubicEase"
@@ -94,7 +93,7 @@
                     x:Name="bgImagePlacement"
                     RenderOptions.BitmapScalingMode="HighQuality"
                     Source="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no035,card_after_training.png"
-                    Visibility="Visible" />
+                    Visibility="Hidden" />
             </Viewbox>
 
         </Grid>
@@ -114,7 +113,7 @@
                 Amount="10"
                 Focusable="False"
                 NoiseOpacity="0.01"
-                ScaleCanvasVal="1.2"
+                ScaleCanvas="1.2"
                 TintOpacity=".45" />
 
             <Rectangle
@@ -191,34 +190,36 @@
                                 <ScaleTransform ScaleX="1" ScaleY="1" />
                             </Border.RenderTransform>
                             <Grid>
-                                <ink:ThemeShadowChrome
-                                    Margin="4"
-                                    CornerRadius="6"
-                                    Depth="80" />
-                                <Rectangle
-                                    Margin="1"
-                                    ink:ClipHelper.CornerRadius="5.5"
-                                    Fill="#1f1f1f">
-                                    <FrameworkElement.Style>
-                                        <Style TargetType="Rectangle">
-                                            <Setter Property="Visibility" Value="Hidden" />
-                                            <Style.Triggers>
-                                                <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </FrameworkElement.Style>
-                                </Rectangle>
-                                <ink:AcrylicPanel
-                                    x:Name="acrylicPanel4"
-                                    Margin="1"
-                                    Amount="10"
-                                    CornerRadius="4"
-                                    Focusable="False"
-                                    NoiseOpacity="0.01"
-                                    ScaleCanvasVal="1.2"
-                                    TintOpacity=".45" />
+                                <Grid Visibility="{Binding Visibility, Source={x:Reference Name=bgImagePlacement}, Mode=OneWay}">
+                                    <ink:ThemeShadowChrome
+                                        Margin="4"
+                                        CornerRadius="6"
+                                        Depth="80" />
+                                    <Rectangle
+                                        Margin="1"
+                                        ink:ClipHelper.CornerRadius="5.5"
+                                        Fill="#1f1f1f">
+                                        <FrameworkElement.Style>
+                                            <Style TargetType="Rectangle">
+                                                <Setter Property="Visibility" Value="Hidden" />
+                                                <Style.Triggers>
+                                                    <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </FrameworkElement.Style>
+                                    </Rectangle>
+                                    <ink:AcrylicPanel
+                                        x:Name="acrylicPanel4"
+                                        Margin="1"
+                                        Amount="10"
+                                        CornerRadius="4"
+                                        Focusable="False"
+                                        NoiseOpacity="0.01"
+                                        ScaleCanvas="1.2"
+                                        TintOpacity=".45" />
+                                </Grid>
                                 <Border
                                     Background="{DynamicResource InfoBarInformationalSeverityBackgroundBrush}"
                                     BorderBrush="{DynamicResource InfoBarBorderBrush}"
@@ -313,13 +314,14 @@
                                 <ink:ThemeShadowChrome
                                     Margin="4"
                                     CornerRadius="6"
-                                    Depth="80" />
+                                    Depth="80"
+                                    Visibility="{Binding Visibility, Source={x:Reference Name=bgImagePlacement}, Mode=OneWay}" />
                                 <ink:InfoBar
                                     Title="FRPC 功能异常"
                                     FontFamily="{StaticResource SoraMediumMixYahei}"
                                     IsClosable="False"
                                     IsOpen="True"
-                                    Message="可能是杀软对启动操作进行了拦截，以及对 FRPC 可执行文件进行了隔离、删除。若不确认原因的 (比如不知道)，请点击下方&quot;查看&quot;,查看解决方案。"
+                                    Message="可能由于安全软件拦截启动操作，或对 FRPC 可执行文件进行了隔离或删除。如无法确定具体原因，请点击下方‘查看’，获取网页帮助与解决方案。"
                                     Severity="Error">
                                     <ink:InfoBar.ActionButton>
                                         <Button Command="{Binding event_GotoDesktopLauncherHelpPageCommand}" Content="查看帮助" />
@@ -390,7 +392,7 @@
                                 CornerRadius="4"
                                 Focusable="False"
                                 NoiseOpacity="0.01"
-                                ScaleCanvasVal="1.2"
+                                ScaleCanvas="1.2"
                                 TintOpacity=".45" />
                         </Grid>
                         <ink:InfoBar
@@ -472,8 +474,7 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid Background="Transparent">
-                                        <!--<TabControl Margin="0,16,0,0" Style="{StaticResource CenterTabControlPivotStyle}">
-                                    <TabItem Header="快捷登录">-->
+
                                         <ink:ScrollViewerEx Margin="0" PanningMode="VerticalOnly">
                                             <wp:SimpleStackPanel Margin="24,28,24,24" Spacing="8">
                                                 <StackPanel Orientation="Horizontal">
@@ -580,8 +581,9 @@
                                                             Grid.Column="0"
                                                             Width="38"
                                                             Height="38"
-                                                            FontSize="24"
-                                                            Icon="{x:Static ink:SegoeFluentIcons.PassiveAuthentication}" />
+                                                            FontFamily="{StaticResource FluentSystemIcons}"
+                                                            FontSize="28"
+                                                            Glyph="&#xeeaf;" />
                                                         <TextBlock
                                                             Grid.Column="1"
                                                             Margin="8,0,0,0"
@@ -609,8 +611,9 @@
                                                             Grid.Column="0"
                                                             Width="38"
                                                             Height="38"
-                                                            FontSize="24"
-                                                            Icon="{x:Static ink:SegoeFluentIcons.QRCode}" />
+                                                            FontFamily="{StaticResource FluentSystemIcons}"
+                                                            FontSize="28"
+                                                            Glyph="&#xF04C;" />
                                                         <StackPanel
                                                             Grid.Column="1"
                                                             Margin="8,0,0,0"
@@ -694,24 +697,7 @@
                                                         Visibility="Collapsed" />
                                                 </StackPanel>
                                             </ink:HyperlinkButton>
-                                            <!--<ctrl:HyperlinkTp1
-                                        AutomationProperties.Name="跳过"
-                                        Command="{Binding event_GotoMainWindowCommand}"
-                                        Content="跳过"
-                                        FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                    <Rectangle
-                                        Width="1"
-                                        Margin="0,7"
-                                        Fill="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
-                                    <ctrl:HyperlinkTp1
-                                        AutomationProperties.Name="设置"
-                                        Command="{Binding event_DisplaySettingControlCommand}"
-                                        Content="设置"
-                                        FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                        PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />-->
+
                                         </StackPanel>
                                     </Grid>
                                 </Grid>
@@ -774,7 +760,8 @@
                                             Content="取消"
                                             FocusBursh="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                                             Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                            PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                                            PressedBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            RaiseHyperlinkClicks="False" />
                                     </StackPanel>
                                 </wp:SimpleStackPanel>
                             </Border>

@@ -38,7 +38,7 @@ namespace OpenFrp.Launcher.Rpc
 
             byte[] buffer = new byte[24];
 #if NET
-                Random.Shared.NextBytes(buffer);
+            Random.Shared.NextBytes(buffer);
 #else
             Random rand = new Random();
             rand.NextBytes(buffer);
@@ -86,8 +86,8 @@ namespace OpenFrp.Launcher.Rpc
             {
                 return Process.Start(new ProcessStartInfo()
                 {
-                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
-                    Arguments = $"--inst -type=frpc -pipe=\"{pipeName}\" -useProxy={App.Settings.UseProxy}",
+                    FileName = OpenFrp.Service.Helpers.FileHelper.GetServiceExecutableFile(),
+                    Arguments = $"--inst frpc-update -pipe=\"{pipeName}\" -useProxy={App.Settings.UseProxy}",
                     CreateNoWindow = true,
                     ErrorDialog = false,
                     UseShellExecute = true,

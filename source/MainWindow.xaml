@@ -16,7 +16,6 @@
     Height="585"
     MinWidth="550"
     MinHeight="540"
-    ink:ThemeManager.RequestedTheme="Default"
     ink:TitleBar.ExtendViewIntoTitleBar="True"
     ink:TitleBar.Height="34"
     ink:WindowHelper.UseModernWindowStyle="True"
@@ -64,7 +63,15 @@
                         </MultiBinding>
                     </FrameworkElement.IsEnabled>-->
                     <ink:NavigationViewItem.Icon>
-                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Communications}" />
+                        <ink:FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="16"
+                            Glyph="&#xE777;"
+                            RenderTransformOrigin=".5,.5">
+                            <FrameworkElement.RenderTransform>
+                                <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                            </FrameworkElement.RenderTransform>
+                        </ink:FontIcon>
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
                 <ink:NavigationViewItem
@@ -80,12 +87,27 @@
                         </behavior:DataTrigger>
                     </behavior:Interaction.Triggers>
                     <ink:NavigationViewItem.Icon>
-                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.AddSurfaceHub}" />
+                        <ink:FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            Glyph="&#xE99B;"
+                            RenderTransformOrigin=".5,.5">
+                            <FrameworkElement.RenderTransform>
+                                <ScaleTransform ScaleX="1.35" ScaleY="1.35" />
+                            </FrameworkElement.RenderTransform>
+                        </ink:FontIcon>
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
                 <ink:NavigationViewItem Content="日志" Tag="{x:Type views:Logs}">
                     <ink:NavigationViewItem.Icon>
-                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.LineDisplay}" />
+                        <ink:FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="16"
+                            Glyph="&#xE50E;"
+                            RenderTransformOrigin=".5,.5">
+                            <FrameworkElement.RenderTransform>
+                                <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                            </FrameworkElement.RenderTransform>
+                        </ink:FontIcon>
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
             </ink:NavigationView.MenuItems>

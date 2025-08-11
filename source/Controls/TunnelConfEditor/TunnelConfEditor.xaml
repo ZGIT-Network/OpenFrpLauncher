@@ -23,7 +23,7 @@
                             <ink:InfoBar
                                 Title="对广大 Minecraft 玩家的温馨提示"
                                 IsClosable="False"
-                                IsOpen="{Binding Value,Converter={StaticResource EqualConverter},ConverterParameter='25565',Source={x:Reference Name=localNumberBox},Mode=OneWay}"
+                                IsOpen="{Binding Value, Converter={StaticResource EqualConverter}, ConverterParameter='25565', Source={x:Reference Name=localNumberBox}, Mode=OneWay}"
                                 Message="近期有未知组织正在不间断以恶意目的扫描 OpenFrp 穿透节点，为了保障您的资产安全，穿透Minecraft服务时，启用正版验证、安装登录插件或启用白名单是非常必要的行为。穿透服务的安全性由您自行负责。感谢您的支持与理解。"
                                 Severity="Warning" />
                             <Grid>

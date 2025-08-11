@@ -45,7 +45,7 @@ namespace OpenFrp.Launcher.Views.LoginWindow
             {
                 ResetAuthorizationCodeWaiter();
             }
-            return await AuthorizationCodeWaiter.Task.WaitAsync(cancellationToken);
+            return await AuthorizationCodeWaiter.Task.WhenAnyTime(cancellationToken);
         }
 
         public void ResetAuthorizationCodeWaiter()

@@ -166,6 +166,7 @@
                                     Padding="0"
                                     AutomationProperties.HelpText=""
                                     AutomationProperties.Name="{Binding Name, StringFormat='复制隧道{0}的链接地址', Mode=OneWay}"
+                                    RaiseHyperlinkClicks="False"
                                     Style="{StaticResource ButtonStyledHyperlinkButton}"
                                     TabIndex="1"
                                     ToolTip="复制链接">

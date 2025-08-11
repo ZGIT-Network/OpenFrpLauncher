@@ -128,7 +128,7 @@ namespace OpenFrp.Launcher.Rpc
 
         public async Task<string?> WaitForAuthCode(CancellationToken cancellationToken = default)
         {
-            return await authCodeCompletion.Task.WaitAsync(cancellationToken);
+            return await authCodeCompletion.Task.WhenAnyTime(cancellationToken);
         }
 
         

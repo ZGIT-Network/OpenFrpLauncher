@@ -39,13 +39,15 @@ using static Google.Rpc.Context.AttributeContext.Types;
 using OpenFrp.Launcher.Rpc;
 using Google.Api;
 using static Google.Protobuf.WellKnownTypes.Field.Types;
+using Microsoft.Extensions.DependencyInjection;
 
 
 
 namespace OpenFrp.Launcher.ViewModels
 {
-    internal partial class LoginWindowViewModel : ObservableObject,IHrViewModel
+    internal partial class LoginWindowViewModel : ObservableObject, IHrViewModel
     {
+        // 1. 构造函数
         public LoginWindowViewModel()
         {
             CallbackAction = (state) =>
@@ -95,9 +97,7 @@ namespace OpenFrp.Launcher.ViewModels
                         };break;
                     case "processLfec":
                         {
-                            App.DaemonManager.LaunchRpcProcess();
-
-                            if (event_FastLoginCommand.IsRunning || event_WebLogin2Command.IsRunning || event_WebLoginCommand.IsRunning)
+                            if (event_GotoMainWindowCommand.IsRunning ||event_FastLoginCommand.IsRunning || event_WebLogin2Command.IsRunning || event_WebLoginCommand.IsRunning)
                             {
                                 if (!CanCancelLogin)
                                 {
@@ -114,35 +114,42 @@ namespace OpenFrp.Launcher.ViewModels
                     this.UpdateState(result);
                 }
             });
-                Helpers.UsrTokenService.RefreshPlatformUsers();
+
+            Helpers.UsrTokenService.RefreshPlatformUsers();
             OnPropertyChanged(nameof(PlatformUsers));
+
+            Logger = App.ServiceProvider.GetRequiredService<ILogger<LoginWindowViewModel>>();
+
+            RpcManager = App.ServiceProvider.GetRequiredService<RpcManager>();
+            DaemonManager = App.ServiceProvider.GetRequiredService<DaemonManager>();
+
         }
 
+        // 2. 常量、字段、属性（依次为 internal const, private, public, [ObservableProperty]）
         internal const string LoadingState = "DisplayLoadingCtrl";
         internal const string QrCodeFVState = "DisplayQrCodeFvCtrl";
         internal const string WebOAuthState = "DisplayWebOAuthCtrl";
         internal const string SettingState = "DisplaySettingCtrl";
         internal const string UpdateCtrl = "DisplayUpdateCtrl";
         internal const string LoginState = "DisplayLoginCtrl";
-
         internal const string CaptchaWebViewDisplayState = "DisplayCaptchaWebView";
         internal const string CaptchaWebViewHiddenState = "HiddenCaptchaWebView";
-
         internal const string DisplayDownloadingInfobar = "DisplayDownloadingInfobar";
         internal const string DisplayNewUpdateInfobar = "DisplayNewUpdateInfobar";
         internal const string DisplayErrorInfobar = "DisplayErrorInfobar";
-
         internal const string HiddenFrpcCtrl = "HiddenFrpcCtrl";
         internal readonly Action<string> CallbackAction;
 
         private LoginWindow? window;
 
-        private static ILogger<LoginWindowViewModel> Logger { get; } = App.loggerFactory.CreateLogger<LoginWindowViewModel>();
+        private DaemonManager DaemonManager { get; set; }
+        private RpcManager RpcManager { get; set; }
+        private ILogger<LoginWindowViewModel> Logger { get; set; } 
 
-        [ObservableProperty,NotifyCanExecuteChangedFor(nameof(event_CancelLoginCommand))]
+        [ObservableProperty, NotifyCanExecuteChangedFor(nameof(event_CancelLoginCommand))]
         private bool canCancelLogin = true;
 
-        [ObservableProperty,NotifyPropertyChangedFor(nameof(IsExceptionInfobarOpen),nameof(HttpResponseMessage))]
+        [ObservableProperty, NotifyPropertyChangedFor(nameof(IsExceptionInfobarOpen), nameof(HttpResponseMessage))]
         private Model.ExecuteResult? executeResult;
 
         [ObservableProperty]
@@ -151,33 +158,18 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty]
         private string? httpResponseMessage;
 
-        public ObservableCollection<Model.PlatformUser> PlatformUsers
-        {
-            get => Helpers.UsrTokenService.PlatformUserCache;
-        }
-
-        public bool HasOwnerWindow
-        {
-            get => window is { Owner: not null };
-        }
-
+        public ObservableCollection<Model.PlatformUser> PlatformUsers => Helpers.UsrTokenService.PlatformUserCache;
+        public bool HasOwnerWindow => window is { Owner: not null };
         public bool IsExceptionInfobarOpen
         {
             get => ExecuteResult is not null;
-            set
-            {
-                if (!value) { ExecuteResult = null; }
-            }
+            set { if (!value) { ExecuteResult = null; } }
         }
-
-        public bool ShowTitlebarBackground
-        {
-            get => App.Settings.ShowTitlebarBackground;
-        }
+        public bool ShowTitlebarBackground => App.Settings.ShowTitlebarBackground;
         public void OnShowTitlebarBackgroundChanged() => OnPropertyChanged(nameof(ShowTitlebarBackground));
-
         private bool _loaded = false;
 
+        // 3. 生命周期/初始化相关
         [RelayCommand]
         private async Task @event_MainWindowLoaded(LoginWindow wind)
         {
@@ -300,19 +292,29 @@ namespace OpenFrp.Launcher.ViewModels
             conve_TryDetectFrpcCommand.Execute(default);
         }
 
+        // 4. 事件/命令（RelayCommand 标记的方法，按界面交互流程排序）
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_RelayPrepare(CancellationToken cancellationToken)
         {
-            var userInfo = await OpenFrp.Service.Net.OpenFrpApi.GetUserInfo(cancellationToken);
+            if (OpenFrpApi.GetAuthorization() is not null)
+            {
+                var userInfo = await OpenFrp.Service.Net.OpenFrpApi.GetUserInfo(cancellationToken);
 
-            if (!this.UpdateState(userInfo, () => userInfo.Data is not null)) return;
+                if (!this.UpdateState(userInfo, () => userInfo.Data is not null)) return;
 
-            await PrepareForApp(userInfo.Data!, cancellationToken);
+                await PrepareForApp(userInfo.Data!, cancellationToken);
+            }
+            else
+            {
+                await event_GotoMainWindowCommand.ExecuteAsync (cancellationToken);
+            }
+
+            
         }
 
         private void Wind_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
-            App.DaemonManager.ResetDaemonWaitHandle();
+            
 
             if (window is { Owner: MainWindow mw })
             {
@@ -358,110 +360,6 @@ namespace OpenFrp.Launcher.ViewModels
             VisualStateManager.GoToElementState(window, flag ? LoadingState : LoginState, false);
         }
 
-        //[RelayCommand]
-        //private async Task @event_DisplayCaptchaWebViewControl(string booleanStr)
-        //{
-        //    if (window is null || !bool.TryParse(booleanStr, out var flag)) return;
-
-        //    if (window.FindName("captchaWebViewContainerBr") is not Border br) return;
-
-        //    if (flag && br.Child is null)
-        //    {
-        //        string pat = Service.Helpers.FileHelper.GetTemplateFolder($"ofl.edgeWebView2.{DateTimeOffset.Now.ToUnixTimeMilliseconds()}");
-        //        try
-        //        {
-        //            var ev = await CoreWebView2Environment.CreateAsync(userDataFolder: pat);
-        //            Microsoft.Web.WebView2.Wpf.WebView2 wv = new Microsoft.Web.WebView2.Wpf.WebView2
-        //            {
-        //                DefaultBackgroundColor = System.Drawing.Color.Transparent
-        //            };
-        //            br.Child = wv;
-
-        //            await wv.EnsureCoreWebView2Async(ev);
-
-        //            wv.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
-        //            wv.CoreWebView2.Settings.AreDevToolsEnabled = System.Diagnostics.Debugger.IsAttached;
-
-        //            wv.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
-        //            wv.CoreWebView2.Settings.AreHostObjectsAllowed = false;
-        //            wv.CoreWebView2.Settings.IsPinchZoomEnabled = false;
-        //            wv.CoreWebView2.Settings.IsPasswordAutosaveEnabled = false;
-        //            wv.CoreWebView2.Settings.IsSwipeNavigationEnabled = false;
-        //            wv.CoreWebView2.Settings.IsZoomControlEnabled = false;
-
-        //            wv.CoreWebView2.Settings.IsStatusBarEnabled = false;
-
-        //            wv.CoreWebView2.Settings.IsBuiltInErrorPageEnabled = false;
-        //            wv.CoreWebView2.Settings.IsGeneralAutofillEnabled = false;
-        //            wv.CoreWebView2.Settings.AreDefaultContextMenusEnabled = System.Diagnostics.Debugger.IsAttached;
-
-        //            wv.CoreWebView2.Navigate("http://127.0.0.1:5500/index.html");
-        //            wv.CoreWebView2.DOMContentLoaded += delegate
-        //            {
-        //                SendUserAppearence(wv.CoreWebView2);
-        //            };
-
-        //        }
-        //        catch
-        //        {
-
-        //        }
-        //    }
-        //    else if (br.Child is Microsoft.Web.WebView2.Wpf.WebView2 wv)
-        //    {
-        //        if (flag)
-        //        {
-        //            SendUserAppearence(wv.CoreWebView2);
-        //            wv.CoreWebView2.PostWebMessageAsString("refreshCaptcha");
-        //        }
-        //        else
-        //        {
-        //            wv.CoreWebView2.PostWebMessageAsString(CaptchaWebViewHiddenState);
-        //        }
-        //    }
-            
-        //    VisualStateManager.GoToElementState(window, flag ? CaptchaWebViewDisplayState : CaptchaWebViewHiddenState, false);
-        //}
-        //private void SendUserAppearence(Microsoft.Web.WebView2.Core.CoreWebView2 wv)
-        //{
-        //    if (window is null) return;
-        //    wv.PostWebMessageAsString(CaptchaWebViewDisplayState);
-
-        //    var accentColor = window?.GetValue(ThemeManager.ActualAccentColorProperty);
-
-        //    if (accentColor != null && accentColor is System.Windows.Media.Color mc)
-        //    {
-        //        wv.PostWebMessageAsString($"accent^rgb({mc.R},{mc.G},{mc.B})");
-        //    }
-        //    wv.PostWebMessageAsString(App.Settings.ApplicationTheme.ToString());
-        //}
-
-        //private void CoreWebView2_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
-        //{
-        //    if (sender is Microsoft.Web.WebView2.Core.CoreWebView2 wv)
-        //    {
-        //        string msg = e.TryGetWebMessageAsString();
-
-        //        switch (msg)
-        //        {
-        //            case "reloadPage":
-        //                {
-        //                    wv.Reload();
-        //                    SendUserAppearence(wv);
-        //                }
-        //                ;break;
-        //            case "closeDialog":
-        //                {
-        //                    _ = event_DisplayCaptchaWebViewControlCommand.ExecuteAsync("False");
-        //                };break;
-        //        }
-        //        if (msg.StartsWith("resp^"))
-        //        {
-
-        //        }
-        //    }
-        //}
-
         /// <summary>
         /// OAuth 网页授权登录
         /// </summary>
@@ -495,8 +393,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     return;
                 }
-                //if (webOAuth is not { DataContext: ViewModels.OAuthLoginViewModel { } otvm }) return;
-
+    
                 string? code = await webOAuth.WaitForFinish(cancellationToken);
                 if (string.IsNullOrEmpty(code)) return;
 
@@ -632,6 +529,8 @@ namespace OpenFrp.Launcher.ViewModels
             }
             finally
             {
+                VisualStateManager.GoToElementState(window, LoginState, false);
+
                 if (window is not null)
                 {
                     window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
@@ -646,6 +545,7 @@ namespace OpenFrp.Launcher.ViewModels
             event_WebLoginCommand.Cancel();
             event_FastLoginCommand.Cancel();
             event_WebLogin2Command.Cancel();
+            
         }
 
         private void ToggleToUpdateCtrl()
@@ -673,13 +573,31 @@ namespace OpenFrp.Launcher.ViewModels
             if (window is null) return;
             
             this.ClearExecuteResult();
-          
+
+            if (window is not null)
+            {
+                window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+            }
 
             VisualStateManager.GoToElementState(window, LoadingState, false);
 
-            var flag = await RetryCheckFrpcFile(cancellationToken);
+            try
+            {
+                await NOCGotoMainWindow(cancellationToken);
+            }
+            finally
+            {
+                VisualStateManager.GoToElementState(window, LoginState, false);
+                if (window is not null)
+                {
+                    window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
+                }
+            }
+        }
 
-            if (!flag)
+        private async Task NOCGotoMainWindow(CancellationToken cancellationToken)
+        {
+            if (!await RetryCheckFrpcFile(cancellationToken))
             {
                 VisualStateManager.GoToElementState(window, LoginState, false);
                 return;
@@ -698,21 +616,35 @@ namespace OpenFrp.Launcher.ViewModels
                 return;
             }
 
-            App.DaemonManager.LaunchRpcProcess(out var manager);
+            if (await DaemonManager.LaunchDaemonAsync() is { HasException: true } flagV1)
+            {
+                CanCancelLogin = false;
+                this.ExecuteResult = flagV1;
+                return;
+            }
+            else CanCancelLogin = DaemonManager.DaemonService is not null;
 
-            await App.DaemonManager.WaitForProcessLaunch(cancellationToken);
+            if (await DaemonManager.WaitForConfigureAsync(cancellationToken) is { HasException: true } flagV2)
+            {
+                CanCancelLogin = true;
+                this.ExecuteResult = flagV2;
+                return;
+            }
+
+
+            CanCancelLogin = false;
+
+            if (cancellationToken.IsCancellationRequested) return;
 
             OpenFrp.Service.Proto.RpcResponse<SyncResponse>? r1_resp = default;
 
             for (int i = 0; i < 5; i++)
             {
-                r1_resp = await manager.Sync(cancellationToken);
-
-                if (r1_resp.Flag)
+                if (await RpcManager.Sync(cancellationToken) is { Flag: true})
                 {
                     break;
                 }
-                await Task.Delay(250,cancellationToken);
+                await Task.Delay(250, cancellationToken);
             }
 
             if (!this.UpdateState(r1_resp)) { CanCancelLogin = true; return; }
@@ -725,7 +657,7 @@ namespace OpenFrp.Launcher.ViewModels
             if (window is not null)
             {
                 window.Closing -= Wind_Closing;
-                
+
 
                 GC.Collect();
 
@@ -792,7 +724,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
 
                 };
-                if (await dialog.ShowAsync().WaitAsync(cancellationToken) is ContentDialogResult.Primary)
+                if (await dialog.ShowAsync().WhenAnyTime(cancellationToken) is ContentDialogResult.Primary)
                 {
                     var cpc = new ProcessStartInfo
                     {
@@ -902,6 +834,14 @@ namespace OpenFrp.Launcher.ViewModels
             }
             catch (System.ComponentModel.Win32Exception w)
             {
+                if (w.NativeErrorCode is 225 or 226)
+                {
+                    return new Model.ExecuteResult()
+                    {
+                        Exception = w,
+                        Message = w.Message
+                    };
+                }
                 return new Model.ExecuteResult()
                 {
                     Exception = w
@@ -947,9 +887,6 @@ namespace OpenFrp.Launcher.ViewModels
 
         private async Task PrepareForApp(Yue3.Model.OpenFrp.Response.Data.UserInfoData userInfo,CancellationToken cancellationToken = default)
         {
-
-
-
             var flag = await RetryCheckFrpcFile(cancellationToken);
 
             if (!flag)
@@ -959,23 +896,32 @@ namespace OpenFrp.Launcher.ViewModels
             }
 
             CanCancelLogin = false;
-
-
-
-            var rrfe = await TryGetFrpcVersionString();
             
-            if (rrfe.HasException)
+            if (await TryGetFrpcVersionString() is { HasException: true } rrfe)
             {
                 CanCancelLogin = true;
                 this.ExecuteResult = rrfe;
                 return;
             }
 
+            if (await DaemonManager.LaunchDaemonAsync() is { HasException: true} flagV1)
+            {
+                CanCancelLogin = false;
+                this.ExecuteResult = flagV1;
+                return;
+            }
+            else CanCancelLogin = DaemonManager.DaemonService is not null;
 
+            if (await DaemonManager.WaitForConfigureAsync(cancellationToken) is { HasException: true } flagV2)
+            {
+                CanCancelLogin = true;
+                this.ExecuteResult = flagV2;
+                return;
+            }
 
-            App.DaemonManager.LaunchRpcProcess(out var manager);
+            RpcManager.Configure();
 
-            await App.DaemonManager.WaitForProcessLaunch(cancellationToken);
+            CanCancelLogin = false;
 
             if (cancellationToken.IsCancellationRequested) return;
 
@@ -983,9 +929,8 @@ namespace OpenFrp.Launcher.ViewModels
 
             for (int i = 0; i < 5; i++)
             {
-                r1_resp = await manager.Sync(cancellationToken);
-
-                if (r1_resp.Flag)
+                r1_resp = await RpcManager.Sync(cancellationToken);
+                if (r1_resp is { Flag: true })
                 {
                     break;
                 }
@@ -1005,7 +950,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
             // UserId + RegTime + Email
 
-            var r2_resp = await manager.Login(new Service.Proto.Request.LoginRequest { UserInfomationJson = Google.Protobuf.ByteString.CopyFrom(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(userInfo)) }, cancellationToken);
+            var r2_resp = await RpcManager.Login(new Service.Proto.Request.LoginRequest { UserInfomationJson = Google.Protobuf.ByteString.CopyFrom(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(userInfo)) }, cancellationToken);
             if (!this.UpdateState(r2_resp)) { CanCancelLogin = true; return; }
 
             if (Service.Net.OpenFrpApi.GetAuthorization() is { Length: > 0} ap)
@@ -1058,10 +1003,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        /// <summary>
-        /// Note: 在主题改变的时候，同时改变图片的透明度以适应 Mica / Acrylic 主题背景
-        /// </summary>
-        /// <param name="theme"></param>
+        // 6. 工具/私有方法
         private void UpdateImageOpacity(ElementTheme theme)
         {
             if (window is null) return;
@@ -1115,9 +1057,9 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                     }
                 }
-                if (bgService.WaitHandle != null)
+                if (bgService?.WaitHandle != null)
                 {
-                    await Task.Run(() => bgService?.WaitHandle?.WaitOne()).WaitAsync(cancellationToken);
+                    await Task.Run(() => bgService?.WaitHandle?.WaitOne()).WhenAnyTime(cancellationToken);
 
                     // false && false == true
                     // true && false == false;
@@ -1243,6 +1185,17 @@ namespace OpenFrp.Launcher.ViewModels
                                             ; break;
                                         default:
                                             {
+                                                if (sv.Value.StartsWith("err:"))
+                                                {
+                                                    DownloadProcess.DownloadFileUrl = sv.Value;
+
+                                                    bgService?.WaitHandle.Set();
+
+                                                    window.Dispatcher.Invoke(() =>
+                                                    {
+                                                        VisualStateManager.GoToElementState(window, DisplayErrorInfobar, false);
+                                                    });
+                                                }
                                                 Logger.LogError("Message: {msg}", sv.Value);
                                             }
                                             ; break;
@@ -1272,7 +1225,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                 event_TryLaunchBackgroundServiceCommand.Execute(default);
 
-                await Task.Run(() => bgService?.WaitHandle?.WaitOne()).WaitAsync(cancellationToken);
+                await Task.Run(() => bgService?.WaitHandle?.WaitOne()).WhenAnyTime(cancellationToken);
 
                 bgService?.Dispose();
 
@@ -1284,38 +1237,24 @@ namespace OpenFrp.Launcher.ViewModels
             }
             finally
             {
-                DownloadProcess = new DownloadProcess { };
-
                 bgService = default;
-
-                if (!hasUpdateFrpClientArgument)
+                if (!DownloadProcess.DownloadFileUrl.StartsWith("err:"))
                 {
-                    VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
+                    if (!hasUpdateFrpClientArgument)
+                    {
+                        VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
+                    }
+                    else
+                    {
+                        CallbackAction(LoginState);
+                    }
                 }
-                else
-                {
-                    CallbackAction(LoginState);
-                }
+                DownloadProcess = new DownloadProcess { };
             }
             
         }
 
-        [RelayCommand]
-        private void @event_InstallFrpcUpdate()
-        {
-            VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
 
-            if (event_WebLogin2Command.IsRunning || event_WebLoginCommand.IsRunning || event_FastLoginCommand.IsRunning || !CanCancelLogin)
-            {
-                return;
-            }
-
-            ToggleToUpdateCtrl();
-
-            App.StartupArguments.Add("--updateFrpClient");
-
-            conve_TryDetectFrpcCommand.Execute(default);
-        }
 
         private bool CanExecuteLaunchBackgroundService() => DownloadProcess.ProgressValue is 0 && bgService is not null;
             
@@ -1348,6 +1287,24 @@ namespace OpenFrp.Launcher.ViewModels
 
             }
         }
+
+        [RelayCommand]
+        private void @event_InstallFrpcUpdate()
+        {
+            VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
+
+            if (event_WebLogin2Command.IsRunning || event_WebLoginCommand.IsRunning || event_FastLoginCommand.IsRunning || !CanCancelLogin)
+            {
+                return;
+            }
+
+            ToggleToUpdateCtrl();
+
+            App.StartupArguments.Add("--updateFrpClient");
+
+            conve_TryDetectFrpcCommand.Execute(default);
+        }
+
 
         [RelayCommand]
         private void @event_GotoDesktopLauncherHelpPage()

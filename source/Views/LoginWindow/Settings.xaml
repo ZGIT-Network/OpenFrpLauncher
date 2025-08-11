@@ -56,7 +56,17 @@
                     <TextBlock FontSize="18" Text="外观" />
                     <ctrl:SettingItem Title="应用主题" Description="适应一下浅色模式？">
                         <ctrl:SettingItem.Icon>
-                            <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.CharacterAppearance}" />
+
+
+                            <ink:FontIcon
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                FontSize="24"
+                                Glyph="&#xF0605;"
+                                RenderTransformOrigin=".5,.5">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                </FrameworkElement.RenderTransform>
+                            </ink:FontIcon>
                         </ctrl:SettingItem.Icon>
                         <ComboBox
                             Width="150"
@@ -67,22 +77,33 @@
                             <ComboBoxItem Content="深色模式" />
                         </ComboBox>
                     </ctrl:SettingItem>
-                    <ctrl:SettingItem Title="窗口背景效果" Description="整的挺花里胡哨的...">
+                    <ctrl:SettingItem
+                        Title="窗口背景效果"
+                        Description="整的挺花里胡哨的..."
+                        IsEnabled="{x:Static wp:OSVersionHelper.IsWindows11OrGreater}">
                         <ctrl:SettingItem.Icon>
-                            <ink:FontIcon FontSize="24" Glyph="&#xEB1D;" />
+
+                            <ink:FontIcon
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                FontSize="24"
+                                Glyph="&#xF06AB;"
+                                RenderTransformOrigin=".5,.5">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1.05" ScaleY="1.05" />
+                                </FrameworkElement.RenderTransform>
+                            </ink:FontIcon>
                         </ctrl:SettingItem.Icon>
                         <ComboBox
-                            Width="150"
+                            MinWidth="150"
                             AutomationProperties.Name="窗口背景效果"
                             SelectedIndex="{Binding BackdropType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                            <ComboBoxItem Content="None" />
+                            <ComboBoxItem Content="无" />
                             <ComboBoxItem Content="Mica" />
                             <ComboBoxItem Content="Acrylic" />
                             <ComboBoxItem Content="Tabbed" />
-
                         </ComboBox>
                     </ctrl:SettingItem>
-                    <ctrl:SettingItem Title="显示标题栏背景" >
+                    <ctrl:SettingItem Title="显示标题栏背景">
                         <ctrl:SettingItem.Icon>
                             <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.NewWindow}" />
                         </ctrl:SettingItem.Icon>
@@ -96,13 +117,21 @@
                         Margin="0,24,0,0"
                         FontSize="18"
                         Text="网络" />
-                    <ctrl:SettingItem Title="绕过系统代理" Description="此项适用于直接访问 API 而不经过代理。">
+                    <ctrl:SettingItem Title="强制使用 TLS 加密" Description="缓解在一些网络环境下无法映射的问题；但是占用CPU。">
                         <ctrl:SettingItem.Icon>
-                            <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.MultimediaDMS}" />
+                            <ink:FontIcon
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                FontSize="24"
+                                Glyph="&#xF03F2;"
+                                RenderTransformOrigin=".5,.5">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                </FrameworkElement.RenderTransform>
+                            </ink:FontIcon>
                         </ctrl:SettingItem.Icon>
                         <ink:ToggleSwitch
                             MinWidth="0"
-                            IsOn="{Binding BypassProxy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            IsOn="{Binding UseForceTls, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             IsRightAlignedCompact="True" />
 
                     </ctrl:SettingItem>

@@ -7,42 +7,62 @@ using System.Text;
 using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Microsoft.Extensions.Logging;
+using Grpc.Core.Logging;
 using OpenFrp.Service.Daemon;
+
 
 namespace OpenFrp.Launcher.Rpc
 {
     internal class RpcManager
     {
-        internal readonly string? PipeName;
+        internal string? PipeName;
 
-        internal readonly OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient? OpenFrpDeamonRpcClient;
+        internal OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient? OpenFrpDeamonRpcClient;
+
+        private GrpcDotNetNamedPipes.NamedPipeChannel? Channel;
 
         internal readonly Metadata GlobalHeader = new Metadata { };
 
-        //private static DateTime Deadline { get => DateTime.UtcNow.AddSeconds(10); }
+        internal bool IsConfigured => OpenFrpDeamonRpcClient is not null && !string.IsNullOrEmpty(PipeName);
 
-        public RpcManager() : this(Daemon.GetPipename())
+        public RpcManager(ILogger<RpcManager> logger)
         {
-            
+            this.logger = logger;
         }
 
-        public RpcManager(string pipeName) 
+        private readonly ILogger<RpcManager> logger;
+
+
+        public void Configure() => Configure(Daemon.GetPipename());
+
+        public void Configure(string pipeName)
         {
+            if (IsConfigured) return;
+
             PipeName = pipeName;
 
-            var channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", pipeName, new GrpcDotNetNamedPipes.NamedPipeChannelOptions
+            Channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", pipeName, new GrpcDotNetNamedPipes.NamedPipeChannelOptions
             {
                 ConnectionTimeout = 10
             });
-            
-            OpenFrpDeamonRpcClient = new OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient(channel);
+
+            OpenFrpDeamonRpcClient = new OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient(Channel);
+        }
+
+
+        public void Crack()
+        {
+            PipeName = default;
+            Channel = null;
+            OpenFrpDeamonRpcClient = null;
         }
 
         public async Task<OpenFrp.Service.Proto.RpcResponse<Service.Proto.Response.SyncResponse>> Sync(CancellationToken cancellationToken = default)
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
             try
             {
@@ -71,7 +91,7 @@ namespace OpenFrp.Launcher.Rpc
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
             try
             {
@@ -101,7 +121,7 @@ namespace OpenFrp.Launcher.Rpc
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
             try
             {
@@ -142,7 +162,7 @@ namespace OpenFrp.Launcher.Rpc
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
             if (GlobalHeader is null || GlobalHeader.Count < 1)
             {
@@ -179,7 +199,7 @@ namespace OpenFrp.Launcher.Rpc
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
 
             var duplex = OpenFrpDeamonRpcClient.NotificationStream(
@@ -212,12 +232,7 @@ namespace OpenFrp.Launcher.Rpc
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
-            }
-            // GlobalHeader is null || GlobalHeader.Count < 1
-            if (false)
-            {
-                throw new ArgumentNullException(nameof(GlobalHeader));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
             
             var duplex = OpenFrpDeamonRpcClient.TunnelStream(
@@ -267,7 +282,7 @@ namespace OpenFrp.Launcher.Rpc
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
             var duplex = OpenFrpDeamonRpcClient.LogStream(
                 request: new Service.Proto.Request.LogStreamRequest { IndexMaps = { KnownLogIndexMapping } },
@@ -295,7 +310,7 @@ namespace OpenFrp.Launcher.Rpc
         {
             if (OpenFrpDeamonRpcClient is null)
             {
-                throw new ArgumentNullException(nameof(OpenFrpDeamonRpcClient));
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
             }
             try
             {

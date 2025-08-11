@@ -56,22 +56,24 @@
             </Grid.RowDefinitions>
             <Grid>
                 <wp:SimpleStackPanel VerticalAlignment="Center" Spacing="8">
-                    <ink:ProgressRing Width="100" Height="100" />
+                    <!--<ink:ProgressRing Width="100" Height="100" />-->
                     <TextBlock
                         Padding="16,0"
                         FontSize="18"
                         TextAlignment="Center"
                         TextWrapping="Wrap">
-                        <Run Text="授权中..." />
+                        <Run FontSize="24" Text="授权中..." />
                         <LineBreak />
-                        <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="如果没有未能调用浏览器，请点击下方中间的按钮或复制链接到浏览器中打开。" />
+                        <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="请点击下方中间的按钮或复制链接&#10;到浏览器中打开。" />
                     </TextBlock>
                     <ctrl:SelectableTextBlock
+                        Padding="16,0"
+                        FontFamily="{StaticResource SourceCodePro}"
                         FontSize="14"
+                        Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
                         Text="{Binding Port, StringFormat='http://127.0.0.1:{0}/callUpOAuthService', Mode=OneWay}"
                         TextAlignment="Center"
-                        TextWrapping="Wrap"
-                        Visibility="{Binding NeedDisplayUrl, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                        TextWrapping="Wrap" />
                 </wp:SimpleStackPanel>
             </Grid>
             <Grid Grid.Row="1" Background="Transparent">
@@ -104,7 +106,11 @@
                         ToolTip="在浏览器中授权">
 
                         <StackPanel Orientation="Horizontal">
-                            <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.OpenFile}" />
+                            <ink:FontIcon
+                                Height="20"
+                                FontFamily="{StaticResource FluentSystemIcons}"
+                                FontSize="24"
+                                Glyph="&#xF583;" />
                             <TextBlock
                                 Padding="6,0,0,0"
                                 VerticalAlignment="Center"

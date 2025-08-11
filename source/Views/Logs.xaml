@@ -53,8 +53,11 @@
         <Grid
             Grid.Row="1"
             MaxWidth="1272"
-            Margin="36,4,24,4">
-            <xa:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+            Margin="0,4,0,4">
+            <xa:SimpleStackPanel
+                Margin="36,0"
+                Orientation="Horizontal"
+                Spacing="8">
                 <ComboBox
                     MinWidth="250"
                     AutomationProperties.Name="日志过滤器"
@@ -80,7 +83,7 @@
                     VerticalAlignment="Stretch"
                     AutomationProperties.Name="清除日志"
                     Command="{Binding event_ClearLogCommand}"
-                    IsEnabled="{Binding Logs.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}"
+                    IsEnabled="{Binding AppLogContainer.LogsCache.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}"
                     ToolTip="清除当前选择的日志。(全局会清除所有日志)">
                     <xa:SimpleStackPanel Orientation="Horizontal" Spacing="4">
                         <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Delete}" />
@@ -93,7 +96,7 @@
                     VerticalAlignment="Stretch"
                     AutomationProperties.Name="保存日志"
                     Command="{Binding event_SaveLogCommand}"
-                    IsEnabled="{Binding Logs.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}"
+                    IsEnabled="{Binding AppLogContainer.LogsCache.Count, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}"
                     ToolTip="保存当前选择的日志。">
                     <xa:SimpleStackPanel Orientation="Horizontal" Spacing="4">
                         <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Save}" />
@@ -108,7 +111,7 @@
                 x:Name="flv"
                 d:ItemsSource="{d:SampleData ItemCount=5}"
                 Focusable="False"
-                ItemsSource="{Binding Logs, Mode=OneWay, IsAsync=True}"
+                ItemsSource="{Binding AppLogContainer.LogsCache, Mode=OneWay, IsAsync=True}"
                 ScrollViewer.CanContentScroll="True"
                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                 ScrollViewer.IsDeferredScrollingEnabled="False"

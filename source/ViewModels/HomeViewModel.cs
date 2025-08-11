@@ -204,7 +204,7 @@ namespace OpenFrp.Launcher.ViewModels
                 double d2 = d1 / 1024d;
                 if (d2 < 1)
                 {
-                    return $"{d1} Gib";
+                    return $"{Math.Round(d1,2)} Gib";
                 }
                 return $"{Math.Round(d2 / 1024d, 2)} Tib";
             }
@@ -217,21 +217,18 @@ namespace OpenFrp.Launcher.ViewModels
 
             if (string.IsNullOrEmpty(auth))
             {
-                try { Process.Start("http://console.openfrp.net/"); return; } catch { }
-                try { Process.Start("start", "http://console.openfrp.net/"); } catch { }
+                OpenFrp.Service.Helpers.ProcessHelper.OpenLink("https://console.openfrp.net");
             }
             else
             {
-                try { System.Diagnostics.Process.Start($"https://console.openfrp.net/fastlogin?auth={auth}"); return; } catch { }
-                try { System.Diagnostics.Process.Start("start",$"https://console.openfrp.net/fastlogin?auth={auth}");  } catch { }
+                OpenFrp.Service.Helpers.ProcessHelper.OpenLink($"https://console.openfrp.net/fastlogin?auth={auth}");
             }
         }
 
         [RelayCommand]
         private void @event_OpenPaymentApp()
         {
-            try { Process.Start("https://yue3.pages.dev/#/donate"); return; } catch { }
-            try { Process.Start("start", "https://yue3.pages.dev/#/donate"); } catch { }
+            Service.Helpers.ProcessHelper.OpenLink("https://yue3.pages.dev/#/donate");
         }
 
         [RelayCommand]

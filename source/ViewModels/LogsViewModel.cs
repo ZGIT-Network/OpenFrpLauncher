@@ -9,6 +9,7 @@ using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using iNKORE.UI.WPF.Modern.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace OpenFrp.Launcher.ViewModels
@@ -17,29 +18,24 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public LogsViewModel()
         {
+            RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
+            AppLogContainer = App.ServiceProvider.GetRequiredService<Model.AppLogContainer>();
+
             if (Application.Current.MainWindow is { DataContext: MainWindowViewModel mv })
             {
-                _mainWindowViewModel = mv;
-
                 ShowAlertAction = mv.ShowAlert;
-
-                mv.LogsCache ??= new ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogContainer>();
-                mv.PropertyChanged += (_, e) =>
-                {
-                    OnPropertyChanged(e.PropertyName);
-                };
-                
-            }
-            else
-            {
-                throw new NullReferenceException(nameof(_mainWindowViewModel));
             }
 
             conve_CreateStreamCommand.Execute(default);
         }
 
+        private Rpc.RpcManager RpcManager { get; set; }
+
+        [ObservableProperty]
+        private Model.AppLogContainer? appLogContainer;
+
+
         private readonly Action<string, string, InfoBarSeverity> ShowAlertAction = delegate { };
-        private readonly MainWindowViewModel _mainWindowViewModel;
         private IDisposable? disposableStream;
 
 #if NET
@@ -53,9 +49,6 @@ namespace OpenFrp.Launcher.ViewModels
         private Regex LogLevelRegex = LogLevelRegexFallback();
 
         private System.Windows.Controls.ListView? listView;
-
-        // please one time binding
-        //public int DefualtIndex { get => 0; }
 
         [ObservableProperty]
         private ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogLive> tagSelector = new ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogLive>
@@ -76,16 +69,13 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_CreateStream(CancellationToken cancellationToken)
         {
-            if (App.RpcManager is null)
-            {
-                // TODO: THROW EXCEPTION
-                return;
-            }
-            int startIndex = _mainWindowViewModel.LogsCache?.Count ?? 1 - 1;
+            if (AppLogContainer is null) return;
+
+            int startIndex = AppLogContainer.LogsCache?.Count ?? 1 - 1;
 
             if (startIndex < 0) { startIndex = 0; }
 
-            disposableStream = await App.RpcManager.LogStream(KnownLogIndexMapping, StreamReader, cancellationToken);
+            disposableStream = await RpcManager.LogStream(AppLogContainer.KnownLogIndexMapping, StreamReader, cancellationToken);
         }
 
         private void StreamReader(Service.Proto.Response.LogStreamResponse resp)
@@ -102,30 +92,30 @@ namespace OpenFrp.Launcher.ViewModels
                             }
                         }
                     }; break;
-                case Service.Proto.Response.LogStreamResponse.Types.LogStreamResponseState.UpdateLogs:
+                case Service.Proto.Response.LogStreamResponse.Types.LogStreamResponseState.UpdateLogs when AppLogContainer is not null:
                     {
                         if (resp.Data.TryUnpack<Service.Proto.Response.LogStreamResponse.Types.LogsData>(out var logs))
                         {
-                            if (!KnownLogIndexMapping.ContainsKey(logs.LogId))
+                            if (!AppLogContainer.KnownLogIndexMapping.ContainsKey(logs.LogId))
                             {
-                                KnownLogIndexMapping.Add(logs.LogId, logs.Logs.Count);
+                                AppLogContainer.KnownLogIndexMapping.Add(logs.LogId, logs.Logs.Count);
                             }
-                            else KnownLogIndexMapping[logs.LogId] += logs.Logs.Count;
+                            else AppLogContainer.KnownLogIndexMapping[logs.LogId] += logs.Logs.Count;
 
                             foreach (var log in logs.Logs)
                             {
-                                Logs?.Add(log);
+                                AppLogContainer.AddLogContainer(log);
                             }
                         }
                         else if (resp.Data.TryUnpack<Service.Proto.Response.LogStreamResponse.Types.LogContainer>(out var cot))
                         {
-                            if (!KnownLogIndexMapping.ContainsKey(cot.LogId))
+                            if (!AppLogContainer.KnownLogIndexMapping.ContainsKey(cot.LogId))
                             {
-                                KnownLogIndexMapping.Add(cot.LogId, 1);
+                                AppLogContainer.KnownLogIndexMapping.Add(cot.LogId, 1);
                             }
-                            else KnownLogIndexMapping[cot.LogId] += 1;
+                            else AppLogContainer.KnownLogIndexMapping[cot.LogId] += 1;
 
-                            Logs?.Add(cot);
+                            AppLogContainer.AddLogContainer(cot);
                         }
                     }; break;
             }
@@ -199,47 +189,44 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_ClearLog()
         {
-            if (App.RpcManager is null)
-            {
-                // TODO: THROW EXCEPTION
-                return;
-            }
+            if (AppLogContainer is null) return;
+
             if (SelectedTag is null || SelectedTag.Id is -1)
             {
-                var r = await App.RpcManager.ClearLog(-1);
+                var r = await RpcManager.ClearLog(-1);
 
                 if (r.Flag)
                 {
-                    Logs?.Clear();
-                    KnownLogIndexMapping?.Clear();
+                    AppLogContainer.LogsCache?.Clear();
+                    AppLogContainer.KnownLogIndexMapping?.Clear();
                 }
                 else
                 {
-                    // todo: notice
+                    ShowAlertAction("日志页面","清除日志失败，请稍后重试！", InfoBarSeverity.Error);
                 }
             }
             else
             {
                 var ti = SelectedTag.Id;
-                var r = await App.RpcManager.ClearLog(ti);
+                var r = await RpcManager.ClearLog(ti);
 
                 if (r.Flag)
                 {
-                    if (Logs != null)
+                    if (AppLogContainer.LogsCache is { } log)
                     {
-                        for (int i = Logs.Count - 1; i >= 0; i--)
+                        for (int i = log.Count - 1; i >= 0; i--)
                         {
-                            if (Logs[i].LogId == ti)
+                            if (log[i].LogId == ti)
                             {
-                                Logs.RemoveAt(i);
+                                log.RemoveAt(i);
                             }
                         }
                     }
-                    KnownLogIndexMapping.Remove(ti);
+                    AppLogContainer.KnownLogIndexMapping.Remove(ti);
                 }
                 else
                 {
-                    // todo: notice
+                    ShowAlertAction("日志页面", "清除日志失败，请稍后重试！", InfoBarSeverity.Error);
                 }
             }
         }
@@ -247,7 +234,7 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_SaveLog()
         {
-            if (Logs is null || listView is null) return;
+            if (AppLogContainer?.LogsCache is null || listView is null) return;
 
             var fDialog = new Microsoft.Win32.SaveFileDialog
             {
@@ -256,13 +243,13 @@ namespace OpenFrp.Launcher.ViewModels
                 ValidateNames = true,
                 Filter = "日志文件(*.log)|*.log",
             };
-            if(SelectedTag != null)
+            if (SelectedTag != null)
             {
                 fDialog.FileName = $"OFLauncher-{SelectedTag.Tag}.log";
             }
             if (fDialog.ShowDialog() is true)
             {
-                using (var f = System.IO.File.Open(fDialog.FileName,System.IO.FileMode.OpenOrCreate))
+                using (var f = System.IO.File.Open(fDialog.FileName, System.IO.FileMode.OpenOrCreate))
                 {
                     f.Position = 0;
                     f.SetLength(0);
@@ -284,8 +271,8 @@ namespace OpenFrp.Launcher.ViewModels
                             ReadOnlyMemory<byte> fs = Encoding.UTF8.GetBytes($"{vc.Date.ToDateTime():yyyy/MM/dd HH:mm:ss} [{vc.Level}] {vc.Tag} {LogLevelRegex.Replace(vc.Data,string.Empty)}\n");
                             await f.WriteAsync(fs,CancellationToken.None);
 #elif NETFRAMEWORK
-                            byte[] fs = Encoding.UTF8.GetBytes($"{vc.Date.ToDateTime():yyyy/MM/dd HH:mm:ss} [{vc.Level}] {vc.Tag} {LogLevelRegex.Replace(vc.Data,string.Empty)}\n");
-                            await f.WriteAsync(fs,0,fs.Length);
+                            byte[] fs = Encoding.UTF8.GetBytes($"{vc.Date.ToDateTime():yyyy/MM/dd HH:mm:ss} [{vc.Level}] {vc.Tag} {LogLevelRegex.Replace(vc.Data, string.Empty)}\n");
+                            await f.WriteAsync(fs, 0, fs.Length);
 #endif
                         }
                     }
@@ -295,21 +282,7 @@ namespace OpenFrp.Launcher.ViewModels
                 }
 
                 ShowAlertAction($"日志 \"{fDialog.SafeFileName}\" 保存成功!", $"已成功保存在: {fDialog.FileName}", InfoBarSeverity.Success);
-
-                // log notice
             }
         }
-       
-        public ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogContainer>? Logs
-        {
-            get => _mainWindowViewModel.LogsCache;
-        }
-
-        public Google.Protobuf.Collections.MapField<int, int> KnownLogIndexMapping
-        {
-            get => _mainWindowViewModel.KnownLogIndexMapping;
-        }
-
-
     }
 }

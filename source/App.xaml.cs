@@ -25,6 +25,9 @@ using OpenFrp.Launcher.Win32;
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using OpenFrp.Service;
+using Microsoft.Extensions.DependencyInjection;
+using OpenFrp.Service.Helpers;
 
 
 namespace OpenFrp.Launcher
@@ -34,13 +37,32 @@ namespace OpenFrp.Launcher
     /// </summary>
     public partial class App : Application
     {
-        internal static ILoggerFactory loggerFactory = LoggerFactory.Create((c) =>
-        {
-            c.AddDebug();
-            c.SetMinimumLevel(LogLevel.Debug);
-        });
+        //internal static ILoggerFactory loggerFactory = LoggerFactory.Create((c) =>
+        //{
+        //    c.AddDebug();
+        //    c.SetMinimumLevel(LogLevel.Debug);
+        //});
 
-        public static ILogger<App> Logger { get; } = loggerFactory.CreateLogger<App>();
+        public ILogger<App> Logger { get; private set; } 
+        public static ServiceProvider ServiceProvider { get; private set; }
+
+        static App()
+        {
+            ServiceProvider = new ServiceCollection()
+                .AddLogging((option) =>
+                {
+                    option.SetMinimumLevel(LogLevel.Debug);
+                    option.AddDebug();
+                })
+                .AddSingleton<DaemonManager>()
+                .AddSingleton<RpcManager>()
+                .AddSingleton<Model.AppLogContainer>()
+                
+
+                
+
+                .BuildServiceProvider();
+        }
 
         public App()
         {
@@ -72,6 +94,7 @@ namespace OpenFrp.Launcher
                     }
             };
 #endif
+            Logger = ServiceProvider.GetRequiredService<ILogger<App>>();
         }
 
         internal static bool Notification_UseExpiredReboot { get; private set; } = false;
@@ -190,12 +213,9 @@ namespace OpenFrp.Launcher
                 return;
             }
 
+            string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashToBase64String(AppContext.BaseDirectory);
 
-
-
-            string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(AppContext.BaseDirectory);
-
-            launcherMutex = new Mutex(false, $"openfrp.launcher.{appHash}", out var createdNewFlag);
+            launcherMutex = new Mutex(false, $"openfrp.launcher.Mutex_{appHash}", out var createdNewFlag);
 
             if (!Debugger.IsAttached || (true && e.Args.Length > 0))
             {
@@ -204,6 +224,7 @@ namespace OpenFrp.Launcher
 
             Logger.LogDebug("[OF LAUN] AppHash: {hash}", appHash);
 
+            launcherAppWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, $"openfrp.launcher.WaitHandle_{appHash}", out var createdNewWaitHandle);
 
             if (!createdNewFlag && !launcherMutex.SafeWaitHandle.IsClosed)
             {
@@ -219,82 +240,68 @@ namespace OpenFrp.Launcher
                 {
                     try
                     {
-                        if (proc.Id == currentId) continue;
+                        if (proc.Id == currentId || !proc.GetMainModuleFileName().Equals(LauncherMainModulePath) || proc.MainWindowHandle == IntPtr.Zero) continue;
 
-                        try
+                        byte[] callFromLauncherPath = Encoding.UTF8.GetBytes(LauncherMainModulePath);
+                        byte[] oappPath = Array.Empty<byte>();
+
+                        if (StartupArguments.Count > 0 && StartupArguments.Where(x => x.StartsWith("openfrp://")) is { } c && c.Count() is 1)
                         {
-                            if (proc.MainModule is not { } || proc.MainModule.FileName != LauncherMainModulePath)
-                            {
-                                continue;
-                            }
+                            oappPath = Encoding.UTF8.GetBytes(StartupArguments.First());
                         }
-                        catch (Win32Exception)
-                        {
 
+                        SendWindowCopyDataStruct(proc.MainWindowHandle, 0x00);
+
+                        SendWindowCopyDataStruct(proc.MainWindowHandle, 0x01, callFromLauncherPath);
+
+                        if (oappPath is { Length: > 0 })
+                        {
+                            SendWindowCopyDataStruct(proc.MainWindowHandle, 0x02, oappPath);
                         }
-                        if (proc.MainWindowHandle != IntPtr.Zero)
+
+                        static int SendWindowCopyDataStruct(IntPtr hWnd, int id, byte[]? buffer = null, bool waitForFinish = true)
                         {
-                            byte[] callFromLauncherPath = Encoding.UTF8.GetBytes(LauncherMainModulePath);
-                            byte[] oappPath = Array.Empty<byte>();
-
-                            if (StartupArguments.Count > 0 && StartupArguments.Where(x => x.StartsWith("openfrp://")) is { } c && c.Count() is 1)
+                            var cd = new User32.COPYDATASTRUCT
                             {
-                                oappPath = Encoding.UTF8.GetBytes(StartupArguments.First());
-                            }
-
-                            SendWindowCopyDataStruct(proc.MainWindowHandle,0x00);
-
-                            SendWindowCopyDataStruct(proc.MainWindowHandle, 0x01, callFromLauncherPath);
-
-                            if (oappPath is { Length: > 0 })
+                                dwData = (IntPtr)id,
+                                cbData = (buffer != null) ? buffer.Length : 0
+                            };
+                            if (buffer != null)
                             {
-                                SendWindowCopyDataStruct(proc.MainWindowHandle, 0x02, oappPath);
-                            }
+                                IntPtr pt2 = Marshal.AllocHGlobal(buffer.Length);
 
-
-                            static int SendWindowCopyDataStruct(IntPtr hWnd, int id, byte[]? buffer = null,bool waitForFinish = true)
-                            {
-                                var cd = new User32.COPYDATASTRUCT
-                                {
-                                    dwData = (IntPtr)id,
-                                    cbData = (buffer != null) ? buffer.Length : 0
-                                };
-                                if (buffer != null)
-                                {
-                                    IntPtr pt2 = Marshal.AllocHGlobal(buffer.Length);
-
-                                    try
-                                    {
-                                        cd.lpData = pt2;
-
-                                        Marshal.Copy(buffer, 0, pt2, buffer.Length);
-                                    }
-                                    finally
-                                    {
-                                        Marshal.FreeHGlobal(pt2);
-                                    }
-                                }
                                 try
                                 {
-                                    if (waitForFinish)
-                                    {
-                                        return User32.SendMessage(hWnd, 0x4A, IntPtr.Zero, cd);
-                                    }
-                                    else
-                                    {
-                                        _ = User32.SendMessage(hWnd, 0x4A, IntPtr.Zero, cd);
-                                    }
-                                }
-                                catch
-                                {
-                                    return Marshal.GetHRForLastWin32Error();
-                                }
-                                return 0;
-                            }
+                                    cd.lpData = pt2;
 
-                            Environment.Exit(0);
-                            return;
+                                    Marshal.Copy(buffer, 0, pt2, buffer.Length);
+                                }
+                                finally
+                                {
+                                    Marshal.FreeHGlobal(pt2);
+                                }
+                            }
+                            try
+                            {
+                                if (waitForFinish)
+                                {
+                                    return User32.SendMessage(hWnd, 0x4A, IntPtr.Zero, cd);
+                                }
+                                else
+                                {
+                                    _ = User32.SendMessage(hWnd, 0x4A, IntPtr.Zero, cd);
+                                }
+                            }
+                            catch
+                            {
+                                return Marshal.GetHRForLastWin32Error();
+                            }
+                            return 0;
                         }
+
+                        Environment.Exit(0);
+
+                        return;
                     }
                     catch
                     {
@@ -302,22 +309,35 @@ namespace OpenFrp.Launcher
                     }
                 }
 
-                Service.Helpers.MessageBoxHelper.MessageBox(IntPtr.Zero, "已有相同实例已开启。\n请在系统托盘中找到 OpenFrp 标志，单击或在菜单中点击显示窗口。", "OpenFrp Launcher Preview", (uint)(Service.Helpers.MessageBoxHelper.MessageMode.Confirm | Service.Helpers.MessageBoxHelper.MessageMode.Warning) );
+                if (!launcherAppWaitHandle.Set())
+                {
+                    Service.Helpers.MessageBoxHelper.MessageBox(IntPtr.Zero, "已有相同实例已开启。\n请在系统托盘中找到 OpenFrp 标志，单击或在菜单中点击显示窗口。", "OpenFrp Launcher Preview", (uint)(Service.Helpers.MessageBoxHelper.MessageMode.Confirm | Service.Helpers.MessageBoxHelper.MessageMode.Warning));
+                }
 
                 Environment.Exit(0);
 
                 return;
             }
+            else if (!createdNewWaitHandle)
+            {
+                _ = Task.Run(async () =>
+                {
+                    // TODO: Handle 被设置时自动显示主窗口
+
+                    while (await Task.Run(launcherAppWaitHandle.WaitOne))
+                    {
+                        if (App.Current.Dispatcher.HasShutdownStarted) break;
+
+                        App.Current.Dispatcher.Invoke(() =>
+                        {
+                            (App.Current.MainWindow as AppWindow)?.ShowByHANDLE();
+                        });
+                    }
+                });
+            }
 
             Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
 
-            App.Settings.SettingChanging += (_, e) =>
-            {
-                if (e.SettingClass is "OpenFrp.Launcher.Properties.Settings")
-                {
-                    
-                }
-            };
             App.Settings.PropertyChanged += (_, e) =>
             {
                 switch (e.PropertyName)
@@ -339,17 +359,27 @@ namespace OpenFrp.Launcher
                 }
             };
 
+#if DEBUG
             Logger.LogDebug("[OF LAUN] Setting - AutoLaunchTunnels: {tunnels}", Settings.AutoLaunchTunnel);
             Logger.LogDebug("[OF LAUN] Setting - AutoLoginUserId: {id}", Settings.AutoLoginId);
             Logger.LogDebug("[OF LAUN] Setting - DoNotAskMeForUrlSchemeTools: {flag}", Settings.DoNotAskMeForUrlSchemeTools);
             Logger.LogDebug("[OF LAUN] Setting - LogFontSize: {size}", Settings.LogFontSize);
             Logger.LogDebug("[OF LAUN] Setting - LogFontFamily: {font}", Settings.LogFontFamily);
             Logger.LogDebug("[OF LAUN] Setting - UsrTokenSet: {set}", Settings.Token);
+#endif
 
             if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater)
             {
+                // Windows 7 不支持新版本 Golang 特性
+                // 故关闭 Url Scheme 功能，并且启用配置文件启动。
                 App.Settings.UseConfigLaunch = true;
                 App.Settings.DoNotAskMeForUrlSchemeTools = true;
+            }
+            if (!OSVersionHelper.IsWindows11OrGreater)
+            {
+                // Windows 11 以上版本才支持背景模糊
+                // 故而在 Windows 10 以下版本不支持背景模糊，选择关闭。
+                App.Settings.BackdropType = iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType.None;
             }
 
             ConfigureNotification();
@@ -359,15 +389,20 @@ namespace OpenFrp.Launcher
             base.OnStartup(e);
         }
 
+        protected override void OnExit(ExitEventArgs e)
+        {
+            try { launcherAppWaitHandle?.Set(); } catch { }
+           
+            base.OnExit(e);
+        }
+
+        private EventWaitHandle? launcherAppWaitHandle;
+
         private Mutex? launcherMutex;
 
         internal static H.NotifyIcon.TaskbarIcon? TaskBarIcon;
 
         internal static Properties.Settings Settings { get => OpenFrp.Launcher.Properties.Settings.Default; }
-
-        internal static Rpc.DaemonManager DaemonManager { get; set; } = new DaemonManager { };
-
-        internal static Rpc.RpcManager? RpcManager { get; set; }
 
         internal static Model.FrpcFeatrue FrpcFeature { get; } = new Model.FrpcFeatrue();
 
@@ -480,6 +515,10 @@ namespace OpenFrp.Launcher
                     Mode = BindingMode.OneWay
                 });
             }
+
+            TaskBarIcon.BeginInit();
+            TaskBarIcon.EndInit();
+
             if (!TaskBarIcon.IsCreated)
             {
                 TaskBarIcon.ForceCreate(false);

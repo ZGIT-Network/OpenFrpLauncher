@@ -13,7 +13,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="local:Carousel">
                     <Grid x:Name="carouselRoot">
-                        <ink:ThemeShadowChrome Margin="4"
+                        <ink:ThemeShadowChrome
+                            Margin="4"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             Depth="{Binding (ink:ThemeShadowChrome.Depth), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}"
                             IsShadowEnabled="{Binding (ink:ThemeShadowChrome.IsShadowEnabled), RelativeSource={RelativeSource AncestorType=local:Carousel}, Mode=OneWay}" />

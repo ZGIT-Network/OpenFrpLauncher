@@ -41,7 +41,7 @@ namespace OpenFrp.Launcher.Views.LoginWindow
 
         public async Task<string?> WaitForFinish(CancellationToken cancellationToken = default)
         {
-            return await AuthorizationCodeWaiter.Task.WaitAsync(cancellationToken);
+            return await AuthorizationCodeWaiter.Task.WhenAnyTime(cancellationToken);
         }
     }
 }

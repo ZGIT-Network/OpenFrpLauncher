@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -17,7 +18,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Google.Protobuf.WellKnownTypes;
+using Grpc.Core.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OpenFrp.Launcher.Model;
+using OpenFrp.Service.Helpers;
+
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -56,7 +62,16 @@ namespace OpenFrp.Launcher.ViewModels
                 mvW = lWnd;
                 IsAtLoginWindow = true;
             }
+
+            RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
+            DaemonManager = App.ServiceProvider.GetRequiredService<Rpc.DaemonManager>();
+            Logger = App.ServiceProvider.GetRequiredService<ILogger<SettingsViewModel>>();
         }
+
+        private Rpc.RpcManager RpcManager { get; set; }
+        private Rpc.DaemonManager DaemonManager { get; set; }
+
+        private ILogger<SettingsViewModel> Logger { get; set; }
 
         private string? currentUserAutoLogonId;
         private string astLaunchFile = Service.Helpers.FileHelper.GetAutoStartupFile();
@@ -273,7 +288,10 @@ namespace OpenFrp.Launcher.ViewModels
                 App.Settings.AutoLoginId = currentUserAutoLogonId;
             }
         }
-
+        public bool IsServiceInstalled
+        {
+            get => DaemonManager.DaemonService is not null;
+        }
         public bool IsUrlSchemeRegistered
         {
             get
@@ -377,11 +395,7 @@ namespace OpenFrp.Launcher.ViewModels
                 });
             }
         }
-        //[RelayCommand]
-        //private void @event_MessageTest()
-        //{
 
-        //}
 
         [RelayCommand]
         private void @event_UrlSchemeToggleSwitchLoaded(RoutedEventArgs e)
@@ -393,18 +407,36 @@ namespace OpenFrp.Launcher.ViewModels
                     if (!tg.IsEnabled) return;
 
                     tg.IsEnabled = false;
-                    //args.Handled = true;
+
+           
                     
 
-                    
                     try
                     {
-                        
+                        if (App.IsAdministrator())
+                        {
+                            Process.Start(new ProcessStartInfo
+                            {
+                                FileName = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
+                                Arguments = "--inst url-scheme-registry " + tg.IsOn,
+                                ErrorDialog = false,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            });
+                            await Task.Delay(500);
+                            return;
+                        }
+
+                        if (App.Current is { MainWindow: AppWindow aw })
+                        {
+                            aw.IsEnabled = false;
+                            aw.SetWindowEnableState(false);
+                        }
 
                         var cpc = new ProcessStartInfo
                         {
                             FileName = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OpenFrp.Service.exe"),
-                            Arguments = "--inst -type=reg " + tg.IsOn,
+                            Arguments = "--inst url-scheme-registry " + tg.IsOn,
                             ErrorDialog = false,
                             UseShellExecute = true,
                             WindowStyle = ProcessWindowStyle.Hidden,
@@ -426,6 +458,11 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                     finally
                     {
+                        if (App.Current is { MainWindow: AppWindow aw })
+                        {
+                            aw.IsEnabled = true;
+                            aw.SetWindowEnableState(true);
+                        }
                         OnPropertyChanged(nameof(IsUrlSchemeRegistered));
                         tg.IsEnabled = true;
                     }
@@ -508,15 +545,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand]
         private async Task @event_Logout()
         {
-            if (App.RpcManager is null)
-            {
-                // todo
-                return;
-            }
-
             event_RefreshUserInfoCommand.Cancel();
 
-            var rux1 = await App.RpcManager.Logout();
+            var rux1 = await RpcManager.Logout();
 
             if (!rux1.Flag)
             {
@@ -536,6 +567,97 @@ namespace OpenFrp.Launcher.ViewModels
             //catch { }
 
             Model.RouteMessage<MainWindowViewModel>.Send(__userInfo_Defualt);
+        }
+
+        [RelayCommand()]
+        private async Task @event_CotrollService()
+        {
+            if (App.Current is not { MainWindow: AppWindow aw }) return;
+
+            var dialog = new iNKORE.UI.WPF.Modern.Controls.ContentDialog
+            {
+                Title = (IsServiceInstalled ? "卸载" : "安装") + "系统服务",
+                Content = new TextBlock()
+                {
+                    Inlines =
+                    {
+                        new System.Windows.Documents.Run("点击\"切换模式\",系统可能会弹出 UAC 窗口，请在 UAC 窗口点击\"是\", 来完成模式切换。若切换后\"系统服务模式\"的操控钮内容没有改变，请再次刷新页面后尝试。"),
+                    },
+                    TextWrapping = TextWrapping.Wrap
+                },
+                PrimaryButtonText = "切换模式",
+                CloseButtonText = "取消",
+                DefaultButton = iNKORE.UI.WPF.Modern.Controls.ContentDialogButton.Primary,
+            };
+
+
+
+            dialog.PrimaryButtonClick += async (_, e) =>
+            {
+                e.Cancel = true;
+                try
+                {
+                    aw.IsEnabled = false;
+                    aw.SetWindowEnableState(false);
+                    aw.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+
+                    Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");
+
+                    await DaemonManager.KillDaemonAsync();
+
+                    aw.Activate();
+
+                    var proc = await Service.Helpers.ProcessHelper.StartAsync(new ProcessStartInfo()
+                    {
+                        FileName = OpenFrp.Service.Helpers.FileHelper.GetServiceExecutableFile(),
+                        Arguments = $"--inst service " + !IsServiceInstalled,
+                        CreateNoWindow = true,
+                        ErrorDialog = false,
+                        UseShellExecute = true,
+                        ErrorDialogParentHandle = IntPtr.Zero,
+                        Verb = "runas",
+                        WindowStyle = ProcessWindowStyle.Hidden
+                    });
+
+                    aw.Activate();
+
+                    if (proc != null)
+                    {
+                        await proc.WaitForExitAsync();
+                    }
+
+                    RpcManager.Crack();
+                }
+                catch (System.ComponentModel.Win32Exception ex)
+                {
+                    if (ex.NativeErrorCode is not 5)
+                    {
+                        Logger.LogError(ex, "[ControllService] 切换服务状态时发生了错误");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "[ControllService] 切换服务状态时发生了错误");
+                }
+                finally
+                {
+                    Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
+
+                    await Task.Delay(500);
+
+                    dialog.Dispatcher.Invoke(dialog.Hide);
+
+                    aw.IsEnabled = true;
+                    aw.SetWindowEnableState(true);
+                    aw.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
+
+                    OnPropertyChanged(nameof(DaemonManager));
+                    OnPropertyChanged(nameof(IsServiceInstalled));
+                }
+            };
+
+            try { await dialog.ShowAsync(); } catch {  }
+
         }
     }
 }

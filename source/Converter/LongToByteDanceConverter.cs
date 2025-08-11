@@ -23,7 +23,7 @@ namespace OpenFrp.Launcher.Converter
                 double d2 = d1 / 1024d;
                 if (d2 < 1)
                 {
-                    return $"{d1} Gib";
+                    return $"{Math.Round(d1,2)} Gib";
                 }
                 return $"{Math.Round(d2 / 1024d, 2)} Tib";
             }

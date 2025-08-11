@@ -53,8 +53,8 @@ namespace OpenFrp.Launcher
         {
             if (this.DataContext is ViewModels.LoginWindowViewModel lwm)
             {
-                lwm.conve_TryDetectFrpcCancelCommand.Execute(default);
-                lwm.conve_RelayPrepareCancelCommand.Execute(default);
+                lwm.conve_TryDetectFrpcCommand.Cancel();
+                lwm.conve_RelayPrepareCommand.Cancel();
 
                 lwm.event_CancelLoginCommand.Execute(default);
             }
@@ -123,7 +123,7 @@ namespace OpenFrp.Launcher
                 this.Close();
             }));
 
-            return UserInfoCallback.Task.ContinueWith((t) => { a.Dispose(); return t.Result; }).WaitAsync(cancellationToken);
+            return UserInfoCallback.Task.ContinueWith((t) => { a.Dispose(); return t.Result; }).WhenAnyTime(cancellationToken);
         }
     }
 }

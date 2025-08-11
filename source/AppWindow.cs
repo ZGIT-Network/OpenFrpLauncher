@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Interop;
+using iNKORE.UI.WPF.Helpers;
 
 namespace OpenFrp.Launcher
 {
@@ -16,7 +17,11 @@ namespace OpenFrp.Launcher
 
         public AppWindow()
         {
-
+            TaskbarItemInfo = new System.Windows.Shell.TaskbarItemInfo
+            {
+                Description = "OpenFRP 桌面端启动器",
+                ThumbButtonInfos = new System.Windows.Shell.ThumbButtonInfoCollection(),
+            };
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -27,7 +32,10 @@ namespace OpenFrp.Launcher
                 Path = new PropertyPath(nameof(App.Settings.ApplicationTheme)),
                 Mode = BindingMode.OneWay
             });
-            iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
+            if (OSVersionHelper.IsWindows11OrGreater)
+            {
+                iNKORE.UI.WPF.Modern.Controls.Helpers.WindowHelper.SetSystemBackdropType(this, App.Settings.BackdropType);
+            }
 
             hWnd = new WindowInteropHelper(this).EnsureHandle();
 

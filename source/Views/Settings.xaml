@@ -13,7 +13,7 @@
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
     Title="Settings"
-    d:DesignHeight="980"
+    d:DesignHeight="1415"
     d:DesignWidth="825"
     mc:Ignorable="d">
     <FrameworkElement.Resources>
@@ -196,7 +196,15 @@
                                                 BorderThickness="0"
                                                 Description="正常情况下，直接自动登录该账户而无需在登录窗口等待。">
                                                 <ctrl:SettingItem.Icon>
-                                                    <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.Click}" />
+                                                    <ink:FontIcon
+                                                        FontFamily="{StaticResource FluentSystemIcons}"
+                                                        FontSize="24"
+                                                        Glyph="&#xE0D3;"
+                                                        RenderTransformOrigin=".5,.5">
+                                                        <FrameworkElement.RenderTransform>
+                                                            <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                                        </FrameworkElement.RenderTransform>
+                                                    </ink:FontIcon>
                                                 </ctrl:SettingItem.Icon>
                                                 <ink:ToggleSwitch
                                                     MinWidth="0"
@@ -224,7 +232,17 @@
                         <TextBlock FontSize="18" Text="外观" />
                         <ctrl:SettingItem Title="应用主题" Description="适应一下浅色模式？">
                             <ctrl:SettingItem.Icon>
-                                <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.CharacterAppearance}" />
+
+
+                                <ink:FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xF0605;"
+                                    RenderTransformOrigin=".5,.5">
+                                    <FrameworkElement.RenderTransform>
+                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                    </FrameworkElement.RenderTransform>
+                                </ink:FontIcon>
                             </ctrl:SettingItem.Icon>
                             <ComboBox
                                 Width="150"
@@ -240,7 +258,16 @@
                             Description="整的挺花里胡哨的..."
                             IsEnabled="{x:Static xa:OSVersionHelper.IsWindows11OrGreater}">
                             <ctrl:SettingItem.Icon>
-                                <ink:FontIcon FontSize="24" Glyph="&#xEB1D;" />
+
+                                <ink:FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xF06AB;"
+                                    RenderTransformOrigin=".5,.5">
+                                    <FrameworkElement.RenderTransform>
+                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05" />
+                                    </FrameworkElement.RenderTransform>
+                                </ink:FontIcon>
                             </ctrl:SettingItem.Icon>
                             <ComboBox
                                 MinWidth="150"
@@ -338,7 +365,15 @@
                         </ctrl:SettingItem>
                         <ctrl:SettingItem Title="强制使用 TLS 加密" Description="缓解在一些网络环境下无法映射的问题；但是占用CPU。">
                             <ctrl:SettingItem.Icon>
-                                <ink:FontIcon FontSize="24" Glyph="&#xED2F;" />
+                                <ink:FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xF03F2;"
+                                    RenderTransformOrigin=".5,.5">
+                                    <FrameworkElement.RenderTransform>
+                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                    </FrameworkElement.RenderTransform>
+                                </ink:FontIcon>
                             </ctrl:SettingItem.Icon>
                             <ink:ToggleSwitch
                                 MinWidth="0"
@@ -441,7 +476,15 @@
                             Description="针对旧版本系统无法使用命令行快速启动的问题。"
                             IsEnabled="{x:Static xa:OSVersionHelper.IsWindows10OrGreater}">
                             <ctrl:SettingItem.Icon>
-                                <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.MultimediaPMP}" />
+                                <ink:FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xF3A0;"
+                                    RenderTransformOrigin=".5,.5">
+                                    <FrameworkElement.RenderTransform>
+                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                    </FrameworkElement.RenderTransform>
+                                </ink:FontIcon>
                             </ctrl:SettingItem.Icon>
                             <ink:ToggleSwitch
                                 MinWidth="0"
@@ -452,6 +495,7 @@
                             <ctrl:SettingItem.ExtendUI>
                                 <xa:SimpleStackPanel>
                                     <TextBlock
+                                        FontFamily="{StaticResource SoraMediumMixYahei}"
                                         FontSize="13"
                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                         TextWrapping="Wrap">
@@ -468,7 +512,15 @@
                                 </xa:SimpleStackPanel>
                             </ctrl:SettingItem.ExtendUI>
                             <ctrl:SettingItem.Icon>
-                                <ink:FontIcon FontSize="24" Glyph="&#xE753;" />
+                                <ink:FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xF0241;"
+                                    RenderTransformOrigin=".5,.5">
+                                    <FrameworkElement.RenderTransform>
+                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                    </FrameworkElement.RenderTransform>
+                                </ink:FontIcon>
                             </ctrl:SettingItem.Icon>
                             <ink:ToggleSwitch
                                 MinWidth="0"
@@ -482,6 +534,47 @@
                             </ink:ToggleSwitch>
 
                         </ctrl:SettingItem>
+                        <ctrl:SettingItem Title="系统服务模式">
+                            <ctrl:SettingItem.ExtendUI>
+                                <xa:SimpleStackPanel>
+                                    <TextBlock
+                                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                                        FontSize="13"
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                        TextWrapping="Wrap">
+                                        <Run Text="增加一个系统服务，用于 FRPC 以及相关服务后台自启动。例如用于在登录页面时运行 FRPC 进行映射操作。" />
+
+                                    </TextBlock>
+                                    <ctrl:HyperlinkTp1
+                                        Padding="0"
+                                        Content="查看帮助"
+                                        Focusable="False"
+                                        FontSize="13"
+                                        NavigateUri="https://docs.openfrp.net/use/desktop-launcher"
+                                        ToolTip="查看&quot;系统服务&quot;的相关帮助" />
+                                </xa:SimpleStackPanel>
+                            </ctrl:SettingItem.ExtendUI>
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon FontSize="24" Glyph="&#xEBD2;" />
+                            </ctrl:SettingItem.Icon>
+                            <StackPanel Orientation="Horizontal">
+
+                                <Button
+                                    d:Content="安装"
+                                    Command="{Binding event_CotrollServiceCommand}"
+                                    Style="{StaticResource AccentButtonStyle}">
+                                    <behavior:Interaction.Triggers>
+                                        <behavior:DataTrigger Binding="{Binding IsServiceInstalled, Mode=OneWay}" Value="True">
+                                            <behavior:ChangePropertyAction PropertyName="Content" Value="卸载" />
+                                        </behavior:DataTrigger>
+                                        <behavior:DataTrigger Binding="{Binding IsServiceInstalled, Mode=OneWay}" Value="False">
+                                            <behavior:ChangePropertyAction PropertyName="Content" Value="安装" />
+                                        </behavior:DataTrigger>
+                                    </behavior:Interaction.Triggers>
+                                </Button>
+                            </StackPanel>
+                        </ctrl:SettingItem>
+
                         <ctrl:SettingItem Title="调试模式" Description="">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon FontSize="24" Glyph="&#xEC7A;" />

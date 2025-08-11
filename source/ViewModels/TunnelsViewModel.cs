@@ -18,6 +18,7 @@ using Google.Rpc;
 using Grpc.Core;
 using Grpc.Core.Utils;
 using iNKORE.UI.WPF.Modern.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using OpenFrp.Launcher.Model;
 using OpenFrp.Service;
 
@@ -39,10 +40,6 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     OnPropertyChanged(e.PropertyName);
                 };
-            }
-            if (App.RpcManager is null)
-            {
-
             }
             WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
             WeakReferenceMessenger.Default.Register<Model.RouteMessage<TunnelsViewModel, string>>(nameof(TunnelsViewModel), (_, message) =>
@@ -68,6 +65,8 @@ namespace OpenFrp.Launcher.ViewModels
                         ;break;
                 }
             });
+            RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
+
             conve_CreateStreamCommand.Execute(null);
         }
 
@@ -78,7 +77,7 @@ namespace OpenFrp.Launcher.ViewModels
         internal const string UserDisplayError = "UserDisplayError";
         internal const string UserDisplayEmpty = "UserDisplayEmpty";
 
-
+        private Rpc.RpcManager RpcManager { get; set; }
 
         private IClientStreamWriter<Service.Proto.Request.TunnelStreamRequest>? _writer;
         private FrameworkElement? container;
@@ -125,14 +124,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_CreateStream(CancellationToken cancellationToken)
         {
-            if (App.RpcManager is null)
-            {
-                // TODO: THROW EXCEPTION
-                return;
-            }
             if (disposableStream is null)
             {
-                disposableStream = await App.RpcManager.TunnelStream("testConnection", delegate { }, delegate { },cancellationToken);
+                disposableStream = await RpcManager.TunnelStream("testConnection", delegate { }, delegate { },cancellationToken);
 
                 disposableStream.Dispose();
             }
@@ -140,7 +134,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 await Task.Delay(250, cancellationToken);
             }
-            disposableStream = await App.RpcManager.TunnelStream(UserInfo.UserToken, writer => _writer = writer, StreamReader, cancellationToken);
+            disposableStream = await RpcManager.TunnelStream(UserInfo.UserToken, writer => _writer = writer, StreamReader, cancellationToken);
         }
 
         private void StreamReader(Service.Proto.Response.TunnelStreamResponse resp)
@@ -572,7 +566,7 @@ namespace OpenFrp.Launcher.ViewModels
                 }
                 else
                 {
-                    var onlineTunnels = await firstStateWaiter!.Task.WaitAsync(cancellationToken);
+                    var onlineTunnels = await firstStateWaiter!.Task.WhenAnyTime(cancellationToken);
                 
                     if (onlineTunnels is null || cancellationToken.IsCancellationRequested)
                     {
@@ -649,7 +643,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     try
                     {
-                        var v2 = await remoteAppWaiter.Task.WaitAsync(cancellationToken);
+                        var v2 = await remoteAppWaiter.Task.WhenAnyTime(cancellationToken);
 
                         if (v2 is not { Count: > 0 }) { return; }
 

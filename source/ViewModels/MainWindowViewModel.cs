@@ -17,8 +17,11 @@ using CommunityToolkit.Mvvm.Messaging;
 using Google.Rpc.Context;
 using iNKORE.UI.WPF.Helpers;
 using iNKORE.UI.WPF.Modern.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenFrp.Launcher.Model;
+using OpenFrp.Launcher.Rpc;
+
 
 namespace OpenFrp.Launcher.ViewModels
 {
@@ -26,6 +29,12 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public MainWindowViewModel()
         {
+            Logger = App.ServiceProvider.GetRequiredService<ILogger<MainWindowViewModel>>();
+
+            RpcManager = App.ServiceProvider.GetRequiredService<RpcManager>();
+            DaemonManager = App.ServiceProvider.GetRequiredService<DaemonManager>();
+
+            var appLogContainer = App.ServiceProvider.GetRequiredService<AppLogContainer>();
 
             WeakReferenceMessenger.Default.UnregisterAll(nameof(MainWindowViewModel));
 
@@ -95,6 +104,11 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             IsUserLogon = false;
 
+                            if (frame is { Content: not Views.Settings })
+                            {
+                                frame.Navigate(typeof(Views.Settings));
+                            }
+
                             App.Current.Dispatcher.Invoke(() =>
                             {
                                 if (App.Current.MainWindow is MainWindow { FrameContentViewModel: ViewModels.SettingsViewModel svm })
@@ -102,7 +116,7 @@ namespace OpenFrp.Launcher.ViewModels
                                     svm.event_RefreshUserInfoCommand.Cancel();
                                     svm.event_CallUpLoginWindowCommand.Cancel();
                                 }
-                                LogsCache?.Clear();
+                                appLogContainer.LogsCache?.Clear();
                             });
 
                             conve_CreateNotificationStreamCommand.Cancel();
@@ -128,17 +142,10 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             });
 
-            try
-            {
-                if (Microsoft.Win32.Registry.ClassesRoot.GetSubKeyNames().Contains("openfrp"))
-                {
-                    IsUrlSchemeRegistered = true;
-                }
-            }
-            catch
-            {
+            ReadRegistryConfig();
 
-            }
+
+
         }
 
         internal MainWindowViewModel(bool daemonState) : this()
@@ -168,10 +175,25 @@ namespace OpenFrp.Launcher.ViewModels
 
         private Action<string,string,InfoBarSeverity> ShowAlertAction = delegate { };
 
+        private void ReadRegistryConfig()
+        {
+            try
+            {
+                if (Microsoft.Win32.Registry.ClassesRoot.GetSubKeyNames().Contains("openfrp"))
+                {
+                    IsUrlSchemeRegistered = true;
+                }
+            }
+            catch { }
+        }
+
         private iNKORE.UI.WPF.Modern.Controls.Frame? frame;
         private iNKORE.UI.WPF.Modern.Controls.NavigationView? navigationView;
 
-        private static ILogger<MainWindowViewModel> Logger { get; } = App.loggerFactory.CreateLogger<MainWindowViewModel>();
+        private Rpc.DaemonManager DaemonManager { get; set; }
+        private Rpc.RpcManager RpcManager { get; set; }
+
+        private ILogger<MainWindowViewModel> Logger { get; set; }
 
         internal void OnViewModelPropertyChanged(string name) => OnPropertyChanged(name);
 
@@ -224,10 +246,7 @@ namespace OpenFrp.Launcher.ViewModels
         [ObservableProperty,NotifyPropertyChangedFor(nameof(IsUserLogon),nameof(IsAllowToUseTunnel))]
         private Model.UserInfo userInfo = SettingsViewModel.__userInfo_Defualt;
 
-        [ObservableProperty]
-        private ObservableCollection<Service.Proto.Response.LogStreamResponse.Types.LogContainer>? logsCache;
 
-        public Google.Protobuf.Collections.MapField<int, int> KnownLogIndexMapping { get; set; } = new Google.Protobuf.Collections.MapField<int, int> { };
 
         [RelayCommand]
         private void @event_NavigationViewLoaded(RoutedEventArgs arg)
@@ -298,7 +317,7 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                         return;
                     }
-                    //if (e.InvokedItemContainer is NavigationViewItem { Tag: "usrInfo" } )
+                    //if (e.InvokedItemContainer is NavigationViewItem { Tag: "usrInfo" })
                     //{
                     //    if (UserInfo.Equals(SettingsViewModel.__userInfo_Defualt))
                     //    {
@@ -580,15 +599,19 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_RetryConnectRpc(CancellationToken cancellationToken)
         {
-            App.DaemonManager.LaunchRpcProcess(out var manager);
+            await DaemonManager.LaunchDaemonAsync();
 
-            await App.DaemonManager.WaitForProcessLaunch(cancellationToken);
+            await DaemonManager.WaitForConfigureAsync(cancellationToken);
+
+            RpcManager.Configure();
+
+            await Task.Delay(1000, cancellationToken);
 
             OpenFrp.Service.Proto.RpcResponse<Service.Proto.Response.SyncResponse>? r1_resp = default;
 
             for (int i = 0; i < 5; i++)
             {
-                r1_resp = await manager.Sync(cancellationToken);
+                r1_resp = await RpcManager.Sync(cancellationToken);
 
                 if (r1_resp.Flag)
                 {
@@ -599,7 +622,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
             if (r1_resp is null || !r1_resp.Flag)
             {
-                ShowAlert("Failed to sync", r1_resp?.Message ?? "未知原因", InfoBarSeverity.Error);
+                ShowAlert("无法同步数据", r1_resp?.Message ?? "未知原因", InfoBarSeverity.Error);
             }
             if (r1_resp is not { Data: Service.Proto.Response.SyncResponse srp_sr })
             {
@@ -615,12 +638,12 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     frame.Navigate(typeof(Views.Settings));
                 }
-                ShowAlert("重-登录失败", n1_resp?.Message ?? "未知原因", InfoBarSeverity.Error);
+                ShowAlert("重新登录失败", n1_resp?.Message ?? "未知原因", InfoBarSeverity.Error);
                 return;
             }
             UserInfo = new Model.UserInfo(data);
 
-            var r2_resp = await manager.Login(new Service.Proto.Request.LoginRequest { UserInfomationJson = Google.Protobuf.ByteString.CopyFrom(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(data)) }, cancellationToken);
+            var r2_resp = await RpcManager.Login(new Service.Proto.Request.LoginRequest { UserInfomationJson = Google.Protobuf.ByteString.CopyFrom(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(data)) }, cancellationToken);
 
             if (r2_resp is { })
             {
@@ -642,9 +665,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_CreateNotificationStream(CancellationToken cancellationToken)
         {
-            App.DaemonManager.LaunchRpcProcess(out var rpcManager);
+            if (!RpcManager.IsConfigured) return;
 
-            await rpcManager.NotificationStream(NotificationReader, cancellationToken);
+            await RpcManager.NotificationStream(NotificationReader, cancellationToken);
         }
 
         /// <summary>
@@ -653,6 +676,7 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_TryAutoLaunchTunnel(CancellationToken cancellationToken)
         {
+            if (!RpcManager.IsConfigured) return;
             try
             {
                 if (!string.IsNullOrEmpty(App.Settings.AutoLaunchTunnel) && System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int[]>>(App.Settings.AutoLaunchTunnel) is { Count: > 0 } ap)
@@ -664,17 +688,12 @@ namespace OpenFrp.Launcher.ViewModels
                         return;
                     }
 
-                    App.DaemonManager.LaunchRpcProcess(out var rpcManager);
-
-                    var sync1 = await rpcManager.Sync(cancellationToken);
+                    var sync1 = await RpcManager.Sync(cancellationToken);
 
                     if (sync1.Data is null || sync1.Data.Onlines is not { } online)
                     {
                         return;
                     }
-
-                    ///int[] realOnline = sync1.Data.Onlines.ToArray();
-
                     if (attr.Except(online) is { } t && !t.Any())
                     {
                         return;
@@ -768,7 +787,7 @@ namespace OpenFrp.Launcher.ViewModels
 
                     await Task.Delay(500, cancellationToken);
 
-                    rpcResponse = await rpcManager.SyncWithLaunch(new Service.Proto.Request.SyncWithLaunchRequest
+                    rpcResponse = await RpcManager.SyncWithLaunch(new Service.Proto.Request.SyncWithLaunchRequest
                     {
                         Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
                         {
@@ -1010,7 +1029,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
-        internal static async void ShutdownApp(Process? bypassProc = default)
+        internal static async void ShutdownApp()
         {
             App.TaskBarIcon?.CloseTrayPopup();
 
@@ -1021,91 +1040,44 @@ namespace OpenFrp.Launcher.ViewModels
                 ap.HideByHANDLE();
                 ap.CancelControl();
             }
-            //switch (App.Current.MainWindow)
-            //{
-            //    case MainWindow mw:
-            //        {
-            //            iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(mw)?.Hide();
-            //            mw.HideByHANDLE();
-            //        }
-            //        ; break;
-            //    case LoginWindow lw:
-            //        {
-            //            iNKORE.UI.WPF.Modern.Controls.ContentDialog.GetOpenDialog(lw)?.Hide();
-            //            lw.HideByHANDLE();
-            //        }
-            //        ; break;
-            //}
 
             try
             {
                 BindingOperations.ClearBinding(App.Current.MainWindow, iNKORE.UI.WPF.Modern.ThemeManager.RequestedThemeProperty);
             }
-            catch
-            {
+            catch { }
 
-            }
             Helpers.UsrTokenService.WriteConfig();
-            App.Settings.Save();
 
             if (OSVersionHelper.IsWindows10OrGreater)
             {
                 try
                 {
                     Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.Uninstall();
-                    //ToastNotificationManagerCompat.History.Clear();
                 }
                 catch { }
             }
 
             App.TaskBarIcon?.Dispose();
 
-            await App.DaemonManager.InputToExitProc();
+            var v = App.ServiceProvider.GetService<DaemonManager>();
 
-            var dBase = Path.Combine(Directory.GetCurrentDirectory(), "OpenFrp.Service.exe");
-            foreach (var proc in Process.GetProcessesByName("OpenFrp.Service"))
+            if (v is not null)
             {
-                try
+                var resp = await v.KillDaemonAsync();
+
+                if (resp.StatusCode is 768)
                 {
-                    if (proc.Id.Equals(bypassProc?.Id)) continue;
-
-                    if (proc.MainModule is { FileName: var f } && f.Equals(dBase))
-                    {
-                        proc.Kill();
-
-                        break;
-                    }
+                    App.Settings.AutoLaunchTunnel = resp.Message;
                 }
-                catch
+                else if (resp.StatusCode is not 0)
                 {
-
+                    App.ServiceProvider.GetService<ILogger>()?.LogWarning("[ShutdownApp] DaemonManager.KillDaemonAsync failed: {statusCode} - {message}", resp.StatusCode, resp.Message);
                 }
             }
 
-            if (OpenFrp.Service.Helpers.FileHelper.TryGetFRPClient(out string path))
-            {
-                string prefix = "";
-                if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater)
-                {
-                    prefix = "legacy_";
-                }
-                foreach (var proc in Process.GetProcessesByName($"{prefix}frpc_windows_{OpenFrp.Service.Helpers.FileHelper.UserPlatform}"))
-                {
-                    try
-                    {
-                        if (proc.MainModule is { FileName: var f } && f.Equals(path))
-                        {
-                            proc.Kill();
+            App.Settings.Save();
 
-                            break;
-                        }
-                    }
-                    catch
-                    {
-
-                    }
-                }
-            }
             Application.Current.Shutdown();
         }
 
