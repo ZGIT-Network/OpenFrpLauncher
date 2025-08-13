@@ -10,6 +10,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Grpc.Core.Logging;
 using OpenFrp.Service.Daemon;
+using Nito.AsyncEx;
 
 
 namespace OpenFrp.Launcher.Rpc
@@ -24,7 +25,7 @@ namespace OpenFrp.Launcher.Rpc
 
         internal readonly Metadata GlobalHeader = new Metadata { };
 
-        internal bool IsConfigured => OpenFrpDeamonRpcClient is not null && !string.IsNullOrEmpty(PipeName);
+        internal bool IsConfigured => OpenFrpDeamonRpcClient is not null || !string.IsNullOrEmpty(PipeName);
 
         public RpcManager(ILogger<RpcManager> logger)
         {
@@ -33,29 +34,35 @@ namespace OpenFrp.Launcher.Rpc
 
         private readonly ILogger<RpcManager> logger;
 
+        private AsyncLock rpcConfigurationLock = new AsyncLock { };
 
         public void Configure() => Configure(Daemon.GetPipename());
 
         public void Configure(string pipeName)
         {
             if (IsConfigured) return;
-
-            PipeName = pipeName;
-
-            Channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", pipeName, new GrpcDotNetNamedPipes.NamedPipeChannelOptions
+            using (var @lock = rpcConfigurationLock.Lock())
             {
-                ConnectionTimeout = 10
-            });
+                PipeName = pipeName;
 
-            OpenFrpDeamonRpcClient = new OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient(Channel);
+                Channel = new GrpcDotNetNamedPipes.NamedPipeChannel(".", pipeName, new GrpcDotNetNamedPipes.NamedPipeChannelOptions
+                {
+                    ConnectionTimeout = 10
+                });
+
+                OpenFrpDeamonRpcClient = new OpenFrp.Service.Proto.Service.OpenFrp.OpenFrpClient(Channel);
+            }
         }
 
 
         public void Crack()
         {
-            PipeName = default;
-            Channel = null;
-            OpenFrpDeamonRpcClient = null;
+            using (var @lock = rpcConfigurationLock.Lock())
+            {
+                PipeName = default;
+                Channel = null;
+                OpenFrpDeamonRpcClient = null;
+            }
         }
 
         public async Task<OpenFrp.Service.Proto.RpcResponse<Service.Proto.Response.SyncResponse>> Sync(CancellationToken cancellationToken = default)
@@ -96,6 +103,36 @@ namespace OpenFrp.Launcher.Rpc
             try
             {
                 var resp = await Task.Run(async () => await OpenFrpDeamonRpcClient.SyncWithLaunchAsync(
+                    /* deadline: Deadline, */
+                    request,
+                    headers: GlobalHeader,
+                    cancellationToken: cancellationToken));
+
+                if (resp is not null)
+                {
+                    return resp;
+                }
+            }
+            catch (RpcException rpcEx)
+            {
+                return rpcEx;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+            return Service.Proto.RpcResponse<Service.Proto.Response.BaseResponse>.FailedResponse;
+        }
+
+        public async Task<OpenFrp.Service.Proto.RpcResponse> SyncWithSetting(Service.Proto.Request.SyncWithSettingRequest request, CancellationToken cancellationToken = default)
+        {
+            if (OpenFrpDeamonRpcClient is null)
+            {
+                throw new InvalidOperationException("RPC 客户端暂未配置。");
+            }
+            try
+            {
+                var resp = await Task.Run(async () => await OpenFrpDeamonRpcClient.SyncWithSettingAsync(
                     /* deadline: Deadline, */
                     request,
                     headers: GlobalHeader,
@@ -242,21 +279,16 @@ namespace OpenFrp.Launcher.Rpc
 
             writerCallback.Invoke(duplex.RequestStream);
 
-
-            await duplex.RequestStream.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
-            {
-                State = Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.Prepare,
-                Data = Any.Pack(new StringValue
-                {
-                    Value = userTokenAccess ?? ""
-                }) 
-            });
-
-            //var status = duplex.GetStatus();
-            
-            
             try
             {
+                await duplex.RequestStream.WriteAsync(new Service.Proto.Request.TunnelStreamRequest
+                {
+                    State = Service.Proto.Request.TunnelStreamRequest.Types.TunnelStreamRequestState.Prepare,
+                    Data = Any.Pack(new StringValue
+                    {
+                        Value = userTokenAccess ?? ""
+                    })
+                });
                 while (await duplex.ResponseStream.MoveNext(cancellationToken))
                 {
                     readerCallback.Invoke(duplex.ResponseStream.Current);

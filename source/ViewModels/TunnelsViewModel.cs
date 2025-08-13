@@ -66,6 +66,7 @@ namespace OpenFrp.Launcher.ViewModels
                 }
             });
             RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
+            FrpcManager = App.ServiceProvider.GetRequiredService<Service.Manager.Frpc.FrpcManager>();
 
             conve_CreateStreamCommand.Execute(null);
         }
@@ -78,6 +79,7 @@ namespace OpenFrp.Launcher.ViewModels
         internal const string UserDisplayEmpty = "UserDisplayEmpty";
 
         private Rpc.RpcManager RpcManager { get; set; }
+        private Service.Manager.Frpc.FrpcManager FrpcManager { get; set; }
 
         private IClientStreamWriter<Service.Proto.Request.TunnelStreamRequest>? _writer;
         private FrameworkElement? container;
@@ -454,9 +456,9 @@ namespace OpenFrp.Launcher.ViewModels
                         OriginalTomlConfig = tomlConfStr ?? "",
                         Config = @switch.IsOn ? new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
                         {
-                            AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
-                            UseForceTls = App.FrpcFeature.UseForceTls,
-                            UseDebug = App.FrpcFeature.UseDebug
+                            AllowDisableConsoleColor = FrpcManager.Feature.AllowDisableConsoleColor,
+                            UseForceTls = App.Settings.UseForceTls,
+                            UseDebug = App.Settings.UseDebug
                         } : default
                     }),
                 });
@@ -717,9 +719,9 @@ namespace OpenFrp.Launcher.ViewModels
                         OriginalFastLaunchCall = link,
                         Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
                         {
-                            AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
-                            UseForceTls = App.FrpcFeature.UseForceTls,
-                            UseDebug = App.FrpcFeature.UseDebug
+                            AllowDisableConsoleColor = FrpcManager.Feature.AllowDisableConsoleColor,
+                            UseForceTls = App.Settings.UseForceTls,
+                            UseDebug = App.Settings.UseDebug
                         } 
                     }),
                 });

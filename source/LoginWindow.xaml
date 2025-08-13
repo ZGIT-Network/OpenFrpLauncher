@@ -27,15 +27,11 @@
     ShowActivated="True"
     WindowState="Minimized"
     mc:Ignorable="d">
-    <!--<local:AppWindow.TaskbarItemInfo>
-        <TaskbarItemInfo Description="OpenFrp 启动器 - 登录" />
-    </local:AppWindow.TaskbarItemInfo>-->
     <local:AppWindow.Resources>
         <CubicEase
             x:Key="_DefaultCubicEase"
             PresentationOptions:Freeze="True"
             EasingMode="EaseOut" />
-        <!--<ink:BindingProxy x:Key="ExceptionIsNull" Value="{Binding ExecuteResult.Exception, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, Mode=OneWay}" />-->
     </local:AppWindow.Resources>
     <local:AppWindow.DataContext>
         <vm:LoginWindowViewModel />
@@ -83,17 +79,11 @@
                 <ScaleTransform ScaleX="1" ScaleY="1" />
             </Grid.RenderTransform>
             <Viewbox Stretch="UniformToFill">
-                <!--<Viewbox.CacheMode>
-                    <BitmapCache EnableClearType="False" RenderAtScale="1"/>
-                </Viewbox.CacheMode>-->
-                <!--  "pack://application:,,,/Resources/Images/v2-bg.jpg"  -->
-                <!--  "pack://application:,,,/Resources/Images/pexels-xieyun-15415001.jpg"  -->
-                <!--  pack://application:,,,/Resources/Images/funx.png  -->
                 <Image
                     x:Name="bgImagePlacement"
-                    RenderOptions.BitmapScalingMode="HighQuality"
-                    Source="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no035,card_after_training.png"
-                    Visibility="Hidden" />
+                    RenderOptions.BitmapScalingMode="LowQuality"
+                    Source="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no044,card_after_training.png"
+                    Visibility="Visible" />
             </Viewbox>
 
         </Grid>
@@ -141,39 +131,18 @@
                     ink:ClipHelper.CornerRadius="3"
                     RenderOptions.BitmapScalingMode="LowQuality"
                     Source="pack://application:,,,/Resources/Images/desktop_64w.png" />
-                <TextBlock
-                    x:Name="titelRender"
-                    Padding="0,0,0,0"
-                    VerticalAlignment="Center"
-                    FontFamily="{StaticResource SoraMedium}"
-                    FontSize="24"
-                    FontWeight="Medium"
-                    Text="OpenFRP">
-                    <FrameworkElement.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Foreground">
-                                <Setter.Value>
-                                    <LinearGradientBrush>
-                                        <GradientStop Offset="0" Color="#9BF8F9" />
-                                        <GradientStop Offset="1" Color="#B3DDF1" />
-                                    </LinearGradientBrush>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="ink:ThemeManager.ActualTheme" Value="Dark">
-                                    <Setter Property="Foreground">
-                                        <Setter.Value>
-                                            <LinearGradientBrush>
-                                                <GradientStop Offset="0" Color="#55CBF2" />
-                                                <GradientStop Offset="1" Color="#B3DDF1" />
-                                            </LinearGradientBrush>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </FrameworkElement.Style>
-                </TextBlock>
+                <Grid>
+                    <TextBlock
+                        x:Name="titelRender"
+                        Padding="0,0,0,0"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                        FontSize="24"
+                        FontWeight="Medium"
+                        Visibility="Visible">
+                        <Run>OpenFrp</Run>
+                    </TextBlock>
+                </Grid>
             </StackPanel>
             <Grid Grid.Row="2" Margin="36,0,36,40">
                 <StackPanel Orientation="Vertical">

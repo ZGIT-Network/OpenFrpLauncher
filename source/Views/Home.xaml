@@ -154,7 +154,7 @@
                                             IsHitTestVisible="{Binding Value, Source={StaticResource IsNotRunning}, Mode=OneWay}"
                                             ItemsSource="{Binding AdSences, Mode=OneWay}">
                                             <ctrl:Carousel.Background>
-                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no035,card_after_training.png" Stretch="UniformToFill" />
+                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no044,card_after_training.png" Stretch="UniformToFill" />
                                             </ctrl:Carousel.Background>
                                             <ctrl:Carousel.Visibility>
                                                 <Binding

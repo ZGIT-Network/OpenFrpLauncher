@@ -122,6 +122,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             RpcManager = App.ServiceProvider.GetRequiredService<RpcManager>();
             DaemonManager = App.ServiceProvider.GetRequiredService<DaemonManager>();
+            FrpcManager = App.ServiceProvider.GetRequiredService<Service.Manager.Frpc.FrpcManager>();
 
         }
 
@@ -144,6 +145,7 @@ namespace OpenFrp.Launcher.ViewModels
 
         private DaemonManager DaemonManager { get; set; }
         private RpcManager RpcManager { get; set; }
+        private Service.Manager.Frpc.FrpcManager FrpcManager { get; set; }
         private ILogger<LoginWindowViewModel> Logger { get; set; } 
 
         [ObservableProperty, NotifyCanExecuteChangedFor(nameof(event_CancelLoginCommand))]
@@ -306,10 +308,8 @@ namespace OpenFrp.Launcher.ViewModels
             }
             else
             {
-                await event_GotoMainWindowCommand.ExecuteAsync (cancellationToken);
+                await event_GotoMainWindowCommand.ExecuteAsync(cancellationToken);
             }
-
-            
         }
 
         private void Wind_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -779,81 +779,14 @@ namespace OpenFrp.Launcher.ViewModels
                     };
                 }
             }
-            try
+            Exception? exc = default;
+            if (await FrpcManager.DetectFrpcVersionAndFeatrue(fp,ex => exc = ex))
             {
-                var pro = new Process()
-                {
-                    StartInfo =
-                    {
-                        CreateNoWindow = true,
-                        FileName = fp,
-                        UseShellExecute = false,
-                        StandardOutputEncoding = Encoding.UTF8,
-                        RedirectStandardOutput = true,
-                        Arguments = "-v"
-                    }
-                };
-                // 待回复... 火绒拦截
-                //if(pro.Start())
-                if (await Task.Run(pro.Start))
-                {
-#if NET
-                        await pro.WaitForExitAsync();
-#else
-                    await Task.Run(pro.WaitForExit);
-#endif
-                    while (!pro.StandardOutput.EndOfStream)
-                    {
-                        string? str = await pro.StandardOutput.ReadLineAsync();
-
-                        if (string.IsNullOrEmpty(str)) continue;
-                        if (FrpcVersionRegex.Match(str) is { Groups.Count: > 0 } match)
-                        {
-                            if (match.Groups[match.Groups.Count - 2] is { Success: true, Value: string vlat } && int.TryParse(vlat, out var vlat_i))
-                            {
-                                if (vlat_i >= 60)
-                                {
-                                    App.FrpcFeature.AllowDisableConsoleColor = true;
-                                }
-                                else if (vlat_i < 60)
-                                {
-                                    App.Settings.UseConfigLaunch = true;
-                                }
-                            }
-                            
-                            App.FrpcVersionString = str;
-
-                            VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
-
-                            return new Model.ExecuteResult();
-                        }
-                    }
-                }
-
-                throw new System.ComponentModel.Win32Exception($"进程启动失败或无版本号输出: {pro.ExitCode}");
+                VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
+                return Model.ExecuteResult.Success();
             }
-            catch (System.ComponentModel.Win32Exception w)
-            {
-                if (w.NativeErrorCode is 225 or 226)
-                {
-                    return new Model.ExecuteResult()
-                    {
-                        Exception = w,
-                        Message = w.Message
-                    };
-                }
-                return new Model.ExecuteResult()
-                {
-                    Exception = w
-                };
-            }
-            catch (Exception e)
-            {
-                return new Model.ExecuteResult
-                {
-                    Exception = e
-                };
-            }
+            
+            return exc ?? new InvalidOperationException("操作失败，未知启动原因。");
         }
 
         [RelayCommand]
@@ -1120,13 +1053,13 @@ namespace OpenFrp.Launcher.ViewModels
                     return;
                 }
 
-                if (App.FrpcVersionString.Equals(sv.Latest, StringComparison.Ordinal))
+                if (FrpcManager.FrpcVersionString.Equals(sv.Latest, StringComparison.Ordinal))
                 {
                     return;
                 }
                 else
                 {
-                    if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater && App.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
+                    if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater && FrpcManager.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
                     {
                         DownloadProcess.DownloadFileUrl = "";
 

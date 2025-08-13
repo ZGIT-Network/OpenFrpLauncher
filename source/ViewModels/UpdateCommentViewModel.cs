@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using iNKORE.UI.WPF.Helpers;
 using iNKORE.UI.WPF.Modern.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using OpenFrp.Launcher.Model;
 
 namespace OpenFrp.Launcher.ViewModels
@@ -25,11 +26,15 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     OnPropertyChanged(e.PropertyName);
                 };
-
-                return;
             }
-            throw new NullReferenceException(nameof(App.Current.MainWindow.DataContext));
+            else throw new NullReferenceException(nameof(App.Current.MainWindow.DataContext));
+
+            FrpcManager = App.ServiceProvider.GetRequiredService<Service.Manager.Frpc.FrpcManager>();
         }
+
+        private Service.Manager.Frpc.FrpcManager FrpcManager { get; set; }
+
+        public string FrpcVersionString { get => FrpcManager.FrpcVersionString; }
 
         internal const string LoadingState = "DisplayLoadingCtrl";
         internal const string ErrorState = "DisplayErrorCtrl";
@@ -77,13 +82,13 @@ namespace OpenFrp.Launcher.ViewModels
                         return;
                     }
                 }
-                else if (App.FrpcVersionString != "Unknown")
+                else if (FrpcManager.FrpcVersionString != "Unknown")
                 {
-                    if (software.Latest != App.FrpcVersionString)
+                    if (software.Latest != FrpcManager.FrpcVersionString)
                     {
                         if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows10OrGreater)
                         {
-                            if (App.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
+                            if (FrpcManager.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
                             {
                                 VisualStateManager.GoToElementState(container, EmptyState, false);
                                 mv.HasUpdate = false;
@@ -94,7 +99,7 @@ namespace OpenFrp.Launcher.ViewModels
                         Message =
                                 (OSVersionHelper.IsWindows10OrGreater ? "" : "Windows 10 以下版本 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
                                 software.FrpcUpdateLog +
-                                (OSVersionHelper.IsWindows10OrGreater ? $"\nUpdate: {App.FrpcVersionString} => {software.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
+                                (OSVersionHelper.IsWindows10OrGreater ? $"\nUpdate: {FrpcManager.FrpcVersionString} => {software.Latest}" : $"\nUpdate: {FrpcManager.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
                                 $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！";
                         mv.HasUpdate = true;
                         UpdateType = UpdateType.Frpc;
@@ -180,7 +185,7 @@ namespace OpenFrp.Launcher.ViewModels
                             //mv.HasUpdate = true;
                         }
                     }
-                    else if (App.FrpcVersionString != "Unknown")
+                    else if (FrpcManager.FrpcVersionString != "Unknown")
                     {
                         if (software.Latest != App.LauncherVersionString)
                         {
@@ -195,7 +200,7 @@ namespace OpenFrp.Launcher.ViewModels
                             Message =
                                     (OSVersionHelper.IsWindows8OrGreater ? "" : "Windows 7 已不受支持，将升级到 OpenFRP_0.54.0_835276e2_20240205。") +
                                     software.FrpcUpdateLog +
-                                    (OSVersionHelper.IsWindows8OrGreater ? $"\nUpdate: {App.FrpcVersionString} => {software.Latest}" : $"\nUpdate: {App.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
+                                    (OSVersionHelper.IsWindows8OrGreater ? $"\nUpdate: {FrpcManager.FrpcVersionString} => {software.Latest}" : $"\nUpdate: {FrpcManager.FrpcVersionString} => OpenFRP_0.54.0_835276e2_20240205。") +
                                     $"\n请注意: 若您在使用 FRPC 映射远程服务，请备用远程方式，否则请不要更新！";
 
                             UpdateType = UpdateType.Frpc;

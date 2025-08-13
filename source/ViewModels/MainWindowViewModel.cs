@@ -33,6 +33,7 @@ namespace OpenFrp.Launcher.ViewModels
 
             RpcManager = App.ServiceProvider.GetRequiredService<RpcManager>();
             DaemonManager = App.ServiceProvider.GetRequiredService<DaemonManager>();
+            FrpcManager = App.ServiceProvider.GetRequiredService<Service.Manager.Frpc.FrpcManager>();
 
             var appLogContainer = App.ServiceProvider.GetRequiredService<AppLogContainer>();
 
@@ -192,6 +193,7 @@ namespace OpenFrp.Launcher.ViewModels
 
         private Rpc.DaemonManager DaemonManager { get; set; }
         private Rpc.RpcManager RpcManager { get; set; }
+        private Service.Manager.Frpc.FrpcManager FrpcManager { get; set; }
 
         private ILogger<MainWindowViewModel> Logger { get; set; }
 
@@ -725,7 +727,7 @@ namespace OpenFrp.Launcher.ViewModels
                         }
                     }
 
-                    if (App.Settings.UseConfigLaunch)
+                    if (App.Settings.UseConfigLaunch || FrpcManager.Feature.ForceUseConfig)
                     {
                         foreach (var nid in requestTunnels.Select(x => x.NodeId).Distinct())
                         {
@@ -791,9 +793,9 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         Config = new Service.Proto.Request.TunnelStreamRequest.Types.TunnelLaunchConfig
                         {
-                            AllowDisableConsoleColor = App.FrpcFeature.AllowDisableConsoleColor,
-                            UseForceTls = App.FrpcFeature.UseForceTls,
-                            UseDebug = App.FrpcFeature.UseDebug,
+                            AllowDisableConsoleColor = FrpcManager.Feature.AllowDisableConsoleColor,
+                            UseForceTls = App.Settings.UseForceTls,
+                            UseDebug = App.Settings.UseDebug,
                         },
                         UserToken = UserInfo.UserToken,
                         RequireUserTunnels = bfStr,
@@ -1011,11 +1013,11 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     HasUpdate = true;
                 }
-                else if (App.FrpcVersionString != "Unknown")
+                else if (FrpcManager.FrpcVersionString != "Unknown")
                 {
-                    if (software.Latest != App.FrpcVersionString)
+                    if (software.Latest != FrpcManager.FrpcVersionString)
                     {
-                        if (!OSVersionHelper.IsWindows8OrGreater && App.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
+                        if (!OSVersionHelper.IsWindows8OrGreater && FrpcManager.FrpcVersionString.Equals("OpenFRP_0.54.0_835276e2_20240205"))
                         {
                             return;
                         }
@@ -1066,8 +1068,37 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 var resp = await v.KillDaemonAsync();
 
-                if (resp.StatusCode is 768)
+                if (resp.StatusCode is 768 && !string.IsNullOrEmpty(resp.Message))
                 {
+                    if (!string.IsNullOrEmpty(App.Settings.AutoLaunchTunnel))
+                    {
+                        try
+                        {
+                            var v1 = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int[]>>(App.Settings.AutoLaunchTunnel);
+                            var v2 = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int[]>>(resp.Message!);
+
+                            if (v1 is not null && v2 is not null)
+                            {
+                                var tkv = v2.FirstOrDefault();
+
+                                if (v1.ContainsKey(tkv.Key))
+                                {
+                                    v1[tkv.Key] = tkv.Value;
+                                }
+
+                                string s = System.Text.Json.JsonSerializer.Serialize(v1);
+
+                                if (!string.IsNullOrEmpty(s))
+                                {
+                                    App.Settings.AutoLaunchTunnel = s;
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                    }
                     App.Settings.AutoLaunchTunnel = resp.Message;
                 }
                 else if (resp.StatusCode is not 0)

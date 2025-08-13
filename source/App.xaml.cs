@@ -1,33 +1,33 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing.Imaging;
+using System.Diagnostics.Metrics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
+using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Threading;
-using OpenFrp.Launcher.Rpc;
-using OpenFrp.Service.Daemon;
-using iNKORE.UI.WPF.Helpers;
-using System.Runtime.InteropServices;
-using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using System.Windows.Data;
-using System.Diagnostics.Metrics;
-
-using System.Text;
-using System.Security.Principal;
-using OpenFrp.Launcher.Win32;
-using System.ComponentModel;
-using Microsoft.Extensions.Logging;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using OpenFrp.Service;
+using iNKORE.UI.WPF.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OpenFrp.Launcher.Rpc;
+using OpenFrp.Launcher.Win32;
+using OpenFrp.Service;
+using OpenFrp.Service.Daemon;
 using OpenFrp.Service.Helpers;
+using static Grpc.Core.ServerServiceDefinition;
 
 
 namespace OpenFrp.Launcher
@@ -37,12 +37,6 @@ namespace OpenFrp.Launcher
     /// </summary>
     public partial class App : Application
     {
-        //internal static ILoggerFactory loggerFactory = LoggerFactory.Create((c) =>
-        //{
-        //    c.AddDebug();
-        //    c.SetMinimumLevel(LogLevel.Debug);
-        //});
-
         public ILogger<App> Logger { get; private set; } 
         public static ServiceProvider ServiceProvider { get; private set; }
 
@@ -51,16 +45,17 @@ namespace OpenFrp.Launcher
             ServiceProvider = new ServiceCollection()
                 .AddLogging((option) =>
                 {
-                    option.SetMinimumLevel(LogLevel.Debug);
+#if DEBUG
+                    option.SetMinimumLevel(LogLevel.Trace);
+#else
+                    option.SetMinimumLevel(LogLevel.Information);
+#endif
                     option.AddDebug();
                 })
                 .AddSingleton<DaemonManager>()
                 .AddSingleton<RpcManager>()
                 .AddSingleton<Model.AppLogContainer>()
-                
-
-                
-
+                .AddSingleton<Service.Manager.Frpc.FrpcManager>()
                 .BuildServiceProvider();
         }
 
@@ -404,17 +399,17 @@ namespace OpenFrp.Launcher
 
         internal static Properties.Settings Settings { get => OpenFrp.Launcher.Properties.Settings.Default; }
 
-        internal static Model.FrpcFeatrue FrpcFeature { get; } = new Model.FrpcFeatrue();
+        
 
         public static iNKORE.UI.WPF.Modern.ElementTheme ApplicationTheme { get => Settings.ApplicationTheme; }
 
-        public static string FrpcVersionString { get; set; } = "Unknown";
+        
 
-        public static string LauncherVersionString => "5.8.67 Preview";
+        public static string LauncherVersionString => "5.8.72 Preview";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 
-        public static int LauncherVersionNumber => 5867;
+        public static int LauncherVersionNumber => 5872;
 
         internal static bool IsAdministrator()
         {

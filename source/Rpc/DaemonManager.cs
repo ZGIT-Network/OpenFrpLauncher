@@ -10,573 +10,12 @@ using System.Threading.Tasks;
 using System.Windows.Interop;
 using iNKORE.UI.WPF.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Xaml.Behaviors.Core;
 using OpenFrp.Service;
 using OpenFrp.Service.Helpers;
 
 namespace OpenFrp.Launcher.Rpc
 {
-    //class DaemonManager
-    //{
-    //    internal DaemonManager()
-    //    {
-    //        //CancellationTokenSource = new CancellationTokenSource { };
-
-    //        //GetOpenFrpService();
-    //    }
-
-    //    internal Process? ServiceProcess { get; set; }
-
-    //    //private CancellationTokenSource CancellationTokenSource { get; set; }
-
-    //    //internal CancellationToken CancellationToken
-    //    //{
-    //    //    get
-    //    //    {
-    //    //        if (CancellationTokenSource is not null)
-    //    //        {
-    //    //            return CancellationTokenSource.Token;
-    //    //        }
-    //    //        return CancellationToken.None;
-    //    //    }
-    //    //}
-
-    //    //internal void Cancal()
-    //    //{
-    //    //    if (CancellationTokenSource is not null)
-    //    //    {
-    //    //        CancellationTokenSource.Cancel();
-    //    //        CancellationTokenSource.Dispose();
-    //    //    }
-    //    //}
-
-    //    private TaskCompletionSource<string>? onlineInstanceWaiter { get; set; }
-
-    //    private Task? prevListenDaemonTask;
-
-    //    private EventWaitHandle? _daemon_ProcessEventWaitHandle;
-
-    //    internal async Task<bool> WaitForProcessLaunch(CancellationToken cancellationToken = default)
-    //    {
-    //        if (_daemon_ProcessEventWaitHandle is not null)
-    //        {
-    //            await Task.Run(_daemon_ProcessEventWaitHandle.WaitOne).WhenAnyTime(cancellationToken);
-
-    //            ResetDaemonWaitHandle();
-
-                
-    //        }
-    //        else if (serviceController is not null)
-    //        {
-    //            serviceController.Refresh();
-
-    //            try
-    //            {
-    //                await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Running)).WhenAnyTime(cancellationToken).WithTimeout(7500);
-
-    //                return serviceController.Status == ServiceControllerStatus.Running;
-    //            }
-    //            catch (InvalidOperationException)
-    //            {
-    //                RefreshServiceActivation();
-
-    //                return await WaitForProcessLaunch(cancellationToken);
-    //            }
-    //        }
-    //        return !cancellationToken.IsCancellationRequested;
-    //    }
-
-    //    internal void ResetDaemonWaitHandle()
-    //    {
-    //        if (_daemon_ProcessEventWaitHandle is null) return;
-
-
-    //        _daemon_ProcessEventWaitHandle.Close();
-
-    //        _daemon_ProcessEventWaitHandle = null;
-    //    }
-
-    //    internal Model.ExecuteResult LaunchRpcProcess(out Rpc.RpcManager manager)
-    //    {
-    //        var r = LaunchRpcProcess();
-
-    //        if (App.RpcManager is null)
-    //        {
-    //            throw new NullReferenceException();
-    //        }
-    //        manager = App.RpcManager;
-
-    //        return r;
-    //    }
-
-    //    internal Model.ExecuteResult LaunchRpcProcess()
-    //    {
-    //        //App.RpcManager ??= new RpcManager();
-
-    //        if (ServiceProcess is { HasExited: false })
-    //        {
-    //            return new Model.ExecuteResult { };
-    //        }
-    //        ServiceProcess = default;
-
-    //        RefreshServiceActivation();
-
-    //        if (IsServiceDaemon)
-    //        {
-                
-    //            try
-    //            {
-    //                serviceController!.Refresh();
-
-    //                if (serviceController!.Status is ServiceControllerStatus.Running)
-    //                {
-    //                    return new Model.ExecuteResult { };
-    //                }
-    //                serviceController.Start();
-
-    //                return new Model.ExecuteResult { };
-    //            }
-    //            catch(Exception ivo)
-    //            {
-    //                if (ivo.InnerException is System.ComponentModel.Win32Exception { NativeErrorCode: not 5 } ex)
-    //                {
-    //                    if (ex.NativeErrorCode is 1060 or 1072)
-    //                    {
-    //                        RefreshServiceActivation();
-    //                    }
-    //                    return new Model.ExecuteResult { Exception = ex, Message = ex.Message };
-    //                }
-    //            }
-
-
-    //            try
-    //            {
-    //                Process.Start(new ProcessStartInfo()
-    //                {
-    //                    FileName = OpenFrp.Service.Helpers.FileHelper.GetServiceExecutableFile(),
-    //                    Arguments = $"--service launch",
-    //                    CreateNoWindow = true,
-    //                    ErrorDialog = false,
-    //                    UseShellExecute = true,
-    //                    ErrorDialogParentHandle = IntPtr.Zero,
-    //                    Verb = "runas",
-    //                    WindowStyle = ProcessWindowStyle.Hidden
-    //                });
-
-    //                return new Model.ExecuteResult { };
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                return new Model.ExecuteResult { Exception = ex,Message = "启动服务时发生了错误" };
-    //            }
-    //        }
-
-
-    //        var mutex = new Mutex(true, $"service.{App.RpcManager.PipeName}", out var createdNewFlag);
-
-    //        // ofRpcDaemon.ZrzkE5Ew57JqCQQV1X3BgnOMrVUUjdUPcc82uZ8agH8=
-    //        // ofRpcDaemon.ZrzkE5Ew57JqCQQV1X3BgnOMrVUUjdUPcc82uZ8agH8=
-
-    //        if (!createdNewFlag && !mutex.SafeWaitHandle.IsClosed)
-    //        {
-    //            // 已经创建了一个相同命名的进程，在此监听，等到其结束。
-    //            prevListenDaemonTask ??= Task.Run(() => ListenDaemonProcessExit(ref mutex));
-
-    //            return new Model.ExecuteResult { };
-    //        }
-    //        else
-    //        {
-    //            mutex.Close();
-    //        }
-
-
-            
-    //        try
-    //        {
-    //            var pro = new Process()
-    //            {
-    //                StartInfo = new ProcessStartInfo
-    //                {
-    //                    FileName = Service.Helpers.FileHelper.GetServiceExecutableFile(),
-    //                    Arguments = "--daemon",
-    //                    CreateNoWindow = true,
-    //                    ErrorDialog = false,
-    //                    UseShellExecute = false,
-    //                    RedirectStandardInput = true,
-    //                    RedirectStandardError = true,
-    //                    RedirectStandardOutput = true,
-    //                    StandardErrorEncoding = System.Text.Encoding.Default,
-    //                    StandardOutputEncoding = System.Text.Encoding.Default,
-    //                    //WindowStyle = ProcessWindowStyle.Hidden,
-    //                },
-    //                EnableRaisingEvents = true
-    //            };
-    //            pro.OutputDataReceived += DaemonProcessOutputDataReceived;
-    //            pro.ErrorDataReceived += DaemonProcessOutputDataReceived;
-    //            pro.Exited += DaemonProcessExited;
-
-    //            if ((!pro.Start() && pro.HasExited) || pro.HasExited)
-    //            {
-    //                return new Model.ExecuteResult { StatusCode = pro.ExitCode,Exception = new InvalidOperationException(pro.ToString()) };
-    //            }
-    //            else
-    //            {
-    //                pro.BeginOutputReadLine();
-    //                pro.BeginErrorReadLine();
-
-    //                _daemon_ProcessEventWaitHandle = new EventWaitHandle(false, EventResetMode.ManualReset);
-
-    //                ServiceProcess = pro;
-    //                return new Model.ExecuteResult { };
-    //            }
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            return new Model.ExecuteResult { Exception = ex,Message = "启动 Daemon 时发生了错误" };
-    //        }
-    //    }
-
-    //    private void DaemonProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
-    //    {
-    //        if (e.Data is string { Length: > 0 } msg)
-    //        {
-    //            Debug.WriteLine($"[OF Daemon] {msg}");
-    //            switch (msg)
-    //            {
-    //                case "dbug: OpenFrp.Service.Daemon.Daemon[0] service launched!":
-    //                    {
-    //                        _daemon_ProcessEventWaitHandle?.Set();
-    //                    }
-    //                    ; break;
-    //                case "dbug: OpenFrp.Service.Daemon.Daemon[0] Is Service Mode, Return.":
-    //                    {
-    //                        this.RefreshServiceActivation();
-    //                    };
-    //                    break;
-    //                default:
-    //                    {
-    //                        if (msg.StartsWith("fail"))
-    //                        {
-    //                            if (ServiceProcess is not { } || !ServiceProcess.WaitForExit(1000)) return;
-
-    //                            ServiceProcess.Exited -= DaemonProcessExited;
-
-    //                            DaemonProcessExited(process: ServiceProcess, msg);
-    //                        }
-    //                        else if (msg.StartsWith("jsonValue!of+="))
-    //                        {
-    //                            onlineInstanceWaiter?.TrySetResult(msg.Substring("jsonValue!of+=".Length));
-    //                        }
-    //                    }
-    //                    ; break;
-    //            }
-    //        }
-    //    }
-
-    //    public async Task<bool> InputToExitProc()
-    //    {
-
-    //        if (App.DaemonManager.ServiceProcess is not null)
-    //        {
-    //            App.DaemonManager.ServiceProcess.EnableRaisingEvents = false;
-
-    //            onlineInstanceWaiter = new TaskCompletionSource<string> { };
-
-    //            try
-    //            {
-    //                await App.DaemonManager.ServiceProcess.StandardInput.WriteLineAsync("exitProc");
-
-
-
-    //                var delay = Task.Run(() => App.DaemonManager.ServiceProcess.WaitForExit(3000));
-
-    //                if (await Task.WhenAny(onlineInstanceWaiter.Task, delay) != delay && onlineInstanceWaiter.Task.Status is TaskStatus.RanToCompletion)
-    //                {
-    //                    App.Settings.AutoLaunchTunnel = onlineInstanceWaiter.Task.Result;
-    //                }
-
-
-    //                App.Settings.Save();
-
-    //                //Cancal();
-
-    //                Application.Current.Shutdown();
-
-    //                return true;
-    //            }
-    //            catch (InvalidOperationException)
-    //            {
-
-    //            }
-    //            catch (System.IO.IOException)
-    //            {
-
-    //            }
-    //        }
-    //        return false;
-    //    }
-
-    //    // 当 Daemon 并非子进程时，监听其退出。
-    //    private void ListenDaemonProcessExit(ref Mutex mutex)
-    //    {
-    //        try
-    //        {
-    //            var processes = Process.GetProcessesByName("OpenFrp.Service");
-
-    //            string asm = typeof(OpenFrp.Service.Daemon.Daemon).Assembly.Location;
-
-    //            asm = asm.Remove(asm.Length - 4);
-
-    //            if (processes.Length > 0)
-    //            {
-    //                foreach (var proc in processes)
-    //                {
-    //                    if (proc.MainModule is { FileName: string fv } && asm == fv.Remove(fv.Length - 4))
-    //                    {
-    //                        ServiceProcess = proc;
-    //                        break;
-    //                    }
-    //                }
-
-    //                mutex.Close();
-
-    //                ServiceProcess?.WaitForExit();
-
-    //                // TODO: notice here //
-
-    //                prevListenDaemonTask = null;
-
-    //                DaemonProcessExited(ServiceProcess, EventArgs.Empty);
-    //                return;
-    //            }
-
-    //        }
-    //        catch
-    //        {
-
-    //        }
-    //        try
-    //        {
-    //            var flag = mutex.WaitOne(Timeout.Infinite);
-    //            if (flag)
-    //            {
-    //                mutex.Dispose();
-    //            }
-    //        }
-    //        catch (AbandonedMutexException)
-    //        {
-    //            mutex.Close();
-    //            // nothing happend;
-    //        }
-    //        catch (ObjectDisposedException)
-    //        {
-    //            // nothing happend;
-    //        }
-    //        catch (Exception ex)
-    //        {
-    //            _ = ex;
-
-    //            return;
-    //        }
-    //        prevListenDaemonTask = null;
-
-    //        DaemonProcessExited(mutex, default);
-    //    }
-
-    //    private void DaemonProcessExited(object? sender, EventArgs? e)
-    //    {
-    //        if (App.TaskBarIcon is { IsDisposed: true }) return;
-    //        if (sender is Process process)
-    //        {
-    //            if (e != EventArgs.Empty)
-    //            {
-    //                string err = process.StandardError.ReadToEnd().Trim();
-    //                if (err.Length > 0)
-    //                {
-    //                    DaemonProcessExited(process, err);
-    //                }
-    //            }
-    //            else
-    //            {
-    //                DaemonProcessExited(process, string.Empty);
-    //            }
-    //        }
-    //        else if (sender is Mutex)
-    //        {
-    //            Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");
-
-    //            Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-    //        }
-    //    }
-
-    //    private void DaemonProcessExited(Process process, string stdErrData)
-    //    {
-    //        try { ResetDaemonWaitHandle(); } catch { }
-
-    //        int exitCode = -1;
-    //        Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");
-    //        Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processExit");
-
-    //        try
-    //        {
-    //            exitCode = process.ExitCode;
-    //        }
-    //        catch
-    //        {
-
-    //        }
-
-    //        if (exitCode is 0 or 768 && !stdErrData.StartsWith("fail"))
-    //        {
-    //            App.Current.Dispatcher.Invoke(() =>
-    //            {
-    //                Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-    //                Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
-    //            });
-
-    //            return;
-    //        }
-
-    //        string msg =
-    //            "(聚焦该窗口，按下Ctrl+C 复制内容) Deamon 异常退出" +
-    //            $"\nExitCode: {exitCode}";
-
-    //        if (!string.IsNullOrWhiteSpace(stdErrData) && stdErrData.Length > 0)
-    //        {
-    //            msg += $"\n\n错误内容:\n{stdErrData}\n";
-    //        }
-    //        msg += "\n\"重试\" - 将尝试重新启动守护进程；\n\"取消\" - 退出启动器。";
-
-    //        try
-    //        {
-    //            App.Current.Dispatcher.Invoke(() =>
-    //            {
-    //                App.Current.MainWindow.WindowState = WindowState.Normal;
-    //                App.Current.MainWindow.Activate();
-    //            });
-    //        }
-    //        catch { }
-
-    //        var resp = App.Current.Dispatcher.Invoke(() => Extend.SendMessage(App.Current.MainWindow, "OpenFrp Launcher", msg, OpenFrp.Service.Helpers.MessageBoxHelper.MessageMode.Error | OpenFrp.Service.Helpers.MessageBoxHelper.MessageMode.RetryCancel));
-    //        if (resp is OpenFrp.Service.Helpers.MessageBoxHelper.MessageResult.Cancel)
-    //        {
-    //            App.Current.Dispatcher.Invoke(App.Current.Shutdown);
-    //        }
-    //        else if (resp is OpenFrp.Service.Helpers.MessageBoxHelper.MessageResult.Retry)
-    //        {
-    //            App.Current.Dispatcher.Invoke(() =>
-    //            {
-    //                if (App.Current.MainWindow is MainWindow)
-    //                {
-    //                    Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-    //                }
-    //                else
-    //                {
-    //                    Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
-    //                }
-    //            });
-    //        }
-    //    }
-
-    //    public bool IsServiceDaemon { get => serviceController is not null; }
-
-    //    private ServiceController? serviceController;
-
-    //    public void RefreshServiceActivation()
-    //    {
-    //        GetOpenFrpService();
-    //    }
-
-    //    private void GetOpenFrpService()
-    //    {
-    //        string serviceName = OpenFrp.Service.WinSrv.ServiceWorker.GetServiceName();
-
-    //        var services = ServiceController.GetServices();
-
-    //        foreach (var serve in services)
-    //        {
-    //            if (!serve.ServiceName.Equals(serviceName))
-    //            {
-    //                continue;
-    //            }
-    //            serviceController = serve;
-    //            return;
-    //        }
-    //        serviceController = null;
-    //    }
-
-    //    internal ServiceControllerStatus GetServiceState()
-    //    {
-    //        if (serviceController is not null)
-    //        {
-    //            serviceController.Refresh();
-
-    //            try
-    //            {
-    //                return serviceController.Status;
-    //            }
-    //            catch
-    //            {
-
-    //            }
-    //        }
-    //        return ServiceControllerStatus.Paused;
-    //    }
-
-    //    internal async Task KillService()
-    //    {
-    //        if (serviceController is null) return;
-
-    //        serviceController.Refresh();
-
-    //        try
-    //        {
-    //            if (serviceController!.Status is ServiceControllerStatus.Stopped or ServiceControllerStatus.StopPending)
-    //            {
-    //                return;
-    //            }
-
-    //            serviceController.Stop();
-
-
-    //            return;
-    //        }
-    //        catch (Exception ivo)
-    //        {
-    //            if (ivo.InnerException is System.ComponentModel.Win32Exception { NativeErrorCode: not 5 } ex)
-    //            {
-    //                if (ex.NativeErrorCode is 1060 or 1072)
-    //                {
-    //                    return;
-    //                    //RefreshServiceActivation();
-    //                }
-    //            }
-    //        }
-
-
-    //        try
-    //        {
-    //            await Task.Run(() =>
-    //            {
-    //                Process.Start(new ProcessStartInfo()
-    //                {
-    //                    FileName = OpenFrp.Service.Helpers.FileHelper.GetServiceExecutableFile(),
-    //                    Arguments = $"--service stop",
-    //                    CreateNoWindow = true,
-    //                    ErrorDialog = false,
-    //                    UseShellExecute = true,
-    //                    ErrorDialogParentHandle = IntPtr.Zero,
-    //                    Verb = "runas",
-    //                    WindowStyle = ProcessWindowStyle.Hidden
-    //                });
-    //            });
-    //        }
-    //        catch { }
-
-    //        return;
-    //    }
-    //}
-
-
     class DaemonManager
     {
         public DaemonManager(RpcManager rpcManager, ILogger<DaemonManager> logger)
@@ -913,7 +352,11 @@ namespace OpenFrp.Launcher.Rpc
 
             if (DaemonProcess is not null)
             {
-                return Model.ExecuteResult.Success();
+                if (DaemonProcess.HasExited)
+                {
+                    DaemonProcess = default;
+                }
+                else return Model.ExecuteResult.Success();
             }
             
             if (DaemonService is not null)
@@ -1113,24 +556,25 @@ namespace OpenFrp.Launcher.Rpc
             {
                 var resp = await rpcManager.Sync();
 
-                if (resp.Data is { IsLogon: true, Onlines: var onlinex,HasCurrentId: true })
+                if (resp.Data is { IsLogon: true, Onlines: var onlinex, HasCurrentId: true })
                 {
-                    logger.LogDebug("[KillDaemonAsync] RPC 返回 | 用户 ID : #{id} , 在线隧道列表: {onlinex}", resp.Data.CurrentId ,string.Join(", ", onlinex));
+                    logger.LogDebug("[KillDaemonAsync] RPC 返回 | 用户 ID : #{id} , 在线隧道列表: {onlinex}", resp.Data.CurrentId, string.Join(", ", onlinex));
 
+                    if (DaemonService is not null)
+                    {
+                        return await KillServiceAsync();
+                    }
+                  
                     try
                     {
                         daemon_Process3rd?.Kill();
                     }
                     catch (Exception)
                     {
-                        daemon_Process3rd = default;
+                        KillProcessByName();
                     }
                     finally
                     {
-                        if (daemon_Process3rd is null)
-                        {
-                            KillProcessByName();
-                        }
                         daemon_Process3rd = default;
                     }
                     return new Model.ExecuteResult
@@ -1141,12 +585,10 @@ namespace OpenFrp.Launcher.Rpc
                             {resp.Data.CurrentId.ToString(), onlinex.ToArray() }
                         })
                     };
+                    
                 }
 
-                if (DaemonService is not null)
-                {
-                    return await KillServiceAsync();
-                }
+    
             }
 
             prevListenDaemonTask = default;
@@ -1231,7 +673,7 @@ namespace OpenFrp.Launcher.Rpc
                 Debug.WriteLine($"[OF Daemon] {msg}");
                 switch (msg)
                 {
-                    case "dbug: OpenFrp.Service.Daemon.Daemon[0] service launched!":
+                    case "info: OpenFrp.Service.Daemon.Daemon[0] service launched!":
                         {
                             try
                             {
@@ -1243,12 +685,12 @@ namespace OpenFrp.Launcher.Rpc
                             }
                         }
                         ; break;
-                    case "dbug: OpenFrp.Service.Daemon.Daemon[0] Is Service Mode, Return.":
+                    case "warn: OpenFrp.Service.Daemon.Daemon[0] service mode detected.":
                         _ = this.RefreshServiceStateAsync();
                         break;
                     default:
                         {
-                            if (msg.StartsWith("fail"))
+                            if (msg.StartsWith("fail:"))
                             {
                                 if (DaemonProcess is not { } || !DaemonProcess.WaitForExit(1000)) return;
                                 DaemonProcess.Exited -= DaemonProcessExited;
@@ -1273,6 +715,8 @@ namespace OpenFrp.Launcher.Rpc
 
             int exitCode = -1;
 
+            rpcManager.Crack();
+
             try
             {
                 exitCode = process.ExitCode;
@@ -1283,25 +727,52 @@ namespace OpenFrp.Launcher.Rpc
             }
 
 
+
+
             StringBuilder @string = new StringBuilder();
 
             @string.AppendLine($"(聚焦该窗口，按下Ctrl+C 复制内容) Deamon 异常退出");
             @string.AppendLine($"ExitCode: {exitCode}");
 
-            if (data is string { Length: > 0 } stdErr && string.IsNullOrWhiteSpace(stdErr))
-            {
-                if (!stdErr.StartsWith("fail") && exitCode is 0 or 768)
-                {
-                    @string.Clear();
 
-                    App.Current.Dispatcher.Invoke(() =>
+            if (data is EventArgs)
+            {
+                DaemonProcess = default;
+            }
+            switch (exitCode)
+            {
+                case 0 or 768:
                     {
-                        Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
-                        Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
-                    });
-                    return;
-                }
-                @string.AppendLine($"\n\n错误内容:\n{stdErr}\n");
+                        if (data is string { Length: > 0 } stdErr && string.IsNullOrWhiteSpace(stdErr))
+                        {
+                            if (stdErr.StartsWith("fail"))
+                            {
+                                @string.AppendLine($"\n\n错误内容:\n{stdErr}\n");
+                            }
+                            else
+                            {
+                                goto case -2;
+                            }
+                        }
+                        else if (data is EventArgs)
+                        {
+                            goto case -2;
+                        }
+                    };break;
+                case 1 when data is EventArgs:
+                case -2:
+                    {
+                        App.Current.Dispatcher.Invoke(() =>
+                        {
+                            Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");
+                            Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processLfec");
+
+                            Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processExit");
+                            Model.RouteMessage<ViewModels.LoginWindowViewModel>.Send("processLfec");
+                        });
+                        @string.Clear();
+                        return;
+                    };
             }
 
             @string.AppendLine("\n\"重试\" - 将尝试重新启动守护进程；\n\"取消\" - 退出启动器。");
@@ -1339,6 +810,8 @@ namespace OpenFrp.Launcher.Rpc
         // 无参 作为备用方案 不是 Mutex 时请勿用
         private void DeamonProcessExited()
         {
+            rpcManager.Crack();
+
             if (App.Current.MainWindow is MainWindow)
             {
                 Model.RouteMessage<ViewModels.MainWindowViewModel>.Send("processExit");

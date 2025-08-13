@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.CommandLine;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -34,9 +35,12 @@ namespace OpenFrp.Launcher.ViewModels
             UserName = "non-display-user"
         });
 
-
         public SettingsViewModel()
         {
+            RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
+            DaemonManager = App.ServiceProvider.GetRequiredService<Rpc.DaemonManager>();
+            Logger = App.ServiceProvider.GetRequiredService<ILogger<SettingsViewModel>>();
+
             if (Application.Current.MainWindow is { DataContext: MainWindowViewModel mv } v)
             {
                 mvW = v;
@@ -62,10 +66,6 @@ namespace OpenFrp.Launcher.ViewModels
                 mvW = lWnd;
                 IsAtLoginWindow = true;
             }
-
-            RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
-            DaemonManager = App.ServiceProvider.GetRequiredService<Rpc.DaemonManager>();
-            Logger = App.ServiceProvider.GetRequiredService<ILogger<SettingsViewModel>>();
         }
 
         private Rpc.RpcManager RpcManager { get; set; }
@@ -658,6 +658,28 @@ namespace OpenFrp.Launcher.ViewModels
 
             try { await dialog.ShowAsync(); } catch {  }
 
+        }
+
+        private string[] matchUpdateProperties = new string[]
+        {
+            nameof(UseDebug),
+            nameof(UseForceTls),
+            nameof(UseConfigLaunch)
+        };
+
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            if (IsServiceInstalled && RpcManager.IsConfigured && matchUpdateProperties.Contains(e.PropertyName))
+            {
+                _ = RpcManager.SyncWithSetting(new Service.Proto.Request.SyncWithSettingRequest
+                {
+                    UseDebug = this.UseDebug,
+                    UseConfigLaunch = this.UseConfigLaunch,
+                    UseForceTls = this.UseForceTls
+                });
+            }
+
+            base.OnPropertyChanged(e);
         }
     }
 }

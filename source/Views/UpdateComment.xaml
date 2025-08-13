@@ -66,19 +66,19 @@
                     <Grid TextOptions.TextHintingMode="Auto">
                         <xa:SimpleStackPanel Spacing="8">
                             <ctrl:SelectableTextBlock
-HorizontalAlignment="Left"
-FontFamily="{StaticResource SoraMediumMixYahei}"
-FontSize="20"
-TextWrapping="Wrap">
+                                HorizontalAlignment="Left"
+                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                FontSize="20"
+                                TextWrapping="Wrap">
                                 <Run Text="FRPC 版本号 :" />
-                                <Run Text="{x:Static gapp:App.FrpcVersionString}" />
+                                <Run Text="{Binding FrpcVersionString, Mode=OneWay}" />
 
                             </ctrl:SelectableTextBlock>
                             <ctrl:SelectableTextBlock
-HorizontalAlignment="Left"
-FontFamily="{StaticResource SoraMediumMixYahei}"
-FontSize="20"
-TextWrapping="Wrap">
+                                HorizontalAlignment="Left"
+                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                FontSize="20"
+                                TextWrapping="Wrap">
 
                                 <Run Text="启动器 版本号 :" />
                                 <Run Text="{x:Static gapp:App.LauncherVersionString}" />
