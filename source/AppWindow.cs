@@ -13,7 +13,7 @@ namespace OpenFrp.Launcher
 {
     public abstract partial class AppWindow : System.Windows.Window
     {
-        private IntPtr hWnd = IntPtr.Zero;
+        protected IntPtr hWnd = IntPtr.Zero;
 
         public AppWindow()
         {

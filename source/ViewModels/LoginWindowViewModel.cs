@@ -640,7 +640,12 @@ namespace OpenFrp.Launcher.ViewModels
 
             for (int i = 0; i < 5; i++)
             {
-                if (await RpcManager.Sync(cancellationToken) is { Flag: true})
+                if (!RpcManager.IsConfigured)
+                {
+                    RpcManager.Configure();
+                }
+                r1_resp = await RpcManager.Sync(cancellationToken);
+                if (r1_resp is { Flag: true})
                 {
                     break;
                 }
@@ -852,7 +857,7 @@ namespace OpenFrp.Launcher.ViewModels
                 return;
             }
 
-            RpcManager.Configure();
+//            RpcManager.Configure();
 
             CanCancelLogin = false;
 
@@ -862,6 +867,10 @@ namespace OpenFrp.Launcher.ViewModels
 
             for (int i = 0; i < 5; i++)
             {
+                if (!RpcManager.IsConfigured)
+                {
+                    RpcManager.Configure();
+                }
                 r1_resp = await RpcManager.Sync(cancellationToken);
                 if (r1_resp is { Flag: true })
                 {

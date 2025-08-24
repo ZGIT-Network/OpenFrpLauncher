@@ -8,7 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Interop;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -190,6 +189,7 @@ namespace OpenFrp.Launcher.ViewModels
 
         private iNKORE.UI.WPF.Modern.Controls.Frame? frame;
         private iNKORE.UI.WPF.Modern.Controls.NavigationView? navigationView;
+        private MainWindow? mw;
 
         private Rpc.DaemonManager DaemonManager { get; set; }
         private Rpc.RpcManager RpcManager { get; set; }
@@ -249,6 +249,35 @@ namespace OpenFrp.Launcher.ViewModels
         private Model.UserInfo userInfo = SettingsViewModel.__userInfo_Defualt;
 
 
+        
+        private void TimingWork()
+        {
+            var timer = new System.Timers.Timer()
+            {
+                AutoReset = true,
+                Interval = 1000 * 60 * 10, // 10 min
+            };
+
+            timer.Elapsed += Timer_Elapsed;
+            timer.Start();
+        }
+
+        private int UpdateTimerCount = 0;
+
+        private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (UpdateTimerCount >= 6)
+            {
+                UpdateTimerCount = 0;
+
+                conve_CheckUpdateCommand.Execute(null);
+            }
+            if (IsUserLogon)
+            {
+                _ = await Service.Net.OpenFrpApi.GetUserInfo();
+            }
+            UpdateTimerCount++;
+        }
 
         [RelayCommand]
         private void @event_NavigationViewLoaded(RoutedEventArgs arg)
@@ -276,9 +305,47 @@ namespace OpenFrp.Launcher.ViewModels
 
                         return;
                     }
-                    if (e.InvokedItemContainer is NavigationViewItem { Tag: Type { Namespace: not null or "" } page })
+                    if (e.InvokedItemContainer is NavigationViewItem vi)
                     {
-                        if (frame.Content?.GetType() == page)
+                        if (vi.Tag is not Type { Namespace: not null or "" } page)
+                        {
+                            return;
+                        }
+                        if (!vi.SelectsOnInvoked)
+                        {
+                            switch (page.FullName)
+                            {
+                                case "OpenFrp.Launcher.Views.CreateTunnel" when mw != null:
+                                    {
+                                        var w = new WebView2Window
+                                        {
+                                            Title = "OpenFRP 启动器 - 创建隧道 (WebView2)",
+                                            Source = $"http://localhost:3201/launcher/create" +
+                                            $"?use_backdrop={App.Settings.BackdropType is not iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType.None && OSVersionHelper.IsWindows11OrGreater}" +
+                                            $"&theme_mode={(iNKORE.UI.WPF.Modern.ThemeManager.GetActualTheme(mw) is iNKORE.UI.WPF.Modern.ElementTheme.Dark ? "dark" : "light")}"
+                                        };
+
+                                        w.Owner = mw;
+
+                                        w.Loaded += delegate
+                                        {
+                                            w.Left = mw.Left + (mw.ActualWidth / 2) - (w.ActualWidth / 2);
+                                            w.Top = mw.Top + (mw.ActualHeight / 2) - (w.ActualHeight / 2);
+                                        };
+
+                                        if (w.ShowDialog() is true)
+                                        {
+                                            if (frame.Content is iNKORE.UI.WPF.Modern.Controls.Page { DataContext: ViewModels.TunnelsViewModel t })
+                                            {
+                                                t.event_RefreshUserTunnelCommand.Execute(default);
+                                            }
+                                        }
+                                    };break;
+                            }
+
+                            return;
+                        }
+                        else if (frame.Content?.GetType() == page)
                         {
                             switch (frame.Content)
                             {
@@ -406,6 +473,8 @@ namespace OpenFrp.Launcher.ViewModels
         {
             if (arg.Source is MainWindow mw)
             {
+                this.mw = mw;
+                TimingWork();
 
                 if (App.StartupArguments.Contains("--minimize") && mw.Tag is false)
                 {

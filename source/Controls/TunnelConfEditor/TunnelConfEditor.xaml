@@ -145,12 +145,14 @@
                                         ink:ControlHelper.Header="本地服务链接"
                                         ink:ControlHelper.PlaceholderText="127.0.0.1"
                                         FontFamily="{StaticResource SoraMediumMixYahei}"
+                                        InputMethod.IsInputMethodEnabled="False"
                                         Text="{Binding EditorTemplate.Host, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
                                     <ink:NumberBox
                                         x:Name="localNumberBox"
                                         ink:ControlHelper.Header="本地服务端口"
                                         AcceptsExpression="False"
                                         FontFamily="{StaticResource SoraMediumMixYahei}"
+                                        InputMethod.IsInputMethodEnabled="False"
                                         Maximum="65535"
                                         Minimum="1"
                                         PlaceholderText="不填默认 25565"

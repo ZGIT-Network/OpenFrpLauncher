@@ -221,6 +221,7 @@ namespace OpenFrp.Launcher
 
             launcherAppWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, $"openfrp.launcher.WaitHandle_{appHash}", out var createdNewWaitHandle);
 
+
             if (!createdNewFlag && !launcherMutex.SafeWaitHandle.IsClosed)
             {
                 launcherMutex.Close();
@@ -308,20 +309,22 @@ namespace OpenFrp.Launcher
                 {
                     Service.Helpers.MessageBoxHelper.MessageBox(IntPtr.Zero, "已有相同实例已开启。\n请在系统托盘中找到 OpenFrp 标志，单击或在菜单中点击显示窗口。", "OpenFrp Launcher Preview", (uint)(Service.Helpers.MessageBoxHelper.MessageMode.Confirm | Service.Helpers.MessageBoxHelper.MessageMode.Warning));
                 }
+                else
+                {
+                    launcherAppWaitHandle.Dispose();
+                }
 
                 Environment.Exit(0);
 
                 return;
             }
-            else if (!createdNewWaitHandle)
+            else if (createdNewWaitHandle)
             {
-                _ = Task.Run(async () =>
+                _ = Task.Run(() =>
                 {
-                    // TODO: Handle 被设置时自动显示主窗口
-
-                    while (await Task.Run(launcherAppWaitHandle.WaitOne))
+                    while (launcherAppWaitHandle.WaitOne())
                     {
-                        if (App.Current.Dispatcher.HasShutdownStarted) break;
+                        if (App.Current is null || App.Current.Dispatcher.HasShutdownStarted) break;
 
                         App.Current.Dispatcher.Invoke(() =>
                         {
@@ -330,8 +333,12 @@ namespace OpenFrp.Launcher
                     }
                 });
             }
+            else
+            {
+                launcherAppWaitHandle.Close();launcherAppWaitHandle.Close();
+            }
 
-            Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
+                Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
 
             App.Settings.PropertyChanged += (_, e) =>
             {

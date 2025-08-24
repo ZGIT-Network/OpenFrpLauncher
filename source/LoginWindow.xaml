@@ -18,13 +18,16 @@
     Width="1090"
     Height="600"
     ink:ThemeManager.IsThemeAware="True"
+    ink:ThemeManager.RequestedTheme="Default"
     ink:TitleBar.ExtendViewIntoTitleBar="True"
     ink:TitleBar.Height="34"
+    ink:TitleBar.MaximizeButtonAvailability="Collapsed"
     ink:WindowHelper.UseModernWindowStyle="True"
     IsHitTestVisible="False"
     RenderOptions.ClearTypeHint="Enabled"
     ResizeMode="CanMinimize"
     ShowActivated="True"
+    WindowStartupLocation="CenterScreen"
     WindowState="Minimized"
     mc:Ignorable="d">
     <local:AppWindow.Resources>

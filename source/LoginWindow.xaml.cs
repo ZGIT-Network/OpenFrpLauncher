@@ -47,6 +47,22 @@ namespace OpenFrp.Launcher
         public LoginWindow(Window parent) : this()
         {
             Owner = parent;
+
+            iNKORE.UI.WPF.Modern.Controls.Primitives.TitleBar.SetMinimizeButtonAvailability(this, iNKORE.UI.WPF.Modern.Controls.Primitives.TitleBarButtonAvailability.Collapsed);
+        }
+
+        protected override void OnActivated(EventArgs e)
+        {
+            if (Owner is Window && hWnd != IntPtr.Zero)
+            {
+                int style = Win32.User32.GetWindowLong(hWnd, -16);
+
+                style &= ~(131072);
+
+                _ = Win32.User32.SetWindowLong(hWnd, -16, style);
+            }
+
+            base.OnActivated(e);
         }
 
         public override void CancelControl()

@@ -40,6 +40,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     OnPropertyChanged(e.PropertyName);
                 };
+                
             }
             WeakReferenceMessenger.Default.UnregisterAll(nameof(TunnelsViewModel));
             WeakReferenceMessenger.Default.Register<Model.RouteMessage<TunnelsViewModel, string>>(nameof(TunnelsViewModel), (_, message) =>

@@ -16,6 +16,8 @@
     Height="585"
     MinWidth="550"
     MinHeight="540"
+    ink:ThemeManager.IsThemeAware="True"
+    ink:ThemeManager.RequestedTheme="Default"
     ink:TitleBar.ExtendViewIntoTitleBar="True"
     ink:TitleBar.Height="34"
     ink:WindowHelper.UseModernWindowStyle="True"
@@ -77,15 +79,9 @@
                 <ink:NavigationViewItem
                     Content="创建隧道"
                     IsEnabled="{Binding IsUserLogon, Mode=OneWay}"
-                    SelectsOnInvoked="True">
-                    <behavior:Interaction.Triggers>
-                        <behavior:DataTrigger Binding="{Binding SelectsOnInvoked, RelativeSource={RelativeSource AncestorType=ink:NavigationViewItem}, Mode=OneWay}" Value="True">
-                            <behavior:ChangePropertyAction PropertyName="Tag" Value="{x:Type views:CreateTunnel}" />
-                        </behavior:DataTrigger>
-                        <behavior:DataTrigger Binding="{Binding SelectsOnInvoked, RelativeSource={RelativeSource AncestorType=ink:NavigationViewItem}, Mode=OneWay}" Value="False">
-                            <behavior:ChangePropertyAction PropertyName="Tag" Value="{x:Null}" />
-                        </behavior:DataTrigger>
-                    </behavior:Interaction.Triggers>
+                    SelectsOnInvoked="False"
+                    Tag="{x:Type views:CreateTunnel}">
+
                     <ink:NavigationViewItem.Icon>
                         <ink:FontIcon
                             FontFamily="{StaticResource FluentSystemIcons}"

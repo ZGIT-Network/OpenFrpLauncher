@@ -351,7 +351,6 @@
                                 </Grid>
                             </StackPanel>
                         </Border>
-
                     </Grid>
                 </Border>
             </ink:ScrollViewerEx>

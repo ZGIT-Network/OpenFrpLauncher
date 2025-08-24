@@ -96,6 +96,18 @@
                                         Text="{Binding NodeName, Mode=OneWay}"
                                         TextOptions.TextFormattingMode="Display" />
                                 </TextBlock>
+                                <xa:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock
+                                        FontSize="16"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                        Text="数据压缩"
+                                        Visibility="{Binding UseCompression, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                                    <TextBlock
+                                        FontSize="16"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                        Text="数据加密"
+                                        Visibility="{Binding UseEncryption, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                                </xa:SimpleStackPanel>
                                 <TextBlock
                                     FontSize="16"
                                     Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"

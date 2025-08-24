@@ -348,12 +348,20 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_CallUpLoginWindow(CancellationToken cancellationToken)
         {
-            var lf = new LoginWindow(Application.Current.MainWindow);
+            if (Application.Current is not { MainWindow: var mw }) return;
+
+            var lf = new LoginWindow(mw);
 
             lf.WindowState = WindowState.Normal;
 
-            var @value = await lf.LoginWndProcAsync(cancellationToken);
+            lf.Loaded += delegate
+            {
+                lf.Left = mw.Left + (mw.ActualWidth / 2) - (lf.ActualWidth / 2);
+                lf.Top = mw.Top + (mw.ActualHeight / 2) - (lf.ActualHeight / 2);
+            };
 
+            var @value = await lf.LoginWndProcAsync(cancellationToken);
+            
             if (@value is not null)
             {
                 Model.RouteMessage<MainWindowViewModel>.Send(new Model.UserInfo(value));

@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using iNKORE.UI.WPF.Helpers;
 using iNKORE.UI.WPF.Modern.Controls;
+using OpenFrp.Launcher.ViewModels;
 
 namespace OpenFrp.Launcher.Controls
 {
@@ -62,19 +63,46 @@ namespace OpenFrp.Launcher.Controls
                 {
                     mf2.Command = new RelayCommand(() =>
                     {
-                        if (App.Current is { MainWindow: var mw} && ContentDialog.GetOpenDialog(mw) is not null)
+                        if (App.Current is not { MainWindow: var mw } || ContentDialog.GetOpenDialog(mw) is not null)
                         {
                             return;
                         }
-                        var dialog = new Dialogs.TunnelEditDialog
+                        if (false)
                         {
+                            var dialog = new Dialogs.TunnelEditDialog
+                            {
 
-                        };
-                        dialog.SetValue(TunnelConfEditor.EditorTemplateProperty, new Model.TunnelEditorTemplate(this.Tunnel));
-                        dialog.Dispatcher.Invoke(async () =>
+                            };
+                            dialog.SetValue(TunnelConfEditor.EditorTemplateProperty, new Model.TunnelEditorTemplate(this.Tunnel));
+                            dialog.Dispatcher.Invoke(async () =>
+                            {
+                                await dialog.ShowAsync();
+                            });
+                        }
+                        else
                         {
-                            await dialog.ShowAsync();
-                        });
+                            var w = new WebView2Window
+                            {
+                                Title = "OpenFRP 启动器 - Edit 隧道 (WebView2)",
+                                Source = $"http://localhost:3201/launcher/edit/" +
+                                   this.Tunnel.Id +
+                                   $"?use_backdrop={App.Settings.BackdropType is not iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType.None && OSVersionHelper.IsWindows11OrGreater}" +
+                                   $"&theme_mode={(iNKORE.UI.WPF.Modern.ThemeManager.GetActualTheme(mw) is iNKORE.UI.WPF.Modern.ElementTheme.Dark ? "dark" : "light")}"
+                            };
+
+                            w.Owner = mw;
+
+                            w.Loaded += delegate
+                            {
+                                w.Left = mw.Left + (mw.ActualWidth / 2) - (w.ActualWidth / 2);
+                                w.Top = mw.Top + (mw.ActualHeight / 2) - (w.ActualHeight / 2);
+                            };
+
+                            if (w.ShowDialog() is true)
+                            {
+                                Model.RouteMessage<MainWindowViewModel>.Send(typeof(Views.Tunnels));
+                            }
+                        }
                     });
                 }
                 if (GetTemplateChild("viewInfo") is MenuItem mf3)
