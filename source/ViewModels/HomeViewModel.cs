@@ -19,8 +19,9 @@ namespace OpenFrp.Launcher.ViewModels
     {
         public HomeViewModel()
         {
-            if (Application.Current.MainWindow is { DataContext: MainWindowViewModel mv })
+            if (Application.Current.MainWindow is AppWindow { DataContext: MainWindowViewModel mv } t)
             {
+                _mainWindow = t;
                 _mainWindowViewModel = mv;
             }
         }
@@ -33,6 +34,15 @@ namespace OpenFrp.Launcher.ViewModels
             if (e.Source is Page page)
             {
                 this.page = page;
+                if (page.FindName("carousel") is Controls.Carousel c)
+                {
+                    c.SetBinding(Controls.Carousel.IsActiveProperty, new System.Windows.Data.Binding("IsActive")
+                    {
+                        Source = _mainWindow,
+                        Mode = System.Windows.Data.BindingMode.OneWay
+                    });
+                }
+
                 page.Unloaded += delegate
                 {
                     event_RefreshAdSenseCommand.Cancel();
@@ -45,6 +55,7 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        private readonly AppWindow? _mainWindow;
         private readonly MainWindowViewModel? _mainWindowViewModel;
 
         [ObservableProperty]
@@ -73,88 +84,113 @@ namespace OpenFrp.Launcher.ViewModels
         {
             AdSences = null;
 
-            //await Task.Delay(500,cancellationToken);
-
             var resp = await Service.Net.OpenFrpApi.GetLauncherAdSense(cancellationToken);
 
             if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { Length: > 0 })
             {
-                var v = new AdSenseItem[resp.Data.Length];
+                var v = resp.Data.Select(x => new AdSenseItem(x)).ToArray();
 
-                for (int i = 0; i < resp.Data.Length; i++)
+                Nito.AsyncEx.AsyncLock @lock = new Nito.AsyncEx.AsyncLock();
+#if NET
+                _ = Parallel.ForAsync(0, v.Length, cancellationToken,async (index, cancellationToken) =>
                 {
+#else
+                _ = Parallel.For(0, v.Length,async index =>
+                {
+#endif
                     if (cancellationToken.IsCancellationRequested) return;
 
-                    var ve = resp.Data[i];
+                    var ve = resp.Data[index];
 
                     if (!string.IsNullOrEmpty(ve.ImageUrl))
                     {
-                        string hash = Service.Helpers.HashAlgorithmHelper.ComputeHashString(ve.ImageUrl!);
-
-                        string pathF = System.IO.Path.Combine(System.IO.Path.GetTempPath(), hash);
-
-                        _ = page?.Dispatcher.BeginInvoke(async (object c) =>
+                        string? hash = default;
+                        while (string.IsNullOrEmpty(hash))
                         {
                             try
                             {
-                                if (!System.IO.File.Exists(pathF))
-                                {
-                                    var resp = await Service.Net.HttpClient.DefualtInstance.GetStreamAsync(ve.ImageUrl!, cancellationToken);
-
-                                    if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { Length: > 0 } st)
-                                    {
-                                        using var fs = System.IO.File.Open(pathF, FileMode.OpenOrCreate);
-
-                                        st.Seek(0, SeekOrigin.Begin);
-
-                                        await st.CopyToAsync(fs);
-                                        await fs.FlushAsync(cancellationToken);
-
-                                        fs.Close();
-                                        st.Close();
-                                    }
-                                    else
-                                    {
-                                        return;
-                                    }
-                                }
-                                if (!Uri.TryCreate(pathF, UriKind.RelativeOrAbsolute, out var uri))
-                                {
-                                    return;
-                                }
-                                if (cancellationToken.IsCancellationRequested) return;
-                                try
-                                {
-                                    var bm = new BitmapImage();
-
-                                    bm.BeginInit();
-                                    bm.UriSource = uri;
-                                    bm.EndInit();
-                                    bm.Freeze();
-
-                                    v[(int)c].SetImageSource(bm);
-                                }
-                                catch
-                                {
-
-                                }
+#if NET
+                                hash = "ofapp_" + await Service.Helpers.HashAlgorithmHelper.ComputeHashStringAsync(ve.ImageUrl!);
+#else
+                                hash = "ofapp_" + Service.Helpers.HashAlgorithmHelper.ComputeHashString(ve.ImageUrl!);
+#endif
                             }
                             catch
                             {
-
+                                continue;
                             }
-                        }, priority: System.Windows.Threading.DispatcherPriority.Background, i);
-                  
+                        }
+
+                        string pathF = System.IO.Path.Combine(System.IO.Path.GetTempPath(), hash);
+                        
+
+                        try
+                        {
+                            if (!System.IO.File.Exists(pathF))
+                            {
+                                var resp = await Service.Net.HttpClient.DefualtInstance.GetStreamAsync(ve.ImageUrl!, cancellationToken);
+
+                                if (resp.StatusCode is System.Net.HttpStatusCode.OK && resp.Data is { Length: > 0 } st)
+                                {
+                                    using var fs = System.IO.File.Open(pathF, FileMode.OpenOrCreate);
+
+                                    fs.Seek(0, SeekOrigin.Begin);
+                                    st.Seek(0, SeekOrigin.Begin);
+
+#if NET
+                                    await st.CopyToAsync(fs,cancellationToken);
+#else
+                                    await st.CopyToAsync(fs);    
+#endif
+                                    await fs.FlushAsync(cancellationToken);
+
+                                    st.Close();
+                                }
+                                else
+                                {
+                                    return;
+                                }
+                            }
+                            if (!Uri.TryCreate(pathF, UriKind.RelativeOrAbsolute, out var uri))
+                            {
+                                return;
+                            }
+                            
+
+                            page?.Dispatcher.BeginInvoke(() =>
+                            {
+                                var bm = new BitmapImage();
+                                try
+                                {
+                                    bm.BeginInit();
+                                    bm.CacheOption = BitmapCacheOption.OnLoad;
+                                    bm.UriSource = uri;
+                                    bm.EndInit();
+                                    bm.Freeze();
+                                }
+                                catch
+                                {
+                                }
+                            }, priority: System.Windows.Threading.DispatcherPriority.Background, null);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            return;
+                        }
+                        catch
+                        {
+
+                        }
                     }
                     try
                     {
-                        v[i] = new AdSenseItem(ve);
+                        v[index] = new AdSenseItem(ve);
                     }
                     catch
                     {
-                        break;
+                        return;
                     }
-                }
+                });
                 AdSences = v;
             }
             else
@@ -164,7 +200,7 @@ namespace OpenFrp.Launcher.ViewModels
                     new AdSenseItem
                     {
                         Description = "你的赞助是前进的第一动力，\n本项已从2023年开始成项，到2025年为开发的第四个版本，开发不易。\n欢迎赞助启动器作者 (越越)。",
-                        Title = "东风袅袅泛崇光，香雾空蒙月转廊",
+                        Title = "日暮东风怨啼鸟，落花犹似坠楼人",
                         Url = "https://console.openfrp.net",
                         Company = "默认"
                     },

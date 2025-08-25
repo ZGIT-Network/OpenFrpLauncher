@@ -67,7 +67,7 @@ namespace OpenFrp.Launcher.Controls
                         {
                             return;
                         }
-                        if (false)
+                        if (!App.Settings.UseWebView2Tools)
                         {
                             var dialog = new Dialogs.TunnelEditDialog
                             {
@@ -83,8 +83,8 @@ namespace OpenFrp.Launcher.Controls
                         {
                             var w = new WebView2Window
                             {
-                                Title = "OpenFRP 启动器 - Edit 隧道 (WebView2)",
-                                Source = $"http://localhost:3201/launcher/edit/" +
+                                Title = $"OpenFRP 启动器 - 编辑隧道 #{this.Tunnel.Id} {this.Tunnel.Name} (WebView2)",
+                                Source = $"https://console.openfrp.net/launcher/edit/" +
                                    this.Tunnel.Id +
                                    $"?use_backdrop={App.Settings.BackdropType is not iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType.None && OSVersionHelper.IsWindows11OrGreater}" +
                                    $"&theme_mode={(iNKORE.UI.WPF.Modern.ThemeManager.GetActualTheme(mw) is iNKORE.UI.WPF.Modern.ElementTheme.Dark ? "dark" : "light")}"

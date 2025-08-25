@@ -79,7 +79,7 @@
                 <ink:NavigationViewItem
                     Content="创建隧道"
                     IsEnabled="{Binding IsUserLogon, Mode=OneWay}"
-                    SelectsOnInvoked="False"
+                    SelectsOnInvoked="{Binding UseWebView2Tools, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}"
                     Tag="{x:Type views:CreateTunnel}">
 
                     <ink:NavigationViewItem.Icon>

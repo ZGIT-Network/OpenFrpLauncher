@@ -227,6 +227,7 @@ namespace OpenFrp.Launcher
             core.AddWebResourceRequestedFilter("*://openfrp.local/*", Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext.All);
             core.WebResourceRequested += Core_WebResourceRequested;
 
+            core.Settings.AreBrowserAcceleratorKeysEnabled = false;
             core.Settings.AreHostObjectsAllowed = false;
             core.Settings.IsPinchZoomEnabled = false;
             core.Settings.IsPasswordAutosaveEnabled = false;
@@ -236,9 +237,31 @@ namespace OpenFrp.Launcher
             core.Settings.HiddenPdfToolbarItems = Microsoft.Web.WebView2.Core.CoreWebView2PdfToolbarItems.None;
             core.Settings.IsGeneralAutofillEnabled = false;
 
+            core.IsMuted = true;
+
             core.NavigationStarting += Core_NavigationStarting;
             core.ContextMenuRequested += Core_ContextMenuRequested;
             core.WebMessageReceived += Core_WebMessageReceived;
+            core.NavigationCompleted += Core_NavigationCompleted;
+
+            core.Environment.BrowserProcessExited += (s, ev) =>
+            {
+                if (hWnd == IntPtr.Zero) return;
+                _ = Dispatcher.InvokeAsync(() =>
+                {
+                    if (this.IsActive)
+                    {
+                        Exception = new Exception("WebView2 进程意外退出，请重启应用。");
+                    }
+                });
+            };
+        }
+
+        private void Core_NavigationCompleted(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
+        {
+            if (!e.IsSuccess) return;
+
+            wv.CoreWebView2.ExecuteScriptAsync("window.print = (function(){})");
         }
 
         private void Core_NavigationStarting(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationStartingEventArgs e)

@@ -85,6 +85,11 @@ namespace OpenFrp.Launcher.Rpc
             }
             catch(RpcException rpcEx)
             {
+                if (rpcEx.StatusCode is StatusCode.Unavailable)
+                {
+                    return new InvalidOperationException("无法连接到 OpenFrp 守护进程(服务)，请确保守护进程已启动且正在运行。\n" +
+                        $"DaemonFile: At {PipeName} Is {Service.Helpers.FileHelper.GetServiceExecutableFile()}", rpcEx);
+                }
                 return rpcEx;
             }
             catch(Exception ex)

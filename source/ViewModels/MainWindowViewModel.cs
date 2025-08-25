@@ -233,6 +233,11 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        public bool UseWebView2Tools
+        {
+            get => App.Settings.UseWebView2Tools;
+        }
+
         private bool isUrlSchemeRegistered;
         public bool IsUrlSchemeRegistered
         {
@@ -317,10 +322,11 @@ namespace OpenFrp.Launcher.ViewModels
                             {
                                 case "OpenFrp.Launcher.Views.CreateTunnel" when mw != null:
                                     {
+                                        //
                                         var w = new WebView2Window
                                         {
                                             Title = "OpenFRP 启动器 - 创建隧道 (WebView2)",
-                                            Source = $"http://localhost:3201/launcher/create" +
+                                            Source = "https://console.openfrp.net/launcher/create" +
                                             $"?use_backdrop={App.Settings.BackdropType is not iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType.None && OSVersionHelper.IsWindows11OrGreater}" +
                                             $"&theme_mode={(iNKORE.UI.WPF.Modern.ThemeManager.GetActualTheme(mw) is iNKORE.UI.WPF.Modern.ElementTheme.Dark ? "dark" : "light")}"
                                         };

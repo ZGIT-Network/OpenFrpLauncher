@@ -11,6 +11,7 @@
 	<PublishAot>false</PublishAot>
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	  <ApplicationIcon>Resources\Images\desktop.ico</ApplicationIcon>
+	  <AssemblyTitle>OpenFrp WPF 桌面端启动器</AssemblyTitle>
 	  <AssemblyName>OpenFrp.Launcher</AssemblyName>
   </PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net48'">
@@ -40,6 +41,7 @@
 	  <None Remove="Resources\Images\weavatar.png" />
 	  <None Remove="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res001_no035,card_after_training.png" />
 	  <None Remove="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res001_no044,card_after_training.png" />
+	  <None Remove="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png" />
 	  <None Remove="Resources\Images\[www.pixiv.net]artworks,129041588.png" />
 	  <None Remove="Resources\OAuth\MessageWithPlaceholder.css" />
 	  <None Remove="Resources\Sora-Medium.ttf" />
@@ -55,7 +57,7 @@
     <Resource Include="Resources\Images\mm_reward_qrcode_light.png" />
     <Resource Include="Resources\Images\noc_UrlSchemeTools.png" />
     <Resource Include="Resources\Images\weavatar.png" />
-    <Resource Include="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res001_no044,card_after_training.png" />
+    <Resource Include="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png" />
     <Resource Include="Resources\Sora-Medium.ttf" />
     <Resource Include="Resources\SourceCodePro-Medium.ttf" />
 	  

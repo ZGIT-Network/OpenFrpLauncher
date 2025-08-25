@@ -220,6 +220,15 @@ namespace OpenFrp.Launcher.ViewModels
                 OnPropertyChanged(nameof(DoNotNoticeAutoLaunchTunnelMsg));
             }
         }
+        public bool UseWebView2Tools
+        {
+            get => App.Settings.UseWebView2Tools;
+            set
+            {
+                App.Settings.UseWebView2Tools = value;
+                OnPropertyChanged(nameof(UseWebView2Tools));
+            }
+        }
         public bool AutoLaunchWhenLogon
         {
             get

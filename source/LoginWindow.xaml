@@ -85,7 +85,7 @@
                 <Image
                     x:Name="bgImagePlacement"
                     RenderOptions.BitmapScalingMode="LowQuality"
-                    Source="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no044,card_after_training.png"
+                    Source="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png"
                     Visibility="Visible" />
             </Viewbox>
 
@@ -103,7 +103,7 @@
                 Opacity="0" />
             <ink:AcrylicPanel
                 x:Name="acrylicPanel2"
-                Amount="10"
+                Amount="20"
                 Focusable="False"
                 NoiseOpacity="0.01"
                 ScaleCanvas="1.2"
@@ -185,7 +185,7 @@
                                     <ink:AcrylicPanel
                                         x:Name="acrylicPanel4"
                                         Margin="1"
-                                        Amount="10"
+                                        Amount="20"
                                         CornerRadius="4"
                                         Focusable="False"
                                         NoiseOpacity="0.01"
@@ -334,7 +334,7 @@
                             </Grid>
                         </Border>
                     </Grid>
-                    <Grid>
+                    <Grid Visibility="Collapsed">
                         <ink:ThemeShadowChrome
                             Margin="4"
                             CornerRadius="6"
@@ -360,7 +360,7 @@
                             <ink:AcrylicPanel
                                 x:Name="acrylicPanel3"
                                 Margin="1"
-                                Amount="10"
+                                Amount="20"
                                 CornerRadius="4"
                                 Focusable="False"
                                 NoiseOpacity="0.01"
@@ -418,7 +418,7 @@
                                 Opacity="0" />
                             <ink:AcrylicPanel
                                 x:Name="acrylicPanel"
-                                Amount="70"
+                                Amount="80"
                                 CornerRadius="5.5"
                                 Focusable="False"
                                 NoiseOpacity="0.01"
@@ -467,9 +467,9 @@
                                                 <ItemsControl
                                                     x:Name="selfor"
                                                     Margin="0,4,0,-8"
+                                                    d:ItemsSource="{d:SampleData ItemCount=2}"
                                                     Focusable="False"
                                                     ItemsSource="{Binding PlatformUsers, Mode=OneWay}">
-
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <Button
@@ -503,7 +503,6 @@
                                                                         <ColumnDefinition Width="38" />
                                                                         <ColumnDefinition />
                                                                     </Grid.ColumnDefinitions>
-                                                                    <!--  ProfilePicture="E:\Desktop\Photo\IMG_4165(20240107-124359).JPG"  -->
                                                                     <ink:PersonPicture
                                                                         x:Name="picpic"
                                                                         Grid.Column="0"
@@ -517,7 +516,8 @@
                                                                         Margin="8,0,0,0"
                                                                         VerticalAlignment="Center"
                                                                         FontFamily="{StaticResource SoraMedium}"
-                                                                        FontSize="16">
+                                                                        FontSize="16"
+                                                                        TextTrimming="CharacterEllipsis">
                                                                         <Run Text="{Binding Username, Mode=OneWay}" />
                                                                         <LineBreak />
                                                                         <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding EmailAddress, Mode=OneWay}" />
@@ -536,9 +536,45 @@
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
+
                                                 <Button
                                                     Margin="0,0,0,0"
-                                                    Padding="12,12,8,12"
+                                                    Padding="12,14,8,14"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Left"
+                                                    AutomationProperties.Name="扫码登录或面板快速登录"
+                                                    BorderBrush="Transparent"
+                                                    Command="{Binding event_WebLogin2Command}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="38" />
+                                                            <ColumnDefinition />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <ink:FontIcon
+                                                            Grid.Column="0"
+                                                            Width="38"
+                                                            Height="38"
+                                                            FontFamily="{StaticResource FluentSystemIcons}"
+                                                            FontSize="28"
+                                                            Glyph="&#xF04C;" />
+
+                                                        <StackPanel
+                                                            Grid.Column="1"
+                                                            Margin="8,0,0,0"
+                                                            VerticalAlignment="Center">
+                                                            <TextBlock FontSize="18" Text="扫码登录 / 面板快速登录" />
+                                                            <TextBlock
+                                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                                Text="安全，更快的登录方式，优先选择。"
+                                                                TextWrapping="Wrap" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Button>
+                                                <Button
+                                                    Margin="0,-4,0,0"
+                                                    Padding="12,14,8,14"
                                                     HorizontalAlignment="Stretch"
                                                     HorizontalContentAlignment="Left"
                                                     AutomationProperties.Name="Natayark ID 登录"
@@ -555,46 +591,18 @@
                                                             Height="38"
                                                             FontFamily="{StaticResource FluentSystemIcons}"
                                                             FontSize="28"
-                                                            Glyph="&#xeeaf;" />
-                                                        <TextBlock
-                                                            Grid.Column="1"
-                                                            Margin="8,0,0,0"
-                                                            VerticalAlignment="Center"
-                                                            FontFamily="{StaticResource SoraMediumMixYahei}">
-                                                            <Run FontSize="18" Text="Natayark ID 登录" />
-
-                                                        </TextBlock>
-                                                    </Grid>
-                                                </Button>
-                                                <Button
-                                                    Margin="0,-4,0,0"
-                                                    Padding="12,12,8,12"
-                                                    HorizontalAlignment="Stretch"
-                                                    HorizontalContentAlignment="Left"
-                                                    AutomationProperties.Name="扫码登录或面板快速登录"
-                                                    BorderBrush="Transparent"
-                                                    Command="{Binding event_WebLogin2Command}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="38" />
-                                                            <ColumnDefinition />
-                                                        </Grid.ColumnDefinitions>
-                                                        <ink:FontIcon
-                                                            Grid.Column="0"
-                                                            Width="38"
-                                                            Height="38"
-                                                            FontFamily="{StaticResource FluentSystemIcons}"
-                                                            FontSize="28"
-                                                            Glyph="&#xF04C;" />
+                                                            Glyph="&#xF6BA;" />
                                                         <StackPanel
                                                             Grid.Column="1"
                                                             Margin="8,0,0,0"
                                                             VerticalAlignment="Center">
-                                                            <TextBlock FontSize="18" Text="扫码登录 / 面板快速登录" />
                                                             <TextBlock
                                                                 FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                FontSize="18"
+                                                                Text="Natayark ID 授权登录" />
+                                                            <TextBlock
                                                                 Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                                Text="安全，更快的登录方式，若不行再尝试 Natayark ID 登录"
+                                                                Text="备选方案"
                                                                 TextWrapping="Wrap" />
                                                         </StackPanel>
                                                     </Grid>

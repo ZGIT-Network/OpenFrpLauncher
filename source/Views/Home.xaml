@@ -13,7 +13,7 @@
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
     Title="Home"
-    d:DesignHeight="760"
+    d:DesignHeight="1615"
     d:DesignWidth="865"
     mc:Ignorable="d">
     <FrameworkElement.DataContext>
@@ -148,13 +148,14 @@
                                             IsActive="{Binding event_RefreshAdSenseCommand.IsRunning, Mode=OneWay}"
                                             Visibility="{Binding event_RefreshAdSenseCommand.IsRunning, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                                         <ctrl:Carousel
+                                            x:Name="carousel"
                                             AlternationCount="100"
                                             AutoPlay="True"
                                             CornerRadius="4.45"
                                             IsHitTestVisible="{Binding Value, Source={StaticResource IsNotRunning}, Mode=OneWay}"
                                             ItemsSource="{Binding AdSences, Mode=OneWay}">
                                             <ctrl:Carousel.Background>
-                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res001_no044,card_after_training.png" Stretch="UniformToFill" />
+                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png" Stretch="UniformToFill" />
                                             </ctrl:Carousel.Background>
                                             <ctrl:Carousel.Visibility>
                                                 <Binding
@@ -170,10 +171,38 @@
                                                 <DataTemplate>
                                                     <Grid>
                                                         <Image
+                                                            x:Name="bgFillTranser"
                                                             IsHitTestVisible="False"
+                                                            Opacity="0"
                                                             RenderOptions.BitmapScalingMode="HighQuality"
                                                             Source="{Binding ImageSource, Mode=OneWay}"
-                                                            Stretch="UniformToFill" />
+                                                            Stretch="UniformToFill">
+                                                            <behavior:Interaction.Triggers>
+                                                                <behavior:DataTrigger
+                                                                    Binding="{Binding Source, RelativeSource={RelativeSource AncestorType=Image}, Mode=OneWay}"
+                                                                    Comparison="NotEqual"
+                                                                    Value="{x:Null}">
+
+                                                                    <behavior:ControlStoryboardAction ControlStoryboardOption="Play">
+                                                                        <behavior:ControlStoryboardAction.Storyboard>
+                                                                            <Storyboard>
+                                                                                <DoubleAnimation
+                                                                                    BeginTime="0:0:.5"
+                                                                                    Storyboard.TargetName="bgFillTranser"
+                                                                                    Storyboard.TargetProperty="Opacity"
+                                                                                    From="0"
+                                                                                    To="1"
+                                                                                    Duration="0:0:.5">
+                                                                                    <DoubleAnimation.EasingFunction>
+                                                                                        <CubicEase EasingMode="EaseOut" />
+                                                                                    </DoubleAnimation.EasingFunction>
+                                                                                </DoubleAnimation>
+                                                                            </Storyboard>
+                                                                        </behavior:ControlStoryboardAction.Storyboard>
+                                                                    </behavior:ControlStoryboardAction>
+                                                                </behavior:DataTrigger>
+                                                            </behavior:Interaction.Triggers>
+                                                        </Image>
                                                         <Rectangle Fill="Black" IsHitTestVisible="False">
                                                             <Rectangle.OpacityMask>
                                                                 <LinearGradientBrush StartPoint=".5,.4" EndPoint=".5,1">
@@ -496,16 +525,16 @@
                                         </Image>
 
                                         <TextBlock
-                                            Margin="0,16,0,0"
+                                            Margin="0,14,0,0"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Top"
-                                            FontSize="12"
+                                            FontSize="13"
                                             Foreground="#afafaf"
                                             IsHitTestVisible="False"
                                             TextAlignment="Center">
-                                            <Run Text="请注意:要进入赞助列表请勿匿名赞助" />
+                                            <Run Text="不适用于问题咨询、VIP购买" />
                                             <LineBreak />
-                                            <Run Text="微信 (这不是购买 VIP 的码)" />
+                                            <Run Text="微信赞助码" />
                                         </TextBlock>
                                     </Grid>
                                 </Border>

@@ -491,7 +491,24 @@
                                 IsOn="{Binding UseConfigLaunch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 IsRightAlignedCompact="True" />
                         </ctrl:SettingItem>
-                        <ctrl:SettingItem Title="允许通过链接启动隧道" IsEnabled="{x:Static xa:OSVersionHelper.IsWindows10OrGreater}">
+                        <ctrl:SettingItem Title="使用 WebView2 进行创建/编辑隧道" Description="提供更加完整的编辑操作。">
+                            <ctrl:SettingItem.Icon>
+                                <ink:FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xEE55;"
+                                    RenderTransformOrigin=".5,.5">
+                                    <FrameworkElement.RenderTransform>
+                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                    </FrameworkElement.RenderTransform>
+                                </ink:FontIcon>
+                            </ctrl:SettingItem.Icon>
+                            <ink:ToggleSwitch
+                                MinWidth="0"
+                                IsOn="{Binding UseWebView2Tools, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsRightAlignedCompact="True" />
+                        </ctrl:SettingItem>
+                        <ctrl:SettingItem Title="允许通过链接启动隧道">
                             <ctrl:SettingItem.ExtendUI>
                                 <xa:SimpleStackPanel>
                                     <TextBlock

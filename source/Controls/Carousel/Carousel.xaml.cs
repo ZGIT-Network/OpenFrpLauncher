@@ -79,6 +79,19 @@ namespace OpenFrp.Launcher.Controls
         }
 
         #region Property
+
+
+
+        public bool IsActive
+        {
+            get { return (bool)GetValue(IsActiveProperty); }
+            set { SetValue(IsActiveProperty, value); }
+        }
+        public static readonly DependencyProperty IsActiveProperty =
+            DependencyProperty.Register("IsActive", typeof(bool), typeof(Carousel), new PropertyMetadata(true));
+
+
+
         public int SelectedIndex
         {
             get { return (int)GetValue(SelectedIndexProperty); }
@@ -382,7 +395,7 @@ namespace OpenFrp.Launcher.Controls
 
                     await Task.Delay(3000);
 
-                    if (itemSourceCount > 1)
+                    if (itemSourceCount > 1 && IsActive)
                     {
 
                         var t = Mouse.GetPosition(this);

@@ -208,6 +208,8 @@ namespace OpenFrp.Launcher
                 return;
             }
 
+            
+
             string appHash = Service.Helpers.HashAlgorithmHelper.ComputeHashToBase64String(AppContext.BaseDirectory);
 
             launcherMutex = new Mutex(false, $"openfrp.launcher.Mutex_{appHash}", out var createdNewFlag);
@@ -324,12 +326,19 @@ namespace OpenFrp.Launcher
                 {
                     while (launcherAppWaitHandle.WaitOne())
                     {
-                        if (App.Current is null || App.Current.Dispatcher.HasShutdownStarted) break;
-
-                        App.Current.Dispatcher.Invoke(() =>
+                        try
                         {
-                            (App.Current.MainWindow as AppWindow)?.ShowByHANDLE();
-                        });
+                            if (App.Current is null || App.Current.Dispatcher.HasShutdownStarted) break;
+
+                            App.Current.Dispatcher.Invoke(() =>
+                            {
+                                (App.Current.MainWindow as AppWindow)?.ShowByHANDLE();
+                            });
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            return;
+                        }
                     }
                 });
             }
@@ -338,7 +347,7 @@ namespace OpenFrp.Launcher
                 launcherAppWaitHandle.Close();launcherAppWaitHandle.Close();
             }
 
-                Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
+            Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
 
             App.Settings.PropertyChanged += (_, e) =>
             {
@@ -347,20 +356,24 @@ namespace OpenFrp.Launcher
                     case "UseProxy":
                         {
                             Service.Net.HttpClient.DefualtInstance.SetUseProxy(App.Settings.UseProxy);
-                        }
-                            ; break;
+                        };break;
                     case "ShowTitlebarBackground":
                         {
                             if (App.Current is { MainWindow: LoginWindow { DataContext: ViewModels.LoginWindowViewModel op } })
                             {
                                 op.OnShowTitlebarBackgroundChanged();
                             }
-                        }
-                        ; break;
+                        };break;
+                    case "UseWebView2Tools":
+                        {
+                            if (App.Current is { MainWindow: MainWindow { DataContext: ViewModels.MainWindowViewModel mw} })
+                            {
+                                mw.OnViewModelPropertyChanged("UseWebView2Tools");
+                            }
+                        };break;
                     default: return;
                 }
             };
-
 #if DEBUG
             Logger.LogDebug("[OF LAUN] Setting - AutoLaunchTunnels: {tunnels}", Settings.AutoLaunchTunnel);
             Logger.LogDebug("[OF LAUN] Setting - AutoLoginUserId: {id}", Settings.AutoLoginId);
@@ -412,11 +425,11 @@ namespace OpenFrp.Launcher
 
         
 
-        public static string LauncherVersionString => "5.8.72 Preview";
+        public static string LauncherVersionString => "5.8.80 Release";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 
-        public static int LauncherVersionNumber => 5872;
+        public static int LauncherVersionNumber => 5880;
 
         internal static bool IsAdministrator()
         {
