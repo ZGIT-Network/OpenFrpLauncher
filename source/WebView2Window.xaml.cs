@@ -43,6 +43,12 @@ namespace OpenFrp.Launcher
             "reload",
             "inspectElement"
         };
+        private static readonly string[] OnlySupportedHost = new string[]
+        {
+            "console.openfrp.cn",
+            "console.openfrp.net",
+            "localhost"
+        };
         private readonly ILogger<WebView2Window> logger;
         private readonly EventWaitHandle eventWaitHandle = new EventWaitHandle(false,EventResetMode.ManualReset) { };
 
@@ -82,6 +88,8 @@ namespace OpenFrp.Launcher
 
             wv.Dispose();
 
+  
+
             base.OnClosed(e);
         }
 
@@ -120,21 +128,34 @@ namespace OpenFrp.Launcher
 
             if (Win32.UserUxtheme.IsSupportDarkMode)
             {
-                if (hWnd != IntPtr.Zero)
+                if (Owner is not AppWindow ap) return;
+                
+                var actual = iNKORE.UI.WPF.Modern.ThemeManager.GetActualTheme(ap);
+
+                if (actual is iNKORE.UI.WPF.Modern.ElementTheme.Dark)
                 {
-                    Win32.UserUxtheme.ShouldSystemUseDarkMode();
-                    Win32.UserUxtheme.ShouldAppsUseDarkMode();
-                    Win32.UserUxtheme.AllowDarkModeForApp(true);
-                    Win32.UserUxtheme.AllowDarkModeForWindow(hWnd, true);
+                    if (hWnd != IntPtr.Zero)
+                    {
+                        Win32.UserUxtheme.ShouldSystemUseDarkMode();
+                        Win32.UserUxtheme.ShouldAppsUseDarkMode();
+                        Win32.UserUxtheme.AllowDarkModeForApp(true);
+                        Win32.UserUxtheme.AllowDarkModeForWindow(hWnd, true);
+                    }
                 }
+                
 
                 var so = (HwndSource)HwndSource.FromVisual(this);
 
-                so.CompositionTarget.BackgroundColor = Colors.Transparent;
-
                 if (OSVersionHelper.IsWindows11OrGreater && App.Settings.BackdropType != BackdropType.None)
                 {
+                    so.CompositionTarget.BackgroundColor = Colors.Transparent;
+
                     BackdropHelper.Apply(this, App.Settings.BackdropType, false);
+                }
+                else if (actual == iNKORE.UI.WPF.Modern.ElementTheme.Light)
+                {
+                    Background = new SolidColorBrush { Color = Colors.White };
+                    //SetResourceReference(BackgroundProperty, "ApplicationPageBackgroundThemeBrush");
                 }
 
                 SetDwmExtendFrameIntoClientArea(-1, -1, -1, -1);
@@ -266,7 +287,8 @@ namespace OpenFrp.Launcher
 
         private void Core_NavigationStarting(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationStartingEventArgs e)
         {
-            if (e.Uri.Equals(Source)) return;
+            if (!Uri.TryCreate(e.Uri, uriKind: UriKind.RelativeOrAbsolute, out var t)) return;
+            if (OnlySupportedHost.Contains(t.Host)) return;
 
             e.Cancel = true;
 
@@ -302,6 +324,8 @@ namespace OpenFrp.Launcher
             }
         }
 
+        internal bool? NeedRefresh = null;
+
         private void Core_WebMessageReceived(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
         {
             string str = e.TryGetWebMessageAsString();
@@ -311,6 +335,9 @@ namespace OpenFrp.Launcher
                 case "requestUserTheme":
                     AppWindow_ActualThemeValueChanged(null, new RoutedEventArgs { });
                     return;
+                case "needRefresh":
+                    NeedRefresh = true;
+                    break;
                 case "exitProc":
                     DialogResult = true;
                     goto case "exitProcFail";
@@ -375,6 +402,13 @@ namespace OpenFrp.Launcher
                             
                             switch (path[1])
                             {
+                                case "getNetworkConnection":
+                                    {
+                                        var t = await OpenFrp.Service.Net.LocalConnectionSearch.SearchConnection();
+
+                                        await WriteCoreWebView2WebResponse(e, t);
+                                    }
+                                    ;break;
                                 case "getUserInfo":
                                     {
                                         var u = await Service.Net.OpenFrpApi.GetUserInfo();

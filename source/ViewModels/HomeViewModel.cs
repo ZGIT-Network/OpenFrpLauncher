@@ -34,6 +34,15 @@ namespace OpenFrp.Launcher.ViewModels
             if (e.Source is Page page)
             {
                 this.page = page;
+                if (page.FindName("svo2") is ScrollViewerEx svo2)
+                {
+                    scroller = svo2;
+
+                    if (page.Tag is "scrollToEnd")
+                    {
+                        svo2.ScrollToEnd();
+                    }
+                }
                 if (page.FindName("carousel") is Controls.Carousel c)
                 {
                     c.SetBinding(Controls.Carousel.IsActiveProperty, new System.Windows.Data.Binding("IsActive")
@@ -57,6 +66,10 @@ namespace OpenFrp.Launcher.ViewModels
 
         private readonly AppWindow? _mainWindow;
         private readonly MainWindowViewModel? _mainWindowViewModel;
+
+        private ScrollViewerEx? scroller;
+
+        internal void ScrollToEnd() => scroller?.ScrollToEnd();
 
         [ObservableProperty]
         private Model.AdSenseItem[]? adSences;
@@ -105,19 +118,24 @@ namespace OpenFrp.Launcher.ViewModels
                     if (!string.IsNullOrEmpty(ve.ImageUrl))
                     {
                         string? hash = default;
-                        while (string.IsNullOrEmpty(hash))
+                        using (var loc = await @lock.LockAsync())
                         {
-                            try
+                            while (string.IsNullOrEmpty(hash))
                             {
+                                try
+                                {
 #if NET
-                                hash = "ofapp_" + await Service.Helpers.HashAlgorithmHelper.ComputeHashStringAsync(ve.ImageUrl!);
+                                    hash = "ofapp_" + await Service.Helpers.HashAlgorithmHelper.ComputeHashStringAsync(ve.ImageUrl!);
 #else
                                 hash = "ofapp_" + Service.Helpers.HashAlgorithmHelper.ComputeHashString(ve.ImageUrl!);
 #endif
-                            }
-                            catch
-                            {
-                                continue;
+                                }
+                                catch
+                                {
+                                    await Task.Delay(500, cancellationToken);
+
+                                    continue;
+                                }
                             }
                         }
 

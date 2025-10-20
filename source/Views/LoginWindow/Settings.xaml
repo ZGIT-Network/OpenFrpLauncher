@@ -132,6 +132,15 @@
                         Margin="0,24,0,0"
                         FontSize="18"
                         Text="高级功能" />
+                    <ctrl:SettingItem
+                        Title="打开 FRPC 文件夹"
+                        Command="{Binding event_OpenFrpcFolderCommand}"
+                        Description="当你无法通过更新来获取 FRPC 时，你可以手动下载后放入 FRPC 文件夹。(注意: 请勿将未解压的 FRPC 压缩包放入，这样并不会生效)"
+                        IsClickable="True">
+                        <ctrl:SettingItem.Icon>
+                            <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.NewFolder}" />
+                        </ctrl:SettingItem.Icon>
+                    </ctrl:SettingItem>
                     <ctrl:SettingItem Title="系统服务模式">
                         <ctrl:SettingItem.ExtendUI>
                             <wp:SimpleStackPanel>

@@ -225,5 +225,17 @@ namespace OpenFrp.Launcher.Properties {
                 this["UseWebView2Tools"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UseGridViewTunnelFeature {
+            get {
+                return ((bool)(this["UseGridViewTunnelFeature"]));
+            }
+            set {
+                this["UseGridViewTunnelFeature"] = value;
+            }
+        }
     }
 }

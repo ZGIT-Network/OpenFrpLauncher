@@ -12,7 +12,10 @@ using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using GrpcDotNetNamedPipes;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OpenFrp.Launcher.ViewModels;
+using OpenFrp.Service.Helpers;
 using OpenFrp.Service.Proto.Request;
 
 namespace OpenFrp.Launcher.Rpc
@@ -31,7 +34,11 @@ namespace OpenFrp.Launcher.Rpc
             {
 
             };
+
+            logger = App.ServiceProvider.GetRequiredService<ILogger<BgService>>();
         }
+
+        private readonly ILogger<BgService> logger;
 
         private static string GetPipeName()
         {
@@ -55,6 +62,10 @@ namespace OpenFrp.Launcher.Rpc
 
         public void LaunchServer()
         {
+            if (currentPipeServer != null)
+            {
+                return;
+            }
             var cur = WindowsIdentity.GetCurrent();
             if (cur.User is null)
             {
@@ -73,47 +84,107 @@ namespace OpenFrp.Launcher.Rpc
                 PipeSecurity = security
             });
 
-            var service = new BackgroundServiceInst(DownloadServiceFallback.Invoke);
+            var service = new BackgroundServiceInst(this);
 
             Service.Proto.BackgroundService.OpenFrpBackgroundService.BindService(currentPipeServer.ServiceBinder, service);
 
             currentPipeServer.Start();
         }
 
-        public async Task LaunchProcessAndWait()
+        public async Task<Model.ExecuteResult> LaunchProcessAndWait()
         {
-            currentRpcProcess = await Task.Run(() =>
+            var proc = new Process
             {
-                return Process.Start(new ProcessStartInfo()
+                StartInfo = new ProcessStartInfo()
                 {
                     FileName = OpenFrp.Service.Helpers.FileHelper.GetServiceExecutableFile(),
                     Arguments = $"--inst frpc-update -pipe=\"{pipeName}\" -useProxy={App.Settings.UseProxy}",
                     CreateNoWindow = true,
                     ErrorDialog = false,
                     UseShellExecute = true,
+                    //RedirectStandardOutput = true,
+                    //RedirectStandardError = true,
                     ErrorDialogParentHandle = IntPtr.Zero,
                     Verb = "runas",
                     WindowStyle = ProcessWindowStyle.Hidden
-                });
-            });
-
-            if (currentRpcProcess is null)
+                }
+            };
+            try
             {
-                return;
+                if (await proc.StartAsync())
+                {
+                    //proc.OutputDataReceived += ProcHandle_StdOutOrStdErr;
+                    //proc.ErrorDataReceived += ProcHandle_StdOutOrStdErr;
+
+                    //proc.BeginErrorReadLine();
+                    //proc.BeginOutputReadLine();
+                    LastDebugInfo = null;
+                    currentRpcProcess = proc;
+                }
+                else
+                {
+                    throw new System.ComponentModel.Win32Exception(proc.ExitCode, "进程启动失败。");
+                }
             }
+            catch (Exception ex)
+            {
+                System.ComponentModel.Win32Exception? winEx = ex as System.ComponentModel.Win32Exception ?? ex.InnerException as System.ComponentModel.Win32Exception;
+
+                if (winEx != null)
+                {
+                    switch (winEx.NativeErrorCode)
+                    {
+                        case 1223:
+                            logger.LogDebug("用户已取消操作。");
+                            return Model.ExecuteResult.Fail("Cancelled",1223);
+                        case 5:
+                            logger.LogDebug("操作被系统拒绝，请检查杀软是否拦截了操作。");
+                            return new Model.ExecuteResult { Exception = ex, Message = "操作被系统拒绝，请检查杀软是否拦截了操作。" };
+                    }
+                }
+                return ex;
+            }
+
             await Task.Run(currentRpcProcess.WaitForExit);
+
+            try
+            {
+                if (currentRpcProcess.ExitCode != 0)
+                {
+                    return new Model.ExecuteResult
+                    {
+                        Exception = new Exception("后台服务进程异常退出，错误代码：" + currentRpcProcess.ExitCode),
+                        Message = "后台服务进程异常退出，错误代码：" + currentRpcProcess.ExitCode,
+                        StatusCode = currentRpcProcess.ExitCode
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new Model.ExecuteResult
+                {
+                    Exception = ex,
+                    Message = "后台服务进程异常退出",
+                    StatusCode = -1
+                };
+            }
+
+            return Model.ExecuteResult.Success();
         }
 
         private bool _isDisposed = false;
-
 
 
         public void Dispose()
         {
             if (_isDisposed) return;
 
-            currentPipeServer?.Kill();
+            if (currentRpcProcess is { HasExited: false })
+            {
+                currentRpcProcess.Kill();
+            }
 
+            currentPipeServer?.Kill();
 
             currentRpcProcess?.Dispose();
             currentPipeServer?.Dispose();
@@ -124,23 +195,34 @@ namespace OpenFrp.Launcher.Rpc
 
         public void KillServer() => currentPipeServer?.Kill();
 
+        public Google.Rpc.DebugInfo? LastDebugInfo { get; internal set; }
+
         public event DownloadServiceFallbackHandler DownloadServiceFallback = delegate { };
 
         public delegate void DownloadServiceFallbackHandler(DownloadFallback.Types.DownloadFallbackType type,Any data);
 
         private class BackgroundServiceInst : Service.Proto.BackgroundService.OpenFrpBackgroundService.OpenFrpBackgroundServiceBase
         {
-            public BackgroundServiceInst(Action<DownloadFallback.Types.DownloadFallbackType, Any> downloadServiceFallbackTo)
+            public BackgroundServiceInst(BgService service)
             {
-                DownloadServiceFallbackTo = downloadServiceFallbackTo;
+                //,Action<DownloadFallback.Types.DownloadFallbackType, Any> downloadServiceFallbackTo
+                this.bgService = service;
             }
 
-            private Action<DownloadFallback.Types.DownloadFallbackType,Any>? DownloadServiceFallbackTo;
+            private BgService bgService;
+
 
             public override Task<Empty> DownloadServiceFallback(DownloadFallback request, ServerCallContext context)
             {
-                DownloadServiceFallbackTo?.Invoke(request.State, request.Data);
-
+                switch (request.State)
+                {
+                    case DownloadFallback.Types.DownloadFallbackType.Messaging 
+                    when request.Data.Is(Google.Rpc.DebugInfo.Descriptor):
+                        bgService.logger.LogInformation($"[服务端消息] {request.Data.Unpack<Google.Rpc.DebugInfo>().Detail}");
+                        bgService.LastDebugInfo = request.Data.Unpack<Google.Rpc.DebugInfo>();
+                        break;
+                    default: bgService.DownloadServiceFallback?.Invoke(request.State, request.Data); break;
+                }
                 return Task.FromResult(new Empty { });
             }
         }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using Google.Protobuf.Reflection;
 using Google.Protobuf.WellKnownTypes;
 using iNKORE.UI.WPF.Modern.Controls;
@@ -13,6 +15,74 @@ namespace OpenFrp.Launcher.Controls
 {
     public partial class TunnelConfEditor : ContentControl
     {
+        public bool IsServiceSelecting
+        {
+            get { return (bool)GetValue(IsServiceSelectingProperty); }
+            set { SetValue(IsServiceSelectingPropertyKey, value); }
+        }
+
+        public void CancelServiceSelecting()
+        {
+            if (listView != null)
+            {
+                listView.ClearValue(ItemsControl.ItemsSourceProperty);
+            }
+            SetValue(IsServiceSelectingPropertyKey, false);
+        }
+
+        public static readonly DependencyPropertyKey IsServiceSelectingPropertyKey =
+            DependencyProperty.RegisterReadOnly("IsServiceSelecting", typeof(bool), typeof(TunnelConfEditor), new PropertyMetadata(false, OnIsServiceSelectingPropertyChanged));
+
+        protected static void OnIsServiceSelectingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TunnelConfEditor editor && e.NewValue is bool b)
+            {
+                editor.Conve_RefreshDetectedConnectionCommand.NotifyCanExecuteChanged();
+
+                if (editor.GetTemplateChild("localServiceSelector") is Button btn)
+                {
+                    btn.IsEnabled = !b;
+                }
+                if (b)
+                {
+                    editor.Conve_RefreshDetectedConnectionCommand.Execute(default);
+                }
+                else
+                {
+                    editor.Conve_RefreshDetectedConnectionCommand.Cancel();
+                }
+            }
+        }
+
+        private bool CanExecuteRefreshDetectedConnection() => IsServiceSelecting;
+
+        [RelayCommand(CanExecute = nameof(CanExecuteRefreshDetectedConnection),IncludeCancelCommand = true)]
+        private async Task Conve_RefreshDetectedConnection(CancellationToken cancellationToken)
+        {
+            if (listView == null || suggestBox == null || connectionTypeSelector is null)
+            {
+                return;
+            }
+
+            listView.ItemsSource = null;
+            connectionTypeSelector.SetValue(ComboBox.SelectedIndexProperty, 0);
+            suggestBox.ClearValue(AutoSuggestBox.TextProperty);
+
+            filterText = "";
+            type = Service.Net.LocalConnectionSearch.LocalConnectonType.Unknown;
+
+            var resp = await OpenFrp.Service.Net.LocalConnectionSearch.SearchConnection(cancellationToken);
+
+            listView.Items.Filter = listView.Items.Filter;
+            listView.ItemsSource = resp.Select(x => new Model.LocalConnection(x));
+        }
+
+        public static readonly DependencyProperty IsServiceSelectingProperty = IsServiceSelectingPropertyKey.DependencyProperty;
+
+        private System.Windows.Controls.ListView? listView;
+        private AutoSuggestBox? suggestBox;
+        private ComboBox? connectionTypeSelector;
+
         public Model.Node Node
         {
             get { return (Model.Node)GetValue(NodeProperty); }
@@ -115,6 +185,9 @@ namespace OpenFrp.Launcher.Controls
             }
         }
 
+        private OpenFrp.Service.Net.LocalConnectionSearch.LocalConnectonType type = Service.Net.LocalConnectionSearch.LocalConnectonType.Unknown;
+        private string filterText = string.Empty;
+
         public override void OnApplyTemplate()
         {
             EditorTemplate.SelectedTypeIndex = 0;
@@ -173,9 +246,105 @@ namespace OpenFrp.Launcher.Controls
 
                 cb.SetCurrentValue(ComboBox.SelectedIndexProperty, EditorTemplate.SelectedTypeIndex);
             }
+            if (GetTemplateChild("localServiceSelector") is Button localServiceSelector)
+            {
+                localServiceSelector.Click += delegate
+                {
+                    IsServiceSelecting = true;
+                };
+            }
+            if (GetTemplateChild("listView") is System.Windows.Controls.ListView lv)
+            {
+                listView = lv;
+
+                lv.Items.Filter = item =>
+                {
+                    if (item is Model.LocalConnection ltc)
+                    {
+                        if (ltc.Type == Service.Net.LocalConnectionSearch.LocalConnectonType.Unknown || type == Service.Net.LocalConnectionSearch.LocalConnectonType.Unknown || ltc.Type == type)
+                        {
+                            if (string.IsNullOrEmpty(filterText))
+                            {
+                                return true;
+                            }
+#if NET
+                            return ltc.ProcessName.Contains(filterText,StringComparison.OrdinalIgnoreCase);
+#else
+                            return ltc.ProcessName.IndexOf(filterText,StringComparison.OrdinalIgnoreCase) != -1;
+#endif
+                        }
+                    }
+                    return false;
+                };
+                lv.AddHandler(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, (RoutedEventHandler)((_, e) =>
+                {
+                    if (e.OriginalSource is not Button { DataContext: Model.LocalConnection localConnection }) { return; }
+
+                    var endPoint = localConnection.GetIPEndPoint();
+
+
+                    IPAddress mapped = endPoint.Address;
+
+                    if (endPoint.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                    {
+                        if (mapped.Equals(IPAddress.IPv6Any))
+                        {
+                            mapped = IPAddress.IPv6Loopback;
+                        }
+                    }
+                    else if (mapped.Equals(IPAddress.Any))
+                    {
+                        mapped = IPAddress.Loopback;
+                    }
+                    EditorTemplate.Host = mapped.ToString();
+
+                    if (GetTemplateChild("localNumberBox") is NumberBox nb)
+                    {
+                        nb.Text = (EditorTemplate.Port = (ushort)endPoint.Port).ToString();
+                    }
+
+                    CancelServiceSelecting();
+                }));
+            }
+            if (GetTemplateChild("suggestBox") is AutoSuggestBox sb)
+            {
+                suggestBox = sb;
+
+                sb.ClearValue(AutoSuggestBox.TextProperty);
+                sb.TextChanged += (_, e) =>
+                {
+                    if (this.suggestBox is null || this.listView is null) return;
+                    if (e.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
+                    {
+                        return;
+                    }
+                    filterText = sb.Text;
+                    listView.Items.Filter = listView.Items.Filter;
+                };
+            }
+            if (GetTemplateChild("connectionTypeSelector") is ComboBox connectionTypeSelector)
+            {
+                this.connectionTypeSelector = connectionTypeSelector;
+
+                connectionTypeSelector.SelectionChanged += (_, e) =>
+                {
+                    if (this.suggestBox is null || this.listView is null) return;
+                    if (connectionTypeSelector.SelectedItem is not ComboBoxItem { Content: string type }) return;
+
+                    this.type = type switch
+                    {
+                        "TCP" => Service.Net.LocalConnectionSearch.LocalConnectonType.TCP,
+                        "UDP" => Service.Net.LocalConnectionSearch.LocalConnectonType.UDP,
+                        _ => Service.Net.LocalConnectionSearch.LocalConnectonType.Unknown
+                    };
+                    listView.Items.Filter = listView.Items.Filter;
+                };
+            }
 
             base.OnApplyTemplate();
         }
+
+
 
         public class UshortFormatter : INumberBoxNumberFormatter
         {

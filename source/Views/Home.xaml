@@ -54,6 +54,7 @@
         </xa:SimpleStackPanel>
         <Grid Grid.Row="1">
             <ink:ScrollViewerEx
+                x:Name="svo2"
                 Focusable="False"
                 PanningMode="VerticalFirst"
                 VerticalScrollBarVisibility="Auto">
@@ -155,7 +156,7 @@
                                             IsHitTestVisible="{Binding Value, Source={StaticResource IsNotRunning}, Mode=OneWay}"
                                             ItemsSource="{Binding AdSences, Mode=OneWay}">
                                             <ctrl:Carousel.Background>
-                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png" Stretch="UniformToFill" />
+                                                <ImageBrush ImageSource="pack://application:,,,/Resources/Images/nature-6766923_1920.jpg" Stretch="UniformToFill" />
                                             </ctrl:Carousel.Background>
                                             <ctrl:Carousel.Visibility>
                                                 <Binding
@@ -420,7 +421,7 @@
                                                             <TextBlock FontSize="16" Text="打开官网" />
                                                         </xa:SimpleStackPanel>
                                                     </ctrl:HyperlinkTp1>
-                                                    <ctrl:HyperlinkTp1
+                                                    <!--<ctrl:HyperlinkTp1
                                                         Padding="0"
                                                         AutomationProperties.Name="赞助者列表"
                                                         Command="{Binding event_OpenPaymentAppCommand}"
@@ -430,7 +431,7 @@
                                                             <ink:FontIcon FontSize="17" Icon="{x:Static ink:SegoeFluentIcons.GiftboxOpen}" />
                                                             <TextBlock FontSize="16" Text="赞助者列表" />
                                                         </xa:SimpleStackPanel>
-                                                    </ctrl:HyperlinkTp1>
+                                                    </ctrl:HyperlinkTp1>-->
                                                 </xa:SimpleStackPanel>
                                             </Grid>
                                         </Grid>
@@ -474,34 +475,8 @@
                                     </Grid>
                                 </Border>
                             </Grid>
-                            <WrapPanel>
-                                <!--<Border
-                                    MaxWidth="213"
-                                    Margin="0,0,8,16"
-                                    HorizontalAlignment="Left"
-                                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                                    BorderThickness="1"
-                                    ClipToBounds="True"
-                                    CornerRadius="6">
-                                    <Grid>
-                                        <Image
-                                            ink:ClipHelper.CornerRadius="6"
-                                            RenderOptions.BitmapScalingMode="HighQuality"
-                                            Source="../Resources/Images/alipay.jpg" />
+                            <!--<WrapPanel>
 
-                                        <TextBlock
-                                            Margin="0,36,0,0"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Top"
-                                            FontSize="14"
-                                            Foreground="Black"
-                                            IsHitTestVisible="False"
-                                            TextAlignment="Center">
-
-                                            <Run Text="支付宝 (这不是购买 VIP 的码)" />
-                                        </TextBlock>
-                                    </Grid>
-                                </Border>-->
                                 <Border
                                     MaxWidth="318"
                                     Margin="0,0,8,16"
@@ -538,7 +513,7 @@
                                         </TextBlock>
                                     </Grid>
                                 </Border>
-                            </WrapPanel>
+                            </WrapPanel>-->
 
                         </xa:SimpleStackPanel>
                     </Grid>

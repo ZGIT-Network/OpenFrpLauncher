@@ -5,6 +5,12 @@
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern">
     <Style TargetType="ctrl:Skeleton">
         <Setter Property="Focusable" Value="False" />
+        <Setter Property="RenderTransformOrigin" Value=".5,.5" />
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Setter.Value>
+        </Setter>
         <Setter Property="IsEnabled" Value="{Binding IsVisible, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
         <Setter Property="Template">
             <Setter.Value>
@@ -48,7 +54,6 @@
                             <Trigger.EnterActions>
                                 <BeginStoryboard Name="foreverStory">
                                     <Storyboard>
-
                                         <ColorAnimationUsingKeyFrames
                                             RepeatBehavior="Forever"
                                             Storyboard.TargetName="bg2"
@@ -88,6 +93,9 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="foreverStory" />
+                            </Trigger.ExitActions>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

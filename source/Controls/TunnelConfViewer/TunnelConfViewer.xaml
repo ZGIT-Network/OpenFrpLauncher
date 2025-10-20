@@ -87,7 +87,7 @@
                             <StackPanel
                                 Margin="0,0,8,8"
                                 HorizontalAlignment="Left"
-                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsFastLaunch, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"
@@ -105,7 +105,7 @@
                             <StackPanel
                                 Margin="0,0,8,8"
                                 HorizontalAlignment="Left"
-                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsFastLaunch, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                 <TextBlock
                                     Margin="0,0,0,2"
                                     FontSize="16"

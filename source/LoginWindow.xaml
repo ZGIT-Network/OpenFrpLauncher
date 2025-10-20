@@ -85,7 +85,7 @@
                 <Image
                     x:Name="bgImagePlacement"
                     RenderOptions.BitmapScalingMode="LowQuality"
-                    Source="pack://application:,,,/Resources/Images/[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png"
+                    Source="pack://application:,,,/Resources/Images/nature-6766923_1920.jpg"
                     Visibility="Visible" />
             </Viewbox>
 
@@ -142,6 +142,7 @@
                         FontFamily="{StaticResource SoraMediumMixYahei}"
                         FontSize="24"
                         FontWeight="Medium"
+                        Foreground="White"
                         Visibility="Visible">
                         <Run>OpenFrp</Run>
                     </TextBlock>
@@ -213,16 +214,30 @@
                                             Margin="0,0,11,0"
                                             FontSize="20"
                                             Icon="{x:Static ink:SegoeFluentIcons.CloudDownload}" />
-                                        <TextBlock
+                                        <StackPanel
                                             Grid.Column="1"
                                             Grid.ColumnSpan="2"
-                                            Padding="0,0,0,10"
-                                            FontFamily="{StaticResource SoraMediumMixYahei}">
-                                            <Run Text="正在下载 FRPC" />
-                                            <Run Text="{Binding DownloadProcess.ProgressValue, StringFormat='({0}%)', Mode=OneWay}" />
-                                            <LineBreak />
-                                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="等待下载完成后登录进程才会继续。" />
-                                        </TextBlock>
+                                            Orientation="Vertical">
+                                            <StackPanel Orientation="Horizontal">
+                                                <StackPanel.Resources>
+                                                    <ink:BindingProxy x:Key="IsZeroProgressResBinding" Value="{Binding DownloadProcess.ProgressValue, Converter={StaticResource NotEqualConverter}, ConverterParameter='0', Mode=OneWay}" />
+                                                </StackPanel.Resources>
+                                                <TextBlock>
+                                                    <Run Text="正在下载" />
+                                                    <Run FontFamily="{StaticResource SoraMedium}" Text="FRPC" />
+                                                </TextBlock>
+                                                <TextBlock
+                                                    Margin="4,0,0,0"
+                                                    FontFamily="{StaticResource SoraMedium}"
+                                                    Visibility="{Binding Value, Converter={StaticResource AweBooleanToVisibilityConverter}, Source={StaticResource IsZeroProgressResBinding}, Mode=OneWay}">
+                                                    <Run Text="{Binding DownloadProcess.ProgressValue, StringFormat='({0}%)', Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock Padding="0,0,0,10">
+                                                <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="等待下载完成后登录进程才会继续。" />
+                                            </TextBlock>
+                                        </StackPanel>
+
                                         <StackPanel Grid.Row="2" Grid.Column="1">
                                             <TextBlock
                                                 MaxWidth="375"
@@ -251,12 +266,12 @@
                                                 AutomationProperties.Name="重试"
                                                 Background="Transparent"
                                                 BorderThickness="0"
-                                                Command="{Binding event_TryLaunchBackgroundServiceCommand}"
+                                                Command="{Binding conve_TryDetectFrpcCommand}"
                                                 ToolTip="重新进行下载操作"
-                                                Visibility="{Binding event_TryLaunchBackgroundServiceCommand.IsRunning, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                                Visibility="{Binding conve_TryDetectFrpcCommand.IsRunning, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                                 <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
                                             </Button>
-                                            <Button
+                                            <!--<Button
                                                 Padding="9"
                                                 AutomationProperties.Name="取消下载进程"
                                                 Background="Transparent"
@@ -264,7 +279,7 @@
                                                 Command="{Binding conve_TryDetectFrpcCancelCommand}"
                                                 ToolTip="取消下载进程,同时取消登录操作。">
                                                 <ink:FontIcon FontSize="14" Icon="{x:Static ink:SegoeFluentIcons.ChromeClose}" />
-                                            </Button>
+                                            </Button>-->
                                         </StackPanel>
 
                                     </Grid>
@@ -375,15 +390,16 @@
                             Message="{Binding StringFormat='本软件处于开发阶段，内容仅供参考。({0})', Source={x:Static local:App.LauncherVersionString}}"
                             Severity="Informational" />
                     </Grid>
+                    <!--  Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"  -->
                     <TextBlock
                         Margin="0,8,0,0"
                         FontFamily="{StaticResource SoraMediumMixYahei}"
                         FontSize="16"
-                        Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        IsHitTestVisible="False"
                         Visibility="Visible">
                         <Run Text="版权所有 ZGIT Network" />
-                        <LineBreak />
-                        <Run Text="湘ICP备2021009274号-3" />
+                        <!--<LineBreak />
+                        <Run Text="湘ICP备2021009274号-3" />-->
                     </TextBlock>
                 </StackPanel>
             </Grid>
@@ -398,9 +414,9 @@
                 MaxWidth="375"
                 HorizontalAlignment="Right">
                 <ink:ThemeShadowChrome
-                    Margin="4"
+                    Margin="2"
                     CornerRadius="6"
-                    Depth="80"
+                    Depth="60"
                     IsHitTestVisible="False"
                     Visibility="{Binding Visibility, Source={x:Reference Name=bgImagePlacement}, Mode=OneWay}" />
                 <Border
@@ -421,8 +437,15 @@
                                 Amount="80"
                                 CornerRadius="5.5"
                                 Focusable="False"
+                                IsTabStop="False"
                                 NoiseOpacity="0.01"
-                                TintOpacity=".45" />
+                                TintOpacity=".45">
+                                <FrameworkElement.Resources>
+                                    <Style TargetType="ContentControl">
+                                        <Setter Property="Focusable" Value="False" />
+                                    </Style>
+                                </FrameworkElement.Resources>
+                            </ink:AcrylicPanel>
                             <Rectangle
                                 x:Name="lightAcrylicFill"
                                 ink:ClipHelper.CornerRadius="5.5"
@@ -450,24 +473,14 @@
                                         <ink:ScrollViewerEx Margin="0" PanningMode="VerticalOnly">
                                             <wp:SimpleStackPanel Margin="24,28,24,24" Spacing="8">
                                                 <StackPanel Orientation="Horizontal">
-
                                                     <TextBlock VerticalAlignment="Center" FontSize="20">
                                                         <Run Text="登录" />
+                                                        <Run FontFamily="{StaticResource SoraMedium}" Text="OpenFrp" />
                                                     </TextBlock>
                                                 </StackPanel>
-                                                <TextBlock
-                                                    x:Name="cont"
-                                                    Margin="0,0,0,0"
-                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                    TextWrapping="Wrap">
-                                                    <Run Text="选择该平台上已记录的账户，或登录新账号。" />
-                                                    <LineBreak />
-                                                    <Run Text="若需取消记录已登录的账户，在菜单中删除。" />
-                                                </TextBlock>
                                                 <ItemsControl
                                                     x:Name="selfor"
                                                     Margin="0,4,0,-8"
-                                                    d:ItemsSource="{d:SampleData ItemCount=2}"
                                                     Focusable="False"
                                                     ItemsSource="{Binding PlatformUsers, Mode=OneWay}">
                                                     <ItemsControl.ItemTemplate>
@@ -478,12 +491,12 @@
                                                                 HorizontalAlignment="Stretch"
                                                                 HorizontalContentAlignment="Stretch"
                                                                 BorderBrush="Transparent"
-                                                                Command="{Binding DataContext.event_FastLoginCommand, ElementName=selfor, Mode=OneWay}"
+                                                                Command="{Binding DataContext.event_FastLoginCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
                                                                 CommandParameter="{Binding Mode=OneWay}">
                                                                 <Button.ContextMenu>
                                                                     <ContextMenu MinWidth="100">
                                                                         <MenuItem
-                                                                            Command="{Binding DataContext.event_RemoveUserRecordCommand, Source={x:Reference Name=cont}, Mode=OneWay}"
+                                                                            Command="{Binding DataContext.event_RemoveUserRecordCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}, Mode=OneWay}"
                                                                             CommandParameter="{Binding Mode=OneWay}"
                                                                             Header="取消记录">
                                                                             <MenuItem.Icon>
@@ -536,7 +549,6 @@
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
-
                                                 <Button
                                                     Margin="0,0,0,0"
                                                     Padding="12,14,8,14"
@@ -607,6 +619,15 @@
                                                         </StackPanel>
                                                     </Grid>
                                                 </Button>
+                                                <TextBlock
+                                                    Margin="0,12,0,0"
+                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                                    TextAlignment="Center"
+                                                    TextWrapping="Wrap">
+                                                    <Run Text="若需取消记录已登录的账户，在菜单中删除。" />
+                                                    <LineBreak />
+                                                    <Run Text="您也可以点击&quot;跳过登录&quot;先进入主窗口。" />
+                                                </TextBlock>
                                                 <Rectangle
                                                     Height="{Binding ActualHeight, Source={x:Reference Name=gl_erBar}}"
                                                     Margin="0,0,0,-20"
@@ -649,17 +670,22 @@
                                                 </Style>
                                             </StackPanel.Resources>
                                             <ink:HyperlinkButton
-                                                AutomationProperties.Name="跳过"
+                                                AutomationProperties.Name="跳过登录"
                                                 Command="{Binding event_GotoMainWindowCommand}"
-                                                ToolTip="跳过">
+                                                ToolTip="不登录账户，先进入主窗口操作。">
                                                 <StackPanel Orientation="Horizontal">
-                                                    <ink:FontIcon FontSize="20" Icon="{x:Static ink:SegoeFluentIcons.Go}" />
+                                                    <ink:FontIcon
+                                                        FontFamily="{StaticResource FluentSystemIcons}"
+                                                        FontSize="22"
+                                                        Glyph="&#xF3FE;"
+                                                        RenderTransformOrigin=".5,.5" />
+
                                                     <TextBlock
                                                         Padding="6,0,0,0"
                                                         VerticalAlignment="Center"
-                                                        FontSize="16"
-                                                        Text="跳过"
-                                                        Visibility="Collapsed" />
+                                                        FontSize="14"
+                                                        Text="跳过登录"
+                                                        Visibility="Visible" />
                                                 </StackPanel>
                                             </ink:HyperlinkButton>
                                             <ink:HyperlinkButton

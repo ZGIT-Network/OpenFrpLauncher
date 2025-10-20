@@ -154,6 +154,7 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     FileName = "explorer",
                     Arguments = Service.Helpers.FileHelper.FrpcDirectory,
+                    UseShellExecute = true
                 });
                 return;
             }

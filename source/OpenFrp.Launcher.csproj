@@ -13,6 +13,8 @@
 	  <ApplicationIcon>Resources\Images\desktop.ico</ApplicationIcon>
 	  <AssemblyTitle>OpenFrp WPF 桌面端启动器</AssemblyTitle>
 	  <AssemblyName>OpenFrp.Launcher</AssemblyName>
+	  <AssemblyVersion>5.8.81</AssemblyVersion>
+	  <Version>5.8.81</Version>
   </PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net48'">
 		<LangVersion>10</LangVersion>
@@ -34,14 +36,12 @@
 	  <None Remove="Resources\Images\desktop_64w.png" />
 	  <None Remove="Resources\Images\funx.png" />
 	  <None Remove="Resources\Images\hsccode_v2.jpg" />
-	  <None Remove="Resources\Images\mm_reward_qrcode_dark.png" />
-	  <None Remove="Resources\Images\mm_reward_qrcode_light.png" />
+	  <None Remove="Resources\Images\nature-6766923_1920.jpg" />
 	  <None Remove="Resources\Images\noc_UrlSchemeTools.png" />
 	  <None Remove="Resources\Images\v2-bg.jpg" />
 	  <None Remove="Resources\Images\weavatar.png" />
 	  <None Remove="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res001_no035,card_after_training.png" />
 	  <None Remove="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res001_no044,card_after_training.png" />
-	  <None Remove="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png" />
 	  <None Remove="Resources\Images\[www.pixiv.net]artworks,129041588.png" />
 	  <None Remove="Resources\OAuth\MessageWithPlaceholder.css" />
 	  <None Remove="Resources\Sora-Medium.ttf" />
@@ -53,11 +53,9 @@
   <ItemGroup>
     <Resource Include="Resources\Images\desktop.ico" />
     <Resource Include="Resources\Images\desktop_64w.png" />
-    <Resource Include="Resources\Images\mm_reward_qrcode_dark.png" />
-    <Resource Include="Resources\Images\mm_reward_qrcode_light.png" />
+    <Resource Include="Resources\Images\nature-6766923_1920.jpg" />
     <Resource Include="Resources\Images\noc_UrlSchemeTools.png" />
     <Resource Include="Resources\Images\weavatar.png" />
-    <Resource Include="Resources\Images\[storage.sekai.best]sekai-jp-assets,character,member,res021_no054,card_after_training.png" />
     <Resource Include="Resources\Sora-Medium.ttf" />
     <Resource Include="Resources\SourceCodePro-Medium.ttf" />
 	  

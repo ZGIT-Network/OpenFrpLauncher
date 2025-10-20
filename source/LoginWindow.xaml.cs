@@ -69,6 +69,8 @@ namespace OpenFrp.Launcher
         {
             if (this.DataContext is ViewModels.LoginWindowViewModel lwm)
             {
+                lwm.TryDisposeBgService();
+
                 lwm.conve_TryDetectFrpcCommand.Cancel();
                 lwm.conve_RelayPrepareCommand.Cancel();
 

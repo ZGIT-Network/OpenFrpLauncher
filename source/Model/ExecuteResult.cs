@@ -37,7 +37,7 @@ namespace OpenFrp.Launcher.Model
         public ExecuteResult(OpenFrp.Service.Proto.RpcResponse response)
         {
             Exception = response.Exception;
-            Message = "远程调用 RPC 失败";
+            Message = response.Message ?? "远程调用 RPC 失败";
             // GRPC 的状态码，若无，则默认为 -1
             StatusCode = (int?)response.StatusCode ?? -1;
         }

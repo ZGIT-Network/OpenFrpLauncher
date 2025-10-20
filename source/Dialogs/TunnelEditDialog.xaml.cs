@@ -61,6 +61,9 @@ namespace OpenFrp.Launcher.Dialogs
 #else
         private void ContentDialog_CloseButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
+            editor.CancelServiceSelecting();
+            
+
             CancellationTokenSource?.Cancel(true);
 #endif
         }
@@ -68,6 +71,11 @@ namespace OpenFrp.Launcher.Dialogs
         {
             args.Cancel = true;
 
+            if (editor.IsServiceSelecting)
+            {
+                editor.CancelServiceSelecting();
+                return;
+            }
 #if NET
             CancellationTokenSource ??= new CancellationTokenSource();
             CancellationTokenSource.TryReset();
@@ -151,6 +159,12 @@ namespace OpenFrp.Launcher.Dialogs
             VisualStateManager.GoToElementState(this, DisplayContainerState, false);
 
             UpdateTitle();
+
+            SetBinding(ContentDialog.FullSizeDesiredProperty, new Binding("IsServiceSelecting")
+            {
+                Source = editor,
+                Mode = BindingMode.OneWay
+            });
 
             base.OnApplyTemplate();
         }

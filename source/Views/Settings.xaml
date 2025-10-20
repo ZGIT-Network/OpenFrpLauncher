@@ -199,7 +199,7 @@
                                                     <ink:FontIcon
                                                         FontFamily="{StaticResource FluentSystemIcons}"
                                                         FontSize="24"
-                                                        Glyph="&#xE0D3;"
+                                                        Glyph="&#xE444;"
                                                         RenderTransformOrigin=".5,.5">
                                                         <FrameworkElement.RenderTransform>
                                                             <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
@@ -353,7 +353,10 @@
                             Margin="0,24,0,0"
                             FontSize="18"
                             Text="网络" />
-                        <ctrl:SettingItem Title="绕过系统代理" Description="此项适用于直接访问 API 而不经过代理。">
+                        <ctrl:SettingItem
+                            Title="绕过系统代理"
+                            Description="此项适用于直接访问 API 而不经过代理。"
+                            FontFamily="{StaticResource SoraMediumMixYahei}">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon FontSize="24" Icon="{x:Static ink:SegoeFluentIcons.MultimediaDMS}" />
                             </ctrl:SettingItem.Icon>
@@ -363,7 +366,10 @@
                                 IsRightAlignedCompact="True" />
 
                         </ctrl:SettingItem>
-                        <ctrl:SettingItem Title="强制使用 TLS 加密" Description="缓解在一些网络环境下无法映射的问题；但是占用CPU。">
+                        <ctrl:SettingItem
+                            Title="强制使用 TLS 加密"
+                            Description="缓解在一些网络环境下无法映射的问题；但是占用CPU。"
+                            FontFamily="{StaticResource SoraMediumMixYahei}">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon
                                     FontFamily="{StaticResource FluentSystemIcons}"
@@ -491,7 +497,10 @@
                                 IsOn="{Binding UseConfigLaunch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 IsRightAlignedCompact="True" />
                         </ctrl:SettingItem>
-                        <ctrl:SettingItem Title="使用 WebView2 进行创建/编辑隧道" Description="提供更加完整的编辑操作。">
+                        <ctrl:SettingItem
+                            Title="使用 WebView2 进行创建/编辑隧道"
+                            Description="提供更加完整的编辑操作。"
+                            FontFamily="{StaticResource SoraMediumMixYahei}">
                             <ctrl:SettingItem.Icon>
                                 <ink:FontIcon
                                     FontFamily="{StaticResource FluentSystemIcons}"
@@ -516,7 +525,7 @@
                                         FontSize="13"
                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                         TextWrapping="Wrap">
-                                        <Run Text="开启后将在系统注册一个 Url Scheme，无论您有没有登录账户，所启动的隧道属不属于您，均能通过网页版的&quot;一键启动&quot;来打开一个隧道" />
+                                        <Run Text="开启后将在系统注册一个 Url Scheme，无论您有没有登录账户，所启动的隧道属不属于您，均能通过网页版的&quot;一键启动&quot;来打开一个隧道 (*此功能会与CPL存在部分冲突)" />
 
                                     </TextBlock>
                                     <ctrl:HyperlinkTp1
@@ -643,7 +652,7 @@
                                     NavigateUri="https://console.openfrp.net/">
                                     OpenFrp 官网
                                 </ink:HyperlinkButton>
-                                <ink:HyperlinkButton
+                                <!--<ink:HyperlinkButton
                                     Padding="16,8"
                                     FontFamily="{StaticResource SoraMediumMixYahei}"
                                     NavigateUri="https://yue3.pages.dev/#/donate">
@@ -671,7 +680,7 @@
                                             </Image.Style>
                                         </Image>
                                     </Grid>
-                                </Border>
+                                </Border>-->
                             </xa:SimpleStackPanel>
                         </ctrl:SettingExpander>
                     </xa:SimpleStackPanel>

@@ -7,6 +7,7 @@ using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
@@ -61,7 +62,7 @@ namespace OpenFrp.Launcher
 
         public App()
         {
-            AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.EnablePointerSupport", true);
+            //AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.EnablePointerSupport", true);
             AppContext.SetSwitch("Switch.System.Windows.Media.EnableHardwareAccelerationInRdp", true);
 
             Dispatcher.UnhandledExceptionFilter += Dispatcher_UnhandledExceptionFilter;
@@ -425,7 +426,7 @@ namespace OpenFrp.Launcher
 
         
 
-        public static string LauncherVersionString => "5.8.80 Release";
+        public static string LauncherVersionString => "5.8.87 Release";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 

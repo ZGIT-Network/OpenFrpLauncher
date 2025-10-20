@@ -1,45 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
+using System.Net;
+using System.Runtime.ConstrainedExecution;
+using System.Security.AccessControl;
+using System.Security.Policy;
+using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using OpenFrp.Service;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using iNKORE.UI.WPF.Modern;
-using System.Security.Policy;
-using System.Threading;
-using OpenFrp.Service.Proto.Response;
-using OpenFrp.Service.Net;
-using System.Net;
 using CommunityToolkit.Mvvm.Messaging;
-using OpenFrp.Launcher.Controls;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Windows.Media.Imaging;
-using Microsoft.Web.WebView2.Core;
-using iNKORE.UI.WPF.Modern.Controls;
-using System.Windows.Media;
-using iNKORE.UI.WPF.Helpers;
-using System.IO;
-using Google.Protobuf.WellKnownTypes;
-using OpenFrp.Service.Proto.Request;
-using Grpc.Core;
-using System.IO.Pipes;
-using System.Runtime.ConstrainedExecution;
-using System.Security.AccessControl;
-using System.Security.Principal;
-using GrpcDotNetNamedPipes;
-using OpenFrp.Launcher.Model;
-using Microsoft.Extensions.Logging;
-using static Google.Rpc.Context.AttributeContext.Types;
-using OpenFrp.Launcher.Rpc;
 using Google.Api;
-using static Google.Protobuf.WellKnownTypes.Field.Types;
+using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
+using GrpcDotNetNamedPipes;
+using iNKORE.UI.WPF.Helpers;
+using iNKORE.UI.WPF.Modern;
+using iNKORE.UI.WPF.Modern.Controls;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Web.WebView2.Core;
+using OpenFrp.Launcher.Controls;
+using OpenFrp.Launcher.Model;
+using OpenFrp.Launcher.Rpc;
+using OpenFrp.Service;
+using OpenFrp.Service.Net;
+using OpenFrp.Service.Proto.Request;
+using OpenFrp.Service.Proto.Response;
+using Windows.UI.Popups;
 
 
 
@@ -314,7 +313,8 @@ namespace OpenFrp.Launcher.ViewModels
 
         private void Wind_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
-            
+            //event_TryLaunchBackgroundServiceCommand.Cancel();
+            //conve_TryDetectFrpcCommand.Cancel();
 
             if (window is { Owner: MainWindow mw })
             {
@@ -325,7 +325,6 @@ namespace OpenFrp.Launcher.ViewModels
             else
             {
                 e.Cancel = true;
-
                 window?.HideByHANDLE();
             }
         }
@@ -541,11 +540,9 @@ namespace OpenFrp.Launcher.ViewModels
         [RelayCommand(CanExecute = nameof(CanExecuteCancelLogin))]
         private void @event_CancelLogin()
         {
-
             event_WebLoginCommand.Cancel();
             event_FastLoginCommand.Cancel();
             event_WebLogin2Command.Cancel();
-            
         }
 
         private void ToggleToUpdateCtrl()
@@ -605,16 +602,21 @@ namespace OpenFrp.Launcher.ViewModels
 
             CanCancelLogin = false;
 
-            var rrfe = await TryGetFrpcVersionString();
-
-            if (rrfe.HasException)
+            if (string.IsNullOrEmpty(FrpcManager.FrpcVersionString) || FrpcManager.FrpcVersionString.Equals("Unknown"))
             {
-                CanCancelLogin = true;
-                this.ExecuteResult = rrfe;
+                var rrfe = await TryGetFrpcVersionString();
 
-                VisualStateManager.GoToElementState(window, LoginState, false);
-                return;
+                if (rrfe.HasException)
+                {
+                    CanCancelLogin = true;
+                    this.ExecuteResult = rrfe;
+
+                    VisualStateManager.GoToElementState(window, LoginState, false);
+                    return;
+                }
             }
+
+           
 
             if (await DaemonManager.LaunchDaemonAsync() is { HasException: true } flagV1)
             {
@@ -769,8 +771,6 @@ namespace OpenFrp.Launcher.ViewModels
             Helpers.UsrTokenService.RemoveUser(usr, true);
         }
 
-        private Regex FrpcVersionRegex = FrpcVersionRegexFun();
-
         private async Task<Model.ExecuteResult> TryGetFrpcVersionString(string? fp = default)
         {
             if (string.IsNullOrEmpty(fp))
@@ -834,12 +834,14 @@ namespace OpenFrp.Launcher.ViewModels
             }
 
             CanCancelLogin = false;
-            
-            if (await TryGetFrpcVersionString() is { HasException: true } rrfe)
+            if (string.IsNullOrEmpty(FrpcManager.FrpcVersionString) || FrpcManager.FrpcVersionString.Equals("Unknown"))
             {
-                CanCancelLogin = true;
-                this.ExecuteResult = rrfe;
-                return;
+                if (await TryGetFrpcVersionString() is { HasException: true } rrfe)
+                {
+                    CanCancelLogin = true;
+                    this.ExecuteResult = rrfe;
+                    return;
+                }
             }
 
             if (await DaemonManager.LaunchDaemonAsync() is { HasException: true} flagV1)
@@ -857,7 +859,6 @@ namespace OpenFrp.Launcher.ViewModels
                 return;
             }
 
-//            RpcManager.Configure();
 
             CanCancelLogin = false;
 
@@ -974,52 +975,29 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        internal void TryDisposeBgService()
+        {
+            if (bgService is null) return;
+
+            bgService.KillServer();
+
+            bgService.Dispose();
+        }
+
         private Rpc.BgService? bgService;
 
-        [ObservableProperty,NotifyCanExecuteChangedFor(nameof(event_TryLaunchBackgroundServiceCommand))]
+        [ObservableProperty]
         private Model.DownloadProcess downloadProcess = new Model.DownloadProcess { };
 
-        private async Task<bool> RetryCheckFrpcFile(CancellationToken cancellationToken = default)
+        private async Task<bool> RetryCheckFrpcFile(CancellationToken cancellationToken)
         {
-            if (bgService is not null)
-            {
-                if (!event_TryLaunchBackgroundServiceCommand.IsRunning)
-                {
-                    if (cancellationToken != CancellationToken.None)
-                    {
-                        await event_TryLaunchBackgroundServiceCommand.ExecuteAsync(cancellationToken);
-                    }
-                    else
-                    {
-                        event_TryLaunchBackgroundServiceCommand.Execute(default);
-
-                        if (event_TryLaunchBackgroundServiceCommand.ExecutionTask != null)
-                        {
-                            await event_TryLaunchBackgroundServiceCommand.ExecutionTask;
-                        }
-                    }
-                }
-                if (bgService?.WaitHandle != null)
-                {
-                    await Task.Run(() => bgService?.WaitHandle?.WaitOne()).WhenAnyTime(cancellationToken);
-
-                    // false && false == true
-                    // true && false == false;
-                    return bgService is not null && !cancellationToken.IsCancellationRequested;
-                }
-            }
-            else if (cancellationToken != CancellationToken.None)
+            if (!conve_TryDetectFrpcCommand.IsRunning)
             {
                 await conve_TryDetectFrpcCommand.ExecuteAsync(cancellationToken);
             }
-            else 
-            { 
-                conve_TryDetectFrpcCommand.Execute(default);
-
-                if (conve_TryDetectFrpcCommand.ExecutionTask != null)
-                {
-                    await conve_TryDetectFrpcCommand.ExecutionTask;
-                }
+            if (bgService is not null)
+            {
+                return false;
             }
             return cancellationToken.Equals(CancellationToken.None) || !cancellationToken.IsCancellationRequested ;
         }
@@ -1058,11 +1036,11 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         VisualStateManager.GoToElementState(window, LoginState, false);
                     }
-                    // TODO
+                    // 无法侦测到在线配置
                     return;
                 }
 
-                if (FrpcManager.FrpcVersionString.Equals(sv.Latest, StringComparison.Ordinal))
+                if (FrpcManager.FrpcVersionString.Equals(sv.Latest, StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }
@@ -1090,84 +1068,99 @@ namespace OpenFrp.Launcher.ViewModels
                     }
                 }
             }
-  
+
+            bool? finishedDownload = false;
+
             try
             {
-
                 if (!hasUpdateFrpClientArgument)
                 {
                     VisualStateManager.GoToElementState(window, DisplayDownloadingInfobar, false);
                 }
-                // non-detect
-
-                bgService = new Rpc.BgService();
-
-                bgService.DownloadServiceFallback += (type, data) =>
+                else
                 {
-                    switch (type)
+                    App.StartupArguments.Remove("--updateFrpClient");
+                }
+                if (bgService is null)
+                {
+                    bgService = new Rpc.BgService();
+
+                    bgService.DownloadServiceFallback += (type, data) =>
                     {
-                        case DownloadFallback.Types.DownloadFallbackType.Messaging:
-                            {
-                                if (data is null)
+                        switch (type)
+                        {
+                            case DownloadFallback.Types.DownloadFallbackType.Messaging:
                                 {
-                                    return;
-                                }
-                                else if (data.TryUnpack<Google.Rpc.DebugInfo>(out var dbgInfo))
-                                {
-                                    Logger.LogError("Message: {msg}", dbgInfo.Detail);
-                                }
-                                else if (data.TryUnpack<StringValue>(out var sv) && !string.IsNullOrEmpty(sv.Value))
-                                {
-                                    switch (sv.Value)
+                                    if (data is null)
                                     {
-                                        case "finishDownload":
-                                            {
-                                                bgService?.WaitHandle.Set();
-                                            }
-                                            ; break;
-                                        default:
-                                            {
-                                                if (sv.Value.StartsWith("err:"))
+                                        return;
+                                    }
+                                    else if (data.TryUnpack<StringValue>(out var sv) && !string.IsNullOrEmpty(sv.Value))
+                                    {
+                                        switch (sv.Value)
+                                        {
+                                            case "service worker is loaded":
                                                 {
-                                                    DownloadProcess.DownloadFileUrl = sv.Value;
-
-                                                    bgService?.WaitHandle.Set();
-
-                                                    window.Dispatcher.Invoke(() =>
+                                                    window?.Dispatcher.Invoke(() =>
                                                     {
-                                                        VisualStateManager.GoToElementState(window, DisplayErrorInfobar, false);
+                                                        DownloadProcess = new Model.DownloadProcess { ProgressValue = 0, DownloadFileUrl = "正在请求下载..." };
                                                     });
                                                 }
-                                                Logger.LogError("Message: {msg}", sv.Value);
-                                            }
-                                            ; break;
+                                                ; break;
+                                            case "finishDownload":
+                                                {
+                                                    bgService?.WaitHandle.Set();
+                                                }
+                                                ; break;
+                                            default:
+                                                {
+                                                    if (sv.Value.StartsWith("err:"))
+                                                    {
+                                                        bgService.LastDebugInfo = new Google.Rpc.DebugInfo { };
+
+                                                        DownloadProcess.DownloadFileUrl = sv.Value;
+
+                                                        window?.Dispatcher.Invoke(() =>
+                                                        {
+                                                            VisualStateManager.GoToElementState(window, DisplayErrorInfobar, false);
+                                                        });
+                                                    }
+                                                    Logger.LogError("Message: {msg}", sv.Value);
+                                                }
+                                                ; break;
+                                        }
                                     }
                                 }
-                            }
-                            ; break;
-                        case DownloadFallback.Types.DownloadFallbackType.SwitchSource
-                        when data.TryUnpack<StringValue>(out var stv) && !string.IsNullOrEmpty(stv.Value):
-                            {
-                                DownloadProcess.ProgressValue = 0;
-                                DownloadProcess.DownloadFileUrl = stv.Value;
-                            }
-                            ; break;
-                        case DownloadFallback.Types.DownloadFallbackType.ProgressValue
-                        when data.TryUnpack<Value>(out var v) && v.HasNumberValue:
-                            {
-                                DownloadProcess.ProgressValue = v.NumberValue;
-                            }
-                            ; break;
-                    }
-                };
+                                ; break;
+                            case DownloadFallback.Types.DownloadFallbackType.SwitchSource
+                                when data.TryUnpack<StringValue>(out var stv) && !string.IsNullOrEmpty(stv.Value):
+                                {
+                                    DownloadProcess.ProgressValue = 0;
+                                    DownloadProcess.DownloadFileUrl = stv.Value;
+                                }
+                                ; break;
+                            case DownloadFallback.Types.DownloadFallbackType.ProgressValue
+                                when data.TryUnpack<Value>(out var v):
+                                {
+                                    if (v.HasNumberValue)
+                                    {
+                                        DownloadProcess.ProgressValue = v.NumberValue;
+                                    }
+                                }
+                                ; break;
+                        }
+                    };
+                }
 
                 DownloadProcess = new Model.DownloadProcess { ProgressValue = 0, DownloadFileUrl = "寻找下载源..." };
 
                 bgService.LaunchServer();
 
-                event_TryLaunchBackgroundServiceCommand.Execute(default);
-
-                await Task.Run(() => bgService?.WaitHandle?.WaitOne()).WhenAnyTime(cancellationToken);
+                if (!await @conve_TryLaunchBackgroundService(cancellationToken: cancellationToken))
+                {
+                    finishedDownload = null;
+                    return;
+                }
 
                 bgService?.Dispose();
 
@@ -1179,55 +1172,78 @@ namespace OpenFrp.Launcher.ViewModels
             }
             finally
             {
-                bgService = default;
-                if (!DownloadProcess.DownloadFileUrl.StartsWith("err:"))
+                if (finishedDownload is not null)
                 {
-                    if (!hasUpdateFrpClientArgument)
+                    bgService = default;
+
+                    if (!DownloadProcess.DownloadFileUrl.StartsWith("err:"))
                     {
-                        VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
+                        if (!hasUpdateFrpClientArgument)
+                        {
+                            VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
+                        }
+                        else
+                        {
+                            CallbackAction(LoginState);
+                        }
                     }
-                    else
-                    {
-                        CallbackAction(LoginState);
-                    }
+
+                    DownloadProcess = new DownloadProcess { };
                 }
-                DownloadProcess = new DownloadProcess { };
             }
             
         }
 
-
-
-        private bool CanExecuteLaunchBackgroundService() => DownloadProcess.ProgressValue is 0 && bgService is not null;
-            
-        [RelayCommand(CanExecute = nameof(CanExecuteLaunchBackgroundService))]
-        private async Task @event_TryLaunchBackgroundService()
-        {
-            if (bgService is null) return;
+        private async Task<bool> @conve_TryLaunchBackgroundService(CancellationToken cancellationToken = default)
+        { 
+            if (bgService is null) return false;
 
             try
             {
                 DownloadProcess.DownloadFileUrl = "进程启动中...";
                 DownloadProcess.ProgressBarShowError = false;
 
-                await bgService.LaunchProcessAndWait();
+                if (window is { IsActive: false})
+                {
+                    window.ShowByHANDLE();
+                }
 
-                if (bgService is not null)
+                // 这里会等待进程退出，所以是异步调用
+                var resp = await bgService.LaunchProcessAndWait();
+
+                if (resp is {Message: "Cancelled", StatusCode: 1223 } || resp.HasException || bgService.LastDebugInfo != null)
+                {
+                    if (resp.StatusCode is 1223)
+                    {
+                        DownloadProcess.ProgressBarShowError = false;
+                        DownloadProcess.ProgressValue = 0;
+                        DownloadProcess.DownloadFileUrl = "用户已取消操作。";
+                    }
+                    else
+                    {
+                        DownloadProcess.ProgressBarShowError = true;
+                        DownloadProcess.ProgressValue = 0;
+                        DownloadProcess.DownloadFileUrl = bgService.LastDebugInfo?.Detail ?? resp.Message ?? resp.Exception?.Message ?? "发生了未知错误，请重试启动下载进程。";
+                    }
+                    return false;
+                }
+
+                bool? fallback = await Task.Run(() => bgService?.WaitHandle?.WaitOne()).WhenAnyTime(cancellationToken);
+
+                if (!fallback.HasValue)
                 {
                     DownloadProcess.ProgressBarShowError = false;
                     DownloadProcess.ProgressValue = 0;
                     DownloadProcess.DownloadFileUrl = "过程暂未完成，请点击重试继续操作。";
                 }
+                return fallback.GetValueOrDefault();
             }
-            catch(System.ComponentModel.Win32Exception ex)
+            catch(Exception ex)
             {
                 DownloadProcess.ProgressBarShowError = true;
                 DownloadProcess.DownloadFileUrl = ex.Message;
             }
-            catch
-            {
-
-            }
+            return false;
         }
 
         [RelayCommand]

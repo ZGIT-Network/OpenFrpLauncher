@@ -10,7 +10,11 @@ namespace OpenFrp.Launcher.Controls
 {
     public class UserTunnelAutomationPeer : FrameworkElementAutomationPeer
     {
-        public UserTunnelAutomationPeer(UserTunnel owner) : base(owner)
+        public UserTunnelAutomationPeer(CardUserTunnel owner) : base(owner)
+        {
+        }
+
+        public UserTunnelAutomationPeer(ListUserTunnel owner) : base(owner)
         {
         }
 
@@ -29,9 +33,12 @@ namespace OpenFrp.Launcher.Controls
 
         protected override string GetNameCore()
         {
-            if (base.Owner is OpenFrp.Launcher.Controls.UserTunnel { Tunnel: Model.UserTunnel tunnel})
+            switch (base.Owner)
             {
-                return "用户隧道 " + tunnel.Name;
+                case OpenFrp.Launcher.Controls.ListUserTunnel { Tunnel: Model.UserTunnel tunnel }:
+                    return "用户隧道 " + tunnel.Name;
+                case OpenFrp.Launcher.Controls.CardUserTunnel { Tunnel: Model.UserTunnel tunnel }:
+                    return "用户隧道 " + tunnel.Name;
             }
             return AutomationProperties.GetName(base.Owner);
         }

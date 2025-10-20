@@ -19,8 +19,15 @@
     CloseButtonText="取消"
     DefaultButton="Primary"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
-    PrimaryButtonText="确定"
     mc:Ignorable="d">
+    <behavior:Interaction.Triggers>
+        <behavior:DataTrigger Binding="{Binding IsServiceSelecting, Source={x:Reference editor}, Mode=OneWay}" Value="True">
+            <behavior:ChangePropertyAction PropertyName="PrimaryButtonText" Value="返回" />
+        </behavior:DataTrigger>
+        <behavior:DataTrigger Binding="{Binding IsServiceSelecting, Source={x:Reference editor}, Mode=OneWay}" Value="False">
+            <behavior:ChangePropertyAction PropertyName="PrimaryButtonText" Value="确定" />
+        </behavior:DataTrigger>
+    </behavior:Interaction.Triggers>
     <FrameworkElement.Resources>
         <CubicEase
             x:Key="_DefaultCubicEase"
@@ -28,10 +35,18 @@
             EasingMode="EaseOut" />
     </FrameworkElement.Resources>
     <ink:ScrollViewerEx Margin="-24,0" PanningMode="VerticalOnly">
+        <behavior:Interaction.Triggers>
+            <behavior:DataTrigger Binding="{Binding IsServiceSelecting, Source={x:Reference editor}, Mode=OneWay}" Value="True">
+                <behavior:ChangePropertyAction PropertyName="VerticalScrollBarVisibility" Value="{x:Static ScrollBarVisibility.Disabled}" />
+            </behavior:DataTrigger>
+            <behavior:DataTrigger Binding="{Binding IsServiceSelecting, Source={x:Reference editor}, Mode=OneWay}" Value="False">
+                <behavior:ChangePropertyAction PropertyName="VerticalScrollBarVisibility" Value="{x:Static ScrollBarVisibility.Auto}" />
+            </behavior:DataTrigger>
+        </behavior:Interaction.Triggers>
         <Grid Margin="24,0">
             <Border
                 x:Name="defaultContainerCtrl"
-                VerticalAlignment="Top"
+                VerticalAlignment="Stretch"
                 RenderTransformOrigin=".5,.5"
                 Style="{StaticResource BorderFocusManagedStyle}">
                 <FrameworkElement.RenderTransform>
@@ -40,11 +55,16 @@
                         <TranslateTransform X="0" Y="0" />
                     </TransformGroup>
                 </FrameworkElement.RenderTransform>
-
-                <xa:SimpleStackPanel Spacing="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
                     <ink:InfoBar
                         x:Name="infoBar"
                         Title="操作失败"
+                        Grid.Row="0"
+                        Margin="0,0,0,8"
                         Severity="Error"
                         Visibility="{Binding IsOpen, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}">
                         <ink:InfoBar.ActionButton>
@@ -57,11 +77,11 @@
                     </ink:InfoBar>
                     <control:TunnelConfEditor
                         x:Name="editor"
+                        Grid.Row="1"
                         EditorTemplate="{Binding (control:TunnelConfEditor.EditorTemplate), RelativeSource={RelativeSource AncestorType=ink:ContentDialog}, Mode=OneWay}"
                         Focusable="False"
                         Node="{Binding (control:TunnelConfEditor.Node), RelativeSource={RelativeSource AncestorType=ink:ContentDialog}, Mode=OneWay}" />
-                </xa:SimpleStackPanel>
-
+                </Grid>
             </Border>
             <Border
                 x:Name="defaultLoadingCtrl"

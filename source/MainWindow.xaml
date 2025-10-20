@@ -106,6 +106,23 @@
                         </ink:FontIcon>
                     </ink:NavigationViewItem.Icon>
                 </ink:NavigationViewItem>
+                <!--<ink:NavigationViewItemSeparator />
+                <ink:NavigationViewItem
+                    Content="赞助激发灵感"
+                    SelectsOnInvoked="False"
+                    Tag="{x:Type views:Home}">
+                    <ink:NavigationViewItem.Icon>
+                        <ink:FontIcon
+                            FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="16"
+                            Glyph="&#xF81F;"
+                            RenderTransformOrigin=".5,.5">
+                            <FrameworkElement.RenderTransform>
+                                <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                            </FrameworkElement.RenderTransform>
+                        </ink:FontIcon>
+                    </ink:NavigationViewItem.Icon>
+                </ink:NavigationViewItem>-->
             </ink:NavigationView.MenuItems>
             <ink:NavigationView.FooterMenuItems>
 

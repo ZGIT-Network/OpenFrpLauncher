@@ -182,13 +182,18 @@ namespace OpenFrp.Launcher.Rpc
                     },
                     cancellationToken: cancellationToken));
 
-                if (await resp.ResponseHeadersAsync is not { Count: > 0 } headers || headers.Get("HashCode") is not { Value: string hashCode })
-                {
-                    throw new NullReferenceException(nameof(resp.ResponseHeadersAsync));
-                }
-                GlobalHeader.Add("HashCode", hashCode);
+                var rev = await resp.ResponseAsync;
 
-                return await resp.ResponseAsync;
+                if (rev.Flag)
+                {
+                    if (await resp.ResponseHeadersAsync is not { Count: > 0 } headers || headers.Get("HashCode") is not { Value: string hashCode })
+                    {
+                        throw new NullReferenceException(nameof(resp.ResponseHeadersAsync));
+                    }
+                    GlobalHeader.Add("HashCode", hashCode);
+                }
+
+                return rev;
             }
             catch (RpcException rpcEx)
             {

@@ -4,6 +4,7 @@
     xmlns:conv="clr-namespace:OpenFrp.Launcher.Converter"
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Controls"
+    xmlns:model="clr-namespace:OpenFrp.Launcher.Model"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf">
     <Style TargetType="local:TunnelConfEditor">
         <Setter Property="MinWidth" Value="480" />
@@ -13,162 +14,424 @@
                 <ControlTemplate TargetType="local:TunnelConfEditor">
                     <ControlTemplate.Resources>
                         <conv:RangeNumberToUShortConverter x:Key="RangeNumberToUShortConverter" />
-
+                        <CubicEase x:Key="__CubicEasingFunc" EasingMode="EaseOut" />
                     </ControlTemplate.Resources>
                     <Grid
                         MinWidth="{TemplateBinding MinWidth}"
                         MinHeight="{TemplateBinding MinHeight}"
                         Margin="{TemplateBinding Padding}">
-                        <xa:SimpleStackPanel Spacing="8">
-                            <ink:InfoBar
-                                Title="对广大 Minecraft 玩家的温馨提示"
-                                IsClosable="False"
-                                IsOpen="{Binding Value, Converter={StaticResource EqualConverter}, ConverterParameter='25565', Source={x:Reference Name=localNumberBox}, Mode=OneWay}"
-                                Message="近期有未知组织正在不间断以恶意目的扫描 OpenFrp 穿透节点，为了保障您的资产安全，穿透Minecraft服务时，启用正版验证、安装登录插件或启用白名单是非常必要的行为。穿透服务的安全性由您自行负责。感谢您的支持与理解。"
-                                Severity="Warning" />
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="4" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <xa:SimpleStackPanel
-                                    Margin="0,0,2,0"
-                                    Orientation="Vertical"
-                                    Spacing="8">
-                                    <TextBox
-                                        ink:ControlHelper.Header="已选择的节点"
-                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                        IsEnabled="{Binding Node, IsAsync=True, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
-                                        IsReadOnly="True"
-                                        IsReadOnlyCaretVisible="True">
-                                        <TextBox.Text>
-                                            <PriorityBinding>
-                                                <Binding
-                                                    Mode="OneWay"
-                                                    Path="Node.ApDisplayName"
-                                                    RelativeSource="{RelativeSource Mode=TemplatedParent}" />
-                                                <Binding
-                                                    Mode="OneWay"
-                                                    Path="EditorTemplate.ApDisplayName"
-                                                    RelativeSource="{RelativeSource Mode=TemplatedParent}" />
-                                            </PriorityBinding>
-                                        </TextBox.Text>
-                                    </TextBox>
-                                    <ComboBox
-                                        x:Name="typeSelector"
-                                        HorizontalAlignment="Stretch"
-                                        ink:ControlHelper.Header="协议"
-                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                        IsEnabled="{Binding Node, IsAsync=True, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
-                                        SelectedIndex="{Binding EditorTemplate.SelectedTypeIndex, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
-                                        <ComboBoxItem Content="TCP" IsEnabled="{Binding Node.ProtocolSupport.TCP, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
-                                        <ComboBoxItem Content="UDP" IsEnabled="{Binding Node.ProtocolSupport.UDP, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
-                                        <ComboBoxItem Content="HTTP" IsEnabled="{Binding Node.ProtocolSupport.HTTP, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
-                                        <ComboBoxItem Content="HTTPS" IsEnabled="{Binding Node.ProtocolSupport.HTTPS, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
-                                    </ComboBox>
-                                    <Grid>
-                                        <ink:NumberBox
-                                            x:Name="remoteNumberBox"
-                                            ink:ControlHelper.Header="远程端口"
-                                            AcceptsExpression="False"
+                        <Grid>
+
+                            <xa:SimpleStackPanel x:Name="mainContainer" Spacing="8">
+                                <ink:InfoBar
+                                    Title="对广大 Minecraft 玩家的温馨提示"
+                                    IsClosable="False"
+                                    IsOpen="{Binding Value, Converter={StaticResource EqualConverter}, ConverterParameter='25565', Source={x:Reference Name=localNumberBox}, Mode=OneWay}"
+                                    Message="近期有未知组织正在不间断以恶意目的扫描 OpenFrp 穿透节点，为了保障您的资产安全，穿透Minecraft服务时，启用正版验证、安装登录插件或启用白名单是非常必要的行为。穿透服务的安全性由您自行负责。感谢您的支持与理解。"
+                                    Severity="Warning" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="4" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <xa:SimpleStackPanel
+                                        Margin="0,0,2,0"
+                                        Orientation="Vertical"
+                                        Spacing="8">
+                                        <TextBox
+                                            ink:ControlHelper.Header="已选择的节点"
                                             FontFamily="{StaticResource SoraMediumMixYahei}"
                                             IsEnabled="{Binding Node, IsAsync=True, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                            IsReadOnly="True"
+                                            IsReadOnlyCaretVisible="True">
+                                            <TextBox.Text>
+                                                <PriorityBinding>
+                                                    <Binding
+                                                        Mode="OneWay"
+                                                        Path="Node.ApDisplayName"
+                                                        RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                                    <Binding
+                                                        Mode="OneWay"
+                                                        Path="EditorTemplate.ApDisplayName"
+                                                        RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                                </PriorityBinding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <ComboBox
+                                            x:Name="typeSelector"
+                                            HorizontalAlignment="Stretch"
+                                            ink:ControlHelper.Header="协议"
+                                            FontFamily="{StaticResource SoraMediumMixYahei}"
+                                            IsEnabled="{Binding Node, IsAsync=True, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                            SelectedIndex="{Binding EditorTemplate.SelectedTypeIndex, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
+                                            <ComboBoxItem Content="TCP" IsEnabled="{Binding Node.ProtocolSupport.TCP, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                            <ComboBoxItem Content="UDP" IsEnabled="{Binding Node.ProtocolSupport.UDP, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                            <ComboBoxItem Content="HTTP" IsEnabled="{Binding Node.ProtocolSupport.HTTP, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                            <ComboBoxItem Content="HTTPS" IsEnabled="{Binding Node.ProtocolSupport.HTTPS, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                        </ComboBox>
+                                        <Grid>
+                                            <ink:NumberBox
+                                                x:Name="remoteNumberBox"
+                                                ink:ControlHelper.Header="远程端口"
+                                                AcceptsExpression="False"
+                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                IsEnabled="{Binding Node, IsAsync=True, Converter={StaticResource NotEqualConverter}, ConverterParameter={x:Null}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                                Maximum="65535"
+                                                Minimum="1"
+                                                PlaceholderText="不填则随机"
+                                                SpinButtonPlacementMode="Inline"
+                                                ValidationMode="InvalidInputOverwritten"
+                                                Visibility="{Binding EditorTemplate.IsNormalService, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
+
+                                                <ink:NumberBox.Suffix>
+                                                    <Button
+                                                        x:Name="randomRemotePortBtn"
+                                                        Focusable="False"
+                                                        Style="{StaticResource TextBoxSuffixButtonStyle}"
+                                                        ToolTip="随机端口号">
+                                                        <ink:FontIcon FontSize="{DynamicResource TextBoxIconFontSize}" Icon="{x:Static ink:SegoeFluentIcons.Shuffle}" />
+                                                    </Button>
+                                                </ink:NumberBox.Suffix>
+                                            </ink:NumberBox>
+                                            <TextBox
+                                                ink:ControlHelper.Header="绑定域名"
+                                                ink:ControlHelper.PlaceholderText="多个之间用逗号隔开"
+                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                Text="{Binding EditorTemplate.DomainString, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}"
+                                                Visibility="{Binding EditorTemplate.IsWebService, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                        </Grid>
+                                        <ink:ToggleSwitch Header="数据压缩" IsOn="{Binding EditorTemplate.DataCompress, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                    </xa:SimpleStackPanel>
+                                    <xa:SimpleStackPanel
+                                        Grid.Column="2"
+                                        Margin="2,0,0,0"
+                                        Spacing="8">
+                                        <TextBox
+                                            x:Name="TunnelNameInput"
+                                            ink:ControlHelper.Header="名称"
+                                            ink:ControlHelper.PlaceholderText="不填则随机"
+                                            FontFamily="{StaticResource SoraMediumMixYahei}"
+                                            InputMethod.IsInputMethodEnabled="False"
+                                            MaxLength="22"
+                                            Text="{Binding EditorTemplate.Name, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
+                                            <ink:TextBoxHelper.Suffix>
+                                                <xa:SimpleStackPanel Orientation="Horizontal" Spacing="2">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="{}{0} / {1}">
+                                                                <Binding
+                                                                    ElementName="TunnelNameInput"
+                                                                    Mode="OneWay"
+                                                                    Path="Text.Length" />
+                                                                <Binding
+                                                                    ElementName="TunnelNameInput"
+                                                                    Mode="OneWay"
+                                                                    Path="MaxLength" />
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                    <Button
+                                                        x:Name="randomNameBtn"
+                                                        Focusable="False"
+                                                        Style="{StaticResource TextBoxSuffixButtonStyle}"
+                                                        ToolTip="随机名称">
+                                                        <ink:FontIcon FontSize="{DynamicResource TextBoxIconFontSize}" Icon="{x:Static ink:SegoeFluentIcons.Shuffle}" />
+                                                    </Button>
+                                                </xa:SimpleStackPanel>
+                                            </ink:TextBoxHelper.Suffix>
+                                        </TextBox>
+                                        <TextBox
+                                            ink:ControlHelper.Header="本地服务链接"
+                                            ink:ControlHelper.PlaceholderText="127.0.0.1"
+                                            FontFamily="{StaticResource SoraMediumMixYahei}"
+                                            InputMethod.IsInputMethodEnabled="False"
+                                            Text="{Binding EditorTemplate.Host, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                        <ink:NumberBox
+                                            x:Name="localNumberBox"
+                                            ink:ControlHelper.Header="本地服务端口"
+                                            AcceptsExpression="False"
+                                            FontFamily="{StaticResource SoraMediumMixYahei}"
+                                            InputMethod.IsInputMethodEnabled="False"
                                             Maximum="65535"
                                             Minimum="1"
-                                            PlaceholderText="不填则随机"
-                                            SpinButtonPlacementMode="Inline"
-                                            ValidationMode="InvalidInputOverwritten"
-                                            Visibility="{Binding EditorTemplate.IsNormalService, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}">
-
+                                            PlaceholderText="不填默认 25565"
+                                            SpinButtonPlacementMode="Inline">
                                             <ink:NumberBox.Suffix>
                                                 <Button
-                                                    x:Name="randomRemotePortBtn"
+                                                    x:Name="localServiceSelector"
+                                                    Margin="0,0,-2,0"
                                                     Focusable="False"
                                                     Style="{StaticResource TextBoxSuffixButtonStyle}"
-                                                    ToolTip="随机端口号">
-                                                    <ink:FontIcon FontSize="{DynamicResource TextBoxIconFontSize}" Icon="{x:Static ink:SegoeFluentIcons.Shuffle}" />
+                                                    ToolTip="选择本地服务">
+                                                    <ink:FontIcon FontSize="{DynamicResource TextBoxIconFontSize}" Icon="{x:Static ink:SegoeFluentIcons.Search}" />
                                                 </Button>
                                             </ink:NumberBox.Suffix>
                                         </ink:NumberBox>
-                                        <TextBox
-                                            ink:ControlHelper.Header="绑定域名"
-                                            ink:ControlHelper.PlaceholderText="多个之间用逗号隔开"
-                                            FontFamily="{StaticResource SoraMediumMixYahei}"
-                                            Text="{Binding EditorTemplate.DomainString, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}"
-                                            Visibility="{Binding EditorTemplate.IsWebService, Converter={StaticResource AweBooleanToVisibilityConverter}, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
-                                    </Grid>
-                                    <ink:ToggleSwitch Header="数据压缩" IsOn="{Binding EditorTemplate.DataCompress, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                        <ink:ToggleSwitch Header="数据加密" IsOn="{Binding EditorTemplate.DataEncrypt, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                    </xa:SimpleStackPanel>
+                                </Grid>
+                                <xa:SimpleStackPanel>
+                                    <ink:ToggleSwitch Header="Proxy Protocol Version 2" IsOn="{Binding EditorTemplate.ProxyProtocolVersion2, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
+                                    <TextBlock
+                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                        Text="注：需服务支持 Proxy Protocol Version 2 ，否则服务将无法访问。"
+                                        TextWrapping="Wrap" />
                                 </xa:SimpleStackPanel>
-                                <xa:SimpleStackPanel
-                                    Grid.Column="2"
-                                    Margin="2,0,0,0"
-                                    Spacing="8">
-                                    <TextBox
-                                        x:Name="TunnelNameInput"
-                                        ink:ControlHelper.Header="名称"
-                                        ink:ControlHelper.PlaceholderText="不填则随机"
-                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                        InputMethod.IsInputMethodEnabled="False"
-                                        MaxLength="22"
-                                        Text="{Binding EditorTemplate.Name, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}">
-                                        <ink:TextBoxHelper.Suffix>
-                                            <xa:SimpleStackPanel Orientation="Horizontal" Spacing="2">
-                                                <TextBlock
-                                                    VerticalAlignment="Center"
-                                                    FontSize="12"
-                                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
-                                                    <TextBlock.Text>
-                                                        <MultiBinding StringFormat="{}{0} / {1}">
-                                                            <Binding
-                                                                ElementName="TunnelNameInput"
-                                                                Mode="OneWay"
-                                                                Path="Text.Length" />
-                                                            <Binding
-                                                                ElementName="TunnelNameInput"
-                                                                Mode="OneWay"
-                                                                Path="MaxLength" />
-                                                        </MultiBinding>
-                                                    </TextBlock.Text>
-                                                </TextBlock>
-                                                <Button
-                                                    x:Name="randomNameBtn"
-                                                    Focusable="False"
-                                                    Style="{StaticResource TextBoxSuffixButtonStyle}"
-                                                    ToolTip="随机名称">
-                                                    <ink:FontIcon FontSize="{DynamicResource TextBoxIconFontSize}" Icon="{x:Static ink:SegoeFluentIcons.Shuffle}" />
-                                                </Button>
-                                            </xa:SimpleStackPanel>
-                                        </ink:TextBoxHelper.Suffix>
-                                    </TextBox>
-                                    <TextBox
-                                        ink:ControlHelper.Header="本地服务链接"
-                                        ink:ControlHelper.PlaceholderText="127.0.0.1"
-                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                        InputMethod.IsInputMethodEnabled="False"
-                                        Text="{Binding EditorTemplate.Host, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
-                                    <ink:NumberBox
-                                        x:Name="localNumberBox"
-                                        ink:ControlHelper.Header="本地服务端口"
-                                        AcceptsExpression="False"
-                                        FontFamily="{StaticResource SoraMediumMixYahei}"
-                                        InputMethod.IsInputMethodEnabled="False"
-                                        Maximum="65535"
-                                        Minimum="1"
-                                        PlaceholderText="不填默认 25565"
-                                        SpinButtonPlacementMode="Inline" />
-                                    <ink:ToggleSwitch Header="数据加密" IsOn="{Binding EditorTemplate.DataEncrypt, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
-                                </xa:SimpleStackPanel>
-                            </Grid>
-                            <xa:SimpleStackPanel>
-                                <ink:ToggleSwitch Header="Proxy Protocol Version 2" IsOn="{Binding EditorTemplate.ProxyProtocolVersion2, UpdateSourceTrigger=PropertyChanged, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" />
-                                <TextBlock
-                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                    Text="注：需服务支持 Proxy Protocol Version 2 ，否则服务将无法访问。"
-                                    TextWrapping="Wrap" />
                             </xa:SimpleStackPanel>
-                        </xa:SimpleStackPanel>
+
+                            <Grid x:Name="serviceSelectContainer" RenderTransformOrigin=".5,.5">
+                                <FrameworkElement.RenderTransform>
+                                    <ScaleTransform ScaleX=".95" ScaleY=".95" />
+                                </FrameworkElement.RenderTransform>
+
+                                <Grid VerticalAlignment="Stretch">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.ColumnSpan="3"
+                                        Margin="0,0,0,6">
+                                        <Run Text="本地服务探测" />
+                                    </TextBlock>
+                                    <ComboBox
+                                        x:Name="connectionTypeSelector"
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Width="80"
+                                        Margin="0,0,4,0"
+                                        Padding="10,0,0,0"
+                                        FontFamily="{StaticResource SoraMedium}"
+                                        SelectedIndex="0">
+                                        <ComboBoxItem Content="*" />
+                                        <ComboBoxItem Content="TCP" />
+                                        <ComboBoxItem Content="UDP" />
+                                    </ComboBox>
+                                    <ink:AutoSuggestBox
+                                        x:Name="suggestBox"
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        PlaceholderText="输入进程名..." />
+                                    <Button
+                                        Grid.Row="1"
+                                        Grid.Column="2"
+                                        Margin="6,0,0,0"
+                                        VerticalAlignment="Stretch"
+                                        AutomationProperties.Name="刷新列表"
+                                        Command="{Binding Conve_RefreshDetectedConnectionCommand, RelativeSource={RelativeSource AncestorType=local:TunnelConfEditor}, Mode=OneWay}"
+                                        Style="{StaticResource AccentButtonStyle}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ink:FontIcon FontFamily="{StaticResource FluentSystemIcons}" Glyph="&#xF190;" />
+                                            <TextBlock Padding="4,0,0,0" Text="刷新" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Grid Grid.Row="2" Grid.ColumnSpan="3">
+                                        <Grid Margin="0,6,0,0" VerticalAlignment="Stretch">
+                                            <ListView
+                                                x:Name="listView"
+                                                Margin="-4,-4,-4,0"
+                                                VirtualizingPanel.CacheLength="3,5"
+                                                VirtualizingPanel.CacheLengthUnit="Item"
+                                                VirtualizingPanel.IsVirtualizing="True"
+                                                VirtualizingPanel.ScrollUnit="Item"
+                                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                                <ListView.Style>
+                                                    <Style TargetType="ListView">
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="ListView">
+                                                                    <ScrollViewer
+                                                                        CanContentScroll="True"
+                                                                        Focusable="False"
+                                                                        PanningMode="VerticalFirst"
+                                                                        VerticalScrollBarVisibility="Auto">
+                                                                        <ItemsPresenter Margin="0,0,0,0" Focusable="False" />
+                                                                    </ScrollViewer>
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ListView.Style>
+                                                <ListView.ItemContainerStyle>
+                                                    <Style TargetType="ListViewItem">
+                                                        <Setter Property="Margin" Value="4,4,4,-4" />
+                                                        <Setter Property="OverridesDefaultStyle" Value="True" />
+                                                        <Setter Property="Focusable" Value="False" />
+                                                        <Setter Property="AutomationProperties.Name" Value="{Binding EndPointString, Mode=OneWay}" />
+                                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                                        <Setter Property="Template">
+                                                            <Setter.Value>
+                                                                <ControlTemplate TargetType="ListViewItem">
+                                                                    <ContentPresenter Focusable="False" />
+                                                                </ControlTemplate>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </Style>
+                                                </ListView.ItemContainerStyle>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type model:LocalConnection}">
+                                                        <Button
+                                                            Margin="0,0,0,4"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Left"
+                                                            Tag="{Binding Mode=OneWay}">
+                                                            <xa:SimpleStackPanel
+                                                                Margin="4,8"
+                                                                Orientation="Horizontal"
+                                                                Spacing="8">
+                                                                <ink:FontIcon
+                                                                    VerticalAlignment="Center"
+                                                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                                                    FontSize="24"
+                                                                    Glyph="&#xEE22;" />
+                                                                <TextBlock
+                                                                    Padding="0,2,0,0"
+                                                                    VerticalAlignment="Center"
+                                                                    FontFamily="{StaticResource SoraMedium}"
+                                                                    FontSize="16"
+                                                                    TextTrimming="CharacterEllipsis"
+                                                                    ToolTip="{Binding EndPointString, Mode=OneWay}">
+                                                                    <Run Text="{Binding ProcessName, StringFormat='{}{0} →', Mode=OneWay}" />
+                                                                    <Run Text="{Binding EndPointString, Mode=OneWay}" />
+                                                                    <LineBreak />
+                                                                    <Run
+                                                                        FontSize="14"
+                                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                                        Text="{Binding Type, Mode=OneWay}" />
+                                                                </TextBlock>
+
+                                                            </xa:SimpleStackPanel>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ListView>
+
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Grid>
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsServiceSelecting" Value="False">
+                            <Setter TargetName="serviceSelectContainer" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="serviceSelectContainer" Property="Opacity" Value="0" />
+                            <Setter TargetName="serviceSelectContainer" Property="IsHitTestVisible" Value="False" />
+                            <Setter TargetName="serviceSelectContainer" Property="KeyboardNavigation.TabNavigation" Value="None" />
+                            <Setter TargetName="serviceSelectContainer" Property="KeyboardNavigation.DirectionalNavigation" Value="None" />
+                            <Setter TargetName="serviceSelectContainer" Property="KeyboardNavigation.ControlTabNavigation" Value="None" />
+                            <Setter TargetName="serviceSelectContainer" Property="KeyboardNavigation.IsTabStop" Value="False" />
+                            <Setter TargetName="serviceSelectContainer" Property="KeyboardNavigation.TabIndex" Value="-1" />
+                        </Trigger>
+                        <Trigger Property="IsServiceSelecting" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="mainContainer"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0"
+                                            Duration="0:0:.3" />
+                                        <ObjectAnimationUsingKeyFrames
+                                            Storyboard.TargetName="mainContainer"
+                                            Storyboard.TargetProperty="Visibility"
+                                            Duration="0:0:.3">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:.3" Value="{x:Static Visibility.Collapsed}" />
+                                        </ObjectAnimationUsingKeyFrames>
+
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                            To="1"
+                                            Duration="0:0:.3" />
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                            To="1"
+                                            Duration="0:0:.3" />
+                                        <ObjectAnimationUsingKeyFrames
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="Visibility"
+                                            Duration="0:0:0">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="1"
+                                            Duration="0:0:.3" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="0"
+                                            Duration="0:0:.3" />
+                                        <ObjectAnimationUsingKeyFrames
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="Visibility"
+                                            Duration="0:0:.3">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:.3" Value="{x:Static Visibility.Collapsed}" />
+                                        </ObjectAnimationUsingKeyFrames>
+
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="RenderTransform.ScaleX"
+                                            To=".95"
+                                            Duration="0:0:.3" />
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="serviceSelectContainer"
+                                            Storyboard.TargetProperty="RenderTransform.ScaleY"
+                                            To=".95"
+                                            Duration="0:0:.3" />
+
+                                        <ObjectAnimationUsingKeyFrames
+                                            Storyboard.TargetName="mainContainer"
+                                            Storyboard.TargetProperty="Visibility"
+                                            Duration="0:0:0">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <DoubleAnimation
+                                            EasingFunction="{StaticResource __CubicEasingFunc}"
+                                            Storyboard.TargetName="mainContainer"
+                                            Storyboard.TargetProperty="Opacity"
+                                            To="1"
+                                            Duration="0:0:.3" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                            <Setter TargetName="mainContainer" Property="IsHitTestVisible" Value="False" />
+                            <Setter TargetName="mainContainer" Property="KeyboardNavigation.TabNavigation" Value="None" />
+                            <Setter TargetName="mainContainer" Property="KeyboardNavigation.DirectionalNavigation" Value="None" />
+                            <Setter TargetName="mainContainer" Property="KeyboardNavigation.ControlTabNavigation" Value="None" />
+                            <Setter TargetName="mainContainer" Property="KeyboardNavigation.IsTabStop" Value="False" />
+                            <Setter TargetName="mainContainer" Property="KeyboardNavigation.TabIndex" Value="-1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

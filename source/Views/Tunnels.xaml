@@ -10,6 +10,8 @@
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:local="clr-namespace:OpenFrp.Launcher.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:OpenFrp.Launcher.Model"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
     Title="Tunnels"
@@ -26,6 +28,7 @@
             EasingMode="EaseOut" />
         <conv:EitherConverter x:Key="ReflagdEitherConverter" ReflagValue="True" />
         <ink:BindingProxy x:Key="IsNotUrlSchemeMode" Value="{Binding IsUrlSchemeMode, Converter={StaticResource EqualConverter}, ConverterParameter='False', Mode=OneWay}" />
+
     </FrameworkElement.Resources>
     <behavior:Interaction.Triggers>
         <behavior:EventTrigger EventName="Loaded">
@@ -55,145 +58,533 @@
                 Text="隧道" />
         </xa:SimpleStackPanel>
         <Grid Grid.Row="1">
-            <ink:ScrollViewerEx
-                Focusable="False"
-                PanningMode="VerticalFirst"
-                VerticalScrollBarVisibility="Auto">
-
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <!--  Toolbar  -->
+            <Grid
+                Grid.Row="0"
+                Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
+                MaxWidth="1272">
+                <ctrl:Skeleton
+                    x:Name="defaultToolBarLoadingCtrl"
+                    MinHeight="43.2"
+                    Margin="36,2,36,2"
+                    HorizontalAlignment="Stretch"
+                    BorderThickness="0"
+                    CornerRadius="4"
+                    IsHitTestVisible="False"
+                    RenderTransformOrigin=".5,1" />
                 <Border
-                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=FrameworkElement}, Mode=OneWay}"
-                    MaxWidth="1272"
-                    Padding="36,4,36,32"
-                    HorizontalAlignment="Center">
-                    <Grid TextOptions.TextHintingMode="Auto">
+                    x:Name="defaultToolBarCtrl"
+                    RenderTransformOrigin=".5,.5"
+                    Style="{StaticResource BorderFocusManagedStyle}"
+                    Visibility="Collapsed">
+                    <Border.RenderTransform>
+                        <ScaleTransform ScaleX="1" ScaleY="1" />
+                    </Border.RenderTransform>
+                    <Grid Margin="36,2">
+                        <ink:ThemeShadowChrome
+                            Margin="6"
+                            CornerRadius="4"
+                            Depth="20"
+                            Visibility="Hidden" />
                         <Border
-                            x:Name="defaultLoadingCtrl"
-                            d:IsHitTestVisible="False"
-                            d:Visibility="Collapsed"
-                            RenderTransformOrigin=".5,.5"
-                            Style="{StaticResource BorderFocusManagedStyle}">
-                            <FrameworkElement.RenderTransform>
-                                <ScaleTransform ScaleX="1" ScaleY="1" />
-                            </FrameworkElement.RenderTransform>
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultSolidBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
 
-                                <Grid Grid.Row="0">
-                                    <ctrl:Skeleton
-                                        MinHeight="45"
-                                        Margin="0,0,0,8"
-                                        HorizontalAlignment="Stretch"
-                                        CornerRadius="4" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" MinWidth="150" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.Resources>
+                                    <SolidColorBrush x:Key="ComboBoxBackgroundDisabled">#00FFFFFF</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ComboBoxBackground">#00FFFFFF</SolidColorBrush>
+                                    <SolidColorBrush x:Key="TextControlBackground">#00FFFFFF</SolidColorBrush>
+                                    <!--<ink:DynamicColor x:Key="ComboBoxBackgroundPointerOver" ResourceKey="HyperlinkButtonBackgroundPointerOver" />-->
+                                </Grid.Resources>
+                                <StackPanel
+                                    Grid.Column="0"
+                                    Height="35"
+                                    Margin="4,3,0,3"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    TextOptions.TextFormattingMode="Ideal">
+                                    <StackPanel.Resources>
+                                        <Style BasedOn="{StaticResource SegementStyledRadioButton}" TargetType="RadioButton" />
+                                    </StackPanel.Resources>
+                                    <ctrl:HyperlinkTp1
+                                        Padding="10,0"
+                                        VerticalAlignment="Stretch"
+                                        AutomationProperties.Name="刷新"
+                                        Command="{Binding event_RefreshUserTunnelCommand}"
+                                        Cursor="Arrow"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                        RaiseHyperlinkClicks="False"
+                                        Style="{StaticResource ButtonStyledHyperlinkButton}"
+                                        TabIndex="0"
+                                        ToolTip="刷新列表">
+                                        <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
+                                    </ctrl:HyperlinkTp1>
+                                    <ctrl:HyperlinkTp1
+                                        Padding="10,0"
+                                        VerticalAlignment="Stretch"
+                                        AutomationProperties.Name="查看帮助"
+                                        Command="{Binding event_OpenHelpLinkInWebCommand}"
+                                        Cursor="Arrow"
+                                        Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                                        RaiseHyperlinkClicks="False"
+                                        Style="{StaticResource ButtonStyledHyperlinkButton}"
+                                        TabIndex="0"
+                                        ToolTip="查看帮助">
+                                        <ink:FontIcon FontSize="16" Icon="{x:Static ink:SegoeFluentIcons.Help}" />
+                                    </ctrl:HyperlinkTp1>
+                                    <Rectangle
+                                        Width="1"
+                                        Margin="4,6"
+                                        VerticalAlignment="Stretch"
+                                        Fill="{DynamicResource SystemControlForegroundListLowBrush}" />
+
+                                    <RadioButton
+                                        Margin="0"
+                                        AutomationProperties.Name="网格模式"
+                                        IsChecked="{Binding UseGridViewTunnelFeature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        IsEnabled="{Binding IsToolsBarEnabled, Mode=OneWay}"
+                                        IsTabStop="False"
+                                        TabIndex="1"
+                                        ToolTip="网格模式">
+                                        <ink:FontIcon
+                                            FontFamily="{StaticResource FluentSystemIcons}"
+                                            FontSize="18"
+                                            Glyph="&#xE6C3;" />
+                                    </RadioButton>
+                                    <!--  IsChecked="{Binding UseListViewTunnelFeature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  -->
+                                    <RadioButton
+                                        Margin="0"
+                                        AutomationProperties.Name="列表模式"
+                                        IsChecked="{Binding UseListViewTunnelFeature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        IsEnabled="{Binding IsToolsBarEnabled, Mode=OneWay}"
+                                        IsTabStop="False"
+                                        TabIndex="1"
+                                        ToolTip="列表模式">
+                                        <ink:FontIcon
+                                            FontFamily="{StaticResource FluentSystemIcons}"
+                                            FontSize="18"
+                                            Glyph="&#xECD8;" />
+                                    </RadioButton>
+
+                                    <Rectangle
+                                        Width="1"
+                                        Margin="4,6"
+                                        VerticalAlignment="Stretch"
+                                        Fill="{DynamicResource SystemControlForegroundListLowBrush}" />
+                                    <ComboBox
+                                        Width="115"
+                                        Margin="0,3"
+                                        VerticalAlignment="Stretch"
+                                        ink:ControlHelper.PlaceholderText="排序方式"
+                                        BorderThickness="0"
+                                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                                        IsEnabled="{Binding IsToolsBarEnabled, Mode=OneWay}"
+                                        IsTabStop="False"
+                                        SelectedIndex="{Binding SelectedFilterMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        TabIndex="1"
+                                        ToolTip="隧道排序方式">
+
+                                        <ComboBoxItem Content="ID" />
+                                        <ComboBoxItem Content="状态" />
+                                        <ComboBoxItem Content="最近使用" />
+                                        <ComboBoxItem Content="节点" />
+                                    </ComboBox>
+                                    <Rectangle
+                                        Width="1"
+                                        Margin="4,6"
+                                        VerticalAlignment="Stretch"
+                                        Fill="{DynamicResource SystemControlForegroundListLowBrush}" />
+
+                                </StackPanel>
+                                <Grid Grid.Column="1">
+                                    <ink:AutoSuggestBox
+                                        x:Name="searchTextBox"
+                                        MinWidth="150"
+                                        Margin="4,0"
+                                        VerticalAlignment="Center"
+                                        BorderThickness="0"
+                                        Focusable="False"
+                                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                                        IsEnabled="{Binding IsToolsBarEnabled, Mode=OneWay}"
+                                        IsTabStop="False"
+                                        PlaceholderText="搜索隧道..."
+                                        Text="{Binding SearchValue, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+
+                                        <ink:AutoSuggestBox.TextBoxStyle>
+                                            <Style BasedOn="{StaticResource DefaultTextBoxStyle}" TargetType="TextBox">
+                                                <Setter Property="Padding" Value="4,7,0,0" />
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundListLowBrush}" />
+                                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource SystemControlForegroundListLowBrush}" />
+                                                        <Setter Property="ink:ControlHelper.PlaceholderForeground" Value="{DynamicResource SystemControlForegroundListLowBrush}" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </ink:AutoSuggestBox.TextBoxStyle>
+                                        <behavior:Interaction.Triggers>
+                                            <behavior:EventTrigger EventName="Loaded">
+                                                <behavior:InvokeCommandAction Command="{Binding event_AutoSuggestBoxLoadedCommand}" PassEventArgsToCommand="True" />
+                                            </behavior:EventTrigger>
+                                        </behavior:Interaction.Triggers>
+                                        <FrameworkElement.Resources>
+                                            <Thickness x:Key="AutoSuggestListBorderThemeThickness">0</Thickness>
+                                            <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+                                        </FrameworkElement.Resources>
+                                    </ink:AutoSuggestBox>
                                 </Grid>
-                                <ItemsControl Grid.Row="1" ItemsSource="{Binding PreloadSkeletons, Mode=OneWay, IsAsync=True}">
-                                    <ItemsControl.IsEnabled>
-                                        <MultiBinding Converter="{StaticResource BothConverter}">
-                                            <Binding Mode="OneWay" Path="IsDaemonConnected" />
-                                            <Binding
-                                                Mode="OneWay"
-                                                Path="IsVisible"
-                                                RelativeSource="{RelativeSource Mode=Self}" />
-                                        </MultiBinding>
-                                    </ItemsControl.IsEnabled>
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <ctrl:Skeleton
-                                                Width="360"
-                                                Height="200"
-                                                Margin="0,0,8,8"
-                                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="4" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
                             </Grid>
 
                         </Border>
-                        <Border
-                            x:Name="defaultRootContainerCtrl"
-                            Opacity="0"
-                            RenderTransformOrigin=".5,.5"
-                            Style="{StaticResource BorderFocusManagedStyle}">
-                            <FrameworkElement.RenderTransform>
-                                <TranslateTransform X="0" Y="0" />
-                            </FrameworkElement.RenderTransform>
-                            <StackPanel>
-                                <StackPanel>
-                                    <TextBlock
-                                        Margin="0,0,0,8"
-                                        FontSize="20"
-                                        Visibility="{Binding IsUrlSchemeMode, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
-                                        <Run Text="快启动隧道" />
-                                        <!--<Run Text="其他用户" />-->
-                                        <!--<Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="(不属于您的隧道，通过快速启动)" />-->
-                                    </TextBlock>
+                    </Grid>
+                </Border>
 
-                                    <ItemsControl
-                                        x:Name="remoteItemsController"
-                                        d:ItemsSource="{d:SampleData ItemCount=10}"
-                                        Focusable="False"
-                                        ItemsSource="{Binding AppRemoteTunnels, Mode=OneWay, IsAsync=True}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <ctrl:UserTunnel
-                                                    x:Name="userTunnel"
-                                                    Margin="0,0,8,8"
-                                                    BeginWithOpacityAnimation="True"
-                                                    DeleteCommandBinding="{Binding DataContext.event_DeleteUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
-                                                    RefreshCommandBinding="{Binding DataContext.event_RefreshUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
-                                                    ToggledCommandBinding="{Binding DataContext.event_TunnelSwitchInvokedCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
-                                                    Tunnel="{Binding Mode=OneWay}">
-                                                    <behavior:Interaction.Triggers>
-                                                        <behavior:EventTrigger EventName="Error">
-                                                            <behavior:InvokeCommandAction Command="{Binding DataContext.event_HandleTunnelCtrlExceptionCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}" PassEventArgsToCommand="True" />
-                                                        </behavior:EventTrigger>
-                                                    </behavior:Interaction.Triggers>
-                                                </ctrl:UserTunnel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                                <TextBlock
-                                    Margin="0,4,0,8"
-                                    FontFamily="{StaticResource SoraMediumMixYahei}"
-                                    FontSize="20"
-                                    Visibility="{Binding IsUserLogin, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
-                                    <Run Text="{Binding UserInfo.UserName, StringFormat='{}{0} 的隧道', Mode=OneWay}" />
-                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserTunnels.Count, StringFormat='({0}', Mode=OneWay}" />
-                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="/" />
-                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserInfo.MaxProxies, StringFormat='{}{0})', Mode=OneWay}" />
-                                </TextBlock>
+            </Grid>
+            <!--  Content  -->
+            <Grid Grid.Row="1" TextOptions.TextHintingMode="Auto">
+                <!--  Global Loading page  -->
+                <Border
+                    x:Name="defaultLoadingCtrl"
+                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}, Mode=OneWay}"
+                    MaxWidth="1272"
+                    Padding="36,4"
+                    HorizontalAlignment="Center"
+                    d:IsHitTestVisible="False"
+                    d:Visibility="Collapsed"
+                    RenderTransformOrigin=".5,.5"
+                    Style="{StaticResource BorderFocusManagedStyle}">
+                    <FrameworkElement.RenderTransform>
+                        <ScaleTransform ScaleX="1" ScaleY="1" />
+                    </FrameworkElement.RenderTransform>
+                    <ItemsControl
+                        Focusable="False"
+                        ItemsSource="{Binding PreloadSkeletons, Mode=OneWay, IsAsync=True}"
+                        VirtualizingPanel.CacheLength="2,2"
+                        VirtualizingPanel.CacheLengthUnit="Item"
+                        VirtualizingPanel.ScrollUnit="Item">
+                        <ItemsControl.IsEnabled>
+                            <MultiBinding Converter="{StaticResource BothConverter}">
+                                <Binding Mode="OneWay" Path="IsDaemonConnected" />
+                                <Binding
+                                    Mode="OneWay"
+                                    Path="IsVisible"
+                                    RelativeSource="{RelativeSource Mode=Self}" />
+                            </MultiBinding>
+                        </ItemsControl.IsEnabled>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <xa:VirtualizingWrapPanel
+                                    HorizontalAlignment="Left"
+                                    Focusable="False"
+                                    ItemSize="368,208" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <ctrl:Skeleton
+                                    Width="360"
+                                    Height="200"
+                                    Margin="0,0,8,8"
+                                    BorderThickness="0"
+                                    CornerRadius="4" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+                <Border
+                    x:Name="defaultRootContainerCtrl"
+                    Opacity="0"
+                    RenderTransformOrigin=".5,.5"
+                    Style="{StaticResource BorderFocusManagedStyle}">
+                    <FrameworkElement.RenderTransform>
+                        <TranslateTransform X="0" Y="0" />
+                    </FrameworkElement.RenderTransform>
+                    <Grid>
+                        <ink:ScrollViewerEx PanningMode="VerticalFirst" RewriteWheelChange="True">
+                            <StackPanel Orientation="Vertical">
+                                <!--  Visibility="{Binding UseGridViewTunnelFeature, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}"  -->
                                 <Grid>
                                     <Border
-                                        x:Name="defaultErrorCtrl"
-                                        d:Opacity="1"
-                                        Opacity="0"
+                                        x:Name="defaultContainerCtrl"
+                                        Grid.Row="1"
                                         RenderTransformOrigin=".5,.5"
                                         Style="{StaticResource BorderFocusManagedStyle}">
                                         <FrameworkElement.RenderTransform>
                                             <ScaleTransform ScaleX="1" ScaleY="1" />
                                         </FrameworkElement.RenderTransform>
+                                        <!--
+                                            Applicatio Virtual Inst:
+                                            
+                                            VirtualizingPanel.CacheLength="2,2"
+                                            VirtualizingPanel.IsContainerVirtualizable="True"
+                                            VirtualizingPanel.IsVirtualizing="True"
+                                            VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                            VirtualizingPanel.ScrollUnit="Item"
+                                            VirtualizingPanel.VirtualizationMode="Recycling"
+                                        -->
+                                        <Grid>
+                                            <StackPanel
+                                                Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                MaxWidth="1272"
+                                                Margin="0,4,0,0">
+                                                <TextBlock
+                                                    Margin="0,0,0,6"
+                                                    Padding="36,0,24,0"
+                                                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                    FontSize="20"
+                                                    Visibility="{Binding IsUrlSchemeMode, Converter={StaticResource AweBooleanToVisibilityConverter}, ConverterParameter='Reflag', Mode=OneWay}">
+                                                    <Run Text="{Binding UserInfo.UserName, Mode=OneWay}" />
+                                                    <Run Text="的隧道" />
+                                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserTunnels.Count, StringFormat='({0}', Mode=OneWay}" />
+                                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="/" />
+                                                    <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding UserInfo.MaxProxies, StringFormat='{}{0})', Mode=OneWay}" />
+                                                </TextBlock>
+                                                <ctrl:FixedItemsControl
+                                                    x:Name="itemsController"
+                                                    Padding="36,0,36,0"
+                                                    d:ItemsSource="{d:SampleData ItemCount=10}"
+                                                    AlternationCount="{Binding UserTunnels.Count, Mode=OneWay}"
+                                                    Focusable="False"
+                                                    ItemsSource="{Binding UserTunnels, Mode=OneWay, IsAsync=True}">
+                                                    <ctrl:FixedItemsControl.GroupStyle>
+                                                        <GroupStyle HidesIfEmpty="False">
+                                                            <GroupStyle.ContainerStyle>
+                                                                <Style TargetType="GroupItem">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Path=Name, Mode=OneWay}" Value="ahead-fast-launch">
+                                                                            <Setter Property="AutomationProperties.Name" Value="快启动隧道" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                    <Setter Property="Template">
+                                                                        <Setter.Value>
+                                                                            <ControlTemplate TargetType="GroupItem">
+                                                                                <StackPanel>
+                                                                                    <StackPanel.Resources>
+                                                                                        <ink:BindingProxy x:Key="IsFastLaunchBinding" Value="{Binding Path=Name, Converter={StaticResource EqualConverter}, ConverterParameter='ahead-fast-launch', Mode=OneWay}" />
+                                                                                        <ink:BindingProxy x:Key="SearchTextBoxSourceBinding" Value="{Binding Path=Text, Source={x:Reference Name=searchTextBox}, Mode=OneWay}" />
+                                                                                    </StackPanel.Resources>
+                                                                                    <StackPanel Margin="0,0,0,6" Orientation="Horizontal">
+                                                                                        <FrameworkElement.Visibility>
+                                                                                            <MultiBinding Converter="{StaticResource AweBooleanToVisibilityConverter}" Mode="OneWay">
+                                                                                                <Binding
+                                                                                                    Converter="{StaticResource EqualConverter}"
+                                                                                                    ConverterParameter="display-user-infomation"
+                                                                                                    Mode="OneWay"
+                                                                                                    Path="Name" />
+                                                                                                <Binding
+                                                                                                    Mode="OneWay"
+                                                                                                    Path="DataContext.IsUrlSchemeMode"
+                                                                                                    Source="{x:Reference Name=defaultContainerCtrlSourceBinder}" />
+                                                                                            </MultiBinding>
+                                                                                        </FrameworkElement.Visibility>
+                                                                                        <FrameworkElement.Resources>
+                                                                                            <ink:BindingProxy x:Key="UserInfoBinding" Value="{Binding Path=DataContext.UserInfo, Source={x:Reference Name=defaultContainerCtrlSourceBinder}, Mode=OneWay}" />
+                                                                                        </FrameworkElement.Resources>
+                                                                                        <TextBlock
+                                                                                            Margin="0,0,4,0"
+                                                                                            FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                                            FontSize="20"
+                                                                                            Text="{Binding Path=Value.UserName, StringFormat='{}{0} 的隧道', Source={StaticResource UserInfoBinding}, Mode=OneWay}" />
+                                                                                        <TextBlock FontFamily="{StaticResource SoraMediumMixYahei}" FontSize="20">
+                                                                                            <FrameworkElement.Visibility>
+                                                                                                <MultiBinding Converter="{StaticResource AweBooleanToVisibilityConverter}" Mode="OneWay">
+                                                                                                    <Binding
+                                                                                                        Converter="{StaticResource EqualConverter}"
+                                                                                                        ConverterParameter="0"
+                                                                                                        Mode="OneWay"
+                                                                                                        Path="DataContext.SearchValue.Length"
+                                                                                                        Source="{x:Reference Name=defaultContainerCtrlSourceBinder}" />
+                                                                                                </MultiBinding>
+                                                                                            </FrameworkElement.Visibility>
+                                                                                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Path=ItemCount, StringFormat='({0}', Mode=OneWay}" />
+                                                                                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="/" />
+                                                                                            <Run Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Text="{Binding Path=Value.MaxProxies, StringFormat='{}{0})', Source={StaticResource UserInfoBinding}, Mode=OneWay}" />
+                                                                                        </TextBlock>
+                                                                                    </StackPanel>
+                                                                                    <TextBlock
+                                                                                        Margin="0,0,0,6"
+                                                                                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                                        FontSize="20"
+                                                                                        Text="快启动隧道"
+                                                                                        Visibility="{Binding Value, Converter={StaticResource AweBooleanToVisibilityConverter}, Source={StaticResource IsFastLaunchBinding}, Mode=OneWay}" />
+                                                                                    <ItemsPresenter />
+                                                                                </StackPanel>
+                                                                            </ControlTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Style>
+                                                            </GroupStyle.ContainerStyle>
+                                                        </GroupStyle>
+                                                    </ctrl:FixedItemsControl.GroupStyle>
+                                                    <ctrl:FixedItemsControl.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource ReflagdEitherConverter}" Mode="OneWay">
+                                                            <Binding Mode="OneWay" Path="event_DeleteUserTunnelCommand.IsRunning" />
+                                                            <Binding
+                                                                Converter="{StaticResource EqualConverter}"
+                                                                ConverterParameter="False"
+                                                                Mode="OneWay"
+                                                                Path="IsDaemonConnected" />
+                                                        </MultiBinding>
+                                                    </ctrl:FixedItemsControl.IsEnabled>
+                                                    <ctrl:FixedItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ctrl:FixedItemsControl.ItemsPanel>
+
+                                                    <ctrl:FixedItemsControl.ItemTemplateSelector>
+                                                        <model:TunnelDataTemplateSelector>
+                                                            <model:TunnelDataTemplateSelector.CardDataTemplate>
+                                                                <DataTemplate>
+                                                                    <ctrl:CardUserTunnel
+                                                                        x:Name="userTunnel"
+                                                                        Margin="0,0,8,8"
+                                                                        BeginWithOpacityAnimation="True"
+                                                                        DeleteCommandBinding="{Binding DataContext.event_DeleteUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                                        ToggledCommandBinding="{Binding DataContext.event_TunnelSwitchInvokedCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                                        Tunnel="{Binding Mode=OneWay}">
+                                                                        <behavior:Interaction.Triggers>
+                                                                            <behavior:EventTrigger EventName="Error">
+                                                                                <behavior:InvokeCommandAction Command="{Binding DataContext.event_HandleTunnelCtrlExceptionCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}" PassEventArgsToCommand="True" />
+                                                                            </behavior:EventTrigger>
+                                                                        </behavior:Interaction.Triggers>
+                                                                    </ctrl:CardUserTunnel>
+                                                                </DataTemplate>
+                                                            </model:TunnelDataTemplateSelector.CardDataTemplate>
+                                                            <model:TunnelDataTemplateSelector.ListDataTemplate>
+                                                                <DataTemplate>
+                                                                    <ctrl:ListUserTunnel
+                                                                        x:Name="userTunnel"
+                                                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=WrapPanel}, Mode=OneWay}"
+                                                                        CurrentIndex="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}"
+                                                                        DeleteCommandBinding="{Binding DataContext.event_DeleteUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                                        ToggledCommandBinding="{Binding DataContext.event_TunnelSwitchInvokedCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                                        TotalInContainer="{Binding Path=(GroupItem.DataContext).ItemCount, RelativeSource={RelativeSource AncestorType=GroupItem}, Mode=OneWay}"
+                                                                        Tunnel="{Binding Mode=OneWay}">
+                                                                        <behavior:Interaction.Triggers>
+                                                                            <behavior:EventTrigger EventName="Error">
+                                                                                <behavior:InvokeCommandAction Command="{Binding DataContext.event_HandleTunnelCtrlExceptionCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}" PassEventArgsToCommand="True" />
+                                                                            </behavior:EventTrigger>
+                                                                        </behavior:Interaction.Triggers>
+                                                                    </ctrl:ListUserTunnel>
+                                                                </DataTemplate>
+                                                            </model:TunnelDataTemplateSelector.ListDataTemplate>
+                                                        </model:TunnelDataTemplateSelector>
+                                                    </ctrl:FixedItemsControl.ItemTemplateSelector>
+                                                </ctrl:FixedItemsControl>
+                                            </StackPanel>
+                                            <Decorator
+                                                x:Name="defaultContainerCtrlSourceBinder"
+                                                Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
+                                                MaxWidth="1272"
+                                                HorizontalAlignment="Center">
+                                                <FrameworkElement.Visibility>
+                                                    <MultiBinding Converter="{StaticResource AweBooleanToVisibilityConverter}" Mode="OneWay">
+                                                        <Binding
+                                                            Converter="{StaticResource EqualConverter}"
+                                                            ConverterParameter="0"
+                                                            Mode="OneWay"
+                                                            Path="Items.Count"
+                                                            Source="{x:Reference Name=itemsController}" />
+                                                        <Binding
+                                                            Converter="{StaticResource NotEqualConverter}"
+                                                            ConverterParameter="0"
+                                                            Mode="OneWay"
+                                                            Path="SearchValue.Length" />
+                                                    </MultiBinding>
+                                                </FrameworkElement.Visibility>
+                                                <Border
+                                                    MinHeight="100"
+                                                    Margin="36,0"
+                                                    Padding="32,24,36,36"
+                                                    VerticalAlignment="Top"
+                                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4">
+                                                    <StackPanel Orientation="Vertical" TextElement.Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                                                        <ink:FontIcon
+                                                            FontFamily="{StaticResource FluentSystemIcons}"
+                                                            FontSize="56"
+                                                            Glyph="&#xF155;" />
+                                                        <TextBlock
+                                                            HorizontalAlignment="Center"
+                                                            FontSize="24"
+                                                            TextAlignment="Center"
+                                                            TextWrapping="Wrap">
+                                                            <Run Text="找不到有关" />
+                                                            <Run FontFamily="{StaticResource SoraMedium}" Text="{Binding SearchValue, StringFormat='&quot;{0}&quot;', Mode=OneWay}" />
+                                                            <Run Text="的相关隧道" />
+                                                            <LineBreak />
+                                                            <Run
+                                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                                FontSize="20"
+                                                                Text="搜索方式: 隧道名称 / 隧道 ID / 节点名称 / 节点ID / 本地端口 / 远程端口 / 隧道类型" />
+                                                            <LineBreak />
+                                                            <Run FontSize="20" Text="符合其中一项的隧道将会在此列出。" />
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Decorator>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                                <!--<Border Visibility="{Binding UseListViewTunnelFeature, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />-->
+                                <StackPanel
+                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Border}, Mode=OneWay}"
+                                    MaxWidth="1200"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Top">
+                                    <TextBlock
+                                        Margin="0,0,0,6"
+                                        Padding="36,0,24,0"
+                                        FontFamily="{StaticResource SoraMediumMixYahei}"
+                                        FontSize="20"
+                                        Visibility="{Binding IsHitTestVisible, Converter={StaticResource AweBooleanToVisibilityConverter}, Source={x:Reference defaultVisibleDetector}, Mode=OneWay}">
+
+                                        <Run Text="{Binding UserInfo.UserName, Mode=OneWay}" />
+                                        <Run Text="的隧道" />
+                                    </TextBlock>
+                                    <Grid x:Name="defaultVisibleDetector">
+                                        <Grid.IsHitTestVisible>
+                                            <MultiBinding Converter="{StaticResource EitherConverter}" Mode="OneWay">
+                                                <Binding
+                                                    ElementName="defaultErrorCtrl"
+                                                    Mode="OneWay"
+                                                    Path="IsHitTestVisible" />
+                                                <Binding
+                                                    ElementName="defaultEmptyCtrl"
+                                                    Mode="OneWay"
+                                                    Path="IsHitTestVisible" />
+                                            </MultiBinding>
+                                        </Grid.IsHitTestVisible>
                                         <Border
+                                            x:Name="defaultErrorCtrl"
+                                            Margin="36,4,36,8"
+                                            Padding="36,48"
+                                            d:Opacity="1"
                                             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                             BorderBrush="{DynamicResource CardStrokeColorDefaultSolidBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="4">
+                                            CornerRadius="4"
+                                            Opacity="0"
+                                            RenderTransformOrigin=".5,.5"
+                                            Style="{StaticResource BorderFocusManagedStyle}">
+                                            <FrameworkElement.RenderTransform>
+                                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                                            </FrameworkElement.RenderTransform>
                                             <xa:SimpleStackPanel
-                                                Margin="36,64"
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Center"
                                                 Spacing="16">
@@ -201,7 +592,7 @@
                                                     HorizontalAlignment="Left"
                                                     FontSize="64"
                                                     Icon="{x:Static ink:SegoeFluentIcons.ThoughtBubble}" />
-                                                <TextBlock FontSize="24">
+                                                <TextBlock FontSize="24" TextWrapping="Wrap">
                                                     <Run Text="{Binding ExecuteResult.Message, Mode=OneWay}" />
                                                 </TextBlock>
                                                 <WrapPanel>
@@ -230,130 +621,91 @@
                                                 </WrapPanel>
                                             </xa:SimpleStackPanel>
                                         </Border>
-                                    </Border>
-                                    <Border
-                                        x:Name="defaultEmptyCtrl"
-                                        d:Opacity="1"
-                                        Opacity="0"
-                                        RenderTransformOrigin=".5,.5"
-                                        Style="{StaticResource BorderFocusManagedStyle}">
-                                        <FrameworkElement.RenderTransform>
-                                            <ScaleTransform ScaleX="1" ScaleY="1" />
-                                        </FrameworkElement.RenderTransform>
                                         <Border
-                                            MinHeight="300"
+                                            x:Name="defaultEmptyCtrl"
+                                            Margin="36,4,36,8"
+                                            Padding="36,48"
+                                            d:Opacity="1"
                                             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                             BorderBrush="{DynamicResource CardStrokeColorDefaultSolidBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="4">
-                                            <Grid>
-                                                <xa:SimpleStackPanel
+                                            CornerRadius="4"
+                                            Opacity="0"
+                                            RenderTransformOrigin=".5,.5"
+                                            Style="{StaticResource BorderFocusManagedStyle}">
+                                            <FrameworkElement.RenderTransform>
+                                                <ScaleTransform ScaleX="1" ScaleY="1" />
+                                            </FrameworkElement.RenderTransform>
+                                            <xa:SimpleStackPanel
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                Spacing="16">
+                                                <ink:FontIcon
                                                     HorizontalAlignment="Left"
-                                                    VerticalAlignment="Center"
-                                                    Spacing="16">
-                                                    <ink:FontIcon
-                                                        Margin="36,0"
-                                                        HorizontalAlignment="Left"
-                                                        FontSize="64"
-                                                        Icon="{x:Static ink:SegoeFluentIcons.InteractiveDashboard}" />
-                                                    <TextBlock Margin="36,0" TextWrapping="Wrap">
-                                                        <Run FontSize="24" Text="你还没有隧道呢" />
-                                                        <LineBreak />
-                                                        <Run
-                                                            FontSize="18"
-                                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                                            Text="点击下方&quot;创建隧道&quot;创建新隧道,或者刷新看看？" />
-
-                                                    </TextBlock>
-                                                    <WrapPanel Margin="36,0">
-                                                        <Button
-                                                            Margin="0,0,8,8"
-                                                            Padding="14,9"
-                                                            AutomationProperties.Name="创建隧道"
-                                                            Command="{Binding event_GotoCreateTunnelPageCommand}"
-                                                            IsEnabled="{Binding IsUserLogin, Mode=OneWay}"
-                                                            Style="{StaticResource AccentButtonStyle}">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Add}" />
-                                                                <TextBlock Padding="12,0,0,0" Text="创建隧道" />
-                                                            </StackPanel>
-                                                        </Button>
-                                                        <Button
-                                                            Margin="0,0,8,8"
-                                                            Padding="14,9"
-                                                            AutomationProperties.Name="刷新"
-                                                            Command="{Binding event_RefreshUserTunnelCommand}">
-                                                            <StackPanel Orientation="Horizontal">
-                                                                <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
-                                                                <TextBlock Padding="12,0,0,0" Text="刷新" />
-                                                            </StackPanel>
-                                                        </Button>
-
-                                                    </WrapPanel>
-
-                                                </xa:SimpleStackPanel>
-                                            </Grid>
-
-                                        </Border>
-                                    </Border>
-                                    <Border
-                                        x:Name="defaultContainerCtrl"
-                                        d:Opacity="1"
-                                        Opacity="0"
-                                        RenderTransformOrigin=".5,.5"
-                                        Style="{StaticResource BorderFocusManagedStyle}">
-                                        <FrameworkElement.RenderTransform>
-                                            <ScaleTransform ScaleX="1" ScaleY="1" />
-                                        </FrameworkElement.RenderTransform>
-                                        <ItemsControl
-                                            x:Name="itemsController"
-                                            d:ItemsSource="{d:SampleData ItemCount=10}"
-                                            Focusable="False"
-                                            ItemsSource="{Binding UserTunnels, Mode=OneWay, IsAsync=True}">
-                                            <ItemsControl.IsEnabled>
-                                                <MultiBinding Converter="{StaticResource ReflagdEitherConverter}" Mode="OneWay">
-                                                    <Binding Mode="OneWay" Path="event_DeleteUserTunnelCommand.IsRunning" />
-
-                                                    <Binding
-                                                        Converter="{StaticResource EqualConverter}"
-                                                        ConverterParameter="False"
-                                                        Mode="OneWay"
-                                                        Path="IsDaemonConnected" />
-                                                    <!--<Binding Mode="OneWay" Path="event_UserContextMenuInvokedCommand.IsRunning" />-->
-                                                    <!--<Binding Mode="OneWay" Path="event_TunnelSwitchInvokedCommand.IsRunning" />-->
-                                                </MultiBinding>
-                                            </ItemsControl.IsEnabled>
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <WrapPanel />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <ctrl:UserTunnel
-                                                        x:Name="userTunnel"
+                                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                                    FontSize="64"
+                                                    Glyph="&#xEF27;" />
+                                                <TextBlock TextWrapping="Wrap" Visibility="{Binding IsUserLogin, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                                    <Run FontSize="24" Text="当前用户下没有隧道" />
+                                                    <LineBreak />
+                                                    <Run
+                                                        FontSize="18"
+                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="点击下方&quot;创建隧道&quot;创建新隧道，或尝试刷新页面。" />
+                                                </TextBlock>
+                                                <TextBlock TextWrapping="Wrap">
+                                                    <TextBlock.Visibility>
+                                                        <MultiBinding Converter="{StaticResource AweBooleanToVisibilityConverter}" Mode="OneWay">
+                                                            <Binding Mode="OneWay" Path="IsUrlSchemeMode" />
+                                                            <Binding
+                                                                Converter="{StaticResource EqualConverter}"
+                                                                ConverterParameter="False"
+                                                                Mode="OneWay"
+                                                                Path="IsUserLogin" />
+                                                        </MultiBinding>
+                                                    </TextBlock.Visibility>
+                                                    <Run FontSize="24" Text="目前没有开启的隧道" />
+                                                    <LineBreak />
+                                                    <Run
+                                                        FontSize="18"
+                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                        Text="可在网页端 - 隧道页面中找到对应应用 - 菜单中的 &quot;通过快速启动&quot; 启动隧道。" />
+                                                </TextBlock>
+                                                <WrapPanel>
+                                                    <Button
                                                         Margin="0,0,8,8"
-                                                        BeginWithOpacityAnimation="True"
-                                                        DeleteCommandBinding="{Binding DataContext.event_DeleteUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
-                                                        RefreshCommandBinding="{Binding DataContext.event_RefreshUserTunnelCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
-                                                        ToggledCommandBinding="{Binding DataContext.event_TunnelSwitchInvokedCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}"
-                                                        Tunnel="{Binding Mode=OneWay}">
-                                                        <behavior:Interaction.Triggers>
-                                                            <behavior:EventTrigger EventName="Error">
-                                                                <behavior:InvokeCommandAction Command="{Binding DataContext.event_HandleTunnelCtrlExceptionCommand, RelativeSource={RelativeSource AncestorType=Grid}, Mode=OneWay}" PassEventArgsToCommand="True" />
-                                                            </behavior:EventTrigger>
-                                                        </behavior:Interaction.Triggers>
-                                                    </ctrl:UserTunnel>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </Border>
-                                </Grid>
+                                                        Padding="14,9"
+                                                        AutomationProperties.Name="创建隧道"
+                                                        Command="{Binding event_GotoCreateTunnelPageCommand}"
+                                                        IsEnabled="{Binding IsUserLogin, Mode=OneWay}"
+                                                        Style="{StaticResource AccentButtonStyle}"
+                                                        Visibility="{Binding IsUserLogin, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Add}" />
+                                                            <TextBlock Padding="12,0,0,0" Text="创建隧道" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button
+                                                        Margin="0,0,8,8"
+                                                        Padding="14,9"
+                                                        AutomationProperties.Name="刷新"
+                                                        Command="{Binding event_RefreshUserTunnelCommand}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Refresh}" />
+                                                            <TextBlock Padding="12,0,0,0" Text="刷新" />
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                </WrapPanel>
+                                            </xa:SimpleStackPanel>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
                             </StackPanel>
-                        </Border>
+                        </ink:ScrollViewerEx>
                     </Grid>
                 </Border>
-            </ink:ScrollViewerEx>
+            </Grid>
         </Grid>
     </Grid>
     <VisualStateManager.VisualStateGroups>
@@ -373,6 +725,12 @@
                         Duration="0:0:.25">
                         <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
                     </BooleanAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="IsEnabled"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:0" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="defaultLoadingCtrl"
@@ -391,6 +749,38 @@
                         Storyboard.TargetProperty="RenderTransform.ScaleY"
                         To="1"
                         Duration="0:0:.35" />
+                    <!--  ToolBar Loading Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="IsEnabled"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:0" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.35" />
+
                     <!--  Container Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultRootContainerCtrl"
@@ -410,10 +800,79 @@
                         Storyboard.TargetProperty="Opacity"
                         To="0"
                         Duration="0:0:.15" />
+                    <!--  Toolbar Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.35" />
                 </Storyboard>
             </VisualState>
             <VisualState Name="DisplayContainerCtrl">
                 <Storyboard>
+                    <!--  Toolbar Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="IsHitTestVisible"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="True" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="IsEnabled"
+                        Duration="0:0:.25">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:.25" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="1"
+                        Duration="0:0:.25" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="1"
+                        Duration="0:0:.00" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="1"
+                        Duration="0:0:.00" />
+
                     <!--  Loading Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultLoadingCtrl"
@@ -426,6 +885,12 @@
                         Storyboard.TargetProperty="IsHitTestVisible"
                         Duration="0">
                         <DiscreteBooleanKeyFrame KeyTime="0" Value="False" />
+                    </BooleanAnimationUsingKeyFrames>
+                    <BooleanAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="IsEnabled"
+                        Duration="0">
+                        <DiscreteBooleanKeyFrame KeyTime="0:0:0" Value="False" />
                     </BooleanAnimationUsingKeyFrames>
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
@@ -442,6 +907,31 @@
                     <DoubleAnimation
                         EasingFunction="{StaticResource _DefaultCubicEase}"
                         Storyboard.TargetName="defaultLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleY"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <!--  Loading Ctrl  -->
+                    <ObjectAnimationUsingKeyFrames
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="Visibility"
+                        Duration="0:0:0.35">
+                        <DiscreteObjectKeyFrame KeyTime="0:0:0.35" Value="{x:Static Visibility.Collapsed}" />
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="Opacity"
+                        To="0"
+                        Duration="0:0:.15" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
+                        Storyboard.TargetProperty="RenderTransform.ScaleX"
+                        To="0.95"
+                        Duration="0:0:.35" />
+                    <DoubleAnimation
+                        EasingFunction="{StaticResource _DefaultCubicEase}"
+                        Storyboard.TargetName="defaultToolBarLoadingCtrl"
                         Storyboard.TargetProperty="RenderTransform.ScaleY"
                         To="0.95"
                         Duration="0:0:.35" />
@@ -541,36 +1031,7 @@
                         To="0.95"
                         Duration="0:0:.35" />
                     <!--  Container Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0:0:0">
-                        <DiscreteBooleanKeyFrame KeyTime="0:0:0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To=".95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To=".95"
-                        Duration="0:0:.35" />
+
                 </Storyboard>
             </VisualState>
             <VisualState Name="UserDisplayError">
@@ -607,36 +1068,7 @@
                         To="1"
                         Duration="0:0:.35" />
                     <!--  Container Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0:0:.35">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:.35" Value="{x:Static Visibility.Collapsed}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0:0:0">
-                        <DiscreteBooleanKeyFrame KeyTime="0:0:0" Value="False" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="0"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To=".95"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To=".95"
-                        Duration="0:0:.35" />
+                    <!--  由于容器显示和容器错误显示是完全两个独立组件，故这里需要显示。  -->
                     <!--  Empty Ctrl  -->
                     <ObjectAnimationUsingKeyFrames
                         Storyboard.TargetName="defaultEmptyCtrl"
@@ -734,41 +1166,8 @@
                         Storyboard.TargetProperty="RenderTransform.ScaleY"
                         To="0.95"
                         Duration="0:0:.35" />
-                    <!--  Container Ctrl  -->
-                    <ObjectAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Visibility"
-                        Duration="0">
-                        <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Visible}" />
-                    </ObjectAnimationUsingKeyFrames>
-                    <BooleanAnimationUsingKeyFrames
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="IsHitTestVisible"
-                        Duration="0:0:.35">
-                        <DiscreteBooleanKeyFrame KeyTime="0:0:.35" Value="True" />
-                    </BooleanAnimationUsingKeyFrames>
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="Opacity"
-                        To="1"
-                        Duration="0:0:.15" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleX"
-                        To="1"
-                        Duration="0:0:.35" />
-                    <DoubleAnimation
-                        EasingFunction="{StaticResource _DefaultCubicEase}"
-                        Storyboard.TargetName="defaultContainerCtrl"
-                        Storyboard.TargetProperty="RenderTransform.ScaleY"
-                        To="1"
-                        Duration="0:0:.35" />
                 </Storyboard>
             </VisualState>
-
         </VisualStateGroup>
-
     </VisualStateManager.VisualStateGroups>
 </ink:Page>

@@ -1,13 +1,20 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,8 +26,10 @@ using Grpc.Core;
 using Grpc.Core.Utils;
 using iNKORE.UI.WPF.Modern.Controls;
 using Microsoft.Extensions.DependencyInjection;
+using OpenFrp.Launcher.Controls;
 using OpenFrp.Launcher.Model;
 using OpenFrp.Service;
+using Yue3.Model.OpenFrp.Response.Data;
 
 
 
@@ -66,6 +75,7 @@ namespace OpenFrp.Launcher.ViewModels
                         ;break;
                 }
             });
+
             RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
             FrpcManager = App.ServiceProvider.GetRequiredService<Service.Manager.Frpc.FrpcManager>();
 
@@ -83,9 +93,11 @@ namespace OpenFrp.Launcher.ViewModels
         private Service.Manager.Frpc.FrpcManager FrpcManager { get; set; }
 
         private IClientStreamWriter<Service.Proto.Request.TunnelStreamRequest>? _writer;
+
         private FrameworkElement? container;
-        private ItemsControl? itemsController;
-        private ItemsControl? remoteItemsController;
+
+        private FixedItemsControl? itemsController;
+
         private readonly MainWindowViewModel? _mainWindowViewModel;
         private readonly Action<string, string, InfoBarSeverity> ShowAlertAction = delegate { };
 
@@ -111,6 +123,22 @@ namespace OpenFrp.Launcher.ViewModels
         {
             get => _mainWindowViewModel?.IsUrlSchemeRegistered ?? false;
         }
+        public bool UseGridViewTunnelFeature
+        {
+            get => App.Settings.UseGridViewTunnelFeature;
+            set
+            {
+                App.Settings.UseGridViewTunnelFeature = value;
+                OnPropertyChanged(nameof(UseListViewTunnelFeature));
+                OnPropertyChanged(nameof(UseGridViewTunnelFeature));
+            }
+        }
+        public bool UseListViewTunnelFeature
+        {
+            get => !App.Settings.UseGridViewTunnelFeature;
+            set => UseGridViewTunnelFeature = !value;
+        }
+
         public bool IsUserLogin
         {
             get => !UserInfo.Equals(SettingsViewModel.__userInfo_Defualt);
@@ -123,7 +151,6 @@ namespace OpenFrp.Launcher.ViewModels
 
         private readonly EventWaitHandle fastLaunchWaitHandle = new EventWaitHandle(false,mode: EventResetMode.ManualReset) { };
         
-
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @conve_CreateStream(CancellationToken cancellationToken)
         {
@@ -204,12 +231,11 @@ namespace OpenFrp.Launcher.ViewModels
                                 {
                                     if (_atr.Datas.FirstOrDefault() is var t && t is not null)
                                     {
-                                        if (!IsUserLogin && AppRemoteTunnels.Count is 0)
+                                        if (!IsUserLogin && UserTunnels.Count is 0)
                                         {
                                             VisualStateManager.GoToElementState(container, UserDisplayNoraml, false);
                                         }
-                                        AppRemoteTunnels.Add(new Model.UserTunnel(t) { FirstState = true });
-                                        
+                                        UserTunnels.Add(new Model.UserTunnel(t) { FirstState = true });
                                     }
                                     break;
                                 }
@@ -224,7 +250,6 @@ namespace OpenFrp.Launcher.ViewModels
                                 remoteAppWaiter?.TrySetResult(dl);
                             }
                         }
-
                         if (resp.Data.TryUnpack(out Int32Value _v) && _v is { Value: var tunnelId })
                         {
                             ToggleSwitchWithId(tunnelId);
@@ -241,40 +266,6 @@ namespace OpenFrp.Launcher.ViewModels
 
         private void ToggleSwitchWithId(params int[] tunnelId)
         {
-            remoteItemsController?.Dispatcher.Invoke(delegate
-            {
-                foreach (var rt in AppRemoteTunnels)
-                {
-                    var vi = remoteItemsController.ItemContainerGenerator.ContainerFromItem(rt);
-
-                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
-                    {
-                        if (tunnelId.Contains(-rt.Id))
-                        {
-                            if (!IsUserLogin && AppRemoteTunnels.Count is 1)
-                            {
-                                VisualStateManager.GoToElementState(container, NormalState, false);
-                                VisualStateManager.GoToElementState(container, UserDisplayEmpty, false);
-                            }
-                            userTunnel.RemoveWithAnimate(() => AppRemoteTunnels.Remove(rt));
-                        }
-                        else
-                        {
-                            continue;
-                        }
-
-                        if (iNKORE.UI.WPF.Helpers.OSVersionHelper.IsWindows10OrGreater)
-                        {
-                            try
-                            {
-                                Microsoft.Toolkit.Uwp.Notifications.ToastNotificationManagerCompat.History.Remove(rt.Name);
-                            }
-                            catch { }
-                        }
-                        break;
-                    }
-                }
-            });
             itemsController?.Dispatcher.Invoke(delegate
             {
                 foreach (var tunnel in UserTunnels)
@@ -282,13 +273,19 @@ namespace OpenFrp.Launcher.ViewModels
                     var vi = itemsController.ItemContainerGenerator.ContainerFromItem(tunnel);
 
                     bool? flag = default;
+
                     if (tunnelId.Contains(tunnel.Id)) flag = true;
                     if (tunnelId.Contains(-tunnel.Id)) flag = false;
 
                     if (!flag.HasValue) continue;
 
-                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
+                    if (vi is ContentPresenter cp)
                     {
+                        if (cp.ContentTemplateSelector.SelectTemplate(tunnelId, itemsController).FindName("userTunnel", cp) is not Controls.UserTunnelBase { DataContext: Model.UserTunnel ut } userTunnel)
+                        {
+                            continue;
+                        }
+                        ut.FirstState = flag.Value;
                         userTunnel.ToggleStateTo(flag.Value, force: true);
 
                         if (iNKORE.UI.WPF.Helpers.OSVersionHelper.IsWindows10OrGreater)
@@ -299,7 +296,25 @@ namespace OpenFrp.Launcher.ViewModels
                             }
                             catch { }
                         }
-                        break;
+
+                        if (ut.IsFastLaunch)
+                        {
+                            if (!IsUserLogin && UserTunnels.Count is 1)
+                            {
+                                VisualStateManager.GoToElementState(container, NormalState, false);
+                                VisualStateManager.GoToElementState(container, UserDisplayEmpty, false);
+                            }
+                            if (userTunnel is Controls.CardUserTunnel c)
+                            {
+                                c.RemoveWithAnimate(() => UserTunnels.Remove(ut));
+                            }
+                            else
+                            {
+                                UserTunnels.Remove(ut);
+                            }
+
+                            break;
+                        }
                     }
                     continue;
                 }
@@ -313,13 +328,15 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 container = page;
 
-                if (page.FindName("itemsController") is ItemsControl ic) 
+                if (page.FindName("itemsController") is FixedItemsControl ic) 
                 {
                     itemsController = ic;
-                }
-                if (page.FindName("remoteItemsController") is ItemsControl ric)
-                {
-                    remoteItemsController = ric;
+
+                    ListCollectionView view = (ListCollectionView)CollectionViewSource.GetDefaultView(UserTunnels);
+
+                    view.CustomSort = new AppTunnelSorter(0) { };
+                    view.GroupDescriptions.Add(new PropertyGroupDescription("IsFastLaunch", new AppTunnelGrouper { }));
+                    
                 }
 
                 VisualStateManager.GoToElementState(container, LoadingState, false);
@@ -353,13 +370,19 @@ namespace OpenFrp.Launcher.ViewModels
         private Model.ExecuteResult? executeResult;
 
         [ObservableProperty]
+        private int selectedFilterMode;
+
+        [ObservableProperty]
+        private string searchValue = "";
+
+        [ObservableProperty]
         private ObservableCollection<object> preloadSkeletons = new ObservableCollection<object> { };
 
-        [ObservableProperty]
+        [ObservableProperty, NotifyPropertyChangedFor(nameof(IsToolsBarEnabled))]
         private ObservableCollection<Model.UserTunnel> userTunnels = new ObservableCollection<Model.UserTunnel> { };
 
-        [ObservableProperty]
-        private ObservableCollection<Model.UserTunnel> appRemoteTunnels = new ObservableCollection<Model.UserTunnel> { };
+        public bool IsToolsBarEnabled { get => UserTunnels.Count > 0; }
+
 
         [RelayCommand(IncludeCancelCommand = true)]
         private async Task @event_DisplayException(CancellationToken cancellationToken)
@@ -408,7 +431,7 @@ namespace OpenFrp.Launcher.ViewModels
                 if (itemsController is not null)
                 {
                     var vi = itemsController.ItemContainerGenerator.ContainerFromItem(tunnel);
-                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.UserTunnel userTunnel)
+                    if (vi is ContentPresenter cp && cp.ContentTemplate?.FindName("userTunnel", cp) is Controls.CardUserTunnel userTunnel)
                     {
                         userTunnel.RemoveWithAnimate(() => UserTunnels.Remove(tunnel));
 
@@ -529,6 +552,8 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     await Task.Delay(1000, cancellationToken);
 
+                    SelectedFilterMode = 0;
+
                     await RequestForOnlineTunnelAndRemoteTunnel();
 
                     VisualStateManager.GoToElementState(container, NormalState, false);
@@ -543,17 +568,22 @@ namespace OpenFrp.Launcher.ViewModels
 
             CreatePreloadSkeleton();
 
-            await Task.Delay(1000, cancellationToken);
+            await Task.Delay(500, cancellationToken);
 
-
-
+            SelectedFilterMode = 0;
+            SearchValue = string.Empty;
 
             await RequestForOnlineTunnelAndRemoteTunnel();
 
-
-            await Task.Delay(1000,cancellationToken);
-
             var resp = await Service.Net.OpenFrpApi.GetUserTunnels(cancellationToken);
+
+            PreloadSkeletons.Clear();
+
+            if (UserTunnels.Count > 0)
+            {
+                UserTunnels.Clear();
+            }
+            OnPropertyChanged(nameof(IsToolsBarEnabled));
 
             try
             {
@@ -570,17 +600,19 @@ namespace OpenFrp.Launcher.ViewModels
                 else
                 {
                     var onlineTunnels = await firstStateWaiter!.Task.WhenAnyTime(cancellationToken);
-                
+
                     if (onlineTunnels is null || cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
 
-                    UserTunnels = new ObservableCollection<Model.UserTunnel>();
+
+                    UserTunnels ??= new ObservableCollection<Model.UserTunnel>();
 
                     VisualStateManager.GoToElementState(container, NormalState, false);
                     VisualStateManager.GoToElementState(container, UserDisplayNoraml, false);
 
+                   
                     _ = container?.Dispatcher.Invoke(async () =>
                     {
                         try
@@ -598,12 +630,18 @@ namespace OpenFrp.Launcher.ViewModels
                                 }
                                 UserTunnels.Add(v);
 
-                                await Task.Delay(75, cancellationToken);
+
+                                if (UseGridViewTunnelFeature)
+                                {
+                                    await Task.Delay(75, cancellationToken);
+                                }
                             }
                         }
                         finally
                         {
-                            //firstStateWaiter = null;
+                            RefreshItemsControlAutomationPeer();
+
+                            OnPropertyChanged(nameof(IsToolsBarEnabled));
                         }
                     });
                 }
@@ -648,14 +686,18 @@ namespace OpenFrp.Launcher.ViewModels
                     {
                         var v2 = await remoteAppWaiter.Task.WhenAnyTime(cancellationToken);
 
+                        //if (AppRemoteTunnels.Count > 0)
+                        //{
+                        //    AppRemoteTunnels.Clear();
+                        //}
+
+                        OnPropertyChanged(nameof(IsToolsBarEnabled));
+
                         if (v2 is not { Count: > 0 }) { return; }
 
-                        AppRemoteTunnels ??= new ObservableCollection<Model.UserTunnel> { };
+                        UserTunnels ??= new ObservableCollection<Model.UserTunnel> { };
 
-                        if (AppRemoteTunnels.Count > 0)
-                        {
-                            AppRemoteTunnels.Clear();
-                        }
+
 
                         foreach (var d in v2)
                         {
@@ -664,13 +706,15 @@ namespace OpenFrp.Launcher.ViewModels
                                 return;
                             }
 
-                            AppRemoteTunnels.Add(new Model.UserTunnel(d) { FirstState = true });
+                            UserTunnels.Add(new Model.UserTunnel(d) { FirstState = true });
 
                             await Task.Delay(75, cancellationToken);
                         }
                     }
                     finally
                     {
+                        OnPropertyChanged(nameof(IsToolsBarEnabled));
+
                         fastLaunchWaitHandle.Set();
 
                         fastLaunchWaitHandle.Reset();
@@ -740,7 +784,251 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 count = 4;
             }
-            PreloadSkeletons = new ObservableCollection<object>(Enumerable.Range(0, count).Select(_ => new object { }));
+            _ = this.container?.Dispatcher.Invoke(async () =>
+            {
+                if (this.container is null) return;
+
+                PreloadSkeletons = new ObservableCollection<object>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    PreloadSkeletons.Add(new object { });
+
+                    await Task.Delay(75);
+                }
+            });   
+        }
+
+        [RelayCommand]
+        private void @event_OpenHelpLinkInWeb()
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = true,
+                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                    FileName = "cmd",
+                    Arguments = $"/c start https://docs.openfrp.net/use/desktop-launcher"
+                });
+                return;
+            }
+            catch { }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    UseShellExecute = true,
+                    FileName = "https://docs.openfrp.net/use/desktop-launcher"
+                });
+                return;
+            }
+            catch { }
+        }
+
+        [RelayCommand]
+        private void @event_AutoSuggestBoxLoaded(RoutedEventArgs e)
+        {
+            if (e.Source is not AutoSuggestBox ast) return;
+
+            ast.TextChanged += (_, e) =>
+            {
+                if (e.Reason is AutoSuggestionBoxTextChangeReason.UserInput)
+                {
+                    var view = (CollectionView)CollectionViewSource.GetDefaultView(UserTunnels);
+
+                    if (ast.Text.Length <= 0)
+                    {
+                        view.Filter = null;
+                        return;
+                    }
+                    view.Filter = (obj) =>
+                    {
+                        if (obj is Model.UserTunnel ut)
+                        {
+                            if (int.TryParse(ast.Text,out var val) && val > 0)
+                            {
+#if NET
+                                return ut.Port == val || ut.RemotePort == val || ut.NodeId == val ||
+                                       ut.GetSearchPatten().Contains(ast.Text, StringComparison.OrdinalIgnoreCase);
+#else
+                                return ut.Port == val || ut.RemotePort == val || ut.NodeId == val ||
+                                       ut.GetSearchPatten().IndexOf(ast.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+#endif
+                            }
+#if NET
+                            return ut.GetSearchPatten().Contains(ast.Text, StringComparison.OrdinalIgnoreCase);
+#else 
+                            return ut.GetSearchPatten().IndexOf(ast.Text, StringComparison.OrdinalIgnoreCase) >= 0;
+#endif
+                        }
+                        return false;
+                    };
+                }
+            };
+        }
+
+        private void RefreshItemsControlAutomationPeer()
+        {
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            // TODO: 快启动隧道关闭后不会删除的问题
+            var gtps = itemsController?.GetGroupItemAutomationPeers();
+
+            if (gtps is { Count: > 0 })
+            {
+                foreach (GroupItemAutomationPeer gi in gtps)
+                {
+                    if (!gi.GetName().Equals("display-user-infomation") || gi.Owner is not GroupItem gt) continue;
+
+                    AutomationProperties.SetName(gt, $"{UserInfo.UserName} 的隧道");
+
+                    itemsController!.InvaildateAutomationPeers();
+                    break;
+                }
+            }
+        }
+
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(SelectedFilterMode):
+                    {
+                        if (itemsController is null)
+                        {
+                            return;
+                        }
+                            
+                        var lc1 = (ListCollectionView)CollectionViewSource.GetDefaultView(UserTunnels);
+
+                        if (lc1.CustomSort is AppTunnelSorter ap1s)
+                        {
+                            ap1s.EditSortMode(SelectedFilterMode);
+                            lc1.Refresh();
+                        }
+                        else lc1.CustomSort = new AppTunnelSorter(SelectedFilterMode) { };
+                    }; break;
+                case nameof(UseListViewTunnelFeature):
+                    {
+                        if (itemsController is null)
+                        {
+                            return;
+                        }
+
+                        var lc1 = (ListCollectionView)CollectionViewSource.GetDefaultView(UserTunnels);
+
+                        lc1.Refresh();
+
+                        RefreshItemsControlAutomationPeer();
+                    }
+                    ; break;
+            }
+
+            base.OnPropertyChanged(e);
+        }
+
+        public class AppTunnelGrouper : IValueConverter
+        {
+            public object Convert(object value, System.Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is bool flag)
+                {
+                    return flag ? "ahead-fast-launch" : "display-user-infomation";
+                }
+                return "Unknown";
+            }
+
+            public object ConvertBack(object value, System.Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public class AppTunnelSorter : IComparer
+        {
+            public AppTunnelSorter(int sortMode)
+            {
+                this.sortMode = sortMode;
+            }
+
+            public void EditSortMode(int value) => sortMode = value;
+
+            private int sortMode = 0;
+
+            public int Compare(object? x, object? y)
+            {
+                if (x is null || y is null)
+                {
+                    if (x == y) { return 0; }
+
+                    return x is null ? 1 : -1;
+                }
+                if (x is not Model.UserTunnel orx || y is not Model.UserTunnel ory)
+                {
+                    return 0;
+                }
+                if (orx.IsFastLaunch || ory.IsFastLaunch)
+                {
+                    if (sortMode > 0)
+                    {
+                        if (orx.LastLaunchTime.HasValue && !ory.LastLaunchTime.HasValue)
+                        {
+                            return -1;
+                        }
+                        else if (!orx.LastLaunchTime.HasValue && ory.LastLaunchTime.HasValue)
+                        {
+                            return 1;
+                        }
+                        return (int)(orx.LastLaunchTime! - ory.LastLaunchTime!).Value.TotalSeconds;
+                    }
+                    else if (orx.IsFastLaunch && ory.IsFastLaunch)
+                    {
+                        return (orx.Id - ory.Id);
+                    }
+                    else if (!orx.IsFastLaunch && ory.IsFastLaunch)
+                    {
+                        return 1;
+                    }
+                    else if (orx.IsFastLaunch && !ory.IsFastLaunch)
+                    {
+                        return -1;
+                    }
+                    return 0;
+                }
+                switch (sortMode)
+                {
+                    case 0: //ID
+                        {
+                            return orx.Id - ory.Id;
+                        }
+                    case 1: //STATUS
+                        {
+                            return ory.SortStatusLevel - orx.SortStatusLevel;
+                        }
+                    case 2: //LAST UPDATE TIME
+                        {
+                            return (int)(orx.LastUpdateTimestamp - ory.LastUpdateTimestamp);
+                        }
+                    case 3: // NODE ID
+                        {
+                            return orx.NodeId - ory.NodeId;
+                        }
+                }
+                return 0;
+            }
         }
     }
 }

@@ -385,8 +385,12 @@ namespace OpenFrp.Launcher.Rpc
 
             var mutex = new Mutex(true, $"service.{pipeName}", out var createdNewFlag);
 
-            if (!createdNewFlag && !mutex.SafeWaitHandle.IsClosed && prevListenDaemonTask is null)
+            if (!createdNewFlag && !mutex.SafeWaitHandle.IsClosed)
             {
+                if (prevListenDaemonTask is not null)
+                {
+                    return Model.ExecuteResult.Success();
+                }
                 // 已经创建了一个相同命名的进程，在此监听，等到其结束。
 
                 var processes = Process.GetProcessesByName("OpenFrp.Service");
@@ -401,8 +405,9 @@ namespace OpenFrp.Launcher.Rpc
                         {
                             if (proc.GetMainModuleFileName().Equals(asm))
                             {
-                                mutex.Close();
-                                prevListenDaemonTask = ListenProcessUntilExit(daemon_Process3rd = proc);
+                                mutex.Dispose();
+
+                                prevListenDaemonTask ??= ListenProcessUntilExit(daemon_Process3rd = proc);
 
                                 return new Model.ExecuteResult { };
                             }
@@ -418,7 +423,7 @@ namespace OpenFrp.Launcher.Rpc
                     }
                 }
 
-                prevListenDaemonTask = ListenMutexUntilRelease(mutex);
+                prevListenDaemonTask ??= ListenMutexUntilRelease(mutex);
 
                 return Model.ExecuteResult.Success();
             }
@@ -447,9 +452,6 @@ namespace OpenFrp.Launcher.Rpc
                     EnableRaisingEvents = true
                 };
 
-                proc.OutputDataReceived += DaemonProcessOutputDataReceived;
-                proc.ErrorDataReceived += DaemonProcessOutputDataReceived;
-
                 proc.Exited += DaemonProcessExited;
 
                 if (!await proc.StartAsync())
@@ -470,6 +472,9 @@ namespace OpenFrp.Launcher.Rpc
                         proc.Dispose();
                     }
                 }
+
+                proc.OutputDataReceived += DaemonProcessOutputDataReceived;
+                proc.ErrorDataReceived += DaemonProcessOutputDataReceived;
 
                 proc.BeginErrorReadLine();
                 proc.BeginOutputReadLine();
@@ -568,6 +573,8 @@ namespace OpenFrp.Launcher.Rpc
                     try
                     {
                         daemon_Process3rd?.Kill();
+
+                        KillSubprocessByName();
                     }
                     catch (Exception)
                     {
@@ -615,6 +622,32 @@ namespace OpenFrp.Launcher.Rpc
             finally
             {
                 Semaphore_LaunchFinish = default;
+            }
+        }
+
+        private void KillSubprocessByName()
+        {
+            if (!FileHelper.TryGetFRPClient(out string path)) return;
+
+            string prefix = "";
+            if (OSVersionHelper.IsWindows7OrGreater && !OSVersionHelper.IsWindows8OrGreater)
+            {
+                prefix = "legacy_";
+            }
+
+            foreach (var proc in Process.GetProcessesByName($"{prefix}frpc_windows_{OpenFrp.Service.Helpers.FileHelper.UserPlatform}"))
+            {
+                try
+                {
+                    if (proc.GetMainModuleFileName().Equals(path))
+                    {
+                        proc.Kill();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("[KillDaemon] 获取 FRPC 进程 (PID: {pid}) 的主模块文件名时发生了错误。({msg})", proc.Id, ex.Message);
+                }
             }
         }
 

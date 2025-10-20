@@ -14,18 +14,16 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-    <Style TargetType="local:UserTunnel">
+    <Style TargetType="local:CardUserTunnel">
         <Setter Property="FocusVisualStyle" Value="{DynamicResource Awe__ControlFocusVisualStyle}" />
         <Setter Property="IsEnabled" Value="{Binding Tunnel.IsEnable, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
         <Setter Property="TabIndex" Value="1" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="local:UserTunnel">
+                <ControlTemplate TargetType="local:CardUserTunnel">
                     <ControlTemplate.Resources>
                         <CubicEase x:Key="__ApCubicEase" />
                         <conv:EitherConverter x:Key="ReflagdEitherConverter" ReflagValue="True" />
-
-
                     </ControlTemplate.Resources>
                     <Border
                         x:Name="subfr"
@@ -86,7 +84,7 @@
                                             Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
                                     </TextBlock>
                                 </StackPanel>
-                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsFastLaunch, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
                                     <Run
                                         FontFamily="{StaticResource SoraMedium}"
                                         FontSize="18"
@@ -108,11 +106,31 @@
                                         Text="数据加密"
                                         Visibility="{Binding UseEncryption, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
                                 </xa:SimpleStackPanel>
-                                <TextBlock
-                                    FontSize="16"
-                                    Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
-                                    Text="隧道已禁用"
-                                    Visibility="{Binding IsEnable, Converter={StaticResource AweBooleanToVisibilityConverter}, ConverterParameter='Reflag', Mode=OneWay}" />
+                                <Grid
+                                    ToolTip="请在网页版中到管理-查看对应隧道-将&quot;可用&quot;打开。"
+                                    ToolTipService.InitialShowDelay="250"
+                                    ToolTipService.Placement="Bottom"
+                                    ToolTipService.ShowOnDisabled="True"
+                                    ToolTipService.VerticalOffset="5"
+                                    Visibility="{Binding IsEnable, Converter={StaticResource AweBooleanToVisibilityConverter}, ConverterParameter='Reflag', Mode=OneWay}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        HorizontalAlignment="Left"
+                                        FontSize="16"
+                                        Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                        Text="隧道已禁用" />
+                                    <ink:FontIcon
+                                        Grid.Column="1"
+                                        Margin="4,0,0,-2"
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                        Icon="{x:Static ink:SegoeFluentIcons.Info}" />
+                                </Grid>
+
                                 <TextBlock
                                     x:Name="usedByOtherClient"
                                     FontSize="16"
@@ -121,48 +139,85 @@
                                     Visibility="Collapsed" />
                             </xa:SimpleStackPanel>
                             <!--  Tag  -->
-                            <xa:SimpleStackPanel
+                            <Grid
                                 x:Name="tagViewer"
                                 Grid.Row="2"
                                 Grid.Column="0"
                                 Margin="20,0,0,18"
-                                Orientation="Vertical"
-                                Spacing="2"
-                                Visibility="{Binding IsNotFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                Visibility="{Binding IsFastLaunch, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
                                 <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="3"
+                                    HorizontalAlignment="Left"
                                     FontFamily="{StaticResource SoraMedium}"
                                     FontSize="16"
                                     Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
                                     <Run Text="{Binding Type, Mode=OneWay}" />
                                 </TextBlock>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock
-                                        FontFamily="{StaticResource SoraMedium}"
-                                        FontSize="16"
-                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
-                                        <Run>
-                                            <MultiBinding StringFormat="{}{0}:{1}">
-                                                <Binding Mode="OneWay" Path="Host" />
-                                                <Binding Mode="OneWay" Path="Port" />
-                                            </MultiBinding>
-                                        </Run>
-                                        <Run Text="→" />
-                                        <Run Text="" />
-                                    </TextBlock>
-                                    <TextBlock Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Visibility="{Binding IsHttpService, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
-                                        <Run
-                                            FontFamily="{StaticResource SourceCodePro}"
-                                            FontSize="16"
-                                            Text="{Binding Domains.Length, Mode=OneWay}" />
-                                        <Run Text="个域名" />
-                                    </TextBlock>
-                                    <TextBlock
-                                        FontFamily="{StaticResource SoraMedium}"
-                                        FontSize="16"
-                                        Text="{Binding RemotePort, Mode=OneWay}"
-                                        Visibility="{Binding IsHasRemotePort, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
-                                </StackPanel>
-                            </xa:SimpleStackPanel>
+
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    MaxWidth="180"
+                                    HorizontalAlignment="Left"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                    TextTrimming="CharacterEllipsis">
+                                    <FrameworkElement.ToolTip>
+                                        <TextBlock FontFamily="{StaticResource SoraMedium}">
+                                            <Run>
+                                                <MultiBinding StringFormat="{}{0}:{1}">
+                                                    <Binding Mode="OneWay" Path="Host" />
+                                                    <Binding Mode="OneWay" Path="Port" />
+                                                </MultiBinding>
+                                            </Run>
+                                        </TextBlock>
+                                    </FrameworkElement.ToolTip>
+                                    <Run>
+                                        <MultiBinding StringFormat="{}{0}:{1}">
+                                            <Binding Mode="OneWay" Path="Host" />
+                                            <Binding Mode="OneWay" Path="Port" />
+                                        </MultiBinding>
+                                    </Run>
+                                </TextBlock>
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Margin="4,0"
+                                    FontFamily="{StaticResource SourceCodePro}"
+                                    RenderTransformOrigin=".5,.5"
+                                    Text="→">
+                                    <TextBlock.RenderTransform>
+                                        <ScaleTransform ScaleX="1.2" ScaleY="1.2" />
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    FontFamily="{StaticResource SoraMediumMixYahei}"
+                                    FontSize="16"
+                                    Text="{Binding Domains.Length, StringFormat='{}{0} 个域名', Mode=OneWay}"
+                                    Visibility="{Binding IsHttpService, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    FontFamily="{StaticResource SoraMedium}"
+                                    FontSize="16"
+                                    Text="{Binding RemotePort, Mode=OneWay}"
+                                    Visibility="{Binding IsHasRemotePort, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                            </Grid>
                             <!--  Controller  -->
                             <xa:SimpleStackPanel
                                 Grid.Row="2"
@@ -330,18 +385,6 @@
                                             </MenuItem>
                                         </ink:MenuFlyout>
                                     </ink:FlyoutService.Flyout>
-                                    <!--<ink:HyperlinkButton.IsEnabled>
-                                        <MultiBinding Converter="{StaticResource ReflagdEitherConverter}">
-                                            <Binding
-                                                Mode="OneWay"
-                                                Path="IsOn"
-                                                Source="{x:Reference Name=switcher}" />
-                                            <Binding
-                                                Mode="OneWay"
-                                                Path="event_DefaultUserContextMenuActionCommand.IsRunning"
-                                                RelativeSource="{RelativeSource Mode=TemplatedParent}" />
-                                        </MultiBinding>
-                                    </ink:HyperlinkButton.IsEnabled>-->
                                     <ink:FontIcon
                                         Margin="6"
                                         FontSize="24"
@@ -352,7 +395,395 @@
 
                         </Grid>
                     </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="local:ListUserTunnel">
+        <Setter Property="FocusVisualStyle" Value="{DynamicResource Awe__ControlFocusVisualStyle}" />
+        <Setter Property="TabIndex" Value="1" />
+        <Setter Property="IsEnabled" Value="{Binding Tunnel.IsEnable, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="Padding" Value="16,14" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:ListUserTunnel">
+                    <Border
+                        x:Name="subfr"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="8*" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.ColumnSpan="3" Margin="{TemplateBinding Padding}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ink:FontIcon
+                                    Grid.Column="0"
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xF0306;" />
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    Orientation="Vertical">
+                                    <TextBlock
+                                        BaselineOffset="4"
+                                        FontFamily="{StaticResource SoraMedium}"
+                                        FontSize="16">
+                                        <Run Text="{Binding Tunnel.Name, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                        <Run
+                                            FontSize="14"
+                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                            Text="{Binding Tunnel.Id, StringFormat='#{0}', RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                    </TextBlock>
+                                    <Border
+                                        Margin="0,0,4,0"
+                                        HorizontalAlignment="Left"
+                                        ToolTip="通过网页版快速启动。"
+                                        Visibility="{Binding IsFastLaunch, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                        <TextBlock
+                                            FontSize="13"
+                                            Foreground="{DynamicResource AccentAAFillColorDefaultBrush}"
+                                            Text="快捷启动" />
+                                    </Border>
+                                    <WrapPanel Orientation="Horizontal" Visibility="{Binding IsFastLaunch, ConverterParameter='Reflag', Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                        <TextBlock Margin="0,0,4,0" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                                            <Run FontFamily="{StaticResource SoraMedium}" Text="{Binding Tunnel.NodeId, RelativeSource={RelativeSource Mode=TemplatedParent}, StringFormat='#{0}', Mode=OneWay}" />
+                                            <Run Text="{Binding NodeName, Mode=OneWay}" TextOptions.TextFormattingMode="Display" />
+                                            <Run Text="|" />
+                                            <Run FontFamily="{StaticResource SoraMedium}" Text="{Binding Tunnel.Type, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <StackPanel Margin="0,1,0,0" Orientation="Horizontal">
+                                            <TextBlock
+                                                MaxWidth="180"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource SoraMedium}"
+                                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                TextTrimming="CharacterEllipsis">
+                                                <FrameworkElement.ToolTip>
+                                                    <TextBlock FontFamily="{StaticResource SoraMedium}">
+                                                        <Run>
+                                                            <MultiBinding StringFormat="{}{0}:{1}">
+                                                                <Binding Mode="OneWay" Path="Host" />
+                                                                <Binding Mode="OneWay" Path="Port" />
+                                                            </MultiBinding>
+                                                        </Run>
+                                                    </TextBlock>
+                                                </FrameworkElement.ToolTip>
+                                                <Run>
+                                                    <MultiBinding StringFormat="{}{0}:{1}">
+                                                        <Binding Mode="OneWay" Path="Host" />
+                                                        <Binding Mode="OneWay" Path="Port" />
+                                                    </MultiBinding>
+                                                </Run>
+                                            </TextBlock>
+                                            <TextBlock
+                                                Margin="4,-2,4,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="{StaticResource SourceCodePro}"
+                                                RenderTransformOrigin=".5,.5"
+                                                Text="→">
+                                                <TextBlock.RenderTransform>
+                                                    <ScaleTransform ScaleX="1.2" ScaleY="1.2" />
+                                                </TextBlock.RenderTransform>
+                                            </TextBlock>
+                                            <TextBlock
+                                                FontFamily="{StaticResource SoraMediumMixYahei}"
+                                                Text="{Binding Domains.Length, StringFormat='{}{0} 个域名', Mode=OneWay}"
+                                                Visibility="{Binding IsHttpService, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                                            <TextBlock
+                                                FontFamily="{StaticResource SoraMedium}"
+                                                Text="{Binding RemotePort, Mode=OneWay}"
+                                                Visibility="{Binding IsHasRemotePort, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </WrapPanel>
+                                    <Grid
+                                        Margin="0,6,0,0"
+                                        ToolTip="请在网页版中到管理-查看对应隧道-将&quot;可用&quot;打开。"
+                                        ToolTipService.InitialShowDelay="250"
+                                        ToolTipService.Placement="Bottom"
+                                        ToolTipService.ShowOnDisabled="True"
+                                        ToolTipService.VerticalOffset="5"
+                                        Visibility="{Binding IsEnable, Converter={StaticResource AweBooleanToVisibilityConverter}, ConverterParameter='Reflag', Mode=OneWay}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            HorizontalAlignment="Left"
+                                            FontSize="14"
+                                            Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                            Text="隧道已禁用" />
+                                        <ink:FontIcon
+                                            Grid.Column="1"
+                                            Margin="4,0,0,-2"
+                                            VerticalAlignment="Center"
+                                            FontSize="14"
+                                            Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                            Icon="{x:Static ink:SegoeFluentIcons.Info}" />
+                                    </Grid>
 
+                                    <TextBlock
+                                        x:Name="usedByOtherClient"
+                                        Margin="0,6,0,0"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource SystemControlErrorTextForegroundBrush}"
+                                        Text="隧道已在其他地方启动"
+                                        Visibility="Collapsed" />
+                                </StackPanel>
+                                <xa:SimpleStackPanel
+                                    Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    Spacing="4">
+                                    <ink:ToggleSwitch
+                                        x:Name="switcher"
+                                        MinWidth="0"
+                                        Margin="8,0,8,0"
+                                        IsRightAlignedCompact="True"
+                                        TabIndex="1" />
+                                    <ink:HyperlinkButton
+                                        x:Name="copyLink"
+                                        Padding="0"
+                                        AutomationProperties.HelpText=""
+                                        AutomationProperties.Name="{Binding Name, StringFormat='复制隧道{0}的链接地址', Mode=OneWay}"
+                                        RaiseHyperlinkClicks="False"
+                                        Style="{StaticResource ButtonStyledHyperlinkButton}"
+                                        TabIndex="1"
+                                        ToolTip="复制链接">
+                                        <ink:HyperlinkButton.Resources>
+                                            <CubicEase x:Key="__ApCubicEase" />
+                                        </ink:HyperlinkButton.Resources>
+                                        <Grid Margin="8.5">
+                                            <ink:FontIcon
+                                                x:Name="copyNormalFlag"
+                                                FontSize="19.5"
+                                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ink:HyperlinkButton}, Mode=OneWay}"
+                                                Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
+                                            <ink:FontIcon
+                                                x:Name="copySuccessFlag"
+                                                FontSize="19.5"
+                                                Foreground="{DynamicResource SystemFillColorSuccessBrush}"
+                                                Icon="{x:Static ink:SegoeFluentIcons.CheckMark}" />
+                                        </Grid>
+                                        <VisualStateManager.VisualStateGroups>
+                                            <VisualStateGroup Name="CopyState">
+                                                <VisualState Name="CopyNormal">
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource __ApCubicEase}"
+                                                            Storyboard.TargetName="copySuccessFlag"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            From="1"
+                                                            To="0"
+                                                            Duration="0:0:.3" />
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource __ApCubicEase}"
+                                                            Storyboard.TargetName="copyNormalFlag"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            From="0"
+                                                            To="1"
+                                                            Duration="0:0:.3" />
+                                                    </Storyboard>
+                                                </VisualState>
+                                                <VisualState Name="CopySuccess">
+                                                    <Storyboard>
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource __ApCubicEase}"
+                                                            Storyboard.TargetName="copySuccessFlag"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            From="0"
+                                                            To="1"
+                                                            Duration="0:0:.3" />
+                                                        <DoubleAnimation
+                                                            EasingFunction="{StaticResource __ApCubicEase}"
+                                                            Storyboard.TargetName="copyNormalFlag"
+                                                            Storyboard.TargetProperty="Opacity"
+                                                            From="1"
+                                                            To="0"
+                                                            Duration="0:0:.3" />
+                                                    </Storyboard>
+                                                </VisualState>
+                                            </VisualStateGroup>
+                                        </VisualStateManager.VisualStateGroups>
+                                    </ink:HyperlinkButton>
+
+                                    <ink:HyperlinkButton
+                                        x:Name="displayContextMenu"
+                                        Padding="0"
+                                        AutomationProperties.HelpText=""
+                                        AutomationProperties.Name="{Binding Name, StringFormat='其他操作 {0}', Mode=OneWay}"
+                                        BorderThickness="0"
+                                        Style="{StaticResource ButtonStyledHyperlinkButton}"
+                                        TabIndex="1"
+                                        ToolTip="操作">
+                                        <ink:FlyoutService.Flyout>
+                                            <ink:MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                <MenuItem
+                                                    Padding="0,3,8,3"
+                                                    IsEnabled="False"
+                                                    StaysOpenOnClick="True">
+                                                    <MenuItem.Header>
+                                                        <TextBlock
+                                                            Margin="-20,0,0,0"
+                                                            FontFamily="{StaticResource SoraMedium}"
+                                                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+                                                            <Run Text="{Binding Id, StringFormat='#{0}', Mode=OneWay}" />
+                                                            <Run Text="{Binding Name, Mode=OneWay}" />
+                                                        </TextBlock>
+                                                    </MenuItem.Header>
+                                                </MenuItem>
+                                                <Separator />
+                                                <MenuItem
+                                                    CommandParameter="copy-extra-address"
+                                                    Header="复制扩展地址"
+                                                    Visibility="{Binding HasExtraConnectAddress, Converter={StaticResource AweBooleanToVisibilityConverter}, Mode=OneWay}">
+                                                    <MenuItem.Icon>
+                                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem x:Name="openFolder" Header="打开配置文件夹">
+                                                    <MenuItem.Icon>
+                                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.OpenInNewWindow}" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem x:Name="viewInfo" Header="详细">
+                                                    <MenuItem.Icon>
+                                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Info}" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem x:Name="editTunnel" Header="编辑">
+                                                    <MenuItem.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource BothConverter}">
+                                                            <Binding
+                                                                Converter="{StaticResource EqualConverter}"
+                                                                ConverterParameter="False"
+                                                                Mode="OneWay"
+                                                                Path="DataContext.IsFastLaunch"
+                                                                Source="{x:Reference Name=switcher}" />
+                                                            <Binding
+                                                                Converter="{StaticResource EqualConverter}"
+                                                                ConverterParameter="False"
+                                                                Mode="OneWay"
+                                                                Path="IsOn"
+                                                                Source="{x:Reference Name=switcher}" />
+                                                        </MultiBinding>
+                                                    </MenuItem.IsEnabled>
+                                                    <MenuItem.Icon>
+                                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Edit}" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem x:Name="deleteTunnel" Header="删除">
+                                                    <MenuItem.Icon>
+                                                        <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.Delete}" />
+                                                    </MenuItem.Icon>
+                                                    <MenuItem.IsEnabled>
+                                                        <MultiBinding Converter="{StaticResource BothConverter}">
+                                                            <Binding
+                                                                Converter="{StaticResource EqualConverter}"
+                                                                ConverterParameter="False"
+                                                                Mode="OneWay"
+                                                                Path="DataContext.IsFastLaunch"
+                                                                Source="{x:Reference Name=switcher}" />
+                                                            <Binding
+                                                                Converter="{StaticResource EqualConverter}"
+                                                                ConverterParameter="False"
+                                                                Mode="OneWay"
+                                                                Path="IsOn"
+                                                                Source="{x:Reference Name=switcher}" />
+                                                            <Binding
+                                                                Converter="{StaticResource EqualConverter}"
+                                                                ConverterParameter="False"
+                                                                Mode="OneWay"
+                                                                Path="DeleteCommandBinding.IsRunning"
+                                                                RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                                        </MultiBinding>
+                                                    </MenuItem.IsEnabled>
+                                                </MenuItem>
+                                            </ink:MenuFlyout>
+                                        </ink:FlyoutService.Flyout>
+                                        <ink:FontIcon
+                                            Margin="6"
+                                            FontSize="24"
+                                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ink:HyperlinkButton}, Mode=OneWay}"
+                                            Icon="{x:Static ink:SegoeFluentIcons.More}" />
+                                    </ink:HyperlinkButton>
+                                </xa:SimpleStackPanel>
+                            </Grid>
+                            <Rectangle
+                                x:Name="splitItem"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Height="1"
+                                Fill="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                                IsHitTestVisible="False" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Resources>
+                        <xa:CornerRadiusFilterConverter x:Key="UserTunnelListFirstItemCornerRadiusFilterConverter" Filter="Top" />
+                        <xa:CornerRadiusFilterConverter x:Key="UserTunnelListLastItemCornerRadiusFilterConverter" Filter="Bottom" />
+                        <conv:ThicknessFilterConverter x:Key="UserTunnelListFirstItemThicknessFilterConverter" Filter="ExcludeBottom" />
+                        <conv:ThicknessFilterConverter x:Key="UserTunnelListMiddleItemThicknessFilterConverter" Filter="LeftAndRight" />
+                        <conv:ThicknessFilterConverter x:Key="UserTunnelListLastItemThicknessFilterConverter" Filter="ExcludeTop" />
+                    </ControlTemplate.Resources>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource HyperlinkButtonBackgroundPointerOver}" />
+                        </Trigger>
+                        <Trigger Property="TotalInContainer" Value="0">
+                            <Setter Property="CornerRadius" Value="0" />
+                            <Setter TargetName="splitItem" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="TotalInContainer" Value="1">
+                            <Setter TargetName="splitItem" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource ButtonDisabledForegroundThemeBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsLastItem" Value="True">
+                            <Setter Property="Margin" Value="0,0,0,12" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="CurrentIndex" Value="0" />
+                                <Condition Property="IsLastItem" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="subfr" Property="CornerRadius" Value="{Binding CornerRadius, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource UserTunnelListFirstItemCornerRadiusFilterConverter}, Mode=OneWay}" />
+                            <Setter TargetName="subfr" Property="BorderThickness" Value="{Binding BorderThickness, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource UserTunnelListFirstItemThicknessFilterConverter}, Mode=OneWay}" />
+                        </MultiTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding CurrentIndex, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource EqualConverter}, ConverterParameter='0', Mode=OneWay}" Value="False" />
+                                <Condition Binding="{Binding IsLastItem, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" Value="False" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="CornerRadius" Value="0" />
+                            <Setter TargetName="subfr" Property="BorderThickness" Value="{Binding BorderThickness, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource UserTunnelListMiddleItemThicknessFilterConverter}, Mode=OneWay}" />
+                        </MultiDataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsLastItem, RelativeSource={RelativeSource Mode=Self}, Mode=OneWay}" Value="True" />
+                                <Condition Binding="{Binding CurrentIndex, RelativeSource={RelativeSource Mode=Self}, Converter={StaticResource EqualConverter}, ConverterParameter='0', Mode=OneWay}" Value="False" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter TargetName="subfr" Property="CornerRadius" Value="{Binding CornerRadius, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource UserTunnelListLastItemCornerRadiusFilterConverter}, Mode=OneWay}" />
+                            <Setter TargetName="subfr" Property="BorderThickness" Value="{Binding BorderThickness, RelativeSource={RelativeSource Mode=TemplatedParent}, Converter={StaticResource UserTunnelListLastItemThicknessFilterConverter}, Mode=OneWay}" />
+                            <Setter TargetName="splitItem" Property="Visibility" Value="Collapsed" />
+                        </MultiDataTrigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

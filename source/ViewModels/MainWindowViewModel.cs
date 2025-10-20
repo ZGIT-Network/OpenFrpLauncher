@@ -18,6 +18,7 @@ using iNKORE.UI.WPF.Helpers;
 using iNKORE.UI.WPF.Modern.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Toolkit.Uwp.Notifications;
 using OpenFrp.Launcher.Model;
 using OpenFrp.Launcher.Rpc;
 
@@ -339,12 +340,23 @@ namespace OpenFrp.Launcher.ViewModels
                                             w.Top = mw.Top + (mw.ActualHeight / 2) - (w.ActualHeight / 2);
                                         };
 
-                                        if (w.ShowDialog() is true)
+                                        if (w.ShowDialog() is true || (w.NeedRefresh.HasValue && w.NeedRefresh.Value))
                                         {
                                             if (frame.Content is iNKORE.UI.WPF.Modern.Controls.Page { DataContext: ViewModels.TunnelsViewModel t })
                                             {
                                                 t.event_RefreshUserTunnelCommand.Execute(default);
                                             }
+                                        }
+                                    };break;
+                                case "OpenFrp.Launcher.Views.Home":
+                                    {
+                                        if (frame.Content is FrameworkElement { DataContext: HomeViewModel hvm })
+                                        {
+                                            hvm.ScrollToEnd();
+                                        }
+                                        else
+                                        {
+                                            frame.Navigate(new Views.Home { Tag = "scrollToEnd" });
                                         }
                                     };break;
                             }
@@ -915,17 +927,6 @@ namespace OpenFrp.Launcher.ViewModels
                             return;
                         }
 
-                        string[] addresses = msg.ConnectAddresses.ToArray();
-
-                        var sb = new StringBuilder();
-
-                        if (msg.TunnelType.Contains("HTTP"))
-                        {
-                            foreach (var item in msg.ConnectAddresses)
-                            {
-                                sb.Append(item + ",");
-                            }
-                        }
                         switch (App.Settings.NotificationMode)
                         {
                             case NotificationMode.ToastNotification:
@@ -934,40 +935,115 @@ namespace OpenFrp.Launcher.ViewModels
                                     {
                                         try
                                         {
-                                            string adres;
+                                            var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
+                                                            .AddText($"{(msg.IsFastLaunch ? "快启动" : string.Empty)}隧道 {msg.TunnelName} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
+                                                            .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。");
+                                            if (!msg.IsFastLaunch) 
+                                            {
+                                                toast.AddAttributionText($"{msg.TunnelType.ToUpperInvariant()} {msg.Host}:{msg.Port}");
+                                            }
+                                            toast.AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {msg.ConnectAddresses.First()}");
 
+                                            var adaptGroup = new AdaptiveGroup { };
+
+                                            if (msg.ExtraConnectAddress.Count > 0)
+                                            {
+                                                adaptGroup.Children.Add(new AdaptiveSubgroup
+                                                {
+                                                    Children =
+                                                    {
+                                                        new AdaptiveText
+                                                        {
+                                                            Text = "扩展地址",
+                                                            HintAlign = AdaptiveTextAlign.Left,
+                                                            HintStyle = AdaptiveTextStyle.Caption
+                                                        },
+                                                        new AdaptiveText()
+                                                        {
+                                                            Text = "点击左上角更多按钮复制",
+                                                            HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                                        }
+                                                    }
+                                                });
+                                                adaptGroup.Children.Add(new AdaptiveSubgroup
+                                                {
+                                                    Children =
+                                                    {
+                                                        new AdaptiveText()
+                                                        {
+                                                            Text = $"共 {msg.ExtraConnectAddress.Count} 个",
+                                                            HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                                            HintAlign = AdaptiveTextAlign.Right
+                                                        },
+                                                    }
+                                                });
+                                                foreach (var ext in msg.ExtraConnectAddress)
+                                                {
+                                                    toast.Content.Actions.ContextMenuItems.Add(new ToastContextMenuItem($"复制扩展地址 {ext}", $"copy {ext}")
+                                                    {
+                                                        ActivationType = ToastActivationType.Foreground,
+                                                    });
+                                                }
+                                            }
                                             if (msg.TunnelType.Contains("HTTP"))
                                             {
-                                                adres = sb.ToString().Remove(sb.Length - 1);
+                                                adaptGroup.Children.Add(new AdaptiveSubgroup
+                                                {
+                                                    Children =
+                                                    {
+                                                        new AdaptiveText
+                                                        {
+                                                            Text = "已绑定域名",
+                                                            HintAlign = AdaptiveTextAlign.Left,
+                                                            HintStyle = AdaptiveTextStyle.Caption
+                                                        },
+                                                        new AdaptiveText()
+                                                        {
+                                                            Text = "点击左上角更多按钮复制",
+                                                            HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                                        }
+                                                    }
+                                                });
+                                                adaptGroup.Children.Add(new AdaptiveSubgroup
+                                                {
+                                                    Children =
+                                                    {
+                                                        new AdaptiveText()
+                                                        {
+                                                            Text = $"共 {msg.ConnectAddresses.Count} 个",
+                                                            HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                                            HintAlign = AdaptiveTextAlign.Right
+                                                        },
+                                                    }
+                                                });
+                                                foreach (var cont in msg.ConnectAddresses)
+                                                {
+                                                    toast.Content.Actions.ContextMenuItems.Add(new ToastContextMenuItem($"复制地址 {cont}", $"copy {cont}")
+                                                    {
+                                                        ActivationType = ToastActivationType.Foreground,
+                                                    });
+                                                }
                                             }
                                             else
                                             {
-                                                adres = addresses.First();
+                                                toast.AddText($"可用地址: {msg.ConnectAddresses.FirstOrDefault()}");
                                             }
-                                            if (msg.TunnelType.Contains("HTTP"))
+                                            toast.AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
+                                                    .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
+                                                    .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default);
+                                            if (adaptGroup.Children.Count > 0)
                                             {
-                                                adres += "\n注: 请先将该上列域名解析到对应节点的地址。";
+                                                toast.AddVisualChild(adaptGroup);
                                             }
-                                            string attributionText = msg.IsFastLaunch ? "" : $"{msg.TunnelType.ToUpperInvariant()} {msg.Host}:{msg.Port}";
-
-                                            new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder()
-                                                            .AddText($"{(msg.IsFastLaunch ? "快启动" : string.Empty)}隧道 {msg.TunnelName} 启动成功!", Microsoft.Toolkit.Uwp.Notifications.AdaptiveTextStyle.Title)
-                                                            .AddText($"点击\"复制按钮\"复制链接地址,开始你的映射之旅吧。")
-                                                            .AddText($"可用地址: {adres}" )
-                                                            .AddAttributionText(attributionText)
-                                                            .AddButton("复制链接", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, $"copy {(msg.HasExtraConnectAddress ? msg.ExtraConnectAddress : addresses.First())}")
-                                                            .AddButton("确定", Microsoft.Toolkit.Uwp.Notifications.ToastActivationType.Foreground, "none")
-                                                            .SetToastDuration(Microsoft.Toolkit.Uwp.Notifications.ToastDuration.Short)
-                                                            .SetToastScenario(Microsoft.Toolkit.Uwp.Notifications.ToastScenario.Default)
-                                                            .Show(toast =>
-                                                            {
-                                                                toast.Tag = msg.TunnelName;
-                                                                if (App.Notification_UseExpiredReboot)
-                                                                {
-                                                                    toast.ExpiresOnReboot = true;
-                                                                }
-                                                                toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
-                                                            });
+                                            toast.Show(toast =>
+                                            {
+                                                toast.Tag = msg.TunnelName;
+                                                if (App.Notification_UseExpiredReboot)
+                                                {
+                                                    toast.ExpiresOnReboot = true;
+                                                }
+                                                toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(5);
+                                            });
                                             return;
                                         }
                                         catch
@@ -979,6 +1055,18 @@ namespace OpenFrp.Launcher.ViewModels
                                 ;break;
                             case NotificationMode.TaskbarNotify:
                                 {
+                                    string adresss = msg.ConnectAddresses.First();
+
+                                    if (msg.TunnelType.Contains("HTTP"))
+                                    {
+#if NET
+                                        adresss = string.Join(',',msg.ConnectAddresses);
+#else
+                                        adresss = string.Join(",", msg.ConnectAddresses);
+#endif
+                                        adresss += "\n注: 请先将该上列域名解析到对应节点的地址。";
+                                    }
+
                                     if (App.TaskBarIcon is null)
                                     {
                                         return;
@@ -987,7 +1075,7 @@ namespace OpenFrp.Launcher.ViewModels
                                     {
                                         App.TaskBarIcon.ShowNotification(
                                             title: $"隧道 {msg.TunnelName} 启动成功!",
-                                            message: $"可用地址: {(msg.TunnelType.Contains("HTTP") ? sb.ToString().Remove(sb.Length - 1) : addresses.First())}" + ("HTTP".Contains(msg.TunnelType) ? "\n注: 请先将该上列域名解析到对应节点的地址。" : ""),
+                                            message: $"可用地址: {adresss}" + ("HTTP".Contains(msg.TunnelType) ? "\n注: 请先将该上列域名解析到对应节点的地址。" : ""),
                                             icon: H.NotifyIcon.Core.NotificationIcon.Info);
                                     }
                                     catch

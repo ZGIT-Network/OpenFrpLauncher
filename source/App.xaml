@@ -55,9 +55,9 @@
                 <ink:XamlControlsResources />
 
                 <!--#region Design Resource-->
-                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/DesignTime/SystemColors.xaml" />
+                <!--<ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/DesignTime/SystemColors.xaml" />
                 <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/Schemes/Light.xaml" />
-                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/ControlsResources.xaml" />
+                <ResourceDictionary Source="/iNKORE.UI.WPF.Modern;component/Themes/ControlsResources.xaml" />-->
                 <!--#endregion-->
 
                 <ResourceDictionary Source="./Controls/CenterTab/CenterTab.xaml" />
@@ -70,6 +70,7 @@
                 <ResourceDictionary Source="./Controls/Skeleton/Skeleton.xaml" />
                 <ResourceDictionary Source="./Controls/QRCode/QRCode.xaml" />
                 <ResourceDictionary Source="./Controls/SettingExpander/SettingExpander.xaml" />
+                <ResourceDictionary Source="./Controls/SegementStyledRadioButton/SegementStyledRadioButton.xaml" />
                 <ResourceDictionary Source="./Controls/Carousel/Carousel.xaml" />
 
                 <!--  用户隧道展示用组件  -->

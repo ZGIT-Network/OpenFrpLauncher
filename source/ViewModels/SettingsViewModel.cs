@@ -35,6 +35,8 @@ namespace OpenFrp.Launcher.ViewModels
             UserName = "non-display-user"
         });
 
+
+
         public SettingsViewModel()
         {
             RpcManager = App.ServiceProvider.GetRequiredService<Rpc.RpcManager>();
@@ -413,6 +415,39 @@ namespace OpenFrp.Launcher.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void @event_OpenFrpcFolder()
+        {
+            _ = System.IO.Directory.CreateDirectory(Service.Helpers.FileHelper.FrpcDirectory);
+
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = Service.Helpers.FileHelper.FrpcDirectory,
+                    UseShellExecute = true,
+                });
+                return;
+            }
+            catch
+            {
+
+            }
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer",
+                    Arguments = Service.Helpers.FileHelper.FrpcDirectory,
+                    UseShellExecute = true
+                });
+                return;
+            }
+            catch
+            {
+
+            }
+        }
 
         [RelayCommand]
         private void @event_UrlSchemeToggleSwitchLoaded(RoutedEventArgs e)

@@ -11,48 +11,6 @@ namespace OpenFrp.Launcher.Model
 {
     public partial class UserTunnel : ObservableObject,ICloneable
     {
-        // 仅作 Example
-        public UserTunnel(int ce)
-        {
-            /**
-             * {
-                "connectAddress": "kr-nc-bgp-1.ofalias.net:20495",
-                "extAddress": [],
-                "forceHttps": false,
-                "friendlyNode": "韩国-春川",
-                "id": 604966,
-                "lastLogin": 1737985721000,
-                "lastUpdate": 1719717293000,
-                "localIp": "127.0.0.1",
-                "localPort": 8006,
-                "nid": 21,
-                "nodeHostname": "kr-nc-bgp-1.ofalias.net",
-                "online": false,
-                "proxyName": "rJPZQlD",
-                "proxyProtocolVersion": false,
-                "proxyType": "tcp",
-                "remotePort": 20495,
-                "status": true,
-                "uid": 1448,
-                "useCompression": false,
-                "useEncryption": false
-            },
-             */
-            Tunnel = new Yue3.Model.OpenFrp.Response.Data.UserTunnel
-            {
-                Name = "dddd" + DateTimeOffset.Now.Millisecond,
-                Type = "tcp",
-                NodeId = 21,
-                Host = "127.0.0.1",
-                Port = 25552,
-                Id = 14133 + ce,
-                NodeName = "朝鲜-平壤",
-                ConnectAddress = "kr-dadad.dd.dd"  + DateTimeOffset.Now.ToString(),
-                RemotePort = 16661,
-                IsEnabled = true
-            };
-        }
-
         public UserTunnel(OpenFrp.Service.Proto.Response.TunnelStreamResponse.Types.AnonymousTunnelResponse.Types.AnonymousTunnelData an) : this(tunnel: new Yue3.Model.OpenFrp.Response.Data.UserTunnel
         {
             Name = an.Name,
@@ -62,10 +20,25 @@ namespace OpenFrp.Launcher.Model
         })
         {
             IsFastLaunch = true;
+            LastLaunchTime = DateTimeOffset.Now;
+
+
+            searchPatten ??= $"{an.Name},{an.TunnelId}";
+
         }
 
 
-        public UserTunnel(Yue3.Model.OpenFrp.Response.Data.UserTunnel tunnel) => Tunnel = tunnel;
+        public UserTunnel(Yue3.Model.OpenFrp.Response.Data.UserTunnel tunnel) 
+        {
+            Tunnel = tunnel;
+
+#if NET
+            searchPatten ??= $"{tunnel.Port},{tunnel.Name},{tunnel.Id},{tunnel.Type},{tunnel.NodeId},{(IsHasRemotePort ? tunnel.RemotePort : string.Join(',',tunnel.Domains))}";
+#else
+            searchPatten ??= $"{tunnel.Port},{tunnel.Name},{tunnel.Id},{tunnel.Type},{tunnel.NodeId},{(IsHasRemotePort ? tunnel.RemotePort : string.Join(",", tunnel.Domains))}";
+#endif
+        }
+
 
         public byte[] GetTunnelJsonBuffer()
         {
@@ -74,6 +47,10 @@ namespace OpenFrp.Launcher.Model
             return _buffer ??= JsonSerializer.SerializeToUtf8Bytes(Tunnel);
         }
 
+        public string GetSearchPatten()
+        {
+            return searchPatten ?? "";
+        }
         public void Update() => OnPropertyChanged(nameof(Tunnel));
 
         public object Clone()
@@ -86,17 +63,22 @@ namespace OpenFrp.Launcher.Model
             return (UserTunnel)Clone();
         }
 
+
+
+        private string? searchPatten;
         private byte[]? _buffer;
 
-        [ObservableProperty,NotifyPropertyChangedFor(nameof(Name), nameof(Type), nameof(Id), nameof(Host), nameof(Port), nameof(RemotePort), nameof(NodeName), nameof(NodeId), nameof(IsEnable), nameof(UseEncryption), nameof(UseCompression), nameof(ConnectAddress), nameof(ExtraConnectAddress), nameof(Domains),nameof(IsHasRemotePort),nameof(IsHttpService),nameof(HasExtraConnectAddress))]
+        [ObservableProperty,NotifyPropertyChangedFor(nameof(SortStatusLevel),nameof(LastUpdateTimestamp),nameof(Name), nameof(Type), nameof(Id), nameof(Host), nameof(Port), nameof(RemotePort), nameof(NodeName), nameof(NodeId), nameof(IsEnable), nameof(UseEncryption), nameof(UseCompression), nameof(ConnectAddress), nameof(ExtraConnectAddress), nameof(Domains),nameof(IsHasRemotePort),nameof(IsHttpService),nameof(HasExtraConnectAddress))]
         private Yue3.Model.OpenFrp.Response.Data.UserTunnel? tunnel;
 
-        public bool FirstState { get; internal set; }
+        [ObservableProperty,NotifyPropertyChangedFor(nameof(SortStatusLevel))]
+        private bool firstState;
 
-        [ObservableProperty,NotifyPropertyChangedFor(nameof(IsNotFastLaunch))]
+        [ObservableProperty, NotifyPropertyChangedFor(nameof(SortStatusLevel))]
         private bool isFastLaunch;
 
-        public bool IsNotFastLaunch { get => !IsFastLaunch; }
+
+        public int SortStatusLevel { get => IsEnable ? (FirstState ? 2 : 0) : -1; }
 
         public string Name { get => Tunnel?.Name ?? throw new NullReferenceException(nameof(Tunnel)); }
         public string Type { get => IsFastLaunch ? "" : Tunnel?.Type ?? throw new NullReferenceException(nameof(Tunnel)); }
@@ -110,6 +92,12 @@ namespace OpenFrp.Launcher.Model
 
         public string NodeName { get => IsFastLaunch ? "" : Tunnel?.NodeName ?? throw new NullReferenceException(nameof(Tunnel)); }
         public int NodeId { get => IsFastLaunch ? -1 : Tunnel?.NodeId ?? throw new NullReferenceException(nameof(Tunnel)); }
+
+        public ulong LastUpdateTimestamp { get => IsFastLaunch ? 0 : Tunnel?.LastUpdate ?? throw new NullReferenceException(nameof(Tunnel)); }
+
+
+        public DateTimeOffset? LastLaunchTime { get; private set; } = null;
+
 
         public bool IsEnable { get => IsFastLaunch || (Tunnel?.IsEnabled ?? throw new NullReferenceException(nameof(Tunnel))); }
         public bool UseEncryption { get => !IsFastLaunch && (Tunnel?.UseEncryption ?? throw new NullReferenceException(nameof(Tunnel))); }
@@ -146,6 +134,7 @@ namespace OpenFrp.Launcher.Model
                 }
             }
         }
+
         public string[] ExtraConnectAddress { get => IsFastLaunch ? Array.Empty<string>() : Tunnel?.ExtraConnectAddress ?? throw new NullReferenceException(nameof(Tunnel)); }
         public string[] Domains { get => IsFastLaunch ? Array.Empty<string>() : Tunnel?.Domains.ToArray() ?? throw new NullReferenceException(nameof(Tunnel)); }
 
