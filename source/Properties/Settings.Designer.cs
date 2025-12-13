@@ -216,7 +216,7 @@ namespace OpenFrp.Launcher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool UseWebView2Tools {
             get {
                 return ((bool)(this["UseWebView2Tools"]));
@@ -235,6 +235,30 @@ namespace OpenFrp.Launcher.Properties {
             }
             set {
                 this["UseGridViewTunnelFeature"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UseDoh {
+            get {
+                return ((bool)(this["UseDoh"]));
+            }
+            set {
+                this["UseDoh"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("doh.pub")]
+        public string DohAddress {
+            get {
+                return ((string)(this["DohAddress"]));
+            }
+            set {
+                this["DohAddress"] = value;
             }
         }
     }

@@ -51,10 +51,16 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="UseWebView2Tools" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="UseGridViewTunnelFeature" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="UseDoh" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="DohAddress" Type="System.String" Scope="User">
+      <Value Profile="(Default)">doh.pub</Value>
     </Setting>
   </Settings>
 </SettingsFile>

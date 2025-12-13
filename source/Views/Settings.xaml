@@ -12,6 +12,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:OpenFrp.Launcher.ViewModels"
     xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
+    xmlns:xt="clr-namespace:System;assembly=mscorlib"
     Title="Settings"
     d:DesignHeight="1415"
     d:DesignWidth="825"
@@ -497,6 +498,67 @@
                                 IsOn="{Binding UseConfigLaunch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 IsRightAlignedCompact="True" />
                         </ctrl:SettingItem>
+                        <ctrl:SettingExpander
+                            Title="DNS over HTTPS"
+                            Description="针对 DNS 污染环境进行通过加密查询。"
+                            FontFamily="{StaticResource SoraMediumMixYahei}">
+                            <ctrl:SettingExpander.Icon>
+                                <ink:FontIcon
+                                    FontFamily="{StaticResource FluentSystemIcons}"
+                                    FontSize="24"
+                                    Glyph="&#xEE58;"
+                                    RenderTransformOrigin=".5,.5">
+                                    <FrameworkElement.RenderTransform>
+                                        <ScaleTransform ScaleX="1.15" ScaleY="1.15" />
+                                    </FrameworkElement.RenderTransform>
+                                </ink:FontIcon>
+                            </ctrl:SettingExpander.Icon>
+                            <ctrl:SettingExpander.Header>
+                                <ink:ToggleSwitch
+                                    MinWidth="0"
+                                    Margin="0,0,-12,0"
+                                    IsOn="{Binding UseDoh, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    IsRightAlignedCompact="True" />
+                            </ctrl:SettingExpander.Header>
+                            <xa:SimpleStackPanel
+                                Margin="-16"
+                                Spacing="8"
+                                TextElement.Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock
+                                        Grid.Row="0"
+                                        Grid.Column="0"
+                                        Margin="56,18,0,18"
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Text="DoH 源" />
+                                    <ComboBox
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        MinWidth="150"
+                                        Margin="0,0,38,0"
+                                        VerticalAlignment="Center"
+                                        IsEditable="True"
+                                        IsEnabled="{Binding UseDoh, Mode=OneWay}"
+                                        SelectedValue="{Binding DohSource, Mode=TwoWay, UpdateSourceTrigger=LostFocus}">
+                                        <xt:String>doh.pub</xt:String>
+                                        <xt:String>dns.google</xt:String>
+                                        <xt:String>1.1.1.1</xt:String>
+                                        <xt:String>dns.quad9.net</xt:String>
+                                    </ComboBox>
+                                </Grid>
+                            </xa:SimpleStackPanel>
+                        </ctrl:SettingExpander>
+
                         <ctrl:SettingItem
                             Title="使用 WebView2 进行创建/编辑隧道"
                             Description="提供更加完整的编辑操作。"

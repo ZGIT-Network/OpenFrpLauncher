@@ -13,8 +13,8 @@
 	  <ApplicationIcon>Resources\Images\desktop.ico</ApplicationIcon>
 	  <AssemblyTitle>OpenFrp WPF 桌面端启动器</AssemblyTitle>
 	  <AssemblyName>OpenFrp.Launcher</AssemblyName>
-	  <AssemblyVersion>5.8.81</AssemblyVersion>
-	  <Version>5.8.81</Version>
+	  <AssemblyVersion>5.8.87</AssemblyVersion>
+	  <Version>5.8.87</Version>
   </PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)'=='net48'">
 		<LangVersion>10</LangVersion>

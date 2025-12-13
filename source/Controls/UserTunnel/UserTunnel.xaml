@@ -574,12 +574,14 @@
                                                 x:Name="copyNormalFlag"
                                                 FontSize="19.5"
                                                 Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ink:HyperlinkButton}, Mode=OneWay}"
-                                                Icon="{x:Static ink:SegoeFluentIcons.Copy}" />
+                                                Icon="{x:Static ink:SegoeFluentIcons.Copy}"
+                                                Opacity="1" />
                                             <ink:FontIcon
                                                 x:Name="copySuccessFlag"
                                                 FontSize="19.5"
                                                 Foreground="{DynamicResource SystemFillColorSuccessBrush}"
-                                                Icon="{x:Static ink:SegoeFluentIcons.CheckMark}" />
+                                                Icon="{x:Static ink:SegoeFluentIcons.CheckMark}"
+                                                Opacity="0" />
                                         </Grid>
                                         <VisualStateManager.VisualStateGroups>
                                             <VisualStateGroup Name="CopyState">

@@ -204,6 +204,24 @@ namespace OpenFrp.Launcher.ViewModels
                 OnPropertyChanged(nameof(UseDebug));
             }
         }
+        public bool UseDoh
+        { 
+            get => App.Settings.UseDoh;
+            set
+            {
+                App.Settings.UseDoh = value;
+                OnPropertyChanged(nameof(UseDoh));
+            }
+        }
+        public string DohSource
+        {
+            get => App.Settings.DohAddress;
+            set
+            {
+                App.Settings.DohAddress = value;
+                OnPropertyChanged(nameof(DohSource));
+            }
+        }
         public bool DoNotNoticeErrorMsg
         {
             get => App.Settings.DoNotNoticeErrorMsg;
@@ -716,7 +734,9 @@ namespace OpenFrp.Launcher.ViewModels
         {
             nameof(UseDebug),
             nameof(UseForceTls),
-            nameof(UseConfigLaunch)
+            nameof(UseConfigLaunch),
+            nameof(UseDoh),
+            nameof(DohSource)
         };
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -727,7 +747,9 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     UseDebug = this.UseDebug,
                     UseConfigLaunch = this.UseConfigLaunch,
-                    UseForceTls = this.UseForceTls
+                    UseDoh = this.UseDoh,
+                    UseForceTls = this.UseForceTls,
+                    DohSource = this.DohSource
                 });
             }
 

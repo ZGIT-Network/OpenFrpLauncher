@@ -426,11 +426,11 @@ namespace OpenFrp.Launcher
 
         
 
-        public static string LauncherVersionString => "5.8.87 Release";
+        public static string LauncherVersionString => "5.8.90 Release";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 
-        public static int LauncherVersionNumber => 5880;
+        public static int LauncherVersionNumber => 5890;
 
         internal static bool IsAdministrator()
         {
@@ -460,6 +460,14 @@ namespace OpenFrp.Launcher
                 catch
                 {
                   
+                }
+                try
+                {
+                    _ = Microsoft.Web.WebView2.Core.CoreWebView2Environment.GetAvailableBrowserVersionString();
+                }
+                catch
+                {
+                    App.Settings.UseWebView2Tools = false;
                 }
               
                 try

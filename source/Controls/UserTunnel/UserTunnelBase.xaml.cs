@@ -120,14 +120,21 @@ namespace OpenFrp.Launcher.Controls
                     {
                         @switch.ClearValue(TagProperty);
 
-                        if (DataContext is Model.UserTunnel t)
+                        Tunnel.FirstState = @switch.IsOn;
+
+                        if (!@switch.IsOn && Tunnel.Tunnel != null)
                         {
-                            t.FirstState = @switch.IsOn;
+                            Tunnel.Tunnel.IsOnline = false;
                         }
 
                         return;
                     }
                     @switch.IsEnabled = false;
+
+                    if (!@switch.IsOn && Tunnel.Tunnel is { IsOnline: true })
+                    {
+                        Tunnel.Tunnel.IsOnline = false;
+                    }
 
                     ToggledCommandBinding.Execute(@switch);
                 };

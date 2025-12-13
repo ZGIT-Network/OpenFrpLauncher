@@ -482,7 +482,9 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             AllowDisableConsoleColor = FrpcManager.Feature.AllowDisableConsoleColor,
                             UseForceTls = App.Settings.UseForceTls,
-                            UseDebug = App.Settings.UseDebug
+                            UseDebug = App.Settings.UseDebug,
+                            UseDoh = App.Settings.UseDoh,
+                            DohSource = App.Settings.DohAddress
                         } : default
                     }),
                 });

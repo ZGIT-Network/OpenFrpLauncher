@@ -327,8 +327,8 @@ namespace OpenFrp.Launcher.ViewModels
                                         var w = new WebView2Window
                                         {
                                             Title = "OpenFRP 启动器 - 创建隧道 (WebView2)",
-                                            Source = "https://console.openfrp.net/launcher/create" +
-                                            $"?use_backdrop={App.Settings.BackdropType is not iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType.None && OSVersionHelper.IsWindows11OrGreater}" +
+                                            Source = "http://console.openfrp.net/launcher/create" +
+                                            $"?use_backdrop={(App.Settings.BackdropType is not iNKORE.UI.WPF.Modern.Helpers.Styles.BackdropType.None && OSVersionHelper.IsWindows11OrGreater).ToString().ToLower()}" +
                                             $"&theme_mode={(iNKORE.UI.WPF.Modern.ThemeManager.GetActualTheme(mw) is iNKORE.UI.WPF.Modern.ElementTheme.Dark ? "dark" : "light")}"
                                         };
 
@@ -883,6 +883,8 @@ namespace OpenFrp.Launcher.ViewModels
                             AllowDisableConsoleColor = FrpcManager.Feature.AllowDisableConsoleColor,
                             UseForceTls = App.Settings.UseForceTls,
                             UseDebug = App.Settings.UseDebug,
+                            UseDoh = App.Settings.UseDoh,
+                            DohSource = App.Settings.DohAddress
                         },
                         UserToken = UserInfo.UserToken,
                         RequireUserTunnels = bfStr,
