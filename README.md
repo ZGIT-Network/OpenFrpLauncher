@@ -6,7 +6,7 @@ Service: https://github.com/ZGIT-Network/OpenFrpLaucnherDaemon
 
 by [Yue3-cn](https://github.com/Yue-cn)
 
-Licence: [GPL-3](./LICENSE)
+License: [GPL-3](./LICENSE)
 
 # Donate me on WeChat!
 
