@@ -2,7 +2,7 @@
 
 Model: https://github.com/Yue3Studio/Yue3.Model
 
-Service: https://github.com/ZGIT-Network/OpenFrpLaucnherDaemon
+OpenFrpLauncherDaemon: https://github.com/ZGIT-Network/OpenFrpLauncherDaemon
 
 by [Yue3-cn](https://github.com/Yue-cn)
 
