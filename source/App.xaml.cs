@@ -63,7 +63,9 @@ namespace OpenFrp.Launcher
         public App()
         {
             //AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.EnablePointerSupport", true);
+#if !NETFRAMEWORK
             AppContext.SetSwitch("Switch.System.Windows.Media.EnableHardwareAccelerationInRdp", true);
+#endif
 
             Dispatcher.UnhandledExceptionFilter += Dispatcher_UnhandledExceptionFilter;
             Dispatcher.UnhandledException += Dispatcher_UnhandledException;
@@ -134,6 +136,21 @@ namespace OpenFrp.Launcher
 
                 e.RequestCatch = flag;
                 return;
+            }
+            if (e.Exception is System.NotSupportedException nots)
+            {
+                if (nots.InnerException is COMException { HResult: var hrC })
+                {
+                    try
+                    {
+                        e.RequestCatch = ((uint)hrC).Equals(0x88982F50);
+                    }
+                    catch
+                    {
+
+                    }
+                    
+                }
             }
             if (e.Exception is System.Configuration.ConfigurationErrorsException)
             {
@@ -215,7 +232,7 @@ namespace OpenFrp.Launcher
 
             launcherMutex = new Mutex(false, $"openfrp.launcher.Mutex_{appHash}", out var createdNewFlag);
 
-            if (!Debugger.IsAttached || (true && e.Args.Length > 0))
+            if (e.Args.Length > 0)
             {
                 StartupArguments = new HashSet<string>(e.Args);
             }
@@ -378,7 +395,7 @@ namespace OpenFrp.Launcher
 #if DEBUG
             Logger.LogDebug("[OF LAUN] Setting - AutoLaunchTunnels: {tunnels}", Settings.AutoLaunchTunnel);
             Logger.LogDebug("[OF LAUN] Setting - AutoLoginUserId: {id}", Settings.AutoLoginId);
-            Logger.LogDebug("[OF LAUN] Setting - DoNotAskMeForUrlSchemeTools: {flag}", Settings.DoNotAskMeForUrlSchemeTools);
+            Logger.LogDebug("[OF LAUN] Setting - Feat: {id}", Settings.FeatureHashStr);
             Logger.LogDebug("[OF LAUN] Setting - LogFontSize: {size}", Settings.LogFontSize);
             Logger.LogDebug("[OF LAUN] Setting - LogFontFamily: {font}", Settings.LogFontFamily);
             Logger.LogDebug("[OF LAUN] Setting - UsrTokenSet: {set}", Settings.Token);
@@ -389,7 +406,7 @@ namespace OpenFrp.Launcher
                 // Windows 7 不支持新版本 Golang 特性
                 // 故关闭 Url Scheme 功能，并且启用配置文件启动。
                 App.Settings.UseConfigLaunch = true;
-                App.Settings.DoNotAskMeForUrlSchemeTools = true;
+                App.Settings.FeatureHashStr += "appDialogForScheme|";
             }
             if (!OSVersionHelper.IsWindows11OrGreater)
             {
@@ -426,11 +443,11 @@ namespace OpenFrp.Launcher
 
         
 
-        public static string LauncherVersionString => "5.8.90 Release";
+        public static string LauncherVersionString => "5.8.91";
 
         public static string UiLauncherVersionString => $"OpenFrp 启动器 - v{LauncherVersionString}";
 
-        public static int LauncherVersionNumber => 5890;
+        public static int LauncherVersionNumber => 5891;
 
         internal static bool IsAdministrator()
         {

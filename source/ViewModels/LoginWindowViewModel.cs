@@ -38,7 +38,7 @@ using OpenFrp.Service;
 using OpenFrp.Service.Net;
 using OpenFrp.Service.Proto.Request;
 using OpenFrp.Service.Proto.Response;
-using Windows.UI.Popups;
+
 
 
 
@@ -721,7 +721,7 @@ namespace OpenFrp.Launcher.ViewModels
             {
                 return;
             }
-            if (string.IsNullOrEmpty(App.Settings.AutoLoginId) && !App.Settings.DoNotAskMeForUrlSchemeTools)
+            if (string.IsNullOrEmpty(App.Settings.AutoLoginId) && !App.Settings.FeatureHashStr.Contains("appDialogForScheme"))
             {
                 if (Microsoft.Win32.Registry.ClassesRoot.GetSubKeyNames().Contains("openfrp"))
                 {
@@ -759,7 +759,7 @@ namespace OpenFrp.Launcher.ViewModels
                 }
                 else
                 {
-                    App.Settings.DoNotAskMeForUrlSchemeTools = true;
+                    App.Settings.FeatureHashStr += "appDialogForScheme|";
                 }
                 
             }
@@ -784,14 +784,20 @@ namespace OpenFrp.Launcher.ViewModels
                     };
                 }
             }
-            Exception? exc = default;
-            if (await FrpcManager.DetectFrpcVersionAndFeatrue(fp,ex => exc = ex))
+            try
             {
-                VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
-                return Model.ExecuteResult.Success();
+                if (await FrpcManager.DetectFrpcVersionAndFeatrue(fp))
+                {
+                    VisualStateManager.GoToElementState(window, HiddenFrpcCtrl, false);
+                    return Model.ExecuteResult.Success();
+                }
+            }
+            catch(Exception ex)
+            {
+                return ex;
             }
             
-            return exc ?? new InvalidOperationException("操作失败，未知启动原因。");
+            return new InvalidOperationException("操作失败，未知启动原因。");
         }
 
         [RelayCommand]
@@ -872,10 +878,21 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     RpcManager.Configure();
                 }
-                r1_resp = await RpcManager.Sync(cancellationToken);
-                if (r1_resp is { Flag: true })
+                try
                 {
-                    break;
+                    r1_resp = await RpcManager.Sync(cancellationToken);
+                    if (r1_resp is { Flag: true })
+                    {
+                        break;
+                    }
+                }
+                catch (InvalidOperationException e)
+                {
+                    if (e.Message.Equals("RPC 客户端暂未配置。"))
+                    {
+                        i++;
+                        continue;
+                    }
                 }
                 await Task.Delay(250, cancellationToken);
             }

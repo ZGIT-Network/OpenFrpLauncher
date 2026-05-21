@@ -145,18 +145,6 @@ namespace OpenFrp.Launcher.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool DoNotAskMeForUrlSchemeTools {
-            get {
-                return ((bool)(this["DoNotAskMeForUrlSchemeTools"]));
-            }
-            set {
-                this["DoNotAskMeForUrlSchemeTools"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool UseConfigLaunch {
             get {
                 return ((bool)(this["UseConfigLaunch"]));
@@ -259,6 +247,18 @@ namespace OpenFrp.Launcher.Properties {
             }
             set {
                 this["DohAddress"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FeatureHashStr {
+            get {
+                return ((string)(this["FeatureHashStr"]));
+            }
+            set {
+                this["FeatureHashStr"] = value;
             }
         }
     }

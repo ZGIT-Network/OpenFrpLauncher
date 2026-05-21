@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenFrp.Service.Host;
 using System.Web;
 using System.IO;
 using System.Threading;
 using OpenFrp.Service;
+using OpenFrp.Launcher.HostLite;
 
 namespace OpenFrp.Launcher.Rpc
 {
-    class WebOAuthHost : Service.Host.HttpServer
+    class WebOAuthHost : Launcher.HostLite.HttpServer
     {
         public WebOAuthHost(Action<Exception>? exceptionHandler = default)
         {

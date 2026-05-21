@@ -6,24 +6,25 @@
     xmlns:ctrl="clr-namespace:OpenFrp.Launcher.Controls"
     xmlns:ink="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:local="clr-namespace:OpenFrp.Launcher"
-    xmlns:xa="http://schemas.inkore.net/lib/ui/wpf">
+    xmlns:xa="http://schemas.inkore.net/lib/ui/wpf"
+    MinWidth="250">
 
     <Grid Margin="8">
         <ink:ThemeShadowChrome
-            CornerRadius="4"
+            CornerRadius="6"
             Depth="20"
             IsShadowEnabled="True" />
         <Border
             Background="{DynamicResource SystemControlPageBackgroundAltHighBrush}"
             BorderBrush="Transparent"
             BorderThickness="0"
-            CornerRadius="4"
+            CornerRadius="6"
             SnapsToDevicePixels="True" />
         <Border
             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
             BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
             BorderThickness="0"
-            CornerRadius="4">
+            CornerRadius="6">
             <Grid Margin="6">
                 <Grid.Resources>
                     <Style TargetType="ink:HyperlinkButton">
@@ -56,8 +57,9 @@
                     </ink:HyperlinkButton>
                     <Rectangle
                         Height="1"
-                        Margin="0,4"
-                        Fill="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+                        Margin="8,6"
+                        Fill="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                        Opacity=".2" />
                     <ink:HyperlinkButton x:Name="closeLauncher" AutomationProperties.Name="退出启动器">
                         <xa:SimpleStackPanel Orientation="Horizontal" Spacing="12">
                             <ink:FontIcon Icon="{x:Static ink:SegoeFluentIcons.ClosePane}" />

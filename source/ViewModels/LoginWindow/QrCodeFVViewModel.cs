@@ -112,6 +112,9 @@ namespace OpenFrp.Launcher.ViewModels
             var base64_publicKey = Convert.ToBase64String(publicKey)
                 .Trim().Replace('+', '-').Replace('/', '_');
 
+            //https://access.openfrp.net/argoAccess/requestLogin
+            // POST: { public_key: byte[] }
+
             var access = await OpenFrpApi.AccessRequestLogin(base64_publicKey, cancellationToken);
 
             

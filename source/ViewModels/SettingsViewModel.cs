@@ -520,7 +520,15 @@ namespace OpenFrp.Launcher.ViewModels
 
                         await Task.Delay(500);
 
-                        App.Settings.DoNotAskMeForUrlSchemeTools = tg.IsOn;
+                        if (App.Settings.FeatureHashStr.Contains("appDialogForScheme") && !tg.IsOn)
+                        {
+                            App.Settings.FeatureHashStr = App.Settings.FeatureHashStr.Replace("appDialogForScheme|", string.Empty);
+                        }
+                        else if (!App.Settings.FeatureHashStr.Contains("appDialogForScheme") && tg.IsOn)
+                        {
+                            App.Settings.FeatureHashStr += "appDialogForScheme|";
+                        }
+              
                     }
                     catch
                     {
@@ -532,6 +540,8 @@ namespace OpenFrp.Launcher.ViewModels
                         {
                             aw.IsEnabled = true;
                             aw.SetWindowEnableState(true);
+
+                            aw.Activate();
                         }
                         OnPropertyChanged(nameof(IsUrlSchemeRegistered));
                         tg.IsEnabled = true;

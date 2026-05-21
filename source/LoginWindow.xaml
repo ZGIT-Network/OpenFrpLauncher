@@ -395,8 +395,10 @@
                         Margin="0,8,0,0"
                         FontFamily="{StaticResource SoraMediumMixYahei}"
                         FontSize="16"
+                        Foreground="White"
                         IsHitTestVisible="False"
                         Visibility="Visible">
+
                         <Run Text="版权所有 ZGIT Network" />
                         <!--<LineBreak />
                         <Run Text="湘ICP备2021009274号-3" />-->

@@ -827,11 +827,11 @@ namespace OpenFrp.Launcher.ViewModels
 
                             try
                             {
-                                var table = Tomlyn.Toml.ToModel(nodeConf.Data!);
+                                var table = Tomlyn.TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(nodeConf.Data!);
 
                                 Tomlyn.Model.TomlTable[] sourceArray;
 
-                                if (table.TryGetValue("proxies", out var val) && val is Tomlyn.Model.TomlTableArray proxies)
+                                if (table != null && table.TryGetValue("proxies", out var val) && val is Tomlyn.Model.TomlTableArray proxies)
                                 {
                                     sourceArray = new Tomlyn.Model.TomlTable[proxies.Count];
 
@@ -854,7 +854,7 @@ namespace OpenFrp.Launcher.ViewModels
                                     {
                                         table.Add("proxies", new Tomlyn.Model.TomlTable[1] {tun});
 
-                                        tomlConfigMapping?.Add(name.ToString()!, Tomlyn.Toml.FromModel(table));
+                                        tomlConfigMapping?.Add(name.ToString()!, Tomlyn.TomlSerializer.Serialize<Tomlyn.Model.TomlTable>(table));
                                     }
                                     table.Remove("proxies");
                                 }

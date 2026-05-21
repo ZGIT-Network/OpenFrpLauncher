@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -144,7 +145,18 @@ namespace OpenFrp.Launcher.ViewModels
 
                         try
                         {
-                            if (!System.IO.File.Exists(pathF))
+                            bool exist = System.IO.File.Exists(pathF);
+
+                            if (exist) 
+                            {
+                                using var vf = File.OpenRead(pathF);
+
+                                if (vf.Length <= 0)
+                                {
+                                    exist = false;
+                                }
+                            }
+                            if (!exist)
                             {
                                 var resp = await Service.Net.HttpClient.DefualtInstance.GetStreamAsync(ve.ImageUrl!, cancellationToken);
 
@@ -217,8 +229,8 @@ namespace OpenFrp.Launcher.ViewModels
                 {
                     new AdSenseItem
                     {
-                        Description = "你的赞助是前进的第一动力，\n本项已从2023年开始成项，到2025年为开发的第四个版本，开发不易。\n欢迎赞助启动器作者 (越越)。",
-                        Title = "日暮东风怨啼鸟，落花犹似坠楼人",
+                        Description = "",
+                        Title = "雄跨洞庭野，楚望古湘州",
                         Url = "https://console.openfrp.net",
                         Company = "默认"
                     },
@@ -311,6 +323,78 @@ namespace OpenFrp.Launcher.ViewModels
 
                 return (x.MaximumVersion == App.LauncherVersionNumber && x.MinimalVersion == App.LauncherVersionNumber) || (App.LauncherVersionNumber >= x.MinimalVersion && (App.LauncherVersionNumber <= x.MaximumVersion || x.MaximumVersion.Equals(-1)));
             }).Select(x => new Model.HomeAlertMessage(x.Title,x.Type,x.Data)).ToArray();
+
+            if (App.StartupArguments.Contains("--skipDialog"))
+                return;
+            App.StartupArguments.Add("--skipDialog");
+
+
+            foreach (var dialog in resp.Data.Dialogs)
+            {
+                if (!string.IsNullOrEmpty(dialog.Olid) && App.Settings.FeatureHashStr.Contains(dialog.Olid))
+                {
+                    continue;
+                }
+
+                if (!(dialog.MaximumVersion == App.LauncherVersionNumber && dialog.MinimalVersion == App.LauncherVersionNumber) || (App.LauncherVersionNumber >= dialog.MinimalVersion && !(App.LauncherVersionNumber > dialog.MaximumVersion && !dialog.MaximumVersion.Equals(-1))))
+                {
+                    continue;
+                }
+                var ct = new ContentDialog()
+                {
+                    Title = dialog.Title,
+                    Content = new ScrollViewerEx()
+                    {
+                        VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto
+                    },
+                    DefaultButton = ContentDialogButton.Primary,
+                    PrimaryButtonText = "我已阅读以上内容，确定",
+                    AllowCloseByEsc = dialog.Delay <= 0,
+                    IsPrimaryButtonEnabled = true,
+                };
+                if (dialog.Olid != "")
+                {
+                    ct.SecondaryButtonText = "关闭并不再提醒";
+                }
+                var tb = new System.Windows.Controls.TextBlock()
+                {
+                    TextWrapping = TextWrapping.Wrap
+                };
+
+                foreach (var item in dialog.Data)
+                {
+                    tb.Inlines.Add(item);
+                }
+
+                if (ct.Content is ScrollViewerEx ex)
+                {
+                    ex.Content = tb;
+                }
+
+                if (dialog.Delay > 0)
+                {
+                    ct.IsSecondaryButtonEnabled = false;
+                    ct.Loaded += async delegate
+                    {
+                        for (global::System.Int32 i = (dialog.Delay) - 1; i >= 0; i-=1000)
+                        {
+                            if (i < 0) break;
+
+                            ct.IsPrimaryButtonEnabled = false;
+                            ct.PrimaryButtonText = $"请等待 {Math.Round(i / 1000d)} 秒";
+
+                            await Task.Delay(1000, cancellationToken);
+                        }
+                        ct.IsPrimaryButtonEnabled = true;
+                        ct.IsSecondaryButtonEnabled = true;
+                        ct.PrimaryButtonText = "我已阅读以上内容，确定";
+                    };
+                }
+                if (await ct.ShowAsync() is ContentDialogResult.Secondary)
+                {
+                    App.Settings.FeatureHashStr += dialog.Olid + '|';
+                }
+            }
         }
     }
 }

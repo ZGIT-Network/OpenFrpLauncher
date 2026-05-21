@@ -32,9 +32,6 @@
     <Setting Name="UseDebug" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="DoNotAskMeForUrlSchemeTools" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="UseConfigLaunch" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -61,6 +58,9 @@
     </Setting>
     <Setting Name="DohAddress" Type="System.String" Scope="User">
       <Value Profile="(Default)">doh.pub</Value>
+    </Setting>
+    <Setting Name="FeatureHashStr" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

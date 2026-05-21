@@ -500,13 +500,12 @@ namespace OpenFrp.Launcher.ViewModels
         /// <exception cref="InvalidOperationException"></exception>
         internal static async Task<string> GetTomlConfigPre(Yue3.Model.OpenFrp.Response.Data.UserTunnel tunnel)
         {
-            string? tomlConfStr = "";
             var config = await OpenFrp.Service.Net.OpenFrpApi.GetNodeConfig(tunnel.NodeId);
 
             
             if (config.StatusCode is System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(config.Data))
             {
-                if (Tomlyn.Toml.ToModel(config.Data!) is { Count: > 0 } table && table.TryGetValue("proxies", out var proxiesValue) && proxiesValue is Tomlyn.Model.TomlTableArray { Count: > 0 } proxies)
+                if (Tomlyn.TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(config.Data!) is { Count: > 0 } table && table.TryGetValue("proxies", out var proxiesValue) && proxiesValue is Tomlyn.Model.TomlTableArray { Count: > 0 } proxies)
                 {
 
                     for (int i = proxies.Count - 1; i >= 0; i--)
@@ -516,18 +515,8 @@ namespace OpenFrp.Launcher.ViewModels
                             proxies.RemoveAt(i);
                         }
                     }
-                    if (Tomlyn.Toml.TryFromModel(table, out tomlConfStr, out var diagnostics))
-                    {
-                        if (string.IsNullOrEmpty(tomlConfStr))
-                        {
-                            throw new NullReferenceException("无法将对象转换成 Toml 等效字符串。");
-                        }
-                        return tomlConfStr;
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException(string.Join(",", diagnostics.Select(x => x.Message)));
-                    }
+
+                    return Tomlyn.TomlSerializer.Serialize<Tomlyn.Model.TomlTable>(table);
                 }
                 else throw new InvalidOperationException($"未能在节点 #{tunnel.NodeId} {tunnel.NodeName} 获取到有效隧道配置。");
             }

@@ -481,13 +481,20 @@ namespace OpenFrp.Launcher
             }
             finally
             {
-                if (e.Response is null)
+                try
                 {
-                    e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(System.IO.Stream.Null, 500, "Not found route", "");
+                    if (e.Response is null)
+                    {
+                        e.Response = wv.CoreWebView2.Environment.CreateWebResourceResponse(System.IO.Stream.Null, 500, "Not found route", "");
 
-                    var or3 = e.Request.Headers.GetHeader("Referer");
+                        var or3 = e.Request.Headers.GetHeader("Referer");
 
-                    e.Response.Headers.AppendHeader("Access-Control-Allow-Origin", or3.Remove(or3.Length - 1));
+                        e.Response.Headers.AppendHeader("Access-Control-Allow-Origin", or3.Remove(or3.Length - 1));
+                    }
+                }
+                catch (System.ObjectDisposedException)
+                {
+
                 }
             }
         }
